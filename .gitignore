@@ -1,6 +1,5 @@
 *.iml
 .gradle
-.idea
 .DS_Store
 build
 captures
@@ -9,3 +8,7 @@ captures
 local.properties
 xcuserdata
 .kotlin
+
+
+.idea/*
+!.idea/runConfigurations/
