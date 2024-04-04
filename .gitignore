@@ -8,7 +8,5 @@ captures
 local.properties
 xcuserdata
 .kotlin
-
-
 .idea/*
 !.idea/runConfigurations/
