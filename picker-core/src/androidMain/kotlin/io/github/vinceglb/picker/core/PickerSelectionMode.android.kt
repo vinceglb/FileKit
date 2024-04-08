@@ -3,11 +3,11 @@ package io.github.vinceglb.picker.core
 import android.net.Uri
 
 public actual sealed class PickerSelectionMode<Out> {
-	internal actual class SelectionResult(
-		val files: List<Uri>?
+	public actual class SelectionResult(
+		public val files: List<Uri>?
 	)
 
-	internal actual abstract fun result(selection: SelectionResult): Out?
+	public actual abstract fun result(selection: SelectionResult): Out?
 
 	public actual class SingleFile actual constructor(
 		public val extensions: List<String>?
