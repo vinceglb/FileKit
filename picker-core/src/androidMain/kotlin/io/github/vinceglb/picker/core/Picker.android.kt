@@ -75,12 +75,12 @@ public actual object Picker {
 		return@withContext mode.result(selection)
 	}
 
-	private fun getMimeType(fileExtensions: List<String>?): Array<String> {
+	public fun getMimeType(fileExtensions: List<String>?): Array<String> {
 		val mimeTypeMap = MimeTypeMap.getSingleton()
 		return fileExtensions
 			?.takeIf { it.isNotEmpty() }
 			?.mapNotNull { mimeTypeMap.getMimeTypeFromExtension(it) }
 			?.toTypedArray()
-			?: emptyArray()
+			?: arrayOf("*/*")
 	}
 }
