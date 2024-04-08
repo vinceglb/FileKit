@@ -1,11 +1,15 @@
-
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -13,38 +17,84 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.vinceglb.picker.compose.rememberPickerLauncher
 import io.github.vinceglb.picker.core.PickerSelectionMode
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import org.jetbrains.compose.resources.painterResource
+import io.github.vinceglb.picker.core.PlatformDirectory
+import io.github.vinceglb.picker.core.PlatformFile
 import org.jetbrains.compose.ui.tooling.preview.Preview
-import pickerkotlin.samples.sample_compose.composeapp.generated.resources.Res
-import pickerkotlin.samples.sample_compose.composeapp.generated.resources.compose_multiplatform
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
+        SampleApp()
+    }
+}
 
-        val picker = rememberPickerLauncher(
-            mode = PickerSelectionMode.MultipleFiles(),
-            onResult = { file ->
-                println("Selected files: ${file?.map { it.name }}")
+@Composable
+private fun SampleApp() {
+    var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
+    var directory: PlatformDirectory? by remember { mutableStateOf(null) }
+
+    val singleFilePicker = rememberPickerLauncher(
+        mode = PickerSelectionMode.SingleFile(extensions = listOf("png", "jpg", "jpeg")),
+        title = "Single file picker",
+        initialDirectory = directory?.path,
+        onResult = { file -> file?.let { files += it } }
+    )
+
+    val multipleFilesPicker = rememberPickerLauncher(
+        mode = PickerSelectionMode.MultipleFiles(extensions = listOf("png", "jpg", "jpeg")),
+        title = "Multiple files picker",
+        initialDirectory = directory?.path,
+        onResult = { file -> file?.let { files += it } }
+    )
+
+    val directoryPicker = rememberPickerLauncher(
+        mode = PickerSelectionMode.Directory,
+        title = "Directory picker",
+        initialDirectory = directory?.path,
+        onResult = { dir -> directory = dir }
+    )
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(onClick = { singleFilePicker.launch() }) {
+                Text("Single file picker")
             }
-        )
 
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { picker.launch() }) {
-                Text("Click me!")
+            Button(onClick = { multipleFilesPicker.launch() }) {
+                Text("Multiple files picker")
             }
 
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+            Button(
+                onClick = { directoryPicker.launch() },
+                enabled = PickerSelectionMode.Directory.isSupported
+            ) {
+                Text("Directory picker")
+            }
+
+            if (PickerSelectionMode.Directory.isSupported) {
+                Text("Selected directory: ${directory?.path ?: "None"}")
+            } else {
+                Text("Directory picker is not supported")
+            }
+
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 128.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                items(files.toList()) {
+                    PhotoItem(it)
                 }
             }
         }
