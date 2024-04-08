@@ -51,12 +51,16 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
+            // Compose
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
+
+            // Picker
+            implementation(projects.pickerCompose)
         }
 
         androidMain.dependencies {

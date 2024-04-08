@@ -13,6 +13,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import io.github.vinceglb.picker.compose.rememberPickerLauncher
+import io.github.vinceglb.picker.core.PickerSelectionMode
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -25,10 +27,19 @@ import pickerkotlin.samples.sample_compose.composeapp.generated.resources.compos
 fun App() {
     MaterialTheme {
         var showContent by remember { mutableStateOf(false) }
+
+        val picker = rememberPickerLauncher(
+            mode = PickerSelectionMode.MultipleFiles(),
+            onResult = { file ->
+                println("Selected files: ${file?.map { it.name }}")
+            }
+        )
+
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
+            Button(onClick = { picker.launch() }) {
                 Text("Click me!")
             }
+
             AnimatedVisibility(showContent) {
                 val greeting = remember { Greeting().greet() }
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
