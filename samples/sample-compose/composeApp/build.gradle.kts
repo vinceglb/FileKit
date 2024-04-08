@@ -54,13 +54,16 @@ kotlin {
             // Compose
             implementation(compose.runtime)
             implementation(compose.foundation)
-            implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
             // Picker
             implementation(projects.pickerCompose)
+
+            // Coil3
+            implementation(libs.coil.compose)
         }
 
         androidMain.dependencies {
@@ -68,7 +71,11 @@ kotlin {
         }
 
         desktopMain.dependencies {
+            // Compose
             implementation(compose.desktop.currentOs)
+
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.swing)
         }
     }
 }
