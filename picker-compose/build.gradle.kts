@@ -67,6 +67,10 @@ kotlin {
 
         val nonAndroidMain by creating {
             dependsOn(commonMain.get())
+
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+            }
         }
 
         nativeMain.get().dependsOn(nonAndroidMain)
