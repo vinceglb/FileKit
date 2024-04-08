@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
@@ -28,18 +29,18 @@ public actual fun <Out> rememberPickerLauncher(
     val context = LocalContext.current
 
     // Keep track of the current mode, initialDirectory and onResult listener
-    val currentMode = rememberUpdatedState(mode)
-    val currentInitialDirectory = rememberUpdatedState(initialDirectory)
-    val currentOnResult = rememberUpdatedState(onResult)
+    val currentMode by rememberUpdatedState(mode)
+    val currentInitialDirectory by rememberUpdatedState(initialDirectory)
+    val currentOnResult by rememberUpdatedState(onResult)
 
     // Create Picker launcher based on mode
-    val launcher = when (val currentModeValue = currentMode.value) {
+    val launcher = when (val currentModeValue = currentMode) {
         is SingleFile -> {
             // Create Android launcher
             @Suppress("UNCHECKED_CAST")
             val launcher = rememberLauncherForActivityResult(OpenDocument()) { uri ->
                 val platformFile = uri?.let { PlatformFile(it, context) }
-                currentOnResult.value(platformFile as Out?)
+                currentOnResult(platformFile as Out?)
             }
 
             remember {
@@ -59,7 +60,7 @@ public actual fun <Out> rememberPickerLauncher(
                     .takeIf { it.isNotEmpty() }
                     ?.map { uri -> PlatformFile(uri, context) }
 
-                currentOnResult.value(platformFiles as Out?)
+                currentOnResult(platformFiles as Out?)
             }
 
             remember {
@@ -76,12 +77,12 @@ public actual fun <Out> rememberPickerLauncher(
             @Suppress("UNCHECKED_CAST")
             val launcher = rememberLauncherForActivityResult(OpenDocumentTree()) { uri ->
                 val platformDirectory = uri?.let { PlatformDirectory(it) }
-                currentOnResult.value(platformDirectory as Out?)
+                currentOnResult(platformDirectory as Out?)
             }
 
             remember {
                 // Convert initialDirectory to Uri
-                val initialPath = currentInitialDirectory.value?.let { Uri.parse(it) }
+                val initialPath = currentInitialDirectory?.let { Uri.parse(it) }
 
                 // Return Picker launcher
                 PickerResultLauncher { launcher.launch(initialPath) }
