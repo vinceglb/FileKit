@@ -3,11 +3,11 @@ package io.github.vinceglb.picker.core
 import java.io.File
 
 public actual sealed class PickerSelectionMode<Out> {
-    internal actual class SelectionResult(
-		val files: List<File>?
+    public actual class SelectionResult(
+		public val files: List<File>?
 	)
 
-    internal actual abstract fun result(selection: SelectionResult): Out?
+    public actual abstract fun result(selection: SelectionResult): Out?
 
     public actual class SingleFile actual constructor(
 		public val extensions: List<String>?
