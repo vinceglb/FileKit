@@ -1,4 +1,8 @@
 <div align="center">
+  <img src="https://github.com/vinceglb/PickerKotlin/assets/24540801/5b54554a-fd18-4f99-99a6-c6277a5d0d38" alt="Picker Kotlin for Kotlin Multiplatform and Compose Multiplatform" />
+
+  <br>
+ 
   <h1>Picker Kotlin</h1>
   <p>Files, Medias and Folder Picker library for Kotlin Multiplatform and Compose Multiplatform</p>
 
@@ -10,7 +14,7 @@
     <img src="https://img.shields.io/badge/Platform-WASM%20%2F%20JS-yellow.svg?logo=javascript" alt="Badge JS" />
   </div>
 
-  <br />
+  <br>
 </div>
 
 Picker Kotlin is a library that allows you to pick files, medias and folders in a simple way. On each platform, it uses the native file picker API to provide a consistent experience.
