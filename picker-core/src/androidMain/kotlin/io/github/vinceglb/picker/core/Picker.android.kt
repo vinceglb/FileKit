@@ -30,7 +30,7 @@ public actual object Picker {
 		initialDirectory: String?,
 	): Out? = withContext(Dispatchers.IO) {
 		// Throw exception if registry is not initialized
-		val registry = registry ?: throw IllegalStateException("Picker not initialized")
+		val registry = registry ?: throw PickerNotInitializedException()
 
 		// It doesn't really matter what the key is, just that it is unique
 		val key = UUID.randomUUID().toString()
