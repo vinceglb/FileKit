@@ -21,7 +21,7 @@ Picker Kotlin is a library that allows you to pick files, medias and folders in 
 
 ### Picker Core
 
-With Picker Core you can pick files, medias and folders.
+With `Picker`, you can pick files, medias and folders on each target from your common code.
 
 ```kotlin
 // Choose a mode: SingleFile(), MultipleFiles() or Directory
@@ -161,6 +161,14 @@ val file: java.io.File = platformFile.file
 
 // WASM / JS
 val file: org.w3c.files.File = platformFile.file
+```
+
+### Directory Mode
+
+The directory mode is available on all platforms, expect for WASM / JS. To check if the directory picker is available from the common code, you can use `PickerSelectionMode.Directory.isSupported`.
+
+```kotlin
+val directoryModeSupported = PickerSelectionMode.Directory.isSupported
 ```
 
 ## 🌱 Sample projects
