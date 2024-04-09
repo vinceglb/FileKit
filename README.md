@@ -144,9 +144,9 @@ The `PlatformFile` class is a wrapper around the platform file system. It allows
 ```kotlin
 val platformFile: PlatformFile = ...
 
-val fileName = platformFile?.name
-val filePath = platformFile?.path
-val bytes = platformFile?.readBytes()   // suspend function
+val fileName: String = platformFile.name
+val filePath: String? = platformFile.path
+val bytes: ByteArray = platformFile.readBytes()   // suspend function
 ```
 
 On each platform, you can get the original platform file:
