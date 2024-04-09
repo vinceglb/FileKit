@@ -14,7 +14,7 @@ public actual sealed class PickerSelectionMode<Out> {
 	) : PickerSelectionMode<PlatformFile>() {
 		actual override fun result(selection: SelectionResult): PlatformFile? {
 			val context = Picker.context.get()
-				?: throw IllegalStateException("Picker context is not set")
+				?: throw PickerNotInitializedException()
 
 			return selection.files
 				?.firstOrNull()
@@ -27,7 +27,7 @@ public actual sealed class PickerSelectionMode<Out> {
 	) : PickerSelectionMode<PlatformFiles>() {
 		override fun result(selection: SelectionResult): PlatformFiles? {
 			val context = Picker.context.get()
-				?: throw IllegalStateException("Picker context is not set")
+				?: throw PickerNotInitializedException()
 
 			return selection.files
 				?.takeIf { it.isNotEmpty() }
