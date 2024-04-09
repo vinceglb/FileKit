@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://github.com/vinceglb/PickerKotlin/assets/24540801/5b54554a-fd18-4f99-99a6-c6277a5d0d38" alt="Picker Kotlin for Kotlin Multiplatform and Compose Multiplatform" />
+  <img src="https://github.com/vinceglb/PickerKotlin/assets/24540801/59a2ca58-dfff-4606-b9b9-6c1132dfbd9c" alt="Picker Kotlin for Kotlin Multiplatform and Compose Multiplatform" />
 
   <br>
  
