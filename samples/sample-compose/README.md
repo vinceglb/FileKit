@@ -1,6 +1,6 @@
 # Sample Compose
 
-This sample project demonstrates the use of Kotlin Picker Compose.
+This sample project demonstrates the use of Picker Kotlin Compose.
 
 ## 🌱 Important parts
 
@@ -9,7 +9,7 @@ The important part of this sample is:
 
 ## 🚀 Running the sample project
 
-By openning KotlinPicker in Android Studio or IntelliJ IDEA, you will be able to run the sample project on all platforms.
+By openning PickerKotlin in Android Studio or IntelliJ IDEA, you will be able to run the sample project on all platforms.
 
 ```bash
 # Run on JVM

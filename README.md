@@ -181,7 +181,7 @@ You can find 2 sample projects in the `samples` directory:
 
 ## ✨ Behind the scene
 
-Kotlin Picker uses the native file picker API on each platform:
+Picker Kotlin uses the native file picker API on each platform:
 
 - On Android, it uses the `ActivityResultContract` API.
 - On iOS, it uses the `UIDocumentPickerViewController` API.
@@ -189,7 +189,7 @@ Kotlin Picker uses the native file picker API on each platform:
 - On JVM, it uses JNA to access the file system (Windows, macOS). Linux is supported but not tested.
 - On WASM / JS, it uses the `input` element with the `file` type.
 
-Also, Kotlin Picker uses the bear minimum of dependencies to be as lightweight as possible. 
+Also, Picker Kotlin uses the bear minimum of dependencies to be as lightweight as possible. 
 
 Picker Core uses the following libraries:
 - [KotlinX Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
@@ -202,7 +202,7 @@ Picker Compose uses the following libraries:
 
 ## 😎 Credits
 
-Kotlin Picker is inspired by the following libraries:
+Picker Kotlin is inspired by the following libraries:
 
 - [compose-multiplatform-file-picker](https://github.com/Wavesonics/compose-multiplatform-file-picker)
 - [peekaboo](https://github.com/onseok/peekaboo)

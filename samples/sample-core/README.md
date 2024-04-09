@@ -1,6 +1,6 @@
 # Sample Core
 
-This sample project demonstrates the use of Kotlin Picker Core in a shared viewModel targeting Android, JVM, WASM, JS, iOS Swift, macOS Swift and iOS Compose.
+This sample project demonstrates the use of Picker Kotlin Core in a shared viewModel targeting Android, JVM, WASM, JS, iOS Swift, macOS Swift and iOS Compose.
 
 ## 🌱 Important parts
 
@@ -13,7 +13,7 @@ The important parts of this sample are:
 
 ## 🚀 Running the sample project
 
-By openning KotlinPicker in Android Studio or IntelliJ IDEA, you will be able to run the sample project on all platforms.
+By openning PickerKotlin in Android Studio or IntelliJ IDEA, you will be able to run the sample project on all platforms.
 
 ```bash
 # Run on JVM
