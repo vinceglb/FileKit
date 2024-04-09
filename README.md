@@ -108,8 +108,6 @@ val directoryMode = PickerSelectionMode.Directory
 ### Picker Core
 
 It is possible to customize the picker dialog:
-- `title`: The title of the dialog.
-- `initialDirectory`: The initial directory to show.
 
 ```kotlin
 val files = Picker.pick(
@@ -121,7 +119,7 @@ val files = Picker.pick(
 
 ### Picker Compose
 
-The `rememberPickerLauncher` function allows you to create a `Launcher` that can be used to easily pick files from a Composable.
+The `rememberPickerLauncher` function allows you to create a launcher that can be used to easily pick files from a Composable.
 
 ```kotlin
 val mode = PickerSelectionMode.Directory
@@ -197,6 +195,16 @@ Picker Core uses the following libraries:
 Picker Compose uses the following libraries:
 - [Jetbrains Compose Runtime](https://github.com/JetBrains/compose-multiplatform)
 - Only Android: [AndroidX Activity Compose](https://developer.android.com/jetpack/androidx/releases/activity)
+
+## 😎 Credits
+
+Kotlin Picker is inspired by the following libraries:
+
+- [compose-multiplatform-file-picker](https://github.com/Wavesonics/compose-multiplatform-file-picker)
+- [peekaboo](https://github.com/onseok/peekaboo)
+- [jnafilechooser](https://github.com/steos/jnafilechooser)
+- [swing-jnafilechooser](https://github.com/DJ-Raven/swing-jnafilechooser)
+- [IntelliJ Community Foundation](https://github.com/JetBrains/intellij-community/blob/master/platform/util/ui/src/com/intellij/ui/mac/foundation/Foundation.java)
 
 ---
 
