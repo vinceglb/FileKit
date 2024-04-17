@@ -1,16 +1,16 @@
 [versions]
-agp = "8.3.1"
-android-activity-ktx = "1.8.2"
-android-compose = "1.8.2"
+agp = "8.3.2"
+android-activity-ktx = "1.9.0"
+android-compose = "1.9.0"
 coilCompose = "3.0.0-alpha06"
-compose-plugin = "1.6.1"
+compose-plugin = "1.6.2"
 jna = "5.14.0"
 kmmViewmodel = "1.0.0-ALPHA-20"
 koinCompose = "1.2.0-alpha3"
 kotlin = "1.9.23"
 kotlinx-coroutines = "1.8.0"
 mavenPublishVanniktech = "0.28.0"
-skie = "0.6.2"
+skie = "0.6.3"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "android-compose" }
