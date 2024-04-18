@@ -10,7 +10,7 @@ koinCompose = "1.2.0-alpha3"
 kotlin = "1.9.23"
 kotlinx-coroutines = "1.8.0"
 mavenPublishVanniktech = "0.28.0"
-skie = "0.6.3"
+skie = "0.6.4"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "android-compose" }
