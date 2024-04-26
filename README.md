@@ -71,10 +71,10 @@ repositories {
 
 dependencies {
     // Enables Picker without Compose dependencies
-    implementation("io.github.vinceglb:picker-core:0.2.0")
+    implementation("io.github.vinceglb:picker-core:0.2.1")
 
     // Enables Picker with rememberPickerLauncher Composable
-    implementation("io.github.vinceglb:picker-compose:0.2.0")
+    implementation("io.github.vinceglb:picker-compose:0.2.1")
 }
 ```
 
