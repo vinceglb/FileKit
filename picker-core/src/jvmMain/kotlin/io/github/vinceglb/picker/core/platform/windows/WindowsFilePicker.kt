@@ -7,7 +7,7 @@ import java.io.File
 internal class WindowsFilePicker : PlatformFilePicker {
 	private val fileChooser = JnaFileChooser()
 
-	override fun pickFile(
+	override suspend fun pickFile(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
 		title: String?
@@ -31,7 +31,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		return fileChooser.selectedFile
 	}
 
-	override fun pickFiles(
+	override suspend fun pickFiles(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
 		title: String?

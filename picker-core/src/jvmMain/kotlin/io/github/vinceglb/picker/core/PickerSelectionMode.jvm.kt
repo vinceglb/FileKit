@@ -1,5 +1,7 @@
 package io.github.vinceglb.picker.core
 
+import io.github.vinceglb.picker.core.platform.util.Platform
+import io.github.vinceglb.picker.core.platform.util.PlatformUtil
 import java.io.File
 
 public actual sealed class PickerSelectionMode<Out> {
@@ -30,7 +32,11 @@ public actual sealed class PickerSelectionMode<Out> {
 	}
 
     public actual data object Directory : PickerSelectionMode<PlatformDirectory>() {
-		public actual val isSupported: Boolean = true
+		public actual val isSupported: Boolean = when (PlatformUtil.current) {
+			Platform.MacOS -> true
+			Platform.Windows -> true
+			Platform.Linux -> false
+		}
 
 		override fun result(selection: SelectionResult): PlatformDirectory? {
 			return selection.files

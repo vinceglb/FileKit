@@ -186,7 +186,7 @@ Picker Kotlin uses the native file picker API on each platform:
 - On Android, it uses the `ActivityResultContract` API.
 - On iOS, it uses the `UIDocumentPickerViewController` API.
 - On macOS, it uses the `NSOpenPanel` API.
-- On JVM, it uses JNA to access the file system (Windows, macOS). Linux is supported but not tested.
+- On JVM, it uses JNA to access the file system on Windows and macOS and Awt FileDialog on Linux.
 - On WASM / JS, it uses the `input` element with the `file` type.
 
 Also, Picker Kotlin uses the bear minimum of dependencies to be as lightweight as possible. 
