@@ -6,7 +6,7 @@ import io.github.vinceglb.picker.core.platform.mac.foundation.ID
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
-	override fun pickFile(
+	override suspend fun pickFile(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
 		title: String?
@@ -19,7 +19,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
 		)
 	}
 
-	override fun pickFiles(
+	override suspend fun pickFiles(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
 		title: String?

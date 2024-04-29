@@ -1,5 +1,6 @@
 package io.github.vinceglb.picker.core.platform
 
+import io.github.vinceglb.picker.core.platform.linux.LinuxFilePicker
 import io.github.vinceglb.picker.core.platform.mac.MacOSFilePicker
 import io.github.vinceglb.picker.core.platform.util.Platform
 import io.github.vinceglb.picker.core.platform.util.PlatformUtil
@@ -7,13 +8,13 @@ import io.github.vinceglb.picker.core.platform.windows.WindowsFilePicker
 import java.io.File
 
 internal interface PlatformFilePicker {
-	fun pickFile(
+	suspend fun pickFile(
 		initialDirectory: String? = null,
 		fileExtensions: List<String>? = null,
 		title: String? = null,
 	): File?
 
-	fun pickFiles(
+	suspend fun pickFiles(
 		initialDirectory: String? = null,
 		fileExtensions: List<String>? = null,
 		title: String? = null,
@@ -31,7 +32,7 @@ internal interface PlatformFilePicker {
 			return when (PlatformUtil.current) {
 				Platform.MacOS -> MacOSFilePicker()
 				Platform.Windows -> WindowsFilePicker()
-				Platform.Linux -> WindowsFilePicker()		// TODO: WindowsFilePicker is compatible with other platforms but we need to implement native Linux file picker
+				Platform.Linux -> LinuxFilePicker()
 			}
 		}
 	}

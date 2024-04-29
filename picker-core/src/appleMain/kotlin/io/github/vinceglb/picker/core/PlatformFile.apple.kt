@@ -13,31 +13,34 @@ import platform.Foundation.lastPathComponent
 import platform.posix.memcpy
 
 public actual data class PlatformFile(
-	val nsUrl: NSURL,
+    val nsUrl: NSURL,
 ) {
-	public actual val name: String =
-		nsUrl.lastPathComponent ?: ""
+    public actual val name: String =
+        nsUrl.lastPathComponent ?: ""
 
-	public actual val path: String? =
-		nsUrl.absoluteString
+    public actual val path: String? =
+        nsUrl.absoluteString
 
-	@OptIn(ExperimentalForeignApi::class)
-	public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.IO) {
-		// Get the NSData from the NSURL
-		val nsData = NSData.dataWithContentsOfURL(nsUrl)
-			?: throw IllegalStateException("Failed to read data from $nsUrl")
+    @OptIn(ExperimentalForeignApi::class)
+    public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.IO) {
+        // Get the NSData from the NSURL
+        val nsData = NSData.dataWithContentsOfURL(nsUrl)
+            ?: throw IllegalStateException("Failed to read data from $nsUrl")
 
-		ByteArray(nsData.length.toInt()).apply {
-			usePinned {
-				memcpy(it.addressOf(0), nsData.bytes, nsData.length)
-			}
-		}
-	}
+        val byteArraySize: Int =
+            if (nsData.length > Int.MAX_VALUE.toUInt()) Int.MAX_VALUE else nsData.length.toInt()
+
+        ByteArray(byteArraySize).apply {
+            usePinned {
+                memcpy(it.addressOf(0), nsData.bytes, nsData.length)
+            }
+        }
+    }
 }
 
 public actual data class PlatformDirectory(
-	val nsUrl: NSURL,
+    val nsUrl: NSURL,
 ) {
-	public actual val path: String? =
-		nsUrl.absoluteString
+    public actual val path: String? =
+        nsUrl.absoluteString
 }
