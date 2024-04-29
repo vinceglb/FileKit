@@ -56,7 +56,6 @@ public actual object Picker {
     public actual suspend fun save(
         bytes: ByteArray,
         fileName: String?,
-        fileExtension: String?,
         initialDirectory: String?,
     ): PlatformFile? = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
@@ -73,13 +72,13 @@ public actual object Picker {
             // Create a blob
             val file = File(
                 fileBits = jsArray,
-                fileName = "$fileName.$fileExtension"
+                fileName = fileName ?: "file"
             )
 
             // Create a element
             val a = document.createElement("a") as HTMLAnchorElement
             a.href = URL.createObjectURL(file)
-            a.download = "$fileName.$fileExtension"
+            a.download = fileName ?: "file"
 
             a.click()
 
