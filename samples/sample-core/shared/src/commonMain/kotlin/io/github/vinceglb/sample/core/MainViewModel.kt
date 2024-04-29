@@ -61,18 +61,18 @@ class MainViewModel : KMMViewModel() {
 		}
 	}
 
-	fun saveFile() = executeWithLoading {
+	fun saveFile(file: PlatformFile) = executeWithLoading {
 		// Save a file
-		val file = Picker.save(
-			bytes = uiState.value.files.first().readBytes(), // "Hello, world!".encodeToByteArray(),
-			fileName = "ez-image",
-			fileExtension = "jpg",
+		val newFile = Picker.save(
+			bytes = file.readBytes(),
+			fileName = file.name,
 		)
 
 		// Add file to the state
-//		if (file != null) {
-			println("Saved file: $file")
-//		}
+		if (newFile != null) {
+			val newFiles = _uiState.value.files + newFile
+			_uiState.update { it.copy(files = newFiles) }
+		}
 	}
 
 	private fun executeWithLoading(block: suspend () -> Unit) {

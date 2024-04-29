@@ -57,10 +57,6 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 Text("Multiple image picker")
             }
 
-            Button(onClick = viewModel::saveFile) {
-                Text("Save file")
-            }
-
             Button(
                 onClick = viewModel::pickDirectory,
                 enabled = PickerSelectionMode.Directory.isSupported
@@ -86,7 +82,7 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(uiState.files.toList()) {
-                    PhotoItem(it)
+                    PhotoItem(it, viewModel::saveFile)
                 }
             }
         }
