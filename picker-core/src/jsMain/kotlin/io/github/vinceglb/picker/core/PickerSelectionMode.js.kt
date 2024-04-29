@@ -3,11 +3,11 @@ package io.github.vinceglb.picker.core
 import org.w3c.files.File
 
 public actual sealed class PickerSelectionMode<Out> {
-    public actual class SelectionResult(
-        public val files: List<File>?
+    internal actual class SelectionResult(
+        val files: List<File>?
     )
 
-    public actual abstract fun result(selection: SelectionResult): Out?
+    internal actual abstract fun result(selection: SelectionResult): Out?
 
     public actual class SingleFile actual constructor(
         public val extensions: List<String>?

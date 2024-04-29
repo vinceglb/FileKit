@@ -57,6 +57,10 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 Text("Multiple image picker")
             }
 
+            Button(onClick = viewModel::saveFile) {
+                Text("Save file")
+            }
+
             Button(
                 onClick = viewModel::pickDirectory,
                 enabled = PickerSelectionMode.Directory.isSupported

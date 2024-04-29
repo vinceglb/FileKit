@@ -61,6 +61,20 @@ class MainViewModel : KMMViewModel() {
 		}
 	}
 
+	fun saveFile() = executeWithLoading {
+		// Save a file
+		val file = Picker.save(
+			bytes = uiState.value.files.first().readBytes(), // "Hello, world!".encodeToByteArray(),
+			fileName = "ez-image",
+			fileExtension = "jpg",
+		)
+
+		// Add file to the state
+//		if (file != null) {
+			println("Saved file: $file")
+//		}
+	}
+
 	private fun executeWithLoading(block: suspend () -> Unit) {
 		viewModelScope.coroutineScope.launch {
 			_uiState.update { it.copy(loading = true) }

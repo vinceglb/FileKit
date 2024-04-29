@@ -3,8 +3,11 @@ package io.github.vinceglb.picker.core
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.asList
+import org.w3c.dom.url.URL
+import org.w3c.files.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -24,8 +27,6 @@ public actual object Picker {
 
             // Setup the change listener
             input.onchange = { event ->
-                print("onchange")
-
                 try {
                     // Get the selected files
                     val files = event.target
@@ -47,6 +48,31 @@ public actual object Picker {
 
             // Trigger the file picker
             input.click()
+        }
+    }
+
+    public actual suspend fun save(
+        bytes: ByteArray,
+        fileName: String?,
+        fileExtension: String?,
+        initialDirectory: String?,
+    ): PlatformFile? = withContext(Dispatchers.Default) {
+        suspendCoroutine { continuation ->
+            // Create a blob
+            val file = File(
+                fileBits = bytes.toTypedArray(),
+                fileName = "$fileName.$fileExtension"
+            )
+
+            // Create a element
+            val a = document.createElement("a") as HTMLAnchorElement
+            a.href = URL.createObjectURL(file)
+            a.download = "$fileName.$fileExtension"
+
+            a.click()
+
+            val platformFile = PlatformFile(file)
+            continuation.resume(platformFile)
         }
     }
 
