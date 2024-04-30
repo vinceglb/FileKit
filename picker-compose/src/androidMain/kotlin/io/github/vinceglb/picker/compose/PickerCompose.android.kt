@@ -45,7 +45,7 @@ public actual fun <Out> rememberPickerLauncher(
 
             remember {
                 // Get mime types
-                val mimeTypes = Picker.getMimeType(currentModeValue.extensions)
+                val mimeTypes = Picker.getMimeTypes(currentModeValue.extensions)
 
                 // Return Picker launcher
                 PickerResultLauncher { launcher.launch(mimeTypes) }
@@ -65,7 +65,7 @@ public actual fun <Out> rememberPickerLauncher(
 
             remember {
                 // Get mime types
-                val mimeTypes = Picker.getMimeType(currentModeValue.extensions)
+                val mimeTypes = Picker.getMimeTypes(currentModeValue.extensions)
 
                 // Return Picker launcher
                 PickerResultLauncher { launcher.launch(mimeTypes) }

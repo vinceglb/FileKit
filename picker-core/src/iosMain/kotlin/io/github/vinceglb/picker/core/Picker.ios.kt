@@ -70,7 +70,6 @@ public actual object Picker {
         pickerDelegate = PickerDelegate(
             onFilesPicked = { urls ->
                 val file = urls.firstOrNull()?.let { PlatformFile(it) }
-                println("Picker save: ${urls.size} files picked")
                 continuation.resume(file)
             },
             onPickerCancelled = {
