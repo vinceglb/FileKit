@@ -9,7 +9,7 @@ import kotlin.coroutines.resume
 internal object AwtFileSaver {
     suspend fun saveFile(
         bytes: ByteArray,
-        fileName: String?,
+        fileName: String,
         initialDirectory: String?,
     ): PlatformFile? = suspendCancellableCoroutine { continuation ->
         val parent: Frame? = null

@@ -1,16 +1,10 @@
 package io.github.vinceglb.picker.core
 
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.refTo
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
 import platform.AppKit.allowedFileTypes
-import platform.Foundation.NSData
 import platform.Foundation.NSURL
-import platform.Foundation.dataWithBytes
-import platform.Foundation.writeToURL
 
 public actual object Picker {
     public actual suspend fun <Out> pick(
@@ -38,10 +32,9 @@ public actual object Picker {
         return mode.result(selection)
     }
 
-    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String?,
+        fileName: String,
         initialDirectory: String?
     ): PlatformFile? {
         // Create an NSSavePanel
@@ -51,10 +44,8 @@ public actual object Picker {
         initialDirectory?.let { nsSavePanel.directoryURL = NSURL.fileURLWithPath(it) }
 
         // Set the file name
-        fileName?.let {
-            nsSavePanel.nameFieldStringValue = it
-            nsSavePanel.allowedFileTypes = listOf(it.substringAfterLast('.'))
-        }
+        nsSavePanel.nameFieldStringValue = fileName
+        nsSavePanel.allowedFileTypes = listOf(fileName.substringAfterLast('.'))
 
         // Accept the creation of directories
         nsSavePanel.canCreateDirectories = true
@@ -69,16 +60,8 @@ public actual object Picker {
 
         // Return the result
         val platformFile = nsSavePanel.URL?.let { nsUrl ->
-            // Get the NSData from the ByteArray
-            val nsData = memScoped {
-                NSData.dataWithBytes(
-                    bytes = bytes.refTo(0).getPointer(this),
-                    length = bytes.size.toULong()
-                )
-            }
-
-            // Write the NSData to the NSURL
-            nsData.writeToURL(nsUrl, true)
+            // Write the bytes to the file
+            writeBytesArrayToNsUrl(bytes, nsUrl)
 
             // Create the PlatformFile
             PlatformFile(nsUrl)

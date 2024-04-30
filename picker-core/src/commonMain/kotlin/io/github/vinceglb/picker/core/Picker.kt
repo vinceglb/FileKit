@@ -9,7 +9,7 @@ public expect object Picker {
 
 	public suspend fun save(
 		bytes: ByteArray,
-		fileName: String? = null,
+		fileName: String,
 		initialDirectory: String? = null,
 	): PlatformFile?
 }
