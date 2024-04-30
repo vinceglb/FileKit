@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
+import io.github.vinceglb.picker.core.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +37,38 @@ public actual fun <Out> rememberPickerLauncher(
                     mode = currentMode,
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
+                )
+                currentOnResult(result)
+            }
+        }
+    }
+
+    return returnedLauncher
+}
+
+
+@Composable
+public actual fun rememberSaverLauncher(
+    fileExtension: String,
+    onResult: (PlatformFile?) -> Unit
+): SaverResultLauncher {
+    // Coroutine
+    val coroutineScope = rememberCoroutineScope()
+
+    // Updated state
+    val currentOnResult by rememberUpdatedState(onResult)
+
+    // Picker
+    val picker = remember { Picker }
+
+    // Picker launcher
+    val returnedLauncher = remember {
+        SaverResultLauncher { bytes, fileName, initialDirectory ->
+            coroutineScope.launch {
+                val result = picker.save(
+                    bytes = bytes,
+                    fileName = fileName,
+                    initialDirectory = initialDirectory,
                 )
                 currentOnResult(result)
             }

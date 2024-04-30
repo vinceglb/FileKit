@@ -2,13 +2,16 @@ package io.github.vinceglb.picker.compose
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.CreateDocument
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocument
 import androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree
 import androidx.activity.result.contract.ActivityResultContracts.OpenMultipleDocuments
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
@@ -93,4 +96,50 @@ public actual fun <Out> rememberPickerLauncher(
     }
 
     return launcher
+}
+
+@Composable
+public actual fun rememberSaverLauncher(
+    fileExtension: String,
+    onResult: (PlatformFile?) -> Unit
+): SaverResultLauncher {
+    // Get context
+    val context = LocalContext.current
+
+    // Keep track of the current onResult listener
+    val currentOnResult by rememberUpdatedState(onResult)
+
+    // Get MIME type
+    val mimeType = remember(fileExtension) {
+        Picker.getMimeType(fileExtension)
+    }
+
+    var callback: ((Uri?) -> PlatformFile?)? by remember {
+        mutableStateOf(null)
+    }
+
+    // Create Android launcher
+    val launcher = rememberLauncherForActivityResult(CreateDocument(mimeType)) { uri ->
+        val platformFile = callback?.invoke(uri)
+        callback = null
+        currentOnResult(platformFile)
+    }
+
+    // Return Picker launcher
+    return remember {
+        SaverResultLauncher { bytes, fileName, _ ->
+            callback = { uri ->
+                uri?.let {
+                    // Write the bytes to the file
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        output.write(bytes)
+                    }
+
+                    // Return the file
+                    PlatformFile(uri, context)
+                }
+            }
+            launcher.launch(fileName)
+        }
+    }
 }

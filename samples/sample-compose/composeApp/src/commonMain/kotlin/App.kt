@@ -14,14 +14,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.picker.compose.rememberPickerLauncher
+import io.github.vinceglb.picker.compose.rememberSaverLauncher
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -57,6 +60,18 @@ private fun SampleApp() {
         initialDirectory = directory?.path,
         onResult = { dir -> directory = dir }
     )
+
+    val saver = rememberSaverLauncher(
+        fileExtension = "jpg",
+        onResult = { file -> file?.let { files += it } }
+    )
+
+    val scope = rememberCoroutineScope()
+    fun saveFile(file: PlatformFile) {
+        scope.launch {
+            saver.launch(file.readBytes(), file.name, directory?.path)
+        }
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -94,7 +109,7 @@ private fun SampleApp() {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(files.toList()) {
-                    PhotoItem(it)
+                    PhotoItem(file = it, onSaveFile = ::saveFile)
                 }
             }
         }

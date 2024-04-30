@@ -7,3 +7,19 @@ public class PickerResultLauncher(
         onLaunch()
     }
 }
+
+public class SaverResultLauncher(
+    private val onLaunch: (
+        bytes: ByteArray,
+        fileName: String,
+        initialDirectory: String?,
+    ) -> Unit,
+) {
+    public fun launch(
+        bytes: ByteArray,
+        fileName: String,
+        initialDirectory: String? = null,
+    ) {
+        onLaunch(bytes, fileName, initialDirectory)
+    }
+}

@@ -3,6 +3,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -21,7 +27,10 @@ import coil3.compose.AsyncImage
 import io.github.vinceglb.picker.core.PlatformFile
 
 @Composable
-fun PhotoItem(file: PlatformFile) {
+fun PhotoItem(
+    file: PlatformFile,
+    onSaveFile: (PlatformFile) -> Unit,
+) {
     var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
     var showName by remember { mutableStateOf(false) }
 
@@ -45,6 +54,24 @@ fun PhotoItem(file: PlatformFile) {
                         .fillMaxSize()
 
                 )
+            }
+
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+            ) {
+                IconButton(
+                    onClick = { onSaveFile(file) },
+                    modifier = Modifier.size(36.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Check,
+                        modifier = Modifier.size(22.dp),
+                        contentDescription = "Save",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             AnimatedVisibility(

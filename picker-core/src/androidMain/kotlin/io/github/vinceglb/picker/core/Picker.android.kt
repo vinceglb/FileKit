@@ -122,7 +122,7 @@ public actual object Picker {
             ?: arrayOf("*/*")
     }
 
-    private fun getMimeType(fileExtension: String): String {
+    public fun getMimeType(fileExtension: String): String {
         val mimeTypeMap = MimeTypeMap.getSingleton()
         return mimeTypeMap.getMimeTypeFromExtension(fileExtension) ?: "*/*"
     }
