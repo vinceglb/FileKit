@@ -1,4 +1,4 @@
-package io.github.vinceglb.picker.core.platform.linux
+package io.github.vinceglb.picker.core.platform.awt
 
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.platform.PlatformFilePicker
@@ -9,7 +9,7 @@ import java.io.File
 import java.io.FilenameFilter
 import kotlin.coroutines.resume
 
-internal class LinuxFilePicker : PlatformFilePicker {
+internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun pickFile(
         initialDirectory: String?,
         fileExtensions: List<String>?,

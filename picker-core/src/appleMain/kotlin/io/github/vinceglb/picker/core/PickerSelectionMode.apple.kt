@@ -3,11 +3,11 @@ package io.github.vinceglb.picker.core
 import platform.Foundation.NSURL
 
 public actual sealed class PickerSelectionMode<Out> {
-	public actual class SelectionResult(
-		public val nsUrls: List<NSURL>
+	internal actual class SelectionResult(
+		val nsUrls: List<NSURL>
 	)
 
-	public actual abstract fun result(selection: SelectionResult): Out?
+	internal actual abstract fun result(selection: SelectionResult): Out?
 
 	public actual class SingleFile actual constructor(
 		public val extensions: List<String>?

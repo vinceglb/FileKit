@@ -44,6 +44,7 @@ struct ContentView: View {
             
             List(files, id: \.nsUrl) { file in
                 Text(file.name)
+                    .onTapGesture { viewModel.saveFile(file: file) }
             }
         }
         .padding()

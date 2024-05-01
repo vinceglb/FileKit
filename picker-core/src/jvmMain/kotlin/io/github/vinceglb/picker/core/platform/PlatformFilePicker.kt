@@ -1,6 +1,6 @@
 package io.github.vinceglb.picker.core.platform
 
-import io.github.vinceglb.picker.core.platform.linux.LinuxFilePicker
+import io.github.vinceglb.picker.core.platform.awt.AwtFilePicker
 import io.github.vinceglb.picker.core.platform.mac.MacOSFilePicker
 import io.github.vinceglb.picker.core.platform.util.Platform
 import io.github.vinceglb.picker.core.platform.util.PlatformUtil
@@ -32,7 +32,7 @@ internal interface PlatformFilePicker {
 			return when (PlatformUtil.current) {
 				Platform.MacOS -> MacOSFilePicker()
 				Platform.Windows -> WindowsFilePicker()
-				Platform.Linux -> LinuxFilePicker()
+				Platform.Linux -> AwtFilePicker()
 			}
 		}
 	}

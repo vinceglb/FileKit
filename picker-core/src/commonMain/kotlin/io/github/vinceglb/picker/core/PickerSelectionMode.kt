@@ -1,9 +1,9 @@
 package io.github.vinceglb.picker.core
 
 public expect sealed class PickerSelectionMode<Out> {
-	public class SelectionResult
+	internal class SelectionResult
 
-	public abstract fun result(selection: SelectionResult): Out?
+	internal abstract fun result(selection: SelectionResult): Out?
 
 	public class SingleFile(
 		extensions: List<String>? = null

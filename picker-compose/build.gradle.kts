@@ -57,6 +57,9 @@ kotlin {
             // Compose
             implementation(compose.runtime)
 
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
+
             // Picker Core
             api(projects.pickerCore)
         }
@@ -67,10 +70,6 @@ kotlin {
 
         val nonAndroidMain by creating {
             dependsOn(commonMain.get())
-
-            dependencies {
-                implementation(libs.kotlinx.coroutines.core)
-            }
         }
 
         nativeMain.get().dependsOn(nonAndroidMain)

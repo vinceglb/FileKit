@@ -82,7 +82,7 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(uiState.files.toList()) {
-                    PhotoItem(it)
+                    PhotoItem(it, viewModel::saveFile)
                 }
             }
         }
