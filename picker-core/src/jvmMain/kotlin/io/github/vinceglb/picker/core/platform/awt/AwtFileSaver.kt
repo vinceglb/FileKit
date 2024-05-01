@@ -9,7 +9,8 @@ import kotlin.coroutines.resume
 internal object AwtFileSaver {
     suspend fun saveFile(
         bytes: ByteArray,
-        fileName: String,
+        baseName: String,
+        extension: String,
         initialDirectory: String?,
     ): PlatformFile? = suspendCancellableCoroutine { continuation ->
         val parent: Frame? = null
@@ -30,7 +31,7 @@ internal object AwtFileSaver {
         dialog.directory = initialDirectory
 
         // Set file name
-        dialog.file = fileName
+        dialog.file = "$baseName.$extension"
 
         // Show the dialog
         dialog.isVisible = true

@@ -41,12 +41,14 @@ public actual object Picker {
 
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String,
-        initialDirectory: String?
+        baseName: String,
+        extension: String,
+        initialDirectory: String?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
         AwtFileSaver.saveFile(
             bytes = bytes,
-            fileName = fileName,
+            baseName = baseName,
+            extension = extension,
             initialDirectory = initialDirectory
         )
     }

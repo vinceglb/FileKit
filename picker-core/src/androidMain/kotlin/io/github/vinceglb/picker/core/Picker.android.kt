@@ -77,7 +77,8 @@ public actual object Picker {
 
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String,
+        baseName: String,
+        extension: String,
         initialDirectory: String?
     ): PlatformFile? = withContext(Dispatchers.IO) {
         suspendCoroutine { continuation ->
@@ -92,7 +93,7 @@ public actual object Picker {
                 ?: throw PickerNotInitializedException()
 
             // Get MIME type
-            val mimeType = getMimeType(fileName.substringAfterLast('.'))
+            val mimeType = getMimeType(extension)
 
             // Create Launcher
             val contract = ActivityResultContracts.CreateDocument(mimeType)
@@ -109,7 +110,7 @@ public actual object Picker {
             }
 
             // Launch
-            launcher.launch(fileName)
+            launcher.launch("$baseName.$extension")
         }
     }
 

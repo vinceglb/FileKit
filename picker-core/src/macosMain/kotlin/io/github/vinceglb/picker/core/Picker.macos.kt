@@ -34,8 +34,9 @@ public actual object Picker {
 
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String,
-        initialDirectory: String?
+        baseName: String,
+        extension: String,
+        initialDirectory: String?,
     ): PlatformFile? {
         // Create an NSSavePanel
         val nsSavePanel = NSSavePanel()
@@ -44,8 +45,8 @@ public actual object Picker {
         initialDirectory?.let { nsSavePanel.directoryURL = NSURL.fileURLWithPath(it) }
 
         // Set the file name
-        nsSavePanel.nameFieldStringValue = fileName
-        nsSavePanel.allowedFileTypes = listOf(fileName.substringAfterLast('.'))
+        nsSavePanel.nameFieldStringValue = "$baseName.$extension"
+        nsSavePanel.allowedFileTypes = listOf(extension)
 
         // Accept the creation of directories
         nsSavePanel.canCreateDirectories = true

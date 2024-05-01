@@ -55,36 +55,36 @@ public actual object Picker {
 
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String,
+        baseName: String,
+        extension: String,
         initialDirectory: String?,
     ): PlatformFile? = withContext(Dispatchers.Default) {
-        suspendCoroutine { continuation ->
-            // Create a byte array
-            val array = Uint8Array(bytes.size)
-            for (i in bytes.indices) {
-                array[i] = bytes[i]
-            }
-
-            // Create a JS array
-            val jsArray = JsArray<JsAny?>()
-            jsArray[0] = array
-
-            // Create a blob
-            val file = File(
-                fileBits = jsArray,
-                fileName = fileName
-            )
-
-            // Create a element
-            val a = document.createElement("a") as HTMLAnchorElement
-            a.href = URL.createObjectURL(file)
-            a.download = fileName
-
-            a.click()
-
-            val platformFile = PlatformFile(file)
-            continuation.resume(platformFile)
+        // Create a byte array
+        val array = Uint8Array(bytes.size)
+        for (i in bytes.indices) {
+            array[i] = bytes[i]
         }
+
+        // Create a JS array
+        val jsArray = JsArray<JsAny?>()
+        jsArray[0] = array
+
+        // Create a blob
+        val file = File(
+            fileBits = jsArray,
+            fileName = "$baseName.$extension",
+        )
+
+        // Create a element
+        val a = document.createElement("a") as HTMLAnchorElement
+        a.href = URL.createObjectURL(file)
+        a.download = "$baseName.$extension"
+
+        // Trigger the download
+        a.click()
+
+        // Return the file
+        PlatformFile(file)
     }
 
     private fun HTMLInputElement.configure(

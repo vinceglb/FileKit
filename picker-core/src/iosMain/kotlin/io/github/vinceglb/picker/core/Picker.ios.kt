@@ -63,8 +63,9 @@ public actual object Picker {
 
     public actual suspend fun save(
         bytes: ByteArray,
-        fileName: String,
-        initialDirectory: String?
+        baseName: String,
+        extension: String,
+        initialDirectory: String?,
     ): PlatformFile? = suspendCoroutine { continuation ->
         // Create a picker delegate
         pickerDelegate = PickerDelegate(
@@ -76,6 +77,8 @@ public actual object Picker {
                 continuation.resume(null)
             }
         )
+
+        val fileName = "$baseName.$extension"
 
         // Get the fileManager
         val fileManager = NSFileManager.defaultManager
