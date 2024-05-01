@@ -24,6 +24,8 @@ import io.github.vinceglb.picker.compose.rememberSaverLauncher
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
+import io.github.vinceglb.picker.core.baseName
+import io.github.vinceglb.picker.core.extension
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -62,14 +64,18 @@ private fun SampleApp() {
     )
 
     val saver = rememberSaverLauncher(
-        fileExtension = "jpg",
         onResult = { file -> file?.let { files += it } }
     )
 
     val scope = rememberCoroutineScope()
     fun saveFile(file: PlatformFile) {
         scope.launch {
-            saver.launch(file.readBytes(), file.name, directory?.path)
+            saver.launch(
+                bytes = file.readBytes(),
+                baseName = file.baseName,
+                extension = file.extension,
+                initialDirectory = directory?.path
+            )
         }
     }
 
