@@ -11,15 +11,17 @@ public class PickerResultLauncher(
 public class SaverResultLauncher(
     private val onLaunch: (
         bytes: ByteArray,
-        fileName: String,
+        baseName: String,
+        extension: String,
         initialDirectory: String?,
     ) -> Unit,
 ) {
     public fun launch(
         bytes: ByteArray,
-        fileName: String,
+        baseName: String = "file",
+        extension: String,
         initialDirectory: String? = null,
     ) {
-        onLaunch(bytes, fileName, initialDirectory)
+        onLaunch(bytes, baseName, extension, initialDirectory)
     }
 }
