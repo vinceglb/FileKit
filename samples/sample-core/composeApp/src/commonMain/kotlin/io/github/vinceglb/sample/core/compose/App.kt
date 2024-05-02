@@ -67,7 +67,7 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
 
             Button(
                 onClick = viewModel::pickDirectory,
-                enabled = Picker.isPickDirectorySupported(),
+                enabled = Picker.isDirectoryPickerSupported(),
             ) {
                 Text("Directory picker")
             }
@@ -76,7 +76,7 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 CircularProgressIndicator()
             }
 
-            if (Picker.isPickDirectorySupported()) {
+            if (Picker.isDirectoryPickerSupported()) {
                 Text("Selected directory: ${uiState.directory?.path ?: "None"}")
             } else {
                 Text("Directory picker is not supported")

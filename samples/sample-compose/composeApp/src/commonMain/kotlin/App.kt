@@ -19,9 +19,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.picker.compose.rememberPickerLauncher
-import io.github.vinceglb.picker.compose.rememberSaverLauncher
+import io.github.vinceglb.picker.compose.rememberDirectoryPickerLauncher
+import io.github.vinceglb.picker.compose.rememberFilePickerLauncher
+import io.github.vinceglb.picker.compose.rememberFileSaverLauncher
+import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
+import io.github.vinceglb.picker.core.PickerSelectionType
 import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
 import io.github.vinceglb.picker.core.baseName
@@ -42,30 +45,45 @@ private fun SampleApp() {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
     var directory: PlatformDirectory? by remember { mutableStateOf(null) }
 
-    val singleFilePicker = rememberPickerLauncher(
-        mode = PickerSelectionMode.SingleFile(extensions = listOf("png", "jpg", "jpeg")),
+    val singleFilePicker = rememberFilePickerLauncher(
+        type = PickerSelectionType.Image,
         title = "Single file picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
     )
 
-    val multipleFilesPicker = rememberPickerLauncher(
-        mode = PickerSelectionMode.MultipleFiles(extensions = listOf("png", "jpg", "jpeg")),
+    val multipleFilesPicker = rememberFilePickerLauncher(
+        type = PickerSelectionType.Image,
+        mode = PickerSelectionMode.Multiple,
         title = "Multiple files picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
     )
 
-    val directoryPicker = rememberPickerLauncher(
-        mode = PickerSelectionMode.Directory,
+    val filePicker = rememberFilePickerLauncher(
+        type = PickerSelectionType.File(listOf("png")),
+        title = "Single file picker, only png",
+        initialDirectory = directory?.path,
+        onResult = { file -> file?.let { files += it } }
+    )
+
+    val filesPicker = rememberFilePickerLauncher(
+        type = PickerSelectionType.File(listOf("png")),
+        mode = PickerSelectionMode.Multiple,
+        title = "Multiple files picker, only png",
+        initialDirectory = directory?.path,
+        onResult = { file -> file?.let { files += it } }
+    )
+
+    val directoryPicker = rememberDirectoryPickerLauncher(
         title = "Directory picker",
         initialDirectory = directory?.path,
         onResult = { dir -> directory = dir }
     )
 
-    val saver = rememberSaverLauncher(
-        onResult = { file -> file?.let { files += it } }
-    )
+    val saver = rememberFileSaverLauncher { file ->
+        file?.let { files += it }
+    }
 
     val scope = rememberCoroutineScope()
     fun saveFile(file: PlatformFile) {
@@ -94,14 +112,22 @@ private fun SampleApp() {
                 Text("Multiple files picker")
             }
 
+            Button(onClick = { filePicker.launch() }) {
+                Text("Single file picker, only png")
+            }
+
+            Button(onClick = { filesPicker.launch() }){
+                Text("Multiple files picker, only png")
+            }
+
             Button(
                 onClick = { directoryPicker.launch() },
-                enabled = PickerSelectionMode.Directory.isSupported
+                enabled = Picker.isDirectoryPickerSupported()
             ) {
                 Text("Directory picker")
             }
 
-            if (PickerSelectionMode.Directory.isSupported) {
+            if (Picker.isDirectoryPickerSupported()) {
                 Text("Selected directory: ${directory?.path ?: "None"}")
             } else {
                 Text("Directory picker is not supported")
