@@ -284,9 +284,9 @@ internal class JnaFileChooser
 	}
 
 	/**
-	 * set a save button name
+	 * set a saveFile button name
 	 *
-	 * @param save button text
+	 * @param saveFile button text
 	 */
 	fun setSaveButtonText(buttonText: String) {
 		this.saveButtonText = buttonText

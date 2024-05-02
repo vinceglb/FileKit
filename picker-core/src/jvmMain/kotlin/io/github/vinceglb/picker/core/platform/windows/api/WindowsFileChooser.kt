@@ -180,7 +180,7 @@ internal class WindowsFileChooser {
 	 * shows the dialog
 	 *
 	 * @param parent the parent window
-	 * @param open whether to show the open dialog, if false save dialog is shown
+	 * @param open whether to show the open dialog, if false saveFile dialog is shown
 	 *
 	 * @return true if the user clicked ok, false otherwise
 	 */

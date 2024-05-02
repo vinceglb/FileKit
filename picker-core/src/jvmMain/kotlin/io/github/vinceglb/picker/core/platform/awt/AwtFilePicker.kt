@@ -1,6 +1,5 @@
 package io.github.vinceglb.picker.core.platform.awt
 
-import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.platform.PlatformFilePicker
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.FileDialog
@@ -15,54 +14,48 @@ internal class AwtFilePicker : PlatformFilePicker {
         fileExtensions: List<String>?,
         title: String?
     ): File? = callAwtPicker(
-        mode = PickerSelectionMode.SingleFile(fileExtensions),
         title = title,
+        isMultipleMode = false,
+        fileExtensions = fileExtensions,
         initialDirectory = initialDirectory
-    )?.file
+    )?.firstOrNull()
 
     override suspend fun pickFiles(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?
     ): List<File>? = callAwtPicker(
-        mode = PickerSelectionMode.MultipleFiles(fileExtensions),
         title = title,
+        isMultipleMode = true,
+        fileExtensions = fileExtensions,
         initialDirectory = initialDirectory
-    )?.map { it.file }
+    )
 
     override fun pickDirectory(initialDirectory: String?, title: String?): File? {
         throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
     }
 
-    private suspend fun <T> callAwtPicker(
-        mode: PickerSelectionMode<T>,
+    private suspend fun callAwtPicker(
         title: String?,
+        isMultipleMode: Boolean,
         initialDirectory: String?,
-    ): T? = suspendCancellableCoroutine { continuation ->
+        fileExtensions: List<String>?,
+    ): List<File>? = suspendCancellableCoroutine { continuation ->
         val parent: Frame? = null
         val dialog = object : FileDialog(parent, title, LOAD) {
             override fun setVisible(value: Boolean) {
                 super.setVisible(value)
-                val files: List<File>? = files?.toList()
-                val selection = PickerSelectionMode.SelectionResult(files)
-                continuation.resume(mode.result(selection))
+                val result = files?.toList()
+                continuation.resume(result)
             }
         }
 
         // Set multiple mode
-        dialog.isMultipleMode = mode is PickerSelectionMode.MultipleFiles
+        dialog.isMultipleMode = isMultipleMode
 
         // Set mime types
-        dialog.filenameFilter = FilenameFilter { dir, name ->
-            when (mode) {
-                is PickerSelectionMode.SingleFile -> mode.extensions?.any { name.endsWith(it) }
-                    ?: true
-
-                is PickerSelectionMode.MultipleFiles -> mode.extensions?.any { name.endsWith(it) }
-                    ?: true
-
-                else -> throw IllegalArgumentException("Unsupported mode: $mode")
-            }
+        dialog.filenameFilter = FilenameFilter { _, name ->
+            fileExtensions?.any { name.endsWith(it) } ?: true
         }
 
         // Set initial directory
