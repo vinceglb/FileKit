@@ -63,7 +63,7 @@ public actual object Picker {
         initialDirectory = initialDirectory
     )?.firstOrNull()?.let { PlatformDirectory(it) }
 
-    public actual fun isPickDirectorySupported(): Boolean = true
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
         bytes: ByteArray,

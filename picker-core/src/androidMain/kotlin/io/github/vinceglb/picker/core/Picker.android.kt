@@ -20,8 +20,7 @@ import kotlin.coroutines.suspendCoroutine
 
 public actual object Picker {
     private var registry: ActivityResultRegistry? = null
-    internal var context: WeakReference<Context?> = WeakReference(null)
-        private set
+    private var context: WeakReference<Context?> = WeakReference(null)
 
     public fun init(activity: ComponentActivity) {
         context = WeakReference(activity.applicationContext)
@@ -134,7 +133,7 @@ public actual object Picker {
         }
     }
 
-    public actual fun isPickDirectorySupported(): Boolean = true
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
         bytes: ByteArray,

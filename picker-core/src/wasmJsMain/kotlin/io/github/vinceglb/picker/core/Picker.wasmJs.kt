@@ -76,7 +76,7 @@ public actual object Picker {
         throw NotImplementedError("Directory selection is not supported on the web")
     }
 
-    public actual fun isPickDirectorySupported(): Boolean = false
+    public actual fun isDirectoryPickerSupported(): Boolean = false
 
     public actual suspend fun saveFile(
         bytes: ByteArray,

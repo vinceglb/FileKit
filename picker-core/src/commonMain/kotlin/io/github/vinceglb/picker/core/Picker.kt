@@ -13,7 +13,7 @@ public expect object Picker {
         initialDirectory: String? = null,
     ): PlatformDirectory?
 
-    public fun isPickDirectorySupported(): Boolean
+    public fun isDirectoryPickerSupported(): Boolean
 
     public suspend fun saveFile(
         bytes: ByteArray,

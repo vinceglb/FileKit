@@ -55,7 +55,7 @@ public actual object Picker {
         file?.let { PlatformDirectory(it) }
     }
 
-    public actual fun isPickDirectorySupported(): Boolean = when (PlatformUtil.current) {
+    public actual fun isDirectoryPickerSupported(): Boolean = when (PlatformUtil.current) {
         Platform.MacOS -> true
         Platform.Windows -> true
         Platform.Linux -> false

@@ -37,7 +37,7 @@ public actual object Picker {
         fileExtensions = null
     )?.firstOrNull()?.let { PlatformDirectory(it) }
 
-    public actual fun isPickDirectorySupported(): Boolean = true
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
         bytes: ByteArray,
