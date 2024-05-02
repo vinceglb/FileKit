@@ -1,22 +1,17 @@
 package io.github.vinceglb.picker.core
 
-public expect sealed class PickerSelectionMode<Out> {
-	internal class SelectionResult
+public sealed class PickerSelectionMode<Out> {
+    public abstract fun parseResult(value: PlatformFiles?): Out?
 
-	internal abstract fun result(selection: SelectionResult): Out?
+    public data object Single : PickerSelectionMode<PlatformFile>() {
+        override fun parseResult(value: PlatformFiles?): PlatformFile? {
+            return value?.firstOrNull()
+        }
+    }
 
-	public class SingleFile(
-		extensions: List<String>? = null
-	) : PickerSelectionMode<PlatformFile> {
-		override fun result(selection: SelectionResult): PlatformFile?
-	}
-
-	public class MultipleFiles(
-		extensions: List<String>? = null
-	) : PickerSelectionMode<PlatformFiles>
-
-	@Suppress("ConvertObjectToDataObject")
-	public object Directory : PickerSelectionMode<PlatformDirectory> {
-		public val isSupported: Boolean
-	}
+    public data object Multiple : PickerSelectionMode<PlatformFiles>() {
+        override fun parseResult(value: PlatformFiles?): PlatformFiles? {
+            return value?.takeIf { it.isNotEmpty() }
+        }
+    }
 }
