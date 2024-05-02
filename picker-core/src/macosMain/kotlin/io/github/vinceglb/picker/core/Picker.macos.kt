@@ -7,32 +7,39 @@ import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
 public actual object Picker {
-    public actual suspend fun <Out> pick(
+    public actual suspend fun <Out> pickFile(
+        type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
+        initialDirectory: String?,
+    ): Out? = callPicker(
+        mode = when (mode) {
+            is PickerSelectionMode.Single -> Mode.Single
+            is PickerSelectionMode.Multiple -> Mode.Multiple
+        },
+        title = title,
+        initialDirectory = initialDirectory,
+        fileExtensions = when (type) {
+            PickerSelectionType.Image -> imageExtensions
+            PickerSelectionType.Video -> videoExtensions
+            PickerSelectionType.ImageAndVideo -> imageExtensions + videoExtensions
+            is PickerSelectionType.File -> type.extensions
+        },
+    )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
+
+    public actual suspend fun pickDirectory(
+        title: String?,
         initialDirectory: String?
-    ): Out? {
-        // Create an NSOpenPanel
-        val nsOpenPanel = NSOpenPanel()
+    ): PlatformDirectory? = callPicker(
+        mode = Mode.Directory,
+        title = title,
+        initialDirectory = initialDirectory,
+        fileExtensions = null
+    )?.firstOrNull()?.let { PlatformDirectory(it) }
 
-        // Configure the NSOpenPanel
-        nsOpenPanel.configure(mode, title, initialDirectory)
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
-        // Run the NSOpenPanel
-        val result = nsOpenPanel.runModal()
-
-        // If the user cancelled the operation, return null
-        if (result != NSModalResponseOK) {
-            return null
-        }
-
-        // Return the result
-        val urls = nsOpenPanel.URLs.mapNotNull { it as? NSURL }
-        val selection = PickerSelectionMode.SelectionResult(urls)
-        return mode.result(selection)
-    }
-
-    public actual suspend fun save(
+    public actual suspend fun saveFile(
         bytes: ByteArray,
         baseName: String,
         extension: String,
@@ -71,9 +78,34 @@ public actual object Picker {
         return platformFile
     }
 
-    private fun NSOpenPanel.configure(
-        mode: PickerSelectionMode<*>,
+    private fun callPicker(
+        mode: Mode,
         title: String?,
+        initialDirectory: String?,
+        fileExtensions: List<String>?,
+    ): List<NSURL>? {
+        // Create an NSOpenPanel
+        val nsOpenPanel = NSOpenPanel()
+
+        // Configure the NSOpenPanel
+        nsOpenPanel.configure(mode, title, fileExtensions, initialDirectory)
+
+        // Run the NSOpenPanel
+        val result = nsOpenPanel.runModal()
+
+        // If the user cancelled the operation, return null
+        if (result != NSModalResponseOK) {
+            return null
+        }
+
+        // Return the result
+        return nsOpenPanel.URLs.mapNotNull { it as? NSURL }
+    }
+
+    private fun NSOpenPanel.configure(
+        mode: Mode,
+        title: String?,
+        extensions: List<String>?,
         initialDirectory: String?,
     ): NSOpenPanel {
         // Set the title
@@ -82,35 +114,36 @@ public actual object Picker {
         // Set the initial directory
         initialDirectory?.let { directoryURL = NSURL.fileURLWithPath(it) }
 
+        // Set the allowed file types
+        extensions?.let { allowedFileTypes = extensions }
+
         // Setup the picker mode and files extensions
         when (mode) {
-            is PickerSelectionMode.SingleFile -> {
+            Mode.Single -> {
                 canChooseFiles = true
                 canChooseDirectories = false
                 allowsMultipleSelection = false
-
-                // Set the allowed file types
-                mode.extensions?.let { allowedFileTypes = mode.extensions }
             }
 
-            is PickerSelectionMode.MultipleFiles -> {
+            Mode.Multiple -> {
                 canChooseFiles = true
                 canChooseDirectories = false
                 allowsMultipleSelection = true
-
-                // Set the allowed file types
-                mode.extensions?.let { allowedFileTypes = mode.extensions }
             }
 
-            is PickerSelectionMode.Directory -> {
+            Mode.Directory -> {
                 canChooseFiles = false
                 canChooseDirectories = true
                 allowsMultipleSelection = false
             }
-
-            else -> throw IllegalArgumentException("Unsupported mode: $mode")
         }
 
         return this
+    }
+
+    private enum class Mode {
+        Single,
+        Multiple,
+        Directory
     }
 }

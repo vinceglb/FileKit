@@ -13,7 +13,8 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 public actual object Picker {
-    public actual suspend fun <Out> pick(
+    public actual suspend fun <Out> pickFile(
+        type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
         initialDirectory: String?
@@ -23,7 +24,22 @@ public actual object Picker {
             val input = document.createElement("input") as HTMLInputElement
 
             // Configure the input element
-            input.configure(mode)
+            input.apply {
+                this.type = "file"
+
+                // Set the allowed file types
+                when (type) {
+                    is PickerSelectionType.Image -> accept = "image/*"
+                    is PickerSelectionType.Video -> accept = "video/*"
+                    is PickerSelectionType.ImageAndVideo -> accept = "image/*,video/*"
+                    is PickerSelectionType.File -> type.extensions?.let {
+                        accept = type.extensions.joinToString(",") { ".$it" }
+                    }
+                }
+
+                // Set the multiple attribute
+                multiple = mode is PickerSelectionMode.Multiple
+            }
 
             // Setup the change listener
             input.onchange = { event ->
@@ -35,8 +51,8 @@ public actual object Picker {
                         ?.asList()
 
                     // Return the result
-                    val selection = PickerSelectionMode.SelectionResult(files)
-                    continuation.resume(mode.result(selection))
+                    val result = files?.map { PlatformFile(it) }
+                    continuation.resume(mode.parseResult(result))
                 } catch (e: Throwable) {
                     continuation.resumeWithException(e)
                 }
@@ -51,7 +67,16 @@ public actual object Picker {
         }
     }
 
-    public actual suspend fun save(
+    public actual suspend fun pickDirectory(
+        title: String?,
+        initialDirectory: String?
+    ): PlatformDirectory? = withContext(Dispatchers.Default) {
+        throw NotImplementedError("Directory selection is not supported on the web")
+    }
+
+    public actual fun isDirectoryPickerSupported(): Boolean = false
+
+    public actual suspend fun saveFile(
         bytes: ByteArray,
         baseName: String,
         extension: String,
@@ -73,41 +98,5 @@ public actual object Picker {
 
         // Return the file
         PlatformFile(file)
-    }
-
-    private fun HTMLInputElement.configure(
-        mode: PickerSelectionMode<*>,
-    ): HTMLInputElement {
-        type = "file"
-
-        when (mode) {
-            is PickerSelectionMode.SingleFile -> {
-                // Set the allowed file types
-                mode.extensions?.let {
-                    accept = mode.extensions.joinToString(",") { ".$it" }
-                }
-
-                // Allow only one file
-                multiple = false
-            }
-
-            is PickerSelectionMode.MultipleFiles -> {
-                // Set the allowed file types
-                mode.extensions?.let {
-                    accept = mode.extensions.joinToString(",") { ".$it" }
-                }
-
-                // Allow multiple files
-                multiple = true
-            }
-
-            PickerSelectionMode.Directory ->
-                throw NotImplementedError("Directory selection is not supported on the web")
-
-            else ->
-                throw IllegalArgumentException("Unsupported mode: $mode")
-        }
-
-        return this
     }
 }
