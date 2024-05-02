@@ -19,7 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.picker.core.PickerSelectionMode
+import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.sample.core.MainViewModel
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
@@ -57,9 +57,17 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 Text("Multiple image picker")
             }
 
+            Button(onClick = viewModel::pickFile) {
+                Text("Single file picker, only png")
+            }
+
+            Button(onClick = viewModel::pickFiles) {
+                Text("Multiple files picker, only png")
+            }
+
             Button(
                 onClick = viewModel::pickDirectory,
-                enabled = PickerSelectionMode.Directory.isSupported
+                enabled = Picker.isPickDirectorySupported(),
             ) {
                 Text("Directory picker")
             }
@@ -68,7 +76,7 @@ private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
                 CircularProgressIndicator()
             }
 
-            if (PickerSelectionMode.Directory.isSupported) {
+            if (Picker.isPickDirectorySupported()) {
                 Text("Selected directory: ${uiState.directory?.path ?: "None"}")
             } else {
                 Text("Directory picker is not supported")

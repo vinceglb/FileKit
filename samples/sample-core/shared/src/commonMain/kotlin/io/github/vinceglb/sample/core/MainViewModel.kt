@@ -2,12 +2,14 @@ package io.github.vinceglb.sample.core
 
 import com.rickclephas.kmm.viewmodel.KMMViewModel
 import com.rickclephas.kmm.viewmodel.coroutineScope
-import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
+import io.github.vinceglb.picker.core.PickerSelectionType
+import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
-import io.github.vinceglb.picker.core.extension
 import io.github.vinceglb.picker.core.baseName
+import io.github.vinceglb.picker.core.extension
+import io.github.vinceglb.picker.core.pickFile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -18,12 +20,9 @@ class MainViewModel : KMMViewModel() {
     val uiState: StateFlow<MainUiState> = _uiState
 
     fun pickImage() = executeWithLoading {
-        // Single file mode
-        val mode = PickerSelectionMode.SingleFile(extensions = listOf("jpg", "jpeg", "png"))
-
         // Pick a file
-        val file = Picker.pick(
-            mode = mode,
+        val file = Picker.pickFile(
+            type = PickerSelectionType.Image,
             title = "Custom title here",
             initialDirectory = downloadDirectoryPath()
         )
@@ -36,11 +35,11 @@ class MainViewModel : KMMViewModel() {
     }
 
     fun pickImages() = executeWithLoading {
-        // Multiple files mode
-        val mode = PickerSelectionMode.MultipleFiles(extensions = listOf("jpg", "jpeg", "png"))
-
         // Pick files
-        val files = Picker.pick(mode = mode)
+        val files = Picker.pickFile(
+            type = PickerSelectionType.Image,
+            mode = PickerSelectionMode.Multiple
+        )
 
         // Add files to the state
         if (files != null) {
@@ -50,12 +49,36 @@ class MainViewModel : KMMViewModel() {
         }
     }
 
-    fun pickDirectory() = executeWithLoading {
-        // Directory mode
-        val mode = PickerSelectionMode.Directory
+    fun pickFile() = executeWithLoading {
+        // Pick a file
+        val file = Picker.pickFile(
+            type = PickerSelectionType.File(extensions = listOf("png")),
+        )
 
+        // Add file to the state
+        if (file != null) {
+            val newFiles = _uiState.value.files + file
+            _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
+    fun pickFiles() = executeWithLoading {
+        // Pick files
+        val files = Picker.pickFile(
+            type = PickerSelectionType.File(extensions = listOf("png")),
+            mode = PickerSelectionMode.Multiple
+        )
+
+        // Add files to the state
+        if (files != null) {
+            val newFiles = _uiState.value.files + files
+            _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
+    fun pickDirectory() = executeWithLoading {
         // Pick a directory
-        val directory = Picker.pick(mode)
+        val directory = Picker.pickDirectory()
 
         // Update the state
         if (directory != null) {
@@ -65,7 +88,7 @@ class MainViewModel : KMMViewModel() {
 
     fun saveFile(file: PlatformFile) = executeWithLoading {
         // Save a file
-        val newFile = Picker.save(
+        val newFile = Picker.saveFile(
             bytes = file.readBytes(),
             baseName = file.baseName,
             extension = file.extension
@@ -92,6 +115,7 @@ data class MainUiState(
     val directory: PlatformDirectory? = null,
     val loading: Boolean = false
 ) {
+    // Used by SwiftUI code
     constructor() : this(emptySet(), null, false)
 }
 
