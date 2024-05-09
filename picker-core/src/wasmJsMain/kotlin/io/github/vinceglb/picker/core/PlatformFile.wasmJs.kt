@@ -55,6 +55,8 @@ public actual data class PlatformFile(
 	}
 }
 
-public actual class PlatformDirectory {
+public actual data class PlatformDirectory(
+	val file: File,
+) {
 	public actual val path: String? = null
 }
