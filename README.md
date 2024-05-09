@@ -59,6 +59,8 @@ Button(onClick = { launcher.launch() }) {
 }
 ```
 
+![Picker Kotlin Preview](https://github.com/vinceglb/PickerKotlin/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
+
 ## 📦 Installation
 
 ```gradle
@@ -68,10 +70,10 @@ repositories {
 
 dependencies {
     // Enables Picker without Compose dependencies
-    implementation("io.github.vinceglb:picker-core:0.4.0")
+    implementation("io.github.vinceglb:picker-core:0.3.0")
 
     // Enables Picker with rememberPickerLauncher Composable
-    implementation("io.github.vinceglb:picker-compose:0.4.0")
+    implementation("io.github.vinceglb:picker-compose:0.3.0")
 }
 ```
 
