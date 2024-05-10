@@ -21,7 +21,7 @@ Picker Kotlin is a library that allows you to pick and save files in a simple wa
 
 ## 🚀 Quick Start
 
-With `Picker`, you can pick files, medias and folders on each target from your common code. You can also save files on each target.
+Pick a file, a directory or save a file in common code:
 
 ```kotlin
 // Pick a file
