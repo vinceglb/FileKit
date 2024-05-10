@@ -3,14 +3,13 @@ agp = "8.4.0"
 android-activity-ktx = "1.9.0"
 android-compose = "1.9.0"
 coilCompose = "3.0.0-alpha06"
-compose-plugin = "1.6.2"
+compose-plugin = "1.6.10-rc01"
 jna = "5.14.0"
-kmmViewmodel = "1.0.0-ALPHA-20"
+kmmViewmodel = "1.0.0-ALPHA-20-kotlin-2.0.0-RC2"
 koinCompose = "1.2.0-alpha3"
-kotlin = "1.9.23"
+kotlin = "2.0.0-RC2"
 kotlinx-coroutines = "1.8.0"
 mavenPublishVanniktech = "0.28.0"
-skie = "0.6.4"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "android-compose" }
@@ -25,7 +24,7 @@ kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 mavenPublishVanniktech = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublishVanniktech" }
-skie = { id = "co.touchlab.skie", version.ref = "skie" }

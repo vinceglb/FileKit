@@ -11,23 +11,11 @@ kotlin {
 
     // Android
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
         publishLibraryVariants("release")
     }
 
     // JVM / Desktop
-    jvmToolchain(17)
-    jvm {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
+    jvm()
 
     // JS / Web
     @OptIn(ExperimentalWasmDsl::class)
@@ -50,14 +38,6 @@ kotlin {
         it.binaries.framework {
             baseName = "PickerKt"
             isStatic = true
-        }
-    }
-
-    targets.all {
-        compilations.all {
-            compilerOptions.configure {
-                freeCompilerArgs.add("-Xexpect-actual-classes")
-            }
         }
     }
 
