@@ -1,22 +1,22 @@
 package io.github.vinceglb.sample.core
 
 import com.rickclephas.kmm.viewmodel.KMMViewModel
+import com.rickclephas.kmm.viewmodel.MutableStateFlow
 import com.rickclephas.kmm.viewmodel.coroutineScope
+import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PickerSelectionType
-import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
 import io.github.vinceglb.picker.core.baseName
 import io.github.vinceglb.picker.core.extension
 import io.github.vinceglb.picker.core.pickFile
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel : KMMViewModel() {
-    private val _uiState: MutableStateFlow<MainUiState> = MutableStateFlow(MainUiState())
+    private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
     fun pickImage() = executeWithLoading {

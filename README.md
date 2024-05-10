@@ -28,7 +28,7 @@ With `Picker`, you can pick files, medias and folders on each target from your c
 val file = Picker.pickFile()
 
 // Pick a directory
-val files = Picker.pickDirectory()
+val directory = Picker.pickDirectory()
 
 // Save a file
 val file = Picker.saveFile(
@@ -48,7 +48,7 @@ val bytes = file?.readBytes()
 Compose Multiplatform integration made simple:
 
 ```kotlin
-// Pick a file from Compose
+// Pick files from Compose
 val launcher = rememberFilePickerLauncher(PickerSelectionMode.Multiple) { files ->
     // Handle picked files
 }
@@ -72,7 +72,7 @@ dependencies {
     // Enables Picker without Compose dependencies
     implementation("io.github.vinceglb:picker-core:0.3.0")
 
-    // Enables Picker with rememberPickerLauncher Composable
+    // Enables Picker with Composable utilities
     implementation("io.github.vinceglb:picker-compose:0.3.0")
 }
 ```

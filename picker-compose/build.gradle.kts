@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.mavenPublishVanniktech)
@@ -13,23 +14,11 @@ kotlin {
 
     // Android
     androidTarget {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
         publishLibraryVariants("release")
     }
 
     // JVM / Desktop
-    jvmToolchain(17)
-    jvm {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
+    jvm()
 
     // Wasm
     @OptIn(ExperimentalWasmDsl::class)

@@ -6,17 +6,18 @@
 //
 
 import SwiftUI
+import KMMViewModelSwiftUI
 import SamplePickerKt
 
 struct ContentView: View {
-    let viewModel = MainViewModel()
-    
-    @State
-    var uiState: MainUiState = MainUiState()
+    @StateViewModel 
+    var viewModel = MainViewModel()
     
     var body: some View {
+        let uiState = viewModel.uiState.value as? MainUiState
+        
         // Convert Set to Array
-        let files = Array(uiState.files)
+        let files = Array(uiState?.files ?? [])
         
         VStack {
             Image(systemName: "globe")
@@ -44,11 +45,11 @@ struct ContentView: View {
                 viewModel.pickDirectory()
             }
             
-            if uiState.loading {
+            if uiState?.loading == true {
                 ProgressView()
             }
             
-            Text("Directory: \(String(describing: uiState.directory?.path))")
+            Text("Directory: \(String(describing: uiState?.directory?.path))")
             
             List(files, id: \.nsUrl) { file in
                 Text(file.name)
@@ -56,11 +57,6 @@ struct ContentView: View {
             }
         }
         .padding()
-        .task {
-            for await state in viewModel.uiState {
-                uiState = state
-            }
-        }
     }
 }
 

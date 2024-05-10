@@ -2,26 +2,16 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
 
 plugins {
-	alias(libs.plugins.kotlinMultiplatform)
-	alias(libs.plugins.jetbrainsCompose)
 	alias(libs.plugins.androidApplication)
+	alias(libs.plugins.compose.compiler)
+	alias(libs.plugins.jetbrainsCompose)
+	alias(libs.plugins.kotlinMultiplatform)
 }
 
 kotlin {
-	androidTarget {
-		compilations.all {
-			kotlinOptions {
-				jvmTarget = "17"
-			}
-		}
-	}
+	androidTarget()
 
-	jvmToolchain(17)
-	jvm("desktop") {
-		compilations.all {
-			kotlinOptions.jvmTarget = "17"
-		}
-	}
+	jvm("desktop")
 
 	listOf(
 		iosX64(),
