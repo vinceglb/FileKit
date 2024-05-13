@@ -7,7 +7,7 @@ compose-plugin = "1.6.10-rc01"
 jna = "5.14.0"
 kmmViewmodel = "1.0.0-ALPHA-20-kotlin-2.0.0-RC2"
 koinCompose = "1.2.0-alpha3"
-kotlin = "2.0.0-RC2"
+kotlin = "2.0.0-RC3"
 kotlinx-coroutines = "1.8.0"
 mavenPublishVanniktech = "0.28.0"
 
