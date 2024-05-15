@@ -5,13 +5,13 @@ import io.github.vinceglb.picker.core.platform.windows.api.JnaFileChooser
 import java.io.File
 
 internal class WindowsFilePicker : PlatformFilePicker {
-	private val fileChooser = JnaFileChooser()
-
 	override suspend fun pickFile(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
 		title: String?
 	): File? {
+		val fileChooser = JnaFileChooser()
+
 		// Setup file chooser
 		fileChooser.apply {
 			// Set mode
@@ -36,6 +36,8 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		fileExtensions: List<String>?,
 		title: String?
 	): List<File>? {
+		val fileChooser = JnaFileChooser()
+
 		// Setup file chooser
 		fileChooser.apply {
 			// Set mode
@@ -58,6 +60,8 @@ internal class WindowsFilePicker : PlatformFilePicker {
 	}
 
 	override fun pickDirectory(initialDirectory: String?, title: String?): File? {
+		val fileChooser = JnaFileChooser()
+
 		// Setup file chooser
 		fileChooser.apply {
 			// Set mode
