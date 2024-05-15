@@ -12,7 +12,8 @@ public actual object Picker {
         type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): Out? = withContext(Dispatchers.IO) {
         // Filter by extension
         val extensions = when (type) {
@@ -27,13 +28,15 @@ public actual object Picker {
             PickerSelectionMode.Single -> PlatformFilePicker.current.pickFile(
                 title = title,
                 initialDirectory = initialDirectory,
-                fileExtensions = extensions
+                fileExtensions = extensions,
+                parentWindow = platformSettings?.parentWindow,
             )?.let { listOf(PlatformFile(it)) }
 
             PickerSelectionMode.Multiple -> PlatformFilePicker.current.pickFiles(
                 title = title,
                 initialDirectory = initialDirectory,
-                fileExtensions = extensions
+                fileExtensions = extensions,
+                parentWindow = platformSettings?.parentWindow,
             )?.map { PlatformFile(it) }
         }
 
@@ -43,12 +46,14 @@ public actual object Picker {
 
     public actual suspend fun pickDirectory(
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.IO) {
         // Open native file picker
         val file = PlatformFilePicker.current.pickDirectory(
             title = title,
-            initialDirectory = initialDirectory
+            initialDirectory = initialDirectory,
+            parentWindow = platformSettings?.parentWindow,
         )
 
         // Return result
@@ -66,12 +71,14 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
         AwtFileSaver.saveFile(
             bytes = bytes,
             baseName = baseName,
             extension = extension,
-            initialDirectory = initialDirectory
+            initialDirectory = initialDirectory,
+            parentWindow = platformSettings?.parentWindow,
         )
     }
 }

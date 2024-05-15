@@ -3,13 +3,15 @@ package io.github.vinceglb.picker.core.platform.mac
 import io.github.vinceglb.picker.core.platform.PlatformFilePicker
 import io.github.vinceglb.picker.core.platform.mac.foundation.Foundation
 import io.github.vinceglb.picker.core.platform.mac.foundation.ID
+import java.awt.Frame
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
 	override suspend fun pickFile(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
-		title: String?
+		title: String?,
+		parentWindow: Frame?,
 	): File? {
 		return callNativeMacOSPicker(
 			mode = MacOSFilePickerMode.SingleFile,
@@ -22,7 +24,8 @@ internal class MacOSFilePicker : PlatformFilePicker {
 	override suspend fun pickFiles(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
-		title: String?
+		title: String?,
+		parentWindow: Frame?,
 	): List<File>? {
 		return callNativeMacOSPicker(
 			mode = MacOSFilePickerMode.MultipleFiles,
@@ -34,7 +37,8 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
 	override fun pickDirectory(
 		initialDirectory: String?,
-		title: String?
+		title: String?,
+		parentWindow: Frame?,
 	): File? {
 		return callNativeMacOSPicker(
 			mode = MacOSFilePickerMode.Directories,

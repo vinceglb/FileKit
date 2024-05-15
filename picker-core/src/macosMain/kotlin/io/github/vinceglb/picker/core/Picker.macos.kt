@@ -12,6 +12,7 @@ public actual object Picker {
         mode: PickerSelectionMode<Out>,
         title: String?,
         initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): Out? = callPicker(
         mode = when (mode) {
             is PickerSelectionMode.Single -> Mode.Single
@@ -29,7 +30,8 @@ public actual object Picker {
 
     public actual suspend fun pickDirectory(
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformDirectory? = callPicker(
         mode = Mode.Directory,
         title = title,
@@ -44,6 +46,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformFile? {
         // Create an NSSavePanel
         val nsSavePanel = NSSavePanel()

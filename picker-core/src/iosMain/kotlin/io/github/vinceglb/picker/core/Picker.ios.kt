@@ -34,7 +34,8 @@ public actual object Picker {
         type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): Out? = when (type) {
         // Use PHPickerViewController for images and videos
         is PickerSelectionType.Image,
@@ -56,7 +57,8 @@ public actual object Picker {
 
     public actual suspend fun pickDirectory(
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformDirectory? = callPicker(
         mode = Mode.Directory,
         contentTypes = listOf(UTTypeFolder),
@@ -70,6 +72,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformFile? = suspendCoroutine { continuation ->
         // Create a picker delegate
         documentPickerDelegate = DocumentPickerDelegate(

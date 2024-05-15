@@ -12,9 +12,9 @@ internal object AwtFileSaver {
         baseName: String,
         extension: String,
         initialDirectory: String?,
+        parentWindow: Frame?,
     ): PlatformFile? = suspendCancellableCoroutine { continuation ->
-        val parent: Frame? = null
-        val dialog = object : FileDialog(parent, "Save dialog", SAVE) {
+        val dialog = object : FileDialog(parentWindow, "Save dialog", SAVE) {
             override fun setVisible(value: Boolean) {
                 super.setVisible(value)
 

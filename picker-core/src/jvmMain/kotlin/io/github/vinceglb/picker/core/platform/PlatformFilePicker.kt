@@ -5,24 +5,29 @@ import io.github.vinceglb.picker.core.platform.mac.MacOSFilePicker
 import io.github.vinceglb.picker.core.platform.util.Platform
 import io.github.vinceglb.picker.core.platform.util.PlatformUtil
 import io.github.vinceglb.picker.core.platform.windows.WindowsFilePicker
+import java.awt.Frame
+import java.awt.Window
 import java.io.File
 
 internal interface PlatformFilePicker {
 	suspend fun pickFile(
-		initialDirectory: String? = null,
-		fileExtensions: List<String>? = null,
-		title: String? = null,
+		initialDirectory: String?,
+		fileExtensions: List<String>?,
+		title: String?,
+		parentWindow: Frame?,
 	): File?
 
 	suspend fun pickFiles(
-		initialDirectory: String? = null,
-		fileExtensions: List<String>? = null,
-		title: String? = null,
+		initialDirectory: String?,
+		fileExtensions: List<String>?,
+		title: String?,
+		parentWindow: Frame?,
 	): List<File>?
 
 	fun pickDirectory(
-		initialDirectory: String? = null,
-		title: String? = null,
+		initialDirectory: String?,
+		title: String?,
+		parentWindow: Frame?,
 	): File?
 
 	companion object {

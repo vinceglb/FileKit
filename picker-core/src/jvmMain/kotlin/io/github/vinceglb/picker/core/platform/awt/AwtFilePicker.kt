@@ -4,6 +4,7 @@ import io.github.vinceglb.picker.core.platform.PlatformFilePicker
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.FileDialog
 import java.awt.Frame
+import java.awt.Window
 import java.io.File
 import java.io.FilenameFilter
 import kotlin.coroutines.resume
@@ -12,26 +13,34 @@ internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun pickFile(
         initialDirectory: String?,
         fileExtensions: List<String>?,
-        title: String?
+        title: String?,
+        parentWindow: Frame?,
     ): File? = callAwtPicker(
         title = title,
         isMultipleMode = false,
         fileExtensions = fileExtensions,
-        initialDirectory = initialDirectory
+        initialDirectory = initialDirectory,
+        parentWindow = parentWindow
     )?.firstOrNull()
 
     override suspend fun pickFiles(
         initialDirectory: String?,
         fileExtensions: List<String>?,
-        title: String?
+        title: String?,
+        parentWindow: Frame?,
     ): List<File>? = callAwtPicker(
         title = title,
         isMultipleMode = true,
         fileExtensions = fileExtensions,
-        initialDirectory = initialDirectory
+        initialDirectory = initialDirectory,
+        parentWindow = parentWindow
     )
 
-    override fun pickDirectory(initialDirectory: String?, title: String?): File? {
+    override fun pickDirectory(
+        initialDirectory: String?,
+        title: String?,
+        parentWindow: Frame?,
+    ): File? {
         throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
     }
 
@@ -40,9 +49,9 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode: Boolean,
         initialDirectory: String?,
         fileExtensions: List<String>?,
+        parentWindow: Frame?
     ): List<File>? = suspendCancellableCoroutine { continuation ->
-        val parent: Frame? = null
-        val dialog = object : FileDialog(parent, title, LOAD) {
+        val dialog = object : FileDialog(parentWindow, title, LOAD) {
             override fun setVisible(value: Boolean) {
                 super.setVisible(value)
                 val result = files?.toList()

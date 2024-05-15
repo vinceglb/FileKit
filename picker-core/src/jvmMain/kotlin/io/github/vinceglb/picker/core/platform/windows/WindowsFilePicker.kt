@@ -2,13 +2,15 @@ package io.github.vinceglb.picker.core.platform.windows
 
 import io.github.vinceglb.picker.core.platform.PlatformFilePicker
 import io.github.vinceglb.picker.core.platform.windows.api.JnaFileChooser
+import java.awt.Frame
 import java.io.File
 
 internal class WindowsFilePicker : PlatformFilePicker {
 	override suspend fun pickFile(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
-		title: String?
+		title: String?,
+		parentWindow: Frame?,
 	): File? {
 		val fileChooser = JnaFileChooser()
 
@@ -25,7 +27,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		}
 
 		// Show file chooser
-		fileChooser.showOpenDialog(null)
+		fileChooser.showOpenDialog(parentWindow)
 
 		// Return selected file
 		return fileChooser.selectedFile
@@ -34,7 +36,8 @@ internal class WindowsFilePicker : PlatformFilePicker {
 	override suspend fun pickFiles(
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
-		title: String?
+		title: String?,
+		parentWindow: Frame?,
 	): List<File>? {
 		val fileChooser = JnaFileChooser()
 
@@ -51,7 +54,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		}
 
 		// Show file chooser
-		fileChooser.showOpenDialog(null)
+		fileChooser.showOpenDialog(parentWindow)
 
 		// Return selected files
 		return fileChooser.selectedFiles
@@ -59,7 +62,11 @@ internal class WindowsFilePicker : PlatformFilePicker {
 			.ifEmpty { null }
 	}
 
-	override fun pickDirectory(initialDirectory: String?, title: String?): File? {
+	override fun pickDirectory(
+		initialDirectory: String?,
+		title: String?,
+		parentWindow: Frame?,
+	): File? {
 		val fileChooser = JnaFileChooser()
 
 		// Setup file chooser
@@ -75,7 +82,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		}
 
 		// Show file chooser
-		fileChooser.showOpenDialog(null)
+		fileChooser.showOpenDialog(parentWindow)
 
 		// Return selected directory
 		return fileChooser.selectedFile
