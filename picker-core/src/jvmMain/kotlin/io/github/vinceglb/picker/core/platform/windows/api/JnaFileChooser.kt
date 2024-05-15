@@ -28,8 +28,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
  *
  * @see JFileChooser, WindowsFileChooser, WindowsFileBrowser
  */
-internal class JnaFileChooser
-	() {
+internal class JnaFileChooser() {
 	private enum class Action {
 		Open, Save
 	}
