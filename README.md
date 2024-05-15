@@ -70,10 +70,10 @@ repositories {
 
 dependencies {
     // Enables Picker without Compose dependencies
-    implementation("io.github.vinceglb:picker-core:0.3.1")
+    implementation("io.github.vinceglb:picker-core:0.3.2")
 
     // Enables Picker with Composable utilities
-    implementation("io.github.vinceglb:picker-compose:0.3.1")
+    implementation("io.github.vinceglb:picker-compose:0.3.2")
 }
 ```
 
