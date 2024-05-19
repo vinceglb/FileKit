@@ -41,8 +41,8 @@ kotlin {
             // Picker-core
             api(projects.pickerCore)
 
-            // KMM ViewModel
-            api(libs.kmm.viewmodel)
+            // Observable ViewModel
+            api(libs.observable.viewmodel)
         }
 
         // https://github.com/rickclephas/kmm-viewmodel/?tab=readme-ov-file#kotlin
