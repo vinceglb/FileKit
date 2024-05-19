@@ -15,8 +15,8 @@ public fun <Out> FrameWindowScope.rememberFilePickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
     onResult: (Out?) -> Unit,
-) {
-    rememberFilePickerLauncher(
+): PickerResultLauncher {
+    return rememberFilePickerLauncher(
         type = type,
         mode = mode,
         title = title,
@@ -47,8 +47,8 @@ public fun FrameWindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
     onResult: (PlatformDirectory?) -> Unit,
-) {
-    rememberDirectoryPickerLauncher(
+): PickerResultLauncher {
+    return rememberDirectoryPickerLauncher(
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = PickerPlatformSettings(this.window),
@@ -59,8 +59,8 @@ public fun FrameWindowScope.rememberDirectoryPickerLauncher(
 @Composable
 public fun FrameWindowScope.rememberFileSaverLauncher(
     onResult: (PlatformFile?) -> Unit,
-) {
-    rememberFileSaverLauncher(
+): SaverResultLauncher {
+    return rememberFileSaverLauncher(
         platformSettings = PickerPlatformSettings(this.window),
         onResult = onResult,
     )

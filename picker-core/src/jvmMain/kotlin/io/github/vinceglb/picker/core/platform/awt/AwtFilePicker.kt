@@ -4,7 +4,6 @@ import io.github.vinceglb.picker.core.platform.PlatformFilePicker
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.FileDialog
 import java.awt.Frame
-import java.awt.Window
 import java.io.File
 import java.io.FilenameFilter
 import kotlin.coroutines.resume
