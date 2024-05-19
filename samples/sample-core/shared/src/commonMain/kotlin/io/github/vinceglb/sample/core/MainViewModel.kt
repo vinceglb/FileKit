@@ -1,8 +1,8 @@
 package io.github.vinceglb.sample.core
 
-import com.rickclephas.kmm.viewmodel.KMMViewModel
-import com.rickclephas.kmm.viewmodel.MutableStateFlow
-import com.rickclephas.kmm.viewmodel.coroutineScope
+import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
+import com.rickclephas.kmp.observableviewmodel.ViewModel
+import com.rickclephas.kmp.observableviewmodel.coroutineScope
 import io.github.vinceglb.picker.core.Picker
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PickerSelectionType
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class MainViewModel : KMMViewModel() {
+class MainViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 

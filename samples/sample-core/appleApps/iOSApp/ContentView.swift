@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import KMMViewModelSwiftUI
+import KMPObservableViewModelSwiftUI
 import SamplePickerKt
 
 struct ContentView: View {
