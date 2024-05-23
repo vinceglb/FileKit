@@ -53,8 +53,11 @@ internal class AwtFilePicker : PlatformFilePicker {
         val dialog = object : FileDialog(parentWindow, title, LOAD) {
             override fun setVisible(value: Boolean) {
                 super.setVisible(value)
-                val result = files?.toList()
-                continuation.resume(result)
+
+                if (value) {
+                    val result = files?.toList()
+                    continuation.resume(result)
+                }
             }
         }
 
