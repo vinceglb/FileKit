@@ -1,7 +1,7 @@
 package io.github.vinceglb.picker.core
 
-import java.awt.Frame
+import java.awt.Window
 
 public actual class PickerPlatformSettings(
-    public val parentWindow: Frame? = null,
+    public val parentWindow: Window? = null,
 )

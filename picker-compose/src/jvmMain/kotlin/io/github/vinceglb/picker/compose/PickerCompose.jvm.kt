@@ -1,7 +1,7 @@
 package io.github.vinceglb.picker.compose
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.picker.core.PickerPlatformSettings
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PickerSelectionType
@@ -9,7 +9,7 @@ import io.github.vinceglb.picker.core.PlatformDirectory
 import io.github.vinceglb.picker.core.PlatformFile
 
 @Composable
-public fun <Out> FrameWindowScope.rememberFilePickerLauncher(
+public fun <Out> WindowScope.rememberFilePickerLauncher(
     type: PickerSelectionType = PickerSelectionType.File(),
     mode: PickerSelectionMode<Out>,
     title: String? = null,
@@ -27,7 +27,7 @@ public fun <Out> FrameWindowScope.rememberFilePickerLauncher(
 }
 
 @Composable
-public fun FrameWindowScope.rememberFilePickerLauncher(
+public fun WindowScope.rememberFilePickerLauncher(
     type: PickerSelectionType = PickerSelectionType.File(),
     title: String? = null,
     initialDirectory: String? = null,
@@ -43,7 +43,7 @@ public fun FrameWindowScope.rememberFilePickerLauncher(
 }
 
 @Composable
-public fun FrameWindowScope.rememberDirectoryPickerLauncher(
+public fun WindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
     onResult: (PlatformDirectory?) -> Unit,
@@ -57,7 +57,7 @@ public fun FrameWindowScope.rememberDirectoryPickerLauncher(
 }
 
 @Composable
-public fun FrameWindowScope.rememberFileSaverLauncher(
+public fun WindowScope.rememberFileSaverLauncher(
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     return rememberFileSaverLauncher(
