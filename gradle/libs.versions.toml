@@ -7,7 +7,7 @@ compose-plugin = "1.6.10"
 jna = "5.14.0"
 observable-viewmodel = "1.0.0-BETA-1-kotlin-2.0.0-RC2"
 koinCompose = "1.2.0-alpha3"
-kotlin = "2.0.0-RC2"
+kotlin = "2.0.0"
 kotlinx-coroutines = "1.8.1"
 mavenPublishVanniktech = "0.28.0"
 
