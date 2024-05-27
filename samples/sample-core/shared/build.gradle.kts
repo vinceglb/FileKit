@@ -39,7 +39,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // Picker-core
-            api(projects.pickerCore)
+            api(projects.filekitCore)
 
             // Observable ViewModel
             api(libs.observable.viewmodel)

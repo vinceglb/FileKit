@@ -50,7 +50,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             // Picker Core
-            api(projects.pickerCore)
+            api(projects.filekitCore)
         }
 
         jvmMain.dependencies {
