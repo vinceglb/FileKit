@@ -23,7 +23,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "PickerKt"
+        it.moduleName = "FileKit"
         it.browser()
     }
 
@@ -36,7 +36,7 @@ kotlin {
         macosArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "PickerKt"
+            baseName = "FileKit"
             isStatic = true
         }
     }
@@ -57,7 +57,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.picker"
+    namespace = "io.github.vinceglb.filekit"
     compileSdk = 34
 
     defaultConfig {

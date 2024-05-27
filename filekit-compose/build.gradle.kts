@@ -23,7 +23,7 @@ kotlin {
     // Wasm
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
-        moduleName = "PickerComposeKt"
+        moduleName = "FileKitCompose"
         browser()
     }
 
@@ -34,7 +34,7 @@ kotlin {
         iosSimulatorArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "PickerComposeKt"
+            baseName = "FileKitCompose"
             isStatic = true
         }
     }
@@ -72,7 +72,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.picker.compose"
+    namespace = "io.github.vinceglb.filekit.compose"
     compileSdk = 34
 
     defaultConfig {

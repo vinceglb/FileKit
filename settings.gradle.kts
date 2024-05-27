@@ -1,4 +1,4 @@
-rootProject.name = "PickerKotlin"
+rootProject.name = "FileKit"
 
 include(":filekit-core")
 include(":filekit-compose")
