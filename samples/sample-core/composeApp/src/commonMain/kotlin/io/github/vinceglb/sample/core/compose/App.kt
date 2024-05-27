@@ -19,7 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.picker.core.Picker
+import io.github.vinceglb.filekit.core.Picker
 import io.github.vinceglb.sample.core.MainViewModel
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject

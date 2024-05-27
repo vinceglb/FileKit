@@ -3,7 +3,7 @@ package io.github.vinceglb.sample.core.compose
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import io.github.vinceglb.picker.core.Picker
+import io.github.vinceglb.filekit.core.Picker
 
 class MainActivity : ComponentActivity() {
 	override fun onCreate(savedInstanceState: Bundle?) {
