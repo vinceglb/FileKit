@@ -49,7 +49,7 @@ kotlin {
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
 
-            // Picker Core
+            // FileKit Core
             api(projects.filekitCore)
         }
 

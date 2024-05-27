@@ -1,7 +1,7 @@
 rootProject.name = "PickerKotlin"
 
 include(":filekit-core")
-include(":picker-compose")
+include(":filekit-compose")
 include(":samples:sample-core:shared")
 include(":samples:sample-core:composeApp")
 include(":samples:sample-compose:composeApp")
