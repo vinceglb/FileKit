@@ -6,11 +6,13 @@ public expect object Picker {
         mode: PickerSelectionMode<Out>,
         title: String? = null,
         initialDirectory: String? = null,
+        platformSettings: PickerPlatformSettings? = null,
     ): Out?
 
     public suspend fun pickDirectory(
         title: String? = null,
         initialDirectory: String? = null,
+        platformSettings: PickerPlatformSettings? = null,
     ): PlatformDirectory?
 
     public fun isDirectoryPickerSupported(): Boolean
@@ -20,6 +22,7 @@ public expect object Picker {
         baseName: String = "file",
         extension: String,
         initialDirectory: String? = null,
+        platformSettings: PickerPlatformSettings? = null,
     ): PlatformFile?
 }
 

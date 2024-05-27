@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.picker.core.Picker
+import io.github.vinceglb.picker.core.PickerPlatformSettings
 import io.github.vinceglb.picker.core.PickerSelectionMode
 import io.github.vinceglb.picker.core.PickerSelectionType
 import io.github.vinceglb.picker.core.PlatformDirectory
@@ -18,6 +19,7 @@ public fun <Out> rememberFilePickerLauncher(
     mode: PickerSelectionMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: PickerPlatformSettings? = null,
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
     // Init picker
@@ -45,6 +47,7 @@ public fun <Out> rememberFilePickerLauncher(
                     mode = currentMode,
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
+                    platformSettings = platformSettings,
                 )
                 currentOnResult(result)
             }
@@ -59,6 +62,7 @@ public fun rememberFilePickerLauncher(
     type: PickerSelectionType = PickerSelectionType.File(),
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: PickerPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
@@ -66,6 +70,7 @@ public fun rememberFilePickerLauncher(
         mode = PickerSelectionMode.Single,
         title = title,
         initialDirectory = initialDirectory,
+        platformSettings = platformSettings,
         onResult = onResult,
     )
 }
@@ -74,6 +79,7 @@ public fun rememberFilePickerLauncher(
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: PickerPlatformSettings? = null,
     onResult: (PlatformDirectory?) -> Unit,
 ): PickerResultLauncher {
     // Init picker
@@ -97,6 +103,7 @@ public fun rememberDirectoryPickerLauncher(
                 val result = picker.pickDirectory(
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
+                    platformSettings = platformSettings,
                 )
                 currentOnResult(result)
             }
@@ -108,6 +115,7 @@ public fun rememberDirectoryPickerLauncher(
 
 @Composable
 public fun rememberFileSaverLauncher(
+    platformSettings: PickerPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher {
     // Init picker
@@ -131,6 +139,7 @@ public fun rememberFileSaverLauncher(
                     baseName = baseName,
                     extension = extension,
                     initialDirectory = initialDirectory,
+                    platformSettings = platformSettings,
                 )
                 currentOnResult(result)
             }

@@ -31,7 +31,8 @@ public actual object Picker {
         type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): Out? = withContext(Dispatchers.IO) {
         // Throw exception if registry is not initialized
         val registry = registry ?: throw PickerNotInitializedException()
@@ -114,7 +115,8 @@ public actual object Picker {
 
     public actual suspend fun pickDirectory(
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.IO) {
         // Throw exception if registry is not initialized
         val registry = registry ?: throw PickerNotInitializedException()
@@ -139,7 +141,8 @@ public actual object Picker {
         bytes: ByteArray,
         baseName: String,
         extension: String,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
         suspendCoroutine { continuation ->
             // Throw exception if registry is not initialized

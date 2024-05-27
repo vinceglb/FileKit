@@ -17,7 +17,8 @@ public actual object Picker {
         type: PickerSelectionType,
         mode: PickerSelectionMode<Out>,
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): Out? = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
             // Create input element
@@ -69,7 +70,8 @@ public actual object Picker {
 
     public actual suspend fun pickDirectory(
         title: String?,
-        initialDirectory: String?
+        initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.Default) {
         throw NotImplementedError("Directory selection is not supported on the web")
     }
@@ -81,6 +83,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
+        platformSettings: PickerPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.Default) {
         // Create a blob
         val file = File(
