@@ -1,13 +1,13 @@
 <div align="center">
-  <img src="https://github.com/vinceglb/PickerKotlin/assets/24540801/ef67360d-8b43-4337-adb4-b9089b0d88ce" alt="Picker Kotlin for Kotlin Multiplatform and Compose Multiplatform" />
+  <img src="https://github.com/vinceglb/FileKit/assets/24540801/ef67360d-8b43-4337-adb4-b9089b0d88ce" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
 
   <br>
  
-  <h1>Picker Kotlin</h1>
+  <h1>FileKit</h1>
   <p>Files, Medias, Folder Picker and File saver library for Kotlin Multiplatform and Compose Multiplatform</p>
 
   <div>
-    <img src="https://img.shields.io/maven-central/v/io.github.vinceglb/picker-core" alt="Picker Kotlin Maven Version" />
+    <img src="https://img.shields.io/maven-central/v/io.github.vinceglb/filekit-core" alt="FileKit Kotlin Maven Version" />
     <img src="https://img.shields.io/badge/Platform-Android-brightgreen.svg?logo=android" alt="Badge Android" />
 		<img src="https://img.shields.io/badge/Platform-iOS%20%2F%20macOS-lightgrey.svg?logo=apple" alt="Badge iOS" />
 		<img src="https://img.shields.io/badge/Platform-JVM-8A2BE2.svg?logo=openjdk" alt="Badge JVM" />
@@ -25,13 +25,13 @@ Pick a file, a directory or save a file in common code:
 
 ```kotlin
 // Pick a file
-val file = Picker.pickFile()
+val file = FileKit.pickFile()
 
 // Pick a directory
-val directory = Picker.pickDirectory()
+val directory = FileKit.pickDirectory()
 
 // Save a file
-val file = Picker.saveFile(
+val file = FileKit.saveFile(
     extension = "txt",
     bytes = "Hello, World!".encodeToByteArray()
 )
@@ -49,7 +49,7 @@ Compose Multiplatform integration made simple:
 
 ```kotlin
 // Pick files from Compose
-val launcher = rememberFilePickerLauncher(PickerSelectionMode.Multiple) { files ->
+val launcher = rememberFilePickerLauncher(PickerMode.Multiple) { files ->
     // Handle picked files
 }
 
@@ -59,7 +59,7 @@ Button(onClick = { launcher.launch() }) {
 }
 ```
 
-![Picker Kotlin Preview](https://github.com/vinceglb/PickerKotlin/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
+![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
 
 ## 📦 Installation
 
@@ -69,70 +69,70 @@ repositories {
 }
 
 dependencies {
-    // Enables Picker without Compose dependencies
-    implementation("io.github.vinceglb:picker-core:0.3.2")
+    // Enables FileKit without Compose dependencies
+    implementation("io.github.vinceglb:filekit-core:0.4.0")
 
-    // Enables Picker with Composable utilities
-    implementation("io.github.vinceglb:picker-compose:0.3.2")
+    // Enables FileKit with Composable utilities
+    implementation("io.github.vinceglb:filekit-compose:0.4.0")
 }
 ```
 
 ## ⚡ Initialization
 
-Using **Picker Core on Android** requires an initialization. To be able to use the `ActivityResultContract` under the hood, you need to initialize Picker in your `ComponentActivity`.
+Using **FileKit Core on Android** requires an initialization. To be able to use the `ActivityResultContract` under the hood, you need to initialize FileKit in your `ComponentActivity`.
 
 ```kotlin
 // MainActivity.kt
 class MyApplication : ComponentActivity() {
     override fun onCreate() {
         super.onCreate()
-        Picker.init(this)
+        FileKit.init(this)
     }
 }
 ```
 
-In every other case, Picker is ready to use without any initialization.
+In all other cases, FileKit is ready to use without any initialization.
 
 ## 📄 File Picker
 
 ### Picker types
 
-You can pick different types of files with `PickerSelectionType`:
+You can pick different types of files with `PickerType`:
 - `Image`: Pick an image file.
 - `Video`: Pick a video file.
 - `ImageAndVideo`: Pick an image or a video file.
 - `File`: Pick any file. It is the default type. It's possible to specify a list of extensions.
 
 ```kotlin
-val imageType = PickerSelectionType.Image
-val videoType = PickerSelectionType.Video
-val imageAndVideoType = PickerSelectionType.ImageAndVideo
-val fileType = PickerSelectionType.File(extensions = listOf("pdf", "docx"))
+val imageType = PickerType.Image
+val videoType = PickerType.Video
+val imageAndVideoType = PickerType.ImageAndVideo
+val fileType = PickerType.File(extensions = listOf("pdf", "docx"))
 ```
 
 ### Picker modes
 
-You can pick files in different modes with `PickerSelectionMode`. The mode will change the output type. `Single` is the default mode.
+You can pick files in different modes with `PickerMode`. The mode will change the output type. `Single` is the default mode.
 
 ```kotlin
-val singleMode = PickerSelectionMode.Single
-val multipleMode = PickerSelectionMode.Multiple
+val singleMode = PickerMode.Single
+val multipleMode = PickerMode.Multiple
 ```
 
 ### Launch the picker
 
-You can launch the picker with `Picker.pickFile` or `rememberFilePickerLauncher`:
+You can launch the picker with `FileKit.pickFile` or `rememberFilePickerLauncher`:
 
 ```kotlin
-// Picker Core
-val file = Picker.pickFile(
-    type = PickerSelectionType.Image,
-    mode = PickerSelectionMode.Single,
+// FileKit Core
+val file = FileKit.pickFile(
+    type = PickerType.Image,
+    mode = PickerMode.Single,
     title = "Pick an image",
     initialDirectory = "/custom/initial/path"
 )
 
-// Picker Compose
+// FileKit Compose
 val launcher = rememberFilePickerLauncher(
     type = PickerSelectionType.ImageAndVideo,
     mode = PickerSelectionMode.Multiple,
@@ -146,16 +146,16 @@ launcher.launch()
 
 ## 📁 Directory Picker
 
-You can pick a directory with `Picker.pickDirectory` or `rememberDirectoryPickerLauncher`:
+You can pick a directory with `FileKit.pickDirectory` or `rememberDirectoryPickerLauncher`:
 
 ```kotlin
-// Picker Core
-val directory = Picker.pickDirectory(
+// FileKit Core
+val directory = FileKit.pickDirectory(
     title = "Pick a directory",
     initialDirectory = "/custom/initial/path"
 )
 
-// Picker Compose
+// FileKit Compose
 val launcher = rememberDirectoryPickerLauncher(
     title = "Pick a directory",
     initialDirectory = "/custom/initial/path"
@@ -168,23 +168,23 @@ launcher.launch()
 The directory picker is available on all platforms, expect for WASM / JS. To check if the directory picker is available from the common code, you can use `Picker.isDirectoryPickerSupported()`.
 
 ```kotlin
-val directoryModeSupported = Picker.isDirectoryPickerSupported()
+val directoryModeSupported = FileKit.isDirectoryPickerSupported()
 ```
 
 ## 💾 Save File Picker
 
-You can save a file with `Picker.saveFile` or `rememberSaveFilePickerLauncher`:
+You can save a file with `FileKit.saveFile` or `rememberFileSaverLauncher`:
 
 ```kotlin
-// Picker Core
-val file = Picker.saveFile(
+// FileKit Core
+val file = FileKit.saveFile(
     baseName = "myTextFile",
     extension = "txt",
     initialDirectory = "/custom/initial/path",
     bytes = "Hello, World!".encodeToByteArray()
 )
 
-// Picker Compose
+// FileKit Compose
 val launcher = rememberFileSaverLauncher() { file ->
     // Handle the saved file
 }
@@ -236,12 +236,12 @@ val file: org.w3c.files.File = // PlatformDirectory not supported on WASM / JS
 ## 🌱 Sample projects
 
 You can find 2 sample projects in the `samples` directory:
-- `sample-core`: A Kotlin Multiplatform project using Picker in a shared viewModel targeting Android, JVM, WASM, JS, iOS Swift, macOS Swift and iOS Compose.
-- `sample-compose`: A Compose Multiplatform project using Picker in a Composable targeting Android, iOS, JVM, WASM, 
+- `sample-core`: A Kotlin Multiplatform project using FileKit in a shared viewModel targeting Android, JVM, WASM, JS, iOS Swift, macOS Swift and iOS Compose.
+- `sample-compose`: A Compose Multiplatform project using FileKit in a Composable targeting Android, iOS, JVM, WASM, 
 
 ## ✨ Behind the scene
 
-Picker Kotlin uses the native file picker API on each platform:
+FileKit uses the native file picker API on each platform:
 
 - On Android, it uses `PickVisualMedia`, `OpenDocument` and `OpenDocumentTree` contracts.
 - On iOS, it uses both `UIDocumentPickerViewController` and `PHPickerViewController` APIs.
@@ -249,20 +249,20 @@ Picker Kotlin uses the native file picker API on each platform:
 - On JVM, it uses JNA to access the file system on Windows and macOS and Awt FileDialog on Linux.
 - On WASM / JS, it uses the `input` element with the `file` type.
 
-Also, Picker Kotlin uses the bear minimum of dependencies to be as lightweight as possible. 
+Also, FileKit uses the bear minimum of dependencies to be as lightweight as possible. 
 
-Picker Core uses the following libraries:
+FileKit Core uses the following libraries:
 - [KotlinX Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
 - Only Android: [AndroidX Activity KTX](https://developer.android.com/jetpack/androidx/releases/activity)
 - Only JVM: [Java Native Access - JNA](https://github.com/java-native-access/jna/tree/master)
 
-Picker Compose uses the following libraries:
+FileKit Compose uses the following libraries:
 - [Jetbrains Compose Runtime](https://github.com/JetBrains/compose-multiplatform)
 - Only Android: [AndroidX Activity Compose](https://developer.android.com/jetpack/androidx/releases/activity)
 
 ## 😎 Credits
 
-Picker Kotlin is inspired by the following libraries:
+FileKit is inspired by the following libraries:
 
 - [compose-multiplatform-file-picker](https://github.com/Wavesonics/compose-multiplatform-file-picker)
 - [peekaboo](https://github.com/onseok/peekaboo)
@@ -270,6 +270,7 @@ Picker Kotlin is inspired by the following libraries:
 - [jnafilechooser](https://github.com/steos/jnafilechooser)
 - [swing-jnafilechooser](https://github.com/DJ-Raven/swing-jnafilechooser)
 - [IntelliJ Community Foundation](https://github.com/JetBrains/intellij-community/blob/master/platform/util/ui/src/com/intellij/ui/mac/foundation/Foundation.java)
+- [file_picker (flutter)](https://pub.dev/packages/file_picker)
 
 ---
 

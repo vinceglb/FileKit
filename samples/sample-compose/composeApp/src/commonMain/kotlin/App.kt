@@ -116,7 +116,7 @@ private fun SampleApp() {
                 Text("Single file picker, only png")
             }
 
-            Button(onClick = { filesPicker.launch() }){
+            Button(onClick = { filesPicker.launch() }) {
                 Text("Multiple files picker, only png")
             }
 
