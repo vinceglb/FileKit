@@ -14,13 +14,13 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-public actual object Picker {
+public actual object FileKit {
     public actual suspend fun <Out> pickFile(
-        type: PickerSelectionType,
-        mode: PickerSelectionMode<Out>,
+        type: PickerType,
+        mode: PickerMode<Out>,
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): Out? = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
             // Create input element
@@ -32,16 +32,16 @@ public actual object Picker {
 
                 // Set the allowed file types
                 when (type) {
-                    is PickerSelectionType.Image -> accept = "image/*"
-                    is PickerSelectionType.Video -> accept = "video/*"
-                    is PickerSelectionType.ImageAndVideo -> accept = "image/*,video/*"
-                    is PickerSelectionType.File -> type.extensions?.let {
+                    is PickerType.Image -> accept = "image/*"
+                    is PickerType.Video -> accept = "video/*"
+                    is PickerType.ImageAndVideo -> accept = "image/*,video/*"
+                    is PickerType.File -> type.extensions?.let {
                         accept = type.extensions.joinToString(",") { ".$it" }
                     }
                 }
 
                 // Set the multiple attribute
-                multiple = mode is PickerSelectionMode.Multiple
+                multiple = mode is PickerMode.Multiple
             }
 
             // Setup the change listener
@@ -73,7 +73,7 @@ public actual object Picker {
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.Default) {
         throw NotImplementedError("Directory selection is not supported on the web")
     }
@@ -85,7 +85,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.Default) {
         // Create a byte array
         val array = Uint8Array(bytes.size)

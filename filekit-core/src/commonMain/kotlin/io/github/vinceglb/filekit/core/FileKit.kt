@@ -1,18 +1,18 @@
 package io.github.vinceglb.filekit.core
 
-public expect object Picker {
+public expect object FileKit {
     public suspend fun <Out> pickFile(
-        type: PickerSelectionType = PickerSelectionType.File(),
-        mode: PickerSelectionMode<Out>,
+        type: PickerType = PickerType.File(),
+        mode: PickerMode<Out>,
         title: String? = null,
         initialDirectory: String? = null,
-        platformSettings: PickerPlatformSettings? = null,
+        platformSettings: FileKitPlatformSettings? = null,
     ): Out?
 
     public suspend fun pickDirectory(
         title: String? = null,
         initialDirectory: String? = null,
-        platformSettings: PickerPlatformSettings? = null,
+        platformSettings: FileKitPlatformSettings? = null,
     ): PlatformDirectory?
 
     public fun isDirectoryPickerSupported(): Boolean
@@ -22,18 +22,18 @@ public expect object Picker {
         baseName: String = "file",
         extension: String,
         initialDirectory: String? = null,
-        platformSettings: PickerPlatformSettings? = null,
+        platformSettings: FileKitPlatformSettings? = null,
     ): PlatformFile?
 }
 
-public suspend fun Picker.pickFile(
-    type: PickerSelectionType = PickerSelectionType.File(),
+public suspend fun FileKit.pickFile(
+    type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
 ): PlatformFile? {
     return pickFile(
         type = type,
-        mode = PickerSelectionMode.Single,
+        mode = PickerMode.Single,
         title = title,
         initialDirectory = initialDirectory,
     )

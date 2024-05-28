@@ -25,30 +25,30 @@ import platform.UniformTypeIdentifiers.UTTypeVideo
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-public actual object Picker {
+public actual object FileKit {
     // Create a reference to the picker delegate to prevent it from being garbage collected
     private lateinit var documentPickerDelegate: DocumentPickerDelegate
     private lateinit var phPickerDelegate: PhPickerDelegate
 
     public actual suspend fun <Out> pickFile(
-        type: PickerSelectionType,
-        mode: PickerSelectionMode<Out>,
+        type: PickerType,
+        mode: PickerMode<Out>,
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): Out? = when (type) {
         // Use PHPickerViewController for images and videos
-        is PickerSelectionType.Image,
-        is PickerSelectionType.Video -> callPhPicker(
-            isMultipleMode = mode is PickerSelectionMode.Multiple,
+        is PickerType.Image,
+        is PickerType.Video -> callPhPicker(
+            isMultipleMode = mode is PickerMode.Multiple,
             type = type
         )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
         // Use UIDocumentPickerViewController for other types
         else -> callPicker(
             mode = when (mode) {
-                is PickerSelectionMode.Single -> Mode.Single
-                is PickerSelectionMode.Multiple -> Mode.Multiple
+                is PickerMode.Single -> Mode.Single
+                is PickerMode.Multiple -> Mode.Multiple
             },
             contentTypes = type.contentTypes,
             initialDirectory = initialDirectory
@@ -58,7 +58,7 @@ public actual object Picker {
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformDirectory? = callPicker(
         mode = Mode.Directory,
         contentTypes = listOf(UTTypeFolder),
@@ -72,7 +72,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = suspendCoroutine { continuation ->
         // Create a picker delegate
         documentPickerDelegate = DocumentPickerDelegate(
@@ -153,7 +153,7 @@ public actual object Picker {
 
     private suspend fun callPhPicker(
         isMultipleMode: Boolean,
-        type: PickerSelectionType,
+        type: PickerType,
     ): List<NSURL>? {
         val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
             // Create a picker delegate
@@ -169,9 +169,9 @@ public actual object Picker {
 
             // Filter configuration
             configuration.filter = when (type) {
-                is PickerSelectionType.Image -> PHPickerFilter.imagesFilter
-                is PickerSelectionType.Video -> PHPickerFilter.videosFilter
-                is PickerSelectionType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
+                is PickerType.Image -> PHPickerFilter.imagesFilter
+                is PickerType.Video -> PHPickerFilter.videosFilter
+                is PickerType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
                     listOf(
                         PHPickerFilter.imagesFilter,
                         PHPickerFilter.videosFilter
@@ -197,9 +197,9 @@ public actual object Picker {
             suspendCoroutine<NSURL?> { continuation ->
                 result.itemProvider.loadFileRepresentationForTypeIdentifier(
                     typeIdentifier = when (type) {
-                        is PickerSelectionType.Image -> UTTypeImage.identifier
-                        is PickerSelectionType.Video -> UTTypeVideo.identifier
-                        is PickerSelectionType.ImageAndVideo -> UTTypeContent.identifier
+                        is PickerType.Image -> UTTypeImage.identifier
+                        is PickerType.Video -> UTTypeVideo.identifier
+                        is PickerType.ImageAndVideo -> UTTypeContent.identifier
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
                 ) { url, _ -> continuation.resume(url) }
@@ -215,12 +215,12 @@ public actual object Picker {
             .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
             ?.keyWindow
 
-    private val PickerSelectionType.contentTypes: List<UTType>
+    private val PickerType.contentTypes: List<UTType>
         get() = when (this) {
-            is PickerSelectionType.Image -> listOf(UTTypeImage)
-            is PickerSelectionType.Video -> listOf(UTTypeVideo)
-            is PickerSelectionType.ImageAndVideo -> listOf(UTTypeImage, UTTypeVideo)
-            is PickerSelectionType.File -> extensions
+            is PickerType.Image -> listOf(UTTypeImage)
+            is PickerType.Video -> listOf(UTTypeVideo)
+            is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeVideo)
+            is PickerType.File -> extensions
                 ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
                 .ifNullOrEmpty { listOf(UTTypeContent) }
         }

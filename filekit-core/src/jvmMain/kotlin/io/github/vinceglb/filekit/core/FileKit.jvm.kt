@@ -7,32 +7,32 @@ import io.github.vinceglb.filekit.core.platform.util.PlatformUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-public actual object Picker {
+public actual object FileKit {
     public actual suspend fun <Out> pickFile(
-        type: PickerSelectionType,
-        mode: PickerSelectionMode<Out>,
+        type: PickerType,
+        mode: PickerMode<Out>,
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): Out? = withContext(Dispatchers.IO) {
         // Filter by extension
         val extensions = when (type) {
-            PickerSelectionType.Image -> imageExtensions
-            PickerSelectionType.Video -> videoExtensions
-            PickerSelectionType.ImageAndVideo -> imageExtensions + videoExtensions
-            is PickerSelectionType.File -> type.extensions
+            PickerType.Image -> imageExtensions
+            PickerType.Video -> videoExtensions
+            PickerType.ImageAndVideo -> imageExtensions + videoExtensions
+            is PickerType.File -> type.extensions
         }
 
         // Open native file picker
         val result = when (mode) {
-            PickerSelectionMode.Single -> PlatformFilePicker.current.pickFile(
+            PickerMode.Single -> PlatformFilePicker.current.pickFile(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
                 parentWindow = platformSettings?.parentWindow,
             )?.let { listOf(PlatformFile(it)) }
 
-            PickerSelectionMode.Multiple -> PlatformFilePicker.current.pickFiles(
+            PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
@@ -47,7 +47,7 @@ public actual object Picker {
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.IO) {
         // Open native file picker
         val file = PlatformFilePicker.current.pickDirectory(
@@ -71,7 +71,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
         AwtFileSaver.saveFile(
             bytes = bytes,

@@ -6,32 +6,32 @@ import platform.AppKit.NSSavePanel
 import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
-public actual object Picker {
+public actual object FileKit {
     public actual suspend fun <Out> pickFile(
-        type: PickerSelectionType,
-        mode: PickerSelectionMode<Out>,
+        type: PickerType,
+        mode: PickerMode<Out>,
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): Out? = callPicker(
         mode = when (mode) {
-            is PickerSelectionMode.Single -> Mode.Single
-            is PickerSelectionMode.Multiple -> Mode.Multiple
+            is PickerMode.Single -> Mode.Single
+            is PickerMode.Multiple -> Mode.Multiple
         },
         title = title,
         initialDirectory = initialDirectory,
         fileExtensions = when (type) {
-            PickerSelectionType.Image -> imageExtensions
-            PickerSelectionType.Video -> videoExtensions
-            PickerSelectionType.ImageAndVideo -> imageExtensions + videoExtensions
-            is PickerSelectionType.File -> type.extensions
+            PickerType.Image -> imageExtensions
+            PickerType.Video -> videoExtensions
+            PickerType.ImageAndVideo -> imageExtensions + videoExtensions
+            is PickerType.File -> type.extensions
         },
     )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformDirectory? = callPicker(
         mode = Mode.Directory,
         title = title,
@@ -46,7 +46,7 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? {
         // Create an NSSavePanel
         val nsSavePanel = NSSavePanel()

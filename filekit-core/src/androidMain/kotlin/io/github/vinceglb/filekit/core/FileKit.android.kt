@@ -18,7 +18,7 @@ import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-public actual object Picker {
+public actual object FileKit {
     private var registry: ActivityResultRegistry? = null
     private var context: WeakReference<Context?> = WeakReference(null)
 
@@ -28,29 +28,29 @@ public actual object Picker {
     }
 
     public actual suspend fun <Out> pickFile(
-        type: PickerSelectionType,
-        mode: PickerSelectionMode<Out>,
+        type: PickerType,
+        mode: PickerMode<Out>,
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): Out? = withContext(Dispatchers.IO) {
         // Throw exception if registry is not initialized
-        val registry = registry ?: throw PickerNotInitializedException()
+        val registry = registry ?: throw FileKitNotInitializedException()
 
         // It doesn't really matter what the key is, just that it is unique
         val key = UUID.randomUUID().toString()
 
         // Get context
-        val context = Picker.context.get()
-            ?: throw PickerNotInitializedException()
+        val context = FileKit.context.get()
+            ?: throw FileKitNotInitializedException()
 
         val result: PlatformFiles? = suspendCoroutine { continuation ->
             when (type) {
-                PickerSelectionType.Image,
-                PickerSelectionType.Video,
-                PickerSelectionType.ImageAndVideo -> {
+                PickerType.Image,
+                PickerType.Video,
+                PickerType.ImageAndVideo -> {
                     when (mode) {
-                        is PickerSelectionMode.Single -> {
+                        is PickerMode.Single -> {
                             val contract = PickVisualMedia()
                             val launcher = registry.register(key, contract) { uri ->
                                 val result = uri?.let { listOf(PlatformFile(it, context)) }
@@ -58,16 +58,16 @@ public actual object Picker {
                             }
 
                             val request = when (type) {
-                                PickerSelectionType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerSelectionType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerSelectionType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
+                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
+                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
+                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
                                 else -> throw IllegalArgumentException("Unsupported type: $type")
                             }
 
                             launcher.launch(request)
                         }
 
-                        is PickerSelectionMode.Multiple -> {
+                        is PickerMode.Multiple -> {
                             val contract = ActivityResultContracts.PickMultipleVisualMedia()
                             val launcher = registry.register(key, contract) { uri ->
                                 val result = uri.map { PlatformFile(it, context) }
@@ -75,9 +75,9 @@ public actual object Picker {
                             }
 
                             val request = when (type) {
-                                PickerSelectionType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerSelectionType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerSelectionType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
+                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
+                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
+                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
                                 else -> throw IllegalArgumentException("Unsupported type: $type")
                             }
 
@@ -86,9 +86,9 @@ public actual object Picker {
                     }
                 }
 
-                is PickerSelectionType.File -> {
+                is PickerType.File -> {
                     when (mode) {
-                        is PickerSelectionMode.Single -> {
+                        is PickerMode.Single -> {
                             val contract = ActivityResultContracts.OpenDocument()
                             val launcher = registry.register(key, contract) { uri ->
                                 val result = uri?.let { listOf(PlatformFile(it, context)) }
@@ -97,7 +97,7 @@ public actual object Picker {
                             launcher.launch(getMimeTypes(type.extensions))
                         }
 
-                        is PickerSelectionMode.Multiple -> {
+                        is PickerMode.Multiple -> {
                             val contract = ActivityResultContracts.OpenMultipleDocuments()
                             val launcher = registry.register(key, contract) { uris ->
                                 val result = uris.map { PlatformFile(it, context) }
@@ -116,10 +116,10 @@ public actual object Picker {
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformDirectory? = withContext(Dispatchers.IO) {
         // Throw exception if registry is not initialized
-        val registry = registry ?: throw PickerNotInitializedException()
+        val registry = registry ?: throw FileKitNotInitializedException()
 
         // It doesn't really matter what the key is, just that it is unique
         val key = UUID.randomUUID().toString()
@@ -142,18 +142,18 @@ public actual object Picker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: PickerPlatformSettings?,
+        platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
         suspendCoroutine { continuation ->
             // Throw exception if registry is not initialized
-            val registry = registry ?: throw PickerNotInitializedException()
+            val registry = registry ?: throw FileKitNotInitializedException()
 
             // It doesn't really matter what the key is, just that it is unique
             val key = UUID.randomUUID().toString()
 
             // Get context
-            val context = Picker.context.get()
-                ?: throw PickerNotInitializedException()
+            val context = FileKit.context.get()
+                ?: throw FileKitNotInitializedException()
 
             // Get MIME type
             val mimeType = getMimeType(extension)

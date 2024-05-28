@@ -5,25 +5,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import io.github.vinceglb.filekit.core.Picker
-import io.github.vinceglb.filekit.core.PickerPlatformSettings
-import io.github.vinceglb.filekit.core.PickerSelectionMode
-import io.github.vinceglb.filekit.core.PickerSelectionType
+import io.github.vinceglb.filekit.core.FileKit
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformDirectory
 import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable
 public fun <Out> rememberFilePickerLauncher(
-    type: PickerSelectionType = PickerSelectionType.File(),
-    mode: PickerSelectionMode<Out>,
+    type: PickerType = PickerType.File(),
+    mode: PickerMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: PickerPlatformSettings? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
-    // Init picker
-    InitPicker()
+    // Init FileKit
+    InitFileKit()
 
     // Coroutine
     val coroutineScope = rememberCoroutineScope()
@@ -35,14 +35,14 @@ public fun <Out> rememberFilePickerLauncher(
     val currentInitialDirectory by rememberUpdatedState(initialDirectory)
     val currentOnResult by rememberUpdatedState(onResult)
 
-    // Picker
-    val picker = remember { Picker }
+    // FileKit
+    val fileKit = remember { FileKit }
 
-    // Picker launcher
+    // FileKit launcher
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = picker.pickFile(
+                val result = fileKit.pickFile(
                     type = currentType,
                     mode = currentMode,
                     title = currentTitle,
@@ -59,15 +59,15 @@ public fun <Out> rememberFilePickerLauncher(
 
 @Composable
 public fun rememberFilePickerLauncher(
-    type: PickerSelectionType = PickerSelectionType.File(),
+    type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: PickerPlatformSettings? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
         type = type,
-        mode = PickerSelectionMode.Single,
+        mode = PickerMode.Single,
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = platformSettings,
@@ -79,11 +79,11 @@ public fun rememberFilePickerLauncher(
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: PickerPlatformSettings? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (PlatformDirectory?) -> Unit,
 ): PickerResultLauncher {
-    // Init picker
-    InitPicker()
+    // Init FileKit
+    InitFileKit()
 
     // Coroutine
     val coroutineScope = rememberCoroutineScope()
@@ -93,14 +93,14 @@ public fun rememberDirectoryPickerLauncher(
     val currentInitialDirectory by rememberUpdatedState(initialDirectory)
     val currentOnResult by rememberUpdatedState(onResult)
 
-    // Picker
-    val picker = remember { Picker }
+    // FileKit
+    val fileKit = remember { FileKit }
 
-    // Picker launcher
+    // FileKit launcher
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = picker.pickDirectory(
+                val result = fileKit.pickDirectory(
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
                     platformSettings = platformSettings,
@@ -115,11 +115,11 @@ public fun rememberDirectoryPickerLauncher(
 
 @Composable
 public fun rememberFileSaverLauncher(
-    platformSettings: PickerPlatformSettings? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher {
-    // Init picker
-    InitPicker()
+    // Init FileKit
+    InitFileKit()
 
     // Coroutine
     val coroutineScope = rememberCoroutineScope()
@@ -127,14 +127,14 @@ public fun rememberFileSaverLauncher(
     // Updated state
     val currentOnResult by rememberUpdatedState(onResult)
 
-    // Picker
-    val picker = remember { Picker }
+    // FileKit
+    val fileKit = remember { FileKit }
 
-    // Picker launcher
+    // FileKit launcher
     val returnedLauncher = remember {
         SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
             coroutineScope.launch {
-                val result = picker.saveFile(
+                val result = fileKit.saveFile(
                     bytes = bytes,
                     baseName = baseName,
                     extension = extension,
@@ -150,4 +150,4 @@ public fun rememberFileSaverLauncher(
 }
 
 @Composable
-internal expect fun InitPicker()
+internal expect fun InitFileKit()
