@@ -38,14 +38,14 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            // Picker-core
-            api(projects.pickerCore)
+            // FileKit Core
+            api(projects.filekitCore)
 
             // Observable ViewModel
             api(libs.observable.viewmodel)
         }
 
-        // https://github.com/rickclephas/kmm-viewmodel/?tab=readme-ov-file#kotlin
+        // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
         all {
             languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
         }

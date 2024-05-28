@@ -54,8 +54,8 @@ kotlin {
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
 
-            // Picker
-            implementation(projects.pickerCompose)
+            // FileKit
+            implementation(projects.filekitCompose)
 
             // Coil3
             implementation(libs.coil.compose)

@@ -3,14 +3,14 @@ package io.github.vinceglb.sample.core
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
 import com.rickclephas.kmp.observableviewmodel.ViewModel
 import com.rickclephas.kmp.observableviewmodel.coroutineScope
-import io.github.vinceglb.picker.core.Picker
-import io.github.vinceglb.picker.core.PickerSelectionMode
-import io.github.vinceglb.picker.core.PickerSelectionType
-import io.github.vinceglb.picker.core.PlatformDirectory
-import io.github.vinceglb.picker.core.PlatformFile
-import io.github.vinceglb.picker.core.baseName
-import io.github.vinceglb.picker.core.extension
-import io.github.vinceglb.picker.core.pickFile
+import io.github.vinceglb.filekit.core.FileKit
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.core.PlatformDirectory
+import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.core.baseName
+import io.github.vinceglb.filekit.core.extension
+import io.github.vinceglb.filekit.core.pickFile
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,8 +21,8 @@ class MainViewModel : ViewModel() {
 
     fun pickImage() = executeWithLoading {
         // Pick a file
-        val file = Picker.pickFile(
-            type = PickerSelectionType.Image,
+        val file = FileKit.pickFile(
+            type = PickerType.Image,
             title = "Custom title here",
             initialDirectory = downloadDirectoryPath()
         )
@@ -36,9 +36,9 @@ class MainViewModel : ViewModel() {
 
     fun pickImages() = executeWithLoading {
         // Pick files
-        val files = Picker.pickFile(
-            type = PickerSelectionType.Image,
-            mode = PickerSelectionMode.Multiple
+        val files = FileKit.pickFile(
+            type = PickerType.Image,
+            mode = PickerMode.Multiple
         )
 
         // Add files to the state
@@ -51,8 +51,8 @@ class MainViewModel : ViewModel() {
 
     fun pickFile() = executeWithLoading {
         // Pick a file
-        val file = Picker.pickFile(
-            type = PickerSelectionType.File(extensions = listOf("png")),
+        val file = FileKit.pickFile(
+            type = PickerType.File(extensions = listOf("png")),
         )
 
         // Add file to the state
@@ -64,9 +64,9 @@ class MainViewModel : ViewModel() {
 
     fun pickFiles() = executeWithLoading {
         // Pick files
-        val files = Picker.pickFile(
-            type = PickerSelectionType.File(extensions = listOf("png")),
-            mode = PickerSelectionMode.Multiple
+        val files = FileKit.pickFile(
+            type = PickerType.File(extensions = listOf("png")),
+            mode = PickerMode.Multiple
         )
 
         // Add files to the state
@@ -78,7 +78,7 @@ class MainViewModel : ViewModel() {
 
     fun pickDirectory() = executeWithLoading {
         // Pick a directory
-        val directory = Picker.pickDirectory()
+        val directory = FileKit.pickDirectory()
 
         // Update the state
         if (directory != null) {
@@ -88,7 +88,7 @@ class MainViewModel : ViewModel() {
 
     fun saveFile(file: PlatformFile) = executeWithLoading {
         // Save a file
-        val newFile = Picker.saveFile(
+        val newFile = FileKit.saveFile(
             bytes = file.readBytes(),
             baseName = file.baseName,
             extension = file.extension

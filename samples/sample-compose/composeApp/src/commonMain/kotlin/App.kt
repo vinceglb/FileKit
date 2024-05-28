@@ -19,16 +19,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.picker.compose.rememberDirectoryPickerLauncher
-import io.github.vinceglb.picker.compose.rememberFilePickerLauncher
-import io.github.vinceglb.picker.compose.rememberFileSaverLauncher
-import io.github.vinceglb.picker.core.Picker
-import io.github.vinceglb.picker.core.PickerSelectionMode
-import io.github.vinceglb.picker.core.PickerSelectionType
-import io.github.vinceglb.picker.core.PlatformDirectory
-import io.github.vinceglb.picker.core.PlatformFile
-import io.github.vinceglb.picker.core.baseName
-import io.github.vinceglb.picker.core.extension
+import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
+import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.core.FileKit
+import io.github.vinceglb.filekit.core.PickerMode
+import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.core.PlatformDirectory
+import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.core.baseName
+import io.github.vinceglb.filekit.core.extension
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -46,30 +46,30 @@ private fun SampleApp() {
     var directory: PlatformDirectory? by remember { mutableStateOf(null) }
 
     val singleFilePicker = rememberFilePickerLauncher(
-        type = PickerSelectionType.Image,
+        type = PickerType.Image,
         title = "Single file picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
     )
 
     val multipleFilesPicker = rememberFilePickerLauncher(
-        type = PickerSelectionType.Image,
-        mode = PickerSelectionMode.Multiple,
+        type = PickerType.Image,
+        mode = PickerMode.Multiple,
         title = "Multiple files picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
     )
 
     val filePicker = rememberFilePickerLauncher(
-        type = PickerSelectionType.File(listOf("png")),
+        type = PickerType.File(listOf("png")),
         title = "Single file picker, only png",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
     )
 
     val filesPicker = rememberFilePickerLauncher(
-        type = PickerSelectionType.File(listOf("png")),
-        mode = PickerSelectionMode.Multiple,
+        type = PickerType.File(listOf("png")),
+        mode = PickerMode.Multiple,
         title = "Multiple files picker, only png",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
@@ -116,18 +116,18 @@ private fun SampleApp() {
                 Text("Single file picker, only png")
             }
 
-            Button(onClick = { filesPicker.launch() }){
+            Button(onClick = { filesPicker.launch() }) {
                 Text("Multiple files picker, only png")
             }
 
             Button(
                 onClick = { directoryPicker.launch() },
-                enabled = Picker.isDirectoryPickerSupported()
+                enabled = FileKit.isDirectoryPickerSupported()
             ) {
                 Text("Directory picker")
             }
 
-            if (Picker.isDirectoryPickerSupported()) {
+            if (FileKit.isDirectoryPickerSupported()) {
                 Text("Selected directory: ${directory?.path ?: "None"}")
             } else {
                 Text("Directory picker is not supported")
