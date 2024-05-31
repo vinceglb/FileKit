@@ -1,5 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     alias(libs.plugins.androidLibrary) apply false
@@ -11,8 +11,7 @@ plugins {
 }
 
 allprojects {
-
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile> {
+    tasks.withType<KotlinJvmCompile> {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
@@ -22,9 +21,10 @@ allprojects {
         targetCompatibility = "${JavaVersion.VERSION_17}"
     }
 }
+
 subprojects {
     afterEvaluate {
-        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile> {
+        tasks.withType<KotlinJvmCompile> {
             compilerOptions {
                 jvmTarget.set(JvmTarget.JVM_17)
             }
