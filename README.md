@@ -165,7 +165,7 @@ val launcher = rememberDirectoryPickerLauncher(
 launcher.launch()
 ```
 
-The directory picker is available on all platforms, expect for WASM / JS. To check if the directory picker is available from the common code, you can use `Picker.isDirectoryPickerSupported()`.
+The directory picker is available on all platforms, expect for WASM / JS. To check if the directory picker is available from the common code, you can use `FileKit.isDirectoryPickerSupported()`.
 
 ```kotlin
 val directoryModeSupported = FileKit.isDirectoryPickerSupported()
