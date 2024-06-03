@@ -79,11 +79,16 @@ dependencies {
 
 ## ⚡ Initialization
 
-Using **FileKit Core on Android** requires an initialization. To be able to use the `ActivityResultContract` under the hood, you need to initialize FileKit in your `ComponentActivity`.
+Using **FileKit Core methods on Android** requires an initialization: 
+ - `FileKit.pickFile()`
+ - `FileKit.pickDirectory()`
+ - `FileKit.saveFile()`
+
+In this case, only if using Android, you need to initialize FileKit in your `ComponentActivity`:
 
 ```kotlin
 // MainActivity.kt
-class MyApplication : ComponentActivity() {
+class MainActivity : ComponentActivity() {
     override fun onCreate() {
         super.onCreate()
         FileKit.init(this)
@@ -91,7 +96,7 @@ class MyApplication : ComponentActivity() {
 }
 ```
 
-In all other cases, FileKit is ready to use without any initialization.
+In all other cases, you can use FileKit without initialization.
 
 ## 📄 File Picker
 
