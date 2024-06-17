@@ -53,6 +53,8 @@ public actual data class PlatformFile(
             reader.readAsArrayBuffer(file)
         }
     }
+
+    public actual fun getSize(): Long? = file.size.toLong()
 }
 
 public actual data class PlatformDirectory(

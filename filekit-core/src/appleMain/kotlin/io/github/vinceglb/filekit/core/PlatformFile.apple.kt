@@ -36,6 +36,10 @@ public actual data class PlatformFile(
             }
         }
     }
+
+    public actual fun getSize(): Long? {
+        TODO("implement on Mac")
+    }
 }
 
 public actual data class PlatformDirectory(
