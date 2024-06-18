@@ -1,13 +1,23 @@
 package io.github.vinceglb.filekit.core
 
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.usePinned
+import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
+import platform.Foundation.NSError
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.lastPathComponent
 import platform.posix.memcpy
@@ -37,8 +47,15 @@ public actual data class PlatformFile(
         }
     }
 
+    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     public actual fun getSize(): Long? {
-        TODO("implement on Mac")
+        memScoped {
+            val valuePointer: CPointer<ObjCObjectVar<Any?>> = alloc<ObjCObjectVar<Any?>>().ptr
+            val errorPointer: CPointer<ObjCObjectVar<NSError?>> =
+                alloc<ObjCObjectVar<NSError?>>().ptr
+            nsUrl.getResourceValue(valuePointer, NSURLFileSizeKey, errorPointer)
+            return valuePointer.pointed.value as? Long?
+        }
     }
 }
 
