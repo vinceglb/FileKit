@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.core
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.nio.file.Files
 
 public actual data class PlatformFile(
 	val file: File,
@@ -15,6 +16,8 @@ public actual data class PlatformFile(
 
 	public actual suspend fun readBytes(): ByteArray =
 		withContext(Dispatchers.IO) { file.readBytes() }
+
+	public actual fun getSize(): Long? = Files.size(file.toPath())
 }
 
 public actual data class PlatformDirectory(
