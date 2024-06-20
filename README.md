@@ -212,6 +212,7 @@ val filePath: String? = platformFile.path
 val fileName: String = platformFile.name            // Base name with extension
 val baseName: String = platformFile.baseName
 val extension: String = platformFile.extension
+val size: Long = platformFile.getSize()
 val bytes: ByteArray = platformFile.readBytes()     // suspend function
 
 val platformDirectory: PlatformDirectory = ...
