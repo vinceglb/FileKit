@@ -79,12 +79,16 @@ public actual object FileKit {
     public actual fun isDirectoryPickerSupported(): Boolean = false
 
     public actual suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.Default) {
+        if (bytes == null) {
+            throw FileKitFileSaverWithoutBytesException()
+        }
+
         // Create a blob
         val file = File(
             fileBits = bytes.toTypedArray(),
@@ -102,4 +106,6 @@ public actual object FileKit {
         // Return the file
         PlatformFile(file)
     }
+
+    public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = false
 }
