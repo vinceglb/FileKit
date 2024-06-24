@@ -67,7 +67,7 @@ public actual object FileKit {
     }
 
     public actual suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -81,4 +81,6 @@ public actual object FileKit {
             parentWindow = platformSettings?.parentWindow,
         )
     }
+
+    public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true
 }

@@ -40,6 +40,10 @@ public actual data class PlatformFile(
         val byteArraySize: Int =
             if (nsData.length > Int.MAX_VALUE.toUInt()) Int.MAX_VALUE else nsData.length.toInt()
 
+        if (byteArraySize == 0) {
+            return@withContext ByteArray(0)
+        }
+
         ByteArray(byteArraySize).apply {
             usePinned {
                 memcpy(it.addressOf(0), nsData.bytes, nsData.length)

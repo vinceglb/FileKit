@@ -11,7 +11,7 @@ import kotlin.coroutines.resume
 
 internal object AwtFileSaver {
     suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -19,11 +19,14 @@ internal object AwtFileSaver {
     ): PlatformFile? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
             if (value) {
-                val file = files?.firstOrNull()?.let {
-                    it.writeBytes(bytes)
-                    PlatformFile(it)
+                val file = files?.firstOrNull()?.let { file ->
+                    // Write bytes to file, or create a new file
+                    bytes?.let { file.writeBytes(bytes) } ?: file.createNewFile()
+                    PlatformFile(file)
                 }
                 continuation.resume(file)
+            } else {
+                continuation.resume(null)
             }
         }
 

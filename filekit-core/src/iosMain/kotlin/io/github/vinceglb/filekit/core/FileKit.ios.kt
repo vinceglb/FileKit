@@ -68,7 +68,7 @@ public actual object FileKit {
     public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -119,6 +119,8 @@ public actual object FileKit {
             completion = null
         )
     }
+
+    public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true
 
     private suspend fun callPicker(
         mode: Mode,

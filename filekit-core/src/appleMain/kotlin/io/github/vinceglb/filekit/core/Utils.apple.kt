@@ -9,9 +9,11 @@ import platform.Foundation.dataWithBytes
 import platform.Foundation.writeToURL
 
 @OptIn(ExperimentalForeignApi::class)
-internal fun writeBytesArrayToNsUrl(bytes: ByteArray, nsUrl: NSURL) {
+internal fun writeBytesArrayToNsUrl(bytes: ByteArray?, nsUrl: NSURL) {
     // Get the NSData from the ByteArray
     val nsData = memScoped {
+        if (bytes == null) return@memScoped NSData()
+
         NSData.dataWithBytes(
             bytes = bytes.refTo(0).getPointer(this),
             length = bytes.size.toULong()
