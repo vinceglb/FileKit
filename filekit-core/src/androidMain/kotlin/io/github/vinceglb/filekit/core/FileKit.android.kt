@@ -138,7 +138,7 @@ public actual object FileKit {
     public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -163,8 +163,10 @@ public actual object FileKit {
             val launcher = registry.register(key, contract) { uri ->
                 val platformFile = uri?.let {
                     // Write the bytes to the file
-                    context.contentResolver.openOutputStream(it)?.use { output ->
-                        output.write(bytes)
+                    bytes?.let { bytes ->
+                        context.contentResolver.openOutputStream(it)?.use { output ->
+                            output.write(bytes)
+                        }
                     }
 
                     PlatformFile(it, context)
@@ -176,6 +178,8 @@ public actual object FileKit {
             launcher.launch("$baseName.$extension")
         }
     }
+
+    public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true
 
     private fun getMimeTypes(fileExtensions: List<String>?): Array<String> {
         val mimeTypeMap = MimeTypeMap.getSingleton()

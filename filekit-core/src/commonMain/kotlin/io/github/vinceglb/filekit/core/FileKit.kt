@@ -18,12 +18,14 @@ public expect object FileKit {
     public fun isDirectoryPickerSupported(): Boolean
 
     public suspend fun saveFile(
-        bytes: ByteArray,
+        bytes: ByteArray? = null,
         baseName: String = "file",
         extension: String,
         initialDirectory: String? = null,
         platformSettings: FileKitPlatformSettings? = null,
     ): PlatformFile?
+
+    public suspend fun isSaveFileWithoutBytesSupported(): Boolean
 }
 
 public suspend fun FileKit.pickFile(
