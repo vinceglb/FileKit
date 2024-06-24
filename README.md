@@ -201,6 +201,16 @@ launcher.launch(
 )
 ```
 
+### Optional bytes argument
+
+Bytes argument is optional. If you don't provide it, the file will be empty. This feature is available on Android, iOS, macOS and JVM. It is not available on WASM / JS.
+
+To check if it's possible to save a file without bytes from the common code, you can use:
+
+```kotlin
+val isSupported: Boolean = FileKit.isSaveFileWithoutBytesSupported()
+```
+
 ## 🧑‍💻 PlatformFile and PlatformDirectory
 
 The `PlatformFile` and `PlatformDirectory` classes are wrappers around the platform file system. It allows you to get the file name, path and read the file content in common code.
