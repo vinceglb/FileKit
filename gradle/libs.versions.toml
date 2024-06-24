@@ -9,7 +9,7 @@ observable-viewmodel = "1.0.0-BETA-3"
 koinCompose = "1.2.0-Beta4"
 kotlin = "2.0.0"
 kotlinx-coroutines = "1.8.1"
-mavenPublishVanniktech = "0.28.0"
+mavenPublishVanniktech = "0.29.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "android-compose" }
