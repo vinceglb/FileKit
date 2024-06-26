@@ -25,8 +25,6 @@ internal object AwtFileSaver {
                     PlatformFile(file)
                 }
                 continuation.resume(file)
-            } else {
-                continuation.resume(null)
             }
         }
 
