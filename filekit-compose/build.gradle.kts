@@ -22,9 +22,12 @@ kotlin {
 
     // Wasm
     @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "FileKitCompose"
-        browser()
+    listOf(
+        js(IR),
+        wasmJs(),
+    ).forEach {
+        it.moduleName = "FileKitCompose"
+        it.browser()
     }
 
     // iOS / macOS
