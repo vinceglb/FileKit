@@ -20,7 +20,7 @@ kotlin {
     // JVM / Desktop
     jvm()
 
-    // Wasm
+    // JS / Web
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
         js(IR),
