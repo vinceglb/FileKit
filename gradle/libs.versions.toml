@@ -2,7 +2,7 @@
 agp = "8.5.0"
 android-activity-ktx = "1.9.0"
 android-compose = "1.9.0"
-coilCompose = "3.0.0-alpha06"
+coilCompose = "3.0.0-alpha07"
 compose-plugin = "1.6.11"
 jna = "5.14.0"
 observable-viewmodel = "1.0.0-BETA-3"
