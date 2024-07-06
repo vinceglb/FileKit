@@ -23,7 +23,7 @@ kotlin {
     // JS / Web
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
-        js(),
+        // js(IR),
         wasmJs(),
     ).forEach {
         it.moduleName = "FileKitCompose"
