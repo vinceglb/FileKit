@@ -61,6 +61,8 @@ public actual data class PlatformFile(
             return valuePointer.pointed.value as? Long?
         }
     }
+
+    public actual fun supportsStreams(): Boolean = true
 }
 
 public actual data class PlatformDirectory(

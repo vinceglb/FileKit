@@ -12,53 +12,59 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 public actual data class PlatformFile(
-	val file: File,
+    val file: File,
 ) {
-	public actual val name: String =
-		file.name
+    public actual val name: String =
+        file.name
 
-	public actual val path: String? =
-		null
+    public actual val path: String? =
+        null
 
-	public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.Main) {
-		suspendCoroutine { continuation ->
-			val reader = FileReader()
-			reader.onload = { event ->
-				try {
-					// Read the file as an ArrayBuffer
-					val arrayBuffer = event
-						.target
-						?.unsafeCast<FileReader>()
-						?.result
-						?.unsafeCast<ArrayBuffer>()
-						?: throw IllegalStateException("Could not read file")
+    public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.Main) {
+        suspendCoroutine { continuation ->
+            val reader = FileReader()
+            reader.onload = { event ->
+                try {
+                    // Read the file as an ArrayBuffer
+                    val arrayBuffer = event
+                        .target
+                        ?.unsafeCast<FileReader>()
+                        ?.result
+                        ?.unsafeCast<ArrayBuffer>()
+                        ?: throw IllegalStateException("Could not read file")
 
-					// Convert the ArrayBuffer to a ByteArray
-					val bytes = Uint8Array(arrayBuffer)
+                    // Convert the ArrayBuffer to a ByteArray
+                    val bytes = Uint8Array(arrayBuffer)
 
-					// Copy the bytes into a ByteArray
-					val byteArray = ByteArray(bytes.length)
-					for (i in 0 until bytes.length) {
-						byteArray[i] = bytes[i]
-					}
+                    // Copy the bytes into a ByteArray
+                    val byteArray = ByteArray(bytes.length)
+                    for (i in 0 until bytes.length) {
+                        byteArray[i] = bytes[i]
+                    }
 
-					// Return the ByteArray
-					continuation.resume(byteArray)
-				} catch (e: Exception) {
-					continuation.resumeWithException(e)
-				}
-			}
+                    // Return the ByteArray
+                    continuation.resume(byteArray)
+                } catch (e: Exception) {
+                    continuation.resumeWithException(e)
+                }
+            }
 
-			// Read the file as an ArrayBuffer
-			reader.readAsArrayBuffer(file)
-		}
-	}
+            // Read the file as an ArrayBuffer
+            reader.readAsArrayBuffer(file)
+        }
+    }
 
-	public actual fun getSize(): Long? = file.size.toDouble().toLong()
+    public actual fun getStream(): PlatformInputStream {
+        throw IllegalStateException("JS does not support InputStreams")
+    }
+
+    public actual fun getSize(): Long? = file.size.toDouble().toLong()
+
+    public actual fun supportsStreams(): Boolean = false
 }
 
 public actual data class PlatformDirectory(
-	val file: File,
+    val file: File,
 ) {
-	public actual val path: String? = null
+    public actual val path: String? = null
 }
