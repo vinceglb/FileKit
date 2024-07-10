@@ -84,7 +84,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
                     val nsData = Foundation.invokeVarArg(
                         "NSArray",
                         "arrayWithObjects:",
-                        *items.toTypedArray()
+                        *items.toTypedArray(),
                     )
                     Foundation.invoke(openPanel, "setAllowedFileTypes:", nsData)
                 }
@@ -143,7 +143,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 Foundation.invoke(openPanel, "setCanChooseFiles:", true)
                 Foundation.invoke(openPanel, "setCanChooseDirectories:", false)
                 Foundation.invoke(openPanel, "setAllowsMultipleSelection:", true)
-                // MaxItems is not supported by FileDialog
+                // MaxItems is not supported by MacOSFilePicker
             }
 
             override fun getResult(openPanel: ID): List<File>? = multiplePaths(openPanel)

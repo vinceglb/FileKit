@@ -155,19 +155,19 @@ internal class JnaFileChooser() {
         fc.isMultiSelectionEnabled = isMultiSelectionEnabled
         fc.fileSelectionMode = mode.jFileChooserValue
 
-        // MaxItems is not supported by FileDialog
+        // MaxItems is not supported by JFileChooser
 
         // set select file
-        if (!defaultFile.isEmpty() and (action == Action.Save)) {
+        if (defaultFile.isNotEmpty() and (action == Action.Save)) {
             val fsel = File(defaultFile)
             fc.selectedFile = fsel
         }
-        if (!dialogTitle.isEmpty()) {
+        if (dialogTitle.isNotEmpty()) {
             fc.dialogTitle = dialogTitle
         }
-        if ((action == Action.Open) and !openButtonText.isEmpty()) {
+        if ((action == Action.Open) and openButtonText.isNotEmpty()) {
             fc.approveButtonText = openButtonText
-        } else if ((action == Action.Save) and !saveButtonText.isEmpty()) {
+        } else if ((action == Action.Save) and saveButtonText.isNotEmpty()) {
             fc.approveButtonText = saveButtonText
         }
 
@@ -189,8 +189,7 @@ internal class JnaFileChooser() {
             fc.isAcceptAllFileFilterUsed = useAcceptAllFilter
         }
 
-        var result = -1
-        result = if (action == Action.Open) {
+        val result = if (action == Action.Open) {
             fc.showOpenDialog(parent)
         } else {
             if (saveButtonText.isEmpty()) {
