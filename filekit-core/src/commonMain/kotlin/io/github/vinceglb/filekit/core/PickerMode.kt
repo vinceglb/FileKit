@@ -9,7 +9,7 @@ public sealed class PickerMode<Out> {
         }
     }
 
-    public data object Multiple : PickerMode<PlatformFiles>() {
+    public data class Multiple(val maxItems: Int = Int.MAX_VALUE) : PickerMode<PlatformFiles>() {
         override fun parseResult(value: PlatformFiles?): PlatformFiles? {
             return value?.takeIf { it.isNotEmpty() }
         }

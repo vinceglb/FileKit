@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -49,61 +50,68 @@ public actual object FileKit {
                 PickerType.Image,
                 PickerType.Video,
                 PickerType.ImageAndVideo -> {
-                    when (mode) {
+                    val request = when (type) {
+                        PickerType.Image -> PickVisualMediaRequest(ImageOnly)
+                        PickerType.Video -> PickVisualMediaRequest(VideoOnly)
+                        PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
+                        else -> throw IllegalArgumentException("Unsupported type: $type")
+                    }
+
+                    fun singleMediaLauncher(): ActivityResultLauncher<PickVisualMediaRequest> {
+                        val contract = PickVisualMedia()
+                        return registry.register(key, contract) { uri ->
+                            val result = uri?.let { listOf(PlatformFile(it, context)) }
+                            continuation.resume(result)
+                        }
+                    }
+
+                    val launcher = when (mode) {
                         is PickerMode.Single -> {
-                            val contract = PickVisualMedia()
-                            val launcher = registry.register(key, contract) { uri ->
-                                val result = uri?.let { listOf(PlatformFile(it, context)) }
-                                continuation.resume(result)
-                            }
-
-                            val request = when (type) {
-                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
-                                else -> throw IllegalArgumentException("Unsupported type: $type")
-                            }
-
-                            launcher.launch(request)
+                            singleMediaLauncher()
                         }
 
                         is PickerMode.Multiple -> {
-                            val contract = ActivityResultContracts.PickMultipleVisualMedia()
-                            val launcher = registry.register(key, contract) { uri ->
-                                val result = uri.map { PlatformFile(it, context) }
-                                continuation.resume(result)
+                            if (mode.maxItems == 1) singleMediaLauncher()
+                            else {
+                                val contract =
+                                    ActivityResultContracts.PickMultipleVisualMedia(mode.maxItems)
+                                registry.register(key, contract) { uri ->
+                                    val result = uri.map { PlatformFile(it, context) }
+                                    continuation.resume(result)
+                                }
                             }
-
-                            val request = when (type) {
-                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
-                                else -> throw IllegalArgumentException("Unsupported type: $type")
-                            }
-
-                            launcher.launch(request)
                         }
                     }
+                    launcher.launch(request)
                 }
 
                 is PickerType.File -> {
+                    fun openSingleDocument() {
+                        val contract = ActivityResultContracts.OpenDocument()
+                        val launcher = registry.register(key, contract) { uri ->
+                            val result = uri?.let { listOf(PlatformFile(it, context)) }
+                            continuation.resume(result)
+                        }
+                        launcher.launch(getMimeTypes(type.extensions))
+                    }
                     when (mode) {
                         is PickerMode.Single -> {
-                            val contract = ActivityResultContracts.OpenDocument()
-                            val launcher = registry.register(key, contract) { uri ->
-                                val result = uri?.let { listOf(PlatformFile(it, context)) }
-                                continuation.resume(result)
-                            }
-                            launcher.launch(getMimeTypes(type.extensions))
+                            openSingleDocument()
                         }
 
                         is PickerMode.Multiple -> {
-                            val contract = ActivityResultContracts.OpenMultipleDocuments()
-                            val launcher = registry.register(key, contract) { uris ->
-                                val result = uris.map { PlatformFile(it, context) }
-                                continuation.resume(result)
+                            if (mode.maxItems == 1) {
+                                openSingleDocument()
+                            } else {
+                                // TODO there might be a way to limit the amount of documents, but
+                                //  I haven't found it yet.
+                                val contract = ActivityResultContracts.OpenMultipleDocuments()
+                                val launcher = registry.register(key, contract) { uris ->
+                                    val result = uris.map { PlatformFile(it, context) }
+                                    continuation.resume(result)
+                                }
+                                launcher.launch(getMimeTypes(type.extensions))
                             }
-                            launcher.launch(getMimeTypes(type.extensions))
                         }
                     }
                 }
