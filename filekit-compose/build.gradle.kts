@@ -23,7 +23,7 @@ kotlin {
     // JS / Web
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
-        // js(IR),
+        js(),
         wasmJs(),
     ).forEach {
         it.moduleName = "FileKitCompose"
@@ -44,6 +44,7 @@ kotlin {
 
     sourceSets {
         val wasmJsMain by getting
+        val jsMain by getting
 
         commonMain.dependencies {
             // Compose
@@ -71,6 +72,7 @@ kotlin {
         nativeMain.get().dependsOn(nonAndroidMain)
         jvmMain.get().dependsOn(nonAndroidMain)
         wasmJsMain.dependsOn(nonAndroidMain)
+        jsMain.dependsOn(nonAndroidMain)
     }
 }
 
