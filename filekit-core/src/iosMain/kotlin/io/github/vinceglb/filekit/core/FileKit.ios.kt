@@ -40,7 +40,7 @@ public actual object FileKit {
         // Use PHPickerViewController for images and videos
         is PickerType.Image,
         is PickerType.Video -> callPhPicker(
-            isMultipleMode = mode is PickerMode.Multiple,
+            mode = mode,
             type = type
         )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
@@ -153,8 +153,8 @@ public actual object FileKit {
         )
     }
 
-    private suspend fun callPhPicker(
-        isMultipleMode: Boolean,
+    private suspend fun <Out> callPhPicker(
+        mode: PickerMode<Out>,
         type: PickerType,
     ): List<NSURL>? {
         val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
@@ -167,7 +167,10 @@ public actual object FileKit {
             val configuration = PHPickerConfiguration(sharedPhotoLibrary())
 
             // Number of medias to select
-            configuration.selectionLimit = if (isMultipleMode) 0 else 1
+            configuration.selectionLimit = when (mode) {
+                is PickerMode.Multiple -> mode.maxItems.toLong()
+                PickerMode.Single -> 1
+            }
 
             // Filter configuration
             configuration.filter = when (type) {
