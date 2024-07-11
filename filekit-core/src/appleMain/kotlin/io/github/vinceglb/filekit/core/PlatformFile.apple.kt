@@ -4,17 +4,17 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
-import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.usePinned
+import kotlinx.cinterop.refTo
 import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
+import platform.Foundation.NSDataReadingOptions
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
@@ -31,22 +31,23 @@ public actual data class PlatformFile(
     public actual val path: String? =
         nsUrl.absoluteString
 
-    @OptIn(ExperimentalForeignApi::class)
+    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.IO) {
-        // Get the NSData from the NSURL
-        val nsData = NSData.dataWithContentsOfURL(nsUrl)
-            ?: throw IllegalStateException("Failed to read data from $nsUrl")
+        memScoped {
+            // Start accessing the security scoped resource
+            nsUrl.startAccessingSecurityScopedResource()
 
-        val byteArraySize: Int =
-            if (nsData.length > Int.MAX_VALUE.toUInt()) Int.MAX_VALUE else nsData.length.toInt()
+            // Read the data
+            val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
+            val nsData = NSData.dataWithContentsOfURL(nsUrl, NSDataReadingOptions.MAX_VALUE, error)
+                ?: throw IllegalStateException("Failed to read data from $nsUrl. Error: ${error.pointed.value}")
 
-        if (byteArraySize == 0) {
-            return@withContext ByteArray(0)
-        }
+            // Stop accessing the security scoped resource
+            nsUrl.stopAccessingSecurityScopedResource()
 
-        ByteArray(byteArraySize).apply {
-            usePinned {
-                memcpy(it.addressOf(0), nsData.bytes, nsData.length)
+            // Copy the data to a ByteArray
+            ByteArray(nsData.length.toInt()).apply {
+                memcpy(this.refTo(0), nsData.bytes, nsData.length)
             }
         }
     }
