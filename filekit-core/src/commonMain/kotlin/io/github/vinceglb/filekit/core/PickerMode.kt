@@ -9,6 +9,10 @@ public sealed class PickerMode<Out> {
         }
     }
 
+    /**
+     * @property maxItems sets the limit of how many items can be selected. NOTE: This is only
+     * supported by Android / iOS and only when picking media files, not any kind of file.
+     */
     public data class Multiple(val maxItems: Int = Int.MAX_VALUE) : PickerMode<PlatformFiles>() {
         override fun parseResult(value: PlatformFiles?): PlatformFiles? {
             return value?.takeIf { it.isNotEmpty() }
