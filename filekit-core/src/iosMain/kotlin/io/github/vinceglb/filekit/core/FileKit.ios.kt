@@ -178,7 +178,7 @@ public actual object FileKit {
 
             // Number of medias to select
             configuration.selectionLimit = when (mode) {
-                is PickerMode.Multiple -> mode.maxItems.toLong()
+                is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
                 PickerMode.Single -> 1
             }
 

@@ -4,10 +4,10 @@ import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
@@ -57,28 +57,23 @@ public actual object FileKit {
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
 
-                    fun singleMediaLauncher(): ActivityResultLauncher<PickVisualMediaRequest> {
-                        val contract = PickVisualMedia()
-                        return registry.register(key, contract) { uri ->
-                            val result = uri?.let { listOf(PlatformFile(it, context)) }
-                            continuation.resume(result)
-                        }
-                    }
-
                     val launcher = when (mode) {
                         is PickerMode.Single -> {
-                            singleMediaLauncher()
+                            val contract = PickVisualMedia()
+                            registry.register(key, contract) { uri ->
+                                val result = uri?.let { listOf(PlatformFile(it, context)) }
+                                continuation.resume(result)
+                            }
                         }
 
                         is PickerMode.Multiple -> {
-                            if (mode.maxItems == 1) singleMediaLauncher()
-                            else {
-                                val contract =
-                                    ActivityResultContracts.PickMultipleVisualMedia(mode.maxItems)
-                                registry.register(key, contract) { uri ->
-                                    val result = uri.map { PlatformFile(it, context) }
-                                    continuation.resume(result)
-                                }
+                            val contract = when {
+                                mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
+                                else -> PickMultipleVisualMedia()
+                            }
+                            registry.register(key, contract) { uri ->
+                                val result = uri.map { PlatformFile(it, context) }
+                                continuation.resume(result)
                             }
                         }
                     }
@@ -86,32 +81,25 @@ public actual object FileKit {
                 }
 
                 is PickerType.File -> {
-                    fun openSingleDocument() {
-                        val contract = ActivityResultContracts.OpenDocument()
-                        val launcher = registry.register(key, contract) { uri ->
-                            val result = uri?.let { listOf(PlatformFile(it, context)) }
-                            continuation.resume(result)
-                        }
-                        launcher.launch(getMimeTypes(type.extensions))
-                    }
                     when (mode) {
                         is PickerMode.Single -> {
-                            openSingleDocument()
+                            val contract = ActivityResultContracts.OpenDocument()
+                            val launcher = registry.register(key, contract) { uri ->
+                                val result = uri?.let { listOf(PlatformFile(it, context)) }
+                                continuation.resume(result)
+                            }
+                            launcher.launch(getMimeTypes(type.extensions))
                         }
 
                         is PickerMode.Multiple -> {
-                            if (mode.maxItems == 1) {
-                                openSingleDocument()
-                            } else {
-                                // TODO there might be a way to limit the amount of documents, but
-                                //  I haven't found it yet.
-                                val contract = ActivityResultContracts.OpenMultipleDocuments()
-                                val launcher = registry.register(key, contract) { uris ->
-                                    val result = uris.map { PlatformFile(it, context) }
-                                    continuation.resume(result)
-                                }
-                                launcher.launch(getMimeTypes(type.extensions))
+                            // TODO there might be a way to limit the amount of documents, but
+                            //  I haven't found it yet.
+                            val contract = ActivityResultContracts.OpenMultipleDocuments()
+                            val launcher = registry.register(key, contract) { uris ->
+                                val result = uris.map { PlatformFile(it, context) }
+                                continuation.resume(result)
                             }
+                            launcher.launch(getMimeTypes(type.extensions))
                         }
                     }
                 }
