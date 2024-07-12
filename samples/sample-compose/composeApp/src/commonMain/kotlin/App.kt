@@ -54,7 +54,7 @@ private fun SampleApp() {
 
     val multipleFilesPicker = rememberFilePickerLauncher(
         type = PickerType.Image,
-        mode = PickerMode.Multiple(),
+        mode = PickerMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
