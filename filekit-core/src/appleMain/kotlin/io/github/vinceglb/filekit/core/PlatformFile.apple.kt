@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
-import platform.Foundation.NSDataReadingOptions
+import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
@@ -39,7 +39,7 @@ public actual data class PlatformFile(
 
             // Read the data
             val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
-            val nsData = NSData.dataWithContentsOfURL(nsUrl, NSDataReadingOptions.MAX_VALUE, error)
+            val nsData = NSData.dataWithContentsOfURL(nsUrl, NSDataReadingUncached, error)
                 ?: throw IllegalStateException("Failed to read data from $nsUrl. Error: ${error.pointed.value}")
 
             // Stop accessing the security scoped resource
