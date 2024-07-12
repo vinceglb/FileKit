@@ -10,3 +10,4 @@ xcuserdata
 .kotlin
 .idea/*
 !.idea/runConfigurations/
+Package.resolved
