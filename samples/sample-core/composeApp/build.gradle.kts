@@ -25,14 +25,19 @@ kotlin {
     }
 
     @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "composeApp"
-        browser {
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
+    listOf(
+        js(),
+        wasmJs(),
+    ).forEach {
+        it.apply {
+            moduleName = "composeApp"
+            browser {
+                commonWebpackConfig {
+                    outputFileName = "composeApp.js"
+                }
             }
+            binaries.executable()
         }
-        binaries.executable()
     }
 
     sourceSets {
