@@ -27,6 +27,11 @@ public actual object FileKit {
         registry = activity.activityResultRegistry
     }
 
+    public fun init(context: Context, registry: ActivityResultRegistry) {
+        this.context = WeakReference(context)
+        this.registry = registry
+    }
+
     public actual suspend fun <Out> pickFile(
         type: PickerType,
         mode: PickerMode<Out>,
