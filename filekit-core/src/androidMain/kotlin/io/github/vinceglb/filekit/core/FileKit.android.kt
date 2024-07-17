@@ -57,8 +57,8 @@ public actual object FileKit {
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
 
-                    val launcher = when (mode) {
-                        is PickerMode.Single -> {
+                    val launcher = when {
+                        mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
                             val contract = PickVisualMedia()
                             registry.register(key, contract) { uri ->
                                 val result = uri?.let { listOf(PlatformFile(it, context)) }
@@ -66,7 +66,7 @@ public actual object FileKit {
                             }
                         }
 
-                        is PickerMode.Multiple -> {
+                        mode is PickerMode.Multiple -> {
                             val contract = when {
                                 mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
                                 else -> PickMultipleVisualMedia()
@@ -76,6 +76,8 @@ public actual object FileKit {
                                 continuation.resume(result)
                             }
                         }
+
+                        else -> throw IllegalArgumentException("Unsupported mode: $mode")
                     }
                     launcher.launch(request)
                 }

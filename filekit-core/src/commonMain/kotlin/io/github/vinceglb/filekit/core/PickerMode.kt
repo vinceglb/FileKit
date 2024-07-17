@@ -15,7 +15,9 @@ public sealed class PickerMode<Out> {
      */
     public data class Multiple(val maxItems: Int? = null) : PickerMode<PlatformFiles>() {
         init {
-            require(maxItems == null || maxItems in 2..50) { "maxItems must be contained between 2 <= maxItems <= 50 but current value is $maxItems" }
+            require(maxItems == null || maxItems in 1..50) {
+                "maxItems must be contained between 1 <= maxItems <= 50 but current value is $maxItems"
+            }
         }
 
         override fun parseResult(value: PlatformFiles?): PlatformFiles? {
