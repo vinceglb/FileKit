@@ -25,14 +25,14 @@ public actual object FileKit {
 
         // Open native file picker
         val result = when (mode) {
-            PickerMode.Single -> PlatformFilePicker.current.pickFile(
+            is PickerMode.Single -> PlatformFilePicker.current.pickFile(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
                 parentWindow = platformSettings?.parentWindow,
             )?.let { listOf(PlatformFile(it)) }
 
-            PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
+            is PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,

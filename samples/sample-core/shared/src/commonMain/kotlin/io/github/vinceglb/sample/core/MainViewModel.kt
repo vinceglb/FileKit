@@ -38,7 +38,7 @@ class MainViewModel : ViewModel() {
         // Pick files
         val files = FileKit.pickFile(
             type = PickerType.Image,
-            mode = PickerMode.Multiple
+            mode = PickerMode.Multiple()
         )
 
         // Add files to the state
@@ -66,7 +66,7 @@ class MainViewModel : ViewModel() {
         // Pick files
         val files = FileKit.pickFile(
             type = PickerType.File(extensions = listOf("png")),
-            mode = PickerMode.Multiple
+            mode = PickerMode.Multiple()
         )
 
         // Add files to the state

@@ -54,7 +54,7 @@ private fun SampleApp() {
 
     val multipleFilesPicker = rememberFilePickerLauncher(
         type = PickerType.Image,
-        mode = PickerMode.Multiple,
+        mode = PickerMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }
@@ -69,7 +69,7 @@ private fun SampleApp() {
 
     val filesPicker = rememberFilePickerLauncher(
         type = PickerType.File(listOf("png")),
-        mode = PickerMode.Multiple,
+        mode = PickerMode.Multiple(),
         title = "Multiple files picker, only png",
         initialDirectory = directory?.path,
         onResult = { file -> file?.let { files += it } }

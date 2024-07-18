@@ -42,6 +42,8 @@ public actual object FileKit {
 
                 // Set the multiple attribute
                 multiple = mode is PickerMode.Multiple
+
+                // max is not supported for file inputs
             }
 
             // Setup the change listener

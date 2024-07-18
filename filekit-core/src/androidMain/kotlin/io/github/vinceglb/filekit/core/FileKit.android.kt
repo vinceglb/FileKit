@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
@@ -49,41 +50,36 @@ public actual object FileKit {
                 PickerType.Image,
                 PickerType.Video,
                 PickerType.ImageAndVideo -> {
-                    when (mode) {
-                        is PickerMode.Single -> {
+                    val request = when (type) {
+                        PickerType.Image -> PickVisualMediaRequest(ImageOnly)
+                        PickerType.Video -> PickVisualMediaRequest(VideoOnly)
+                        PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
+                        else -> throw IllegalArgumentException("Unsupported type: $type")
+                    }
+
+                    val launcher = when {
+                        mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
                             val contract = PickVisualMedia()
-                            val launcher = registry.register(key, contract) { uri ->
+                            registry.register(key, contract) { uri ->
                                 val result = uri?.let { listOf(PlatformFile(it, context)) }
                                 continuation.resume(result)
                             }
-
-                            val request = when (type) {
-                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
-                                else -> throw IllegalArgumentException("Unsupported type: $type")
-                            }
-
-                            launcher.launch(request)
                         }
 
-                        is PickerMode.Multiple -> {
-                            val contract = ActivityResultContracts.PickMultipleVisualMedia()
-                            val launcher = registry.register(key, contract) { uri ->
+                        mode is PickerMode.Multiple -> {
+                            val contract = when {
+                                mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
+                                else -> PickMultipleVisualMedia()
+                            }
+                            registry.register(key, contract) { uri ->
                                 val result = uri.map { PlatformFile(it, context) }
                                 continuation.resume(result)
                             }
-
-                            val request = when (type) {
-                                PickerType.Image -> PickVisualMediaRequest(ImageOnly)
-                                PickerType.Video -> PickVisualMediaRequest(VideoOnly)
-                                PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
-                                else -> throw IllegalArgumentException("Unsupported type: $type")
-                            }
-
-                            launcher.launch(request)
                         }
+
+                        else -> throw IllegalArgumentException("Unsupported mode: $mode")
                     }
+                    launcher.launch(request)
                 }
 
                 is PickerType.File -> {
@@ -98,6 +94,8 @@ public actual object FileKit {
                         }
 
                         is PickerMode.Multiple -> {
+                            // TODO there might be a way to limit the amount of documents, but
+                            //  I haven't found it yet.
                             val contract = ActivityResultContracts.OpenMultipleDocuments()
                             val launcher = registry.register(key, contract) { uris ->
                                 val result = uris.map { PlatformFile(it, context) }
