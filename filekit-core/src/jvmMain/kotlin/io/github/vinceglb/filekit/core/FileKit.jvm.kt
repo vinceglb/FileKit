@@ -1,9 +1,9 @@
 package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
-import io.github.vinceglb.filekit.core.platform.awt.AwtFileSaver
 import io.github.vinceglb.filekit.core.platform.util.Platform
 import io.github.vinceglb.filekit.core.platform.util.PlatformUtil
+import io.github.vinceglb.filekit.core.platform.xdg.XdgFilePickerPortal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -63,7 +63,7 @@ public actual object FileKit {
     public actual fun isDirectoryPickerSupported(): Boolean = when (PlatformUtil.current) {
         Platform.MacOS -> true
         Platform.Windows -> true
-        Platform.Linux -> false
+        Platform.Linux -> PlatformFilePicker.current is XdgFilePickerPortal
     }
 
     public actual suspend fun saveFile(
@@ -73,13 +73,14 @@ public actual object FileKit {
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
-        AwtFileSaver.saveFile(
+        val result = PlatformFilePicker.current.saveFile(
             bytes = bytes,
             baseName = baseName,
             extension = extension,
             initialDirectory = initialDirectory,
             parentWindow = platformSettings?.parentWindow,
         )
+        result?.let { PlatformFile(result) }
     }
 
     public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true

@@ -3,6 +3,8 @@ package io.github.vinceglb.filekit.core
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.khronos.webgl.Uint8Array
+import org.khronos.webgl.set
 import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.asList
@@ -91,9 +93,19 @@ public actual object FileKit {
             throw FileKitFileSaverWithoutBytesException()
         }
 
+        // Create a byte array
+        val array = Uint8Array(bytes.size)
+        for (i in bytes.indices) {
+            array[i] = bytes[i]
+        }
+
+        // Create a dynamic array
+        val dynamicArray: Array<dynamic> = emptyArray()
+        dynamicArray[0] = array
+
         // Create a blob
         val file = File(
-            fileBits = bytes.toTypedArray(),
+            fileBits = dynamicArray,
             fileName = "$baseName.$extension",
         )
 
