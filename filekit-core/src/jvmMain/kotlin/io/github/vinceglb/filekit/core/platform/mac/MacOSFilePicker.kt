@@ -35,7 +35,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
 		)
 	}
 
-	override fun pickDirectory(
+	override suspend fun pickDirectory(
 		initialDirectory: String?,
 		title: String?,
 		parentWindow: Window?,
