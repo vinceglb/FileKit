@@ -48,7 +48,8 @@ public actual object FileKit {
     ): Out? = when (type) {
         // Use PHPickerViewController for images and videos
         is PickerType.Image,
-        is PickerType.Video -> callPhPicker(
+        is PickerType.Video,
+        is PickerType.ImageAndVideo -> callPhPicker(
             mode = mode,
             type = type
         )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
