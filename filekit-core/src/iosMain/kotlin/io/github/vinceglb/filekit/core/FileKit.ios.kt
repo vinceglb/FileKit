@@ -30,7 +30,7 @@ import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
-import platform.UniformTypeIdentifiers.UTTypeVideo
+import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -216,7 +216,7 @@ public actual object FileKit {
                     result.itemProvider.loadFileRepresentationForTypeIdentifier(
                         typeIdentifier = when (type) {
                             is PickerType.Image -> UTTypeImage.identifier
-                            is PickerType.Video -> UTTypeVideo.identifier
+                            is PickerType.Video -> UTTypeMovie.identifier
                             is PickerType.ImageAndVideo -> UTTypeContent.identifier
                             else -> throw IllegalArgumentException("Unsupported type: $type")
                         }
@@ -260,8 +260,8 @@ public actual object FileKit {
     private val PickerType.contentTypes: List<UTType>
         get() = when (this) {
             is PickerType.Image -> listOf(UTTypeImage)
-            is PickerType.Video -> listOf(UTTypeVideo)
-            is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeVideo)
+            is PickerType.Video -> listOf(UTTypeMovie)
+            is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
             is PickerType.File -> extensions
                 ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
                 .ifNullOrEmpty { listOf(UTTypeContent) }
