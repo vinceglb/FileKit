@@ -1,6 +1,5 @@
 package io.github.vinceglb.filekit.core.platform.awt
 
-import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
 import java.awt.FileDialog
@@ -16,13 +15,13 @@ internal object AwtFileSaver {
         extension: String,
         initialDirectory: String?,
         parentWindow: Window?,
-    ): PlatformFile? = suspendCancellableCoroutine { continuation ->
+    ): File? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
             if (value) {
                 val file = files?.firstOrNull()?.let { file ->
                     // Write bytes to file, or create a new file
                     bytes?.let { file.writeBytes(bytes) } ?: file.createNewFile()
-                    PlatformFile(file)
+                    file
                 }
                 continuation.resume(file)
             }
