@@ -143,8 +143,8 @@ val file = FileKit.pickFile(
 
 // FileKit Compose
 val launcher = rememberFilePickerLauncher(
-    type = PickerSelectionType.ImageAndVideo,
-    mode = PickerSelectionMode.Multiple(),
+    type = PickerType.ImageAndVideo,
+    mode = PickerMode.Multiple(),
     title = "Pick a media",
     initialDirectory = "/custom/initial/path"
 ) { files ->
