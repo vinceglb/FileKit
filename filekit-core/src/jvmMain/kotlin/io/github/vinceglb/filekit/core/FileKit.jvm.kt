@@ -1,9 +1,6 @@
 package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
-import io.github.vinceglb.filekit.core.platform.util.Platform
-import io.github.vinceglb.filekit.core.platform.util.PlatformUtil
-import io.github.vinceglb.filekit.core.platform.xdg.XdgFilePickerPortal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -60,11 +57,7 @@ public actual object FileKit {
         file?.let { PlatformDirectory(it) }
     }
 
-    public actual fun isDirectoryPickerSupported(): Boolean = when (PlatformUtil.current) {
-        Platform.MacOS -> true
-        Platform.Windows -> true
-        Platform.Linux -> PlatformFilePicker.current is XdgFilePickerPortal
-    }
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
         bytes: ByteArray?,
