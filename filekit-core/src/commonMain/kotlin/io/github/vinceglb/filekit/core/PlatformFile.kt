@@ -5,7 +5,10 @@ public expect class PlatformFile {
     public val path: String?
 
     public suspend fun readBytes(): ByteArray
+    public fun getStream(): PlatformInputStream
     public fun getSize(): Long?
+
+    public fun supportsStreams(): Boolean
 }
 
 public val PlatformFile.baseName: String

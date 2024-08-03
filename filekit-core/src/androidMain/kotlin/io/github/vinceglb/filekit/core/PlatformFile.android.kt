@@ -27,6 +27,14 @@ public actual data class PlatformFile(
             ?: throw IllegalStateException("Failed to read file")
     }
 
+    public actual fun getStream(): PlatformInputStream {
+        return context
+            .contentResolver
+            .openInputStream(uri)?.let {
+                PlatformInputStream(it)
+            } ?: throw IllegalStateException("Failed to open stream")
+    }
+
     public actual fun getSize(): Long? = runCatching {
         context.contentResolver.query(uri, null, null, null, null)
             ?.use { cursor ->
@@ -34,6 +42,8 @@ public actual data class PlatformFile(
                 cursor.getColumnIndex(OpenableColumns.SIZE).let(cursor::getLong)
             }
     }.getOrNull()
+
+    public actual fun supportsStreams(): Boolean = true
 
     private fun Context.getFileName(uri: Uri): String? = when (uri.scheme) {
         ContentResolver.SCHEME_CONTENT -> getContentFileName(uri)

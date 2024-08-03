@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSError
+import platform.Foundation.NSInputStream
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.dataWithContentsOfURL
@@ -52,6 +53,10 @@ public actual data class PlatformFile(
         }
     }
 
+    public actual fun getStream(): PlatformInputStream {
+        return PlatformInputStream(NSInputStream(nsUrl))
+    }
+
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     public actual fun getSize(): Long? {
         memScoped {
@@ -62,6 +67,8 @@ public actual data class PlatformFile(
             return valuePointer.pointed.value as? Long?
         }
     }
+
+    public actual fun supportsStreams(): Boolean = true
 }
 
 public actual data class PlatformDirectory(

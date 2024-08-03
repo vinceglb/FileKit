@@ -6,23 +6,29 @@ import java.io.File
 import java.nio.file.Files
 
 public actual data class PlatformFile(
-	val file: File,
+    val file: File,
 ) {
-	public actual val name: String =
-		file.name
+    public actual val name: String =
+        file.name
 
-	public actual val path: String? =
-		file.absolutePath
+    public actual val path: String? =
+        file.absolutePath
 
-	public actual suspend fun readBytes(): ByteArray =
-		withContext(Dispatchers.IO) { file.readBytes() }
+    public actual suspend fun readBytes(): ByteArray =
+        withContext(Dispatchers.IO) { file.readBytes() }
 
-	public actual fun getSize(): Long? = Files.size(file.toPath())
+    public actual fun getStream(): PlatformInputStream {
+        return PlatformInputStream(file.inputStream())
+    }
+
+    public actual fun getSize(): Long? = Files.size(file.toPath())
+
+    public actual fun supportsStreams(): Boolean = true
 }
 
 public actual data class PlatformDirectory(
-	val file: File,
+    val file: File,
 ) {
-	public actual val path: String? =
-		file.absolutePath
+    public actual val path: String? =
+        file.absolutePath
 }
