@@ -124,25 +124,10 @@ internal class JnaFileChooser() {
         // native windows filechooser doesn't support mixed selection mode
         if (Platform.isWindows() && mode != Mode.FilesAndDirectories) {
             // windows filechooser can only multiselect files
-            if (isMultiSelectionEnabled && mode == Mode.Files) {
-                // TODO Here we would use the native windows dialog
-                // to choose multiple files. However I haven't been able
-                // to get it to work properly yet because it requires
-                // tricky callback magic and somehow this didn't work for me
-                // quite as documented (probably because I messed something up).
-                // Because I don't need this feature right now I've put it on
-                // hold to get on with stuff.
-                // Example code: http://support.microsoft.com/kb/131462/en-us
-                // GetOpenFileName: http://msdn.microsoft.com/en-us/library/ms646927.aspx
-                // OFNHookProc: http://msdn.microsoft.com/en-us/library/ms646931.aspx
-                // CDN_SELCHANGE: http://msdn.microsoft.com/en-us/library/ms646865.aspx
-                // SendMessage: http://msdn.microsoft.com/en-us/library/ms644950.aspx
-            } else if (!isMultiSelectionEnabled) {
-                if (mode == Mode.Files) {
-                    return showWindowsFileChooser(parent, action)
-                } else if (mode == Mode.Directories) {
-                    return showWindowsFolderBrowser(parent)
-                }
+            if (mode == Mode.Files) {
+                return showWindowsFileChooser(parent, action)
+            } else if (mode == Mode.Directories) {
+                return showWindowsFolderBrowser(parent)
             }
         }
 
@@ -211,6 +196,7 @@ internal class JnaFileChooser() {
     private fun showWindowsFileChooser(parent: Window?, action: Action): Boolean {
         val fc = WindowsFileChooser(currentDirectory)
         fc.setFilters(filters)
+        fc.setMultipleSelection(isMultiSelectionEnabled)
 
         if (!defaultFile.isEmpty()) fc.setDefaultFilename(defaultFile)
 
@@ -220,7 +206,8 @@ internal class JnaFileChooser() {
 
         val result = fc.showDialog(parent, action == Action.Open)
         if (result) {
-            selectedFiles = arrayOf(fc.selectedFile)
+            selectedFiles =
+                if (isMultiSelectionEnabled) fc.selectedFiles?.toTypedArray() ?: arrayOf(null) else arrayOf(fc.selectedFile)
             currentDirectory = fc.currentDirectory
         }
         return result
