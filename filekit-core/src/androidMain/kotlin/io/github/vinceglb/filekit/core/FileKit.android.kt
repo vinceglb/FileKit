@@ -190,6 +190,7 @@ public actual object FileKit {
             ?.takeIf { it.isNotEmpty() }
             ?.mapNotNull { mimeTypeMap.getMimeTypeFromExtension(it) }
             ?.toTypedArray()
+            ?.ifEmpty { arrayOf("*/*") }
             ?: arrayOf("*/*")
     }
 
