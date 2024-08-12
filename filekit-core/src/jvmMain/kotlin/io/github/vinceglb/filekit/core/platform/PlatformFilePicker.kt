@@ -2,7 +2,9 @@ package io.github.vinceglb.filekit.core.platform
 
 import io.github.vinceglb.filekit.core.platform.awt.AwtFilePicker
 import io.github.vinceglb.filekit.core.platform.awt.AwtFileSaver
+import io.github.vinceglb.filekit.core.platform.linux.LinuxFilePicker
 import io.github.vinceglb.filekit.core.platform.mac.MacOSFilePicker
+import io.github.vinceglb.filekit.core.platform.swing.SwingFilePicker
 import io.github.vinceglb.filekit.core.platform.util.Platform
 import io.github.vinceglb.filekit.core.platform.util.PlatformUtil
 import io.github.vinceglb.filekit.core.platform.windows.WindowsFilePicker
@@ -53,12 +55,7 @@ internal interface PlatformFilePicker {
             return when (PlatformUtil.current) {
                 Platform.MacOS -> MacOSFilePicker()
                 Platform.Windows -> WindowsFilePicker()
-                Platform.Linux -> {
-                    val xdgPortalFilePicker = XdgFilePickerPortal()
-                    if (xdgPortalFilePicker.isAvailable()) xdgPortalFilePicker
-                    else AwtFilePicker()
-
-                }
+                Platform.Linux -> LinuxFilePicker(XdgFilePickerPortal(), AwtFilePicker(), SwingFilePicker())
             }
         }
     }
