@@ -137,9 +137,7 @@ internal class WindowsFileChooser {
 	 * @param currentDirectoryPath the initial directory path; may be null
 	 */
 	constructor(currentDirectoryPath: String?) : this(
-		if (currentDirectoryPath != null) File(
-			currentDirectoryPath
-		) else null
+		if (currentDirectoryPath != null) File(currentDirectoryPath) else null
 	)
 
 	// this is a package private method used by the JnaFileChooser
