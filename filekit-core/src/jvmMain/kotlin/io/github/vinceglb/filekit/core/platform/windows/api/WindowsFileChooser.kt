@@ -1,14 +1,16 @@
 package io.github.vinceglb.filekit.core.platform.windows.api
 
+import com.sun.jna.Memory
+import com.sun.jna.Native
+import com.sun.jna.WString
 import io.github.vinceglb.filekit.core.platform.windows.win32.Comdlg32
 import io.github.vinceglb.filekit.core.platform.windows.win32.Comdlg32.CommDlgExtendedError
 import io.github.vinceglb.filekit.core.platform.windows.win32.Comdlg32.GetOpenFileNameW
 import io.github.vinceglb.filekit.core.platform.windows.win32.Comdlg32.GetSaveFileNameW
-import com.sun.jna.Memory
-import com.sun.jna.Native
-import com.sun.jna.WString
 import java.awt.Window
 import java.io.File
+import java.nio.charset.StandardCharsets
+import java.util.Arrays
 import java.util.Collections
 
 /**
@@ -67,6 +69,9 @@ import java.util.Collections
  * [://winrun4j.sourceforge.net/][http]
  */
 internal class WindowsFileChooser {
+	private var maxNumberOfFiles: Int = 10000
+	private var max_path: Int = 260
+
 	/**
 	 * returns the file selected by the user
 	 *
@@ -74,6 +79,19 @@ internal class WindowsFileChooser {
 	 */
 	var selectedFile: File? = null
 		protected set
+
+	/**
+	 * returns the file list selected by the user
+	 *
+	 * @return the selected file list; null if the dialog was canceled or never shown
+	 */
+	var selectedFiles: List<File>? = null
+		protected set
+
+	/**
+	 * sets whether to enable isMultiSelectionEnabled
+	 */
+	private var isMultiSelectionEnabled: Boolean = false
 
 	/**
 	 * returns the current directory
@@ -155,6 +173,22 @@ internal class WindowsFileChooser {
 	}
 
 	/**
+	 * sets whether to enable isMultiSelectionEnabled
+	 *
+	 * @param enabled true to enable isMultiSelectionEnabled, false to disable it
+	 */
+	fun setMultipleSelection(enabled: Boolean) {
+		this.isMultiSelectionEnabled = enabled
+	}
+
+	/**
+	 * sets max numbers to maxNumberOfFiles
+	 */
+	fun setMaxNumberOfFiles(maxNumberOfFiles: Int) {
+		this.maxNumberOfFiles = maxNumberOfFiles
+	}
+
+	/**
 	 * show the dialog for opening a file
 	 *
 	 * @param parent the parent window of the dialog
@@ -196,12 +230,16 @@ internal class WindowsFileChooser {
 
 		params.hwndOwner = if (parent == null) null else Native.getWindowPointer(parent)
 
+		if(isMultiSelectionEnabled) {
+			params.Flags = params.Flags or Comdlg32.OFN_ALLOWMULTISELECT
+		}
+
 		// lpstrFile contains the selection path after the dialog
 		// returns. It must be big enough for the path to fit or
 		// GetOpenFileName returns an error (FNERR_BUFFERTOOSMALL).
 		// MAX_PATH is 260 so 4*260+1 bytes should be big enough (I hope...)
 		// http://msdn.microsoft.com/en-us/library/aa365247.aspx#maxpath
-		val bufferLength = 260
+		val bufferLength = if (isMultiSelectionEnabled) maxNumberOfFiles * max_path else max_path
 		// 4 bytes per char + 1 null byte
 		val bufferSize = 4 * bufferLength + 1
 		params.lpstrFile = Memory(bufferSize.toLong())
@@ -238,11 +276,35 @@ internal class WindowsFileChooser {
 
 		val approved = if (open) GetOpenFileNameW(params) else GetSaveFileNameW(params)
 
+        selectedFiles = null
+
 		if (approved) {
-			val filePath = params.lpstrFile?.getWideString(0)
-			selectedFile = File(filePath)
-			val dir = selectedFile!!.parentFile
-			currentDirectory = dir
+            if (isMultiSelectionEnabled) {
+                val bytes = params.lpstrFile?.getByteArray(0, bufferSize)
+
+                if (bytes != null) {
+                    val filePaths = bytesToFilePaths(bytes)
+
+                    if (filePaths.size == 1) {
+                        selectedFile = File(filePaths[0])
+                        currentDirectory = selectedFile!!.parentFile
+                        selectedFiles = listOf(selectedFile!!)
+                    } else if (filePaths.size > 1) {
+                        currentDirectory = File(filePaths[0])
+                        selectedFiles = filePaths.subList(1, filePaths.size).map { File(currentDirectory, it) }
+						selectedFile = selectedFiles!![0]
+                    }
+                }
+            } else {
+                val filePath = params.lpstrFile?.getWideString(0)
+                if (filePath != null) {
+                    selectedFile = File(filePath)
+
+                    val dir = selectedFile!!.parentFile
+                    currentDirectory = dir
+                    selectedFiles = listOf(selectedFile!!)
+                }
+            }
 		} else {
 			val errCode = CommDlgExtendedError()
 			// if the code is 0 the user clicked cancel
@@ -296,4 +358,27 @@ internal class WindowsFileChooser {
 	fun setDefaultFilename(defaultFilename: String) {
 		this.defaultFilename = defaultFilename
 	}
+
+    fun bytesToFilePaths(bytes: ByteArray): List<String> {
+        val filePaths: MutableList<String> = ArrayList()
+        var from = 0
+        var i = 0
+        while (i < bytes.size - 1) {
+            if (bytes[i].toInt() == 0 && bytes[i + 1].toInt() == 0) {
+                if (i > from) {
+                    filePaths.add(
+                        String(
+                            Arrays.copyOfRange(bytes, from, i),
+                            StandardCharsets.UTF_16LE
+                        )
+                    ) //UTF 2-bytes little-endian CharSet seems to work...
+                    from = i + 2
+                } else {
+                    break
+                }
+            }
+            i += 2
+        }
+        return filePaths
+    }
 }
