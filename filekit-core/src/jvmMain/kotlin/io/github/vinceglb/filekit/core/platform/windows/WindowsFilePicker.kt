@@ -1,7 +1,8 @@
 package io.github.vinceglb.filekit.core.platform.windows
 
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
-import io.github.vinceglb.filekit.core.platform.windows.api.JnaFileChooser
+import io.github.vinceglb.filekit.core.platform.windows.api.WindowsFileChooser
+import io.github.vinceglb.filekit.core.platform.windows.api.WindowsFolderBrowser
 import java.awt.Window
 import java.io.File
 
@@ -12,19 +13,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		title: String?,
 		parentWindow: Window?,
 	): File? {
-		val fileChooser = JnaFileChooser()
-
-		// Setup file chooser
-		fileChooser.apply {
-			// Set mode
-			mode = JnaFileChooser.Mode.Files
-
-			// Only allow single selection
-			isMultiSelectionEnabled = false
-
-			// Set initial directory, title and file extensions
-			setup(initialDirectory, fileExtensions, title)
-		}
+		val fileChooser = setup(false, title, initialDirectory, fileExtensions)
 
 		// Show file chooser
 		fileChooser.showOpenDialog(parentWindow)
@@ -39,27 +28,13 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		title: String?,
 		parentWindow: Window?,
 	): List<File>? {
-		val fileChooser = JnaFileChooser()
-
-		// Setup file chooser
-		fileChooser.apply {
-			// Set mode
-			mode = JnaFileChooser.Mode.Files
-
-			// Allow multiple selection
-			isMultiSelectionEnabled = true
-
-			// Set initial directory, title and file extensions
-			setup(initialDirectory, fileExtensions, title)
-		}
+		val fileChooser = setup(true, title, initialDirectory, fileExtensions)
 
 		// Show file chooser
 		fileChooser.showOpenDialog(parentWindow)
 
 		// Return selected files
-		return fileChooser.selectedFiles
-			.mapNotNull { it }
-			.ifEmpty { null }
+		return fileChooser.selectedFiles?.ifEmpty { null }
 	}
 
 	override suspend fun pickDirectory(
@@ -67,42 +42,34 @@ internal class WindowsFilePicker : PlatformFilePicker {
 		title: String?,
 		parentWindow: Window?,
 	): File? {
-		val fileChooser = JnaFileChooser()
+		val fileChooser = WindowsFolderBrowser()
 
-		// Setup file chooser
-		fileChooser.apply {
-			// Set mode
-			mode = JnaFileChooser.Mode.Directories
-
-			// Only allow single selection
-			isMultiSelectionEnabled = false
-
-			// Set initial directory and title
-			setup(initialDirectory, null, title)
-		}
+		// Set title
+		title?.let { fileChooser.setTitle(it) }
 
 		// Show file chooser
-		fileChooser.showOpenDialog(parentWindow)
-
-		// Return selected directory
-		return fileChooser.selectedFile
+		return fileChooser.showDialog(parentWindow)
 	}
 
-	private fun JnaFileChooser.setup(
+	private fun setup(
+		isMultipleSelection: Boolean,
+		title: String?,
 		initialDirectory: String?,
 		fileExtensions: List<String>?,
-		title: String?
-	) {
+	): WindowsFileChooser {
+		val fileChooser = WindowsFileChooser(initialDirectory)
+
+		// Only allow single selection
+		fileChooser.setMultipleSelection(isMultipleSelection)
+
 		// Set title
-		title?.let(::setTitle)
+		title?.let { fileChooser.setTitle(it) }
 
-		// Set initial directory
-		initialDirectory?.let(::setCurrentDirectory)
-
-		// Set file extension
 		if (!fileExtensions.isNullOrEmpty()) {
 			val filterName = fileExtensions.joinToString(", ", "Supported Files (", ")")
-			addFilter(filterName, *fileExtensions.toTypedArray())
+			fileChooser.addFilter(filterName, *fileExtensions.toTypedArray())
 		}
+
+		return fileChooser
 	}
 }
