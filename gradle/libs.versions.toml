@@ -8,7 +8,7 @@ dbus-java = "5.1.0"
 jna = "5.14.0"
 observable-viewmodel = "1.0.0-BETA-3"
 koinCompose = "4.0.0-RC1"
-kotlin = "2.0.0"
+kotlin = "2.0.10"
 kotlinx-coroutines = "1.8.1"
 mavenPublishVanniktech = "0.29.0"
 
