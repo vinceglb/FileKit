@@ -49,16 +49,13 @@ kotlin {
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
+            implementation(compose.ui)
 
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
 
             // FileKit Core
             api(projects.filekitCore)
-        }
-
-        jvmMain.dependencies {
-            implementation(compose.desktop.currentOs)
         }
 
         androidMain.dependencies {
