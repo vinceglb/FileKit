@@ -215,6 +215,15 @@ To check if it's possible to save a file without bytes from the common code, you
 val isSupported: Boolean = FileKit.isSaveFileWithoutBytesSupported()
 ```
 
+## 🤏 Proguard & obfuscation
+
+If using Proguard or obfuscation on JVM, you need to add the following rules:
+
+```proguard
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+```
+
 ## 🧑‍💻 PlatformFile and PlatformDirectory
 
 The `PlatformFile` and `PlatformDirectory` classes are wrappers around the platform file system. It allows you to get the file name, path and read the file content in common code.
@@ -290,6 +299,8 @@ FileKit is inspired by the following libraries:
 - [Calf](https://github.com/MohamedRejeb/Calf)
 - [jnafilechooser](https://github.com/steos/jnafilechooser)
 - [swing-jnafilechooser](https://github.com/DJ-Raven/swing-jnafilechooser)
+- [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
+- [IFileDialogImp](https://github.com/dbwiddis/IFileDialogImp)
 - [IntelliJ Community Foundation](https://github.com/JetBrains/intellij-community/blob/master/platform/util/ui/src/com/intellij/ui/mac/foundation/Foundation.java)
 - [file_picker (flutter)](https://pub.dev/packages/file_picker)
 
