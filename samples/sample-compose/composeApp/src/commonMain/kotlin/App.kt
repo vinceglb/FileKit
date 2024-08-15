@@ -23,6 +23,7 @@ import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.core.FileKit
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
 import io.github.vinceglb.filekit.core.PlatformDirectory
@@ -34,14 +35,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun App() {
+fun App(platformSettings: FileKitPlatformSettings? = null) {
     MaterialTheme {
-        SampleApp()
+        SampleApp(platformSettings)
     }
 }
 
 @Composable
-private fun SampleApp() {
+private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
     var directory: PlatformDirectory? by remember { mutableStateOf(null) }
 
@@ -49,7 +50,8 @@ private fun SampleApp() {
         type = PickerType.Image,
         title = "Single file picker",
         initialDirectory = directory?.path,
-        onResult = { file -> file?.let { files += it } }
+        onResult = { file -> file?.let { files += it } },
+        platformSettings = platformSettings
     )
 
     val multipleFilesPicker = rememberFilePickerLauncher(
@@ -57,14 +59,16 @@ private fun SampleApp() {
         mode = PickerMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
         initialDirectory = directory?.path,
-        onResult = { file -> file?.let { files += it } }
+        onResult = { file -> file?.let { files += it } },
+        platformSettings = platformSettings
     )
 
     val filePicker = rememberFilePickerLauncher(
         type = PickerType.File(listOf("png")),
         title = "Single file picker, only png",
         initialDirectory = directory?.path,
-        onResult = { file -> file?.let { files += it } }
+        onResult = { file -> file?.let { files += it } },
+        platformSettings = platformSettings
     )
 
     val filesPicker = rememberFilePickerLauncher(
@@ -72,13 +76,15 @@ private fun SampleApp() {
         mode = PickerMode.Multiple(),
         title = "Multiple files picker, only png",
         initialDirectory = directory?.path,
-        onResult = { file -> file?.let { files += it } }
+        onResult = { file -> file?.let { files += it } },
+        platformSettings = platformSettings
     )
 
     val directoryPicker = rememberDirectoryPickerLauncher(
         title = "Directory picker",
         initialDirectory = directory?.path,
-        onResult = { dir -> directory = dir }
+        onResult = { dir -> directory = dir },
+        platformSettings = platformSettings
     )
 
     val saver = rememberFileSaverLauncher { file ->

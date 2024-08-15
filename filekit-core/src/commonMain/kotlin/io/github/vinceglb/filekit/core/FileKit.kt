@@ -32,11 +32,13 @@ public suspend fun FileKit.pickFile(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: FileKitPlatformSettings? = null,
 ): PlatformFile? {
     return pickFile(
         type = type,
         mode = PickerMode.Single,
         title = title,
         initialDirectory = initialDirectory,
+        platformSettings = platformSettings,
     )
 }
