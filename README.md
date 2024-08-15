@@ -215,15 +215,6 @@ To check if it's possible to save a file without bytes from the common code, you
 val isSupported: Boolean = FileKit.isSaveFileWithoutBytesSupported()
 ```
 
-## 🤏 Proguard & obfuscation
-
-If using Proguard or obfuscation on JVM, you need to add the following rules:
-
-```proguard
--keep class com.sun.jna.** { *; }
--keep class * implements com.sun.jna.** { *; }
-```
-
 ## 🧑‍💻 PlatformFile and PlatformDirectory
 
 The `PlatformFile` and `PlatformDirectory` classes are wrappers around the platform file system. It allows you to get the file name, path and read the file content in common code.
@@ -260,6 +251,15 @@ val file: java.io.File = platformDirectory.file
 // WASM / JS
 val file: org.w3c.files.File = platformFile.file
 val file: org.w3c.files.File = // PlatformDirectory not supported on WASM / JS
+```
+
+## 🤏 Proguard & obfuscation
+
+If using Proguard or obfuscation on JVM, you need to add the following rules:
+
+```proguard
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
 ```
 
 ## 🌱 Sample projects
