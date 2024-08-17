@@ -51,4 +51,14 @@ internal class LinuxFilePicker(
             title,
             parentWindow
         ) else swingFilePicker.pickDirectory(initialDirectory, title, parentWindow)
+
+    override suspend fun saveFile(
+        bytes: ByteArray?,
+        baseName: String,
+        extension: String,
+        initialDirectory: String?,
+        parentWindow: Window?
+    ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.saveFile(
+        bytes, baseName, extension, initialDirectory, parentWindow
+    ) else awtFilePicker.saveFile(bytes, baseName, extension, initialDirectory, parentWindow)
 }
