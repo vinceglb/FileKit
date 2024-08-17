@@ -3,7 +3,6 @@ package io.github.vinceglb.filekit.core.platform.xdg
 import com.sun.jna.Native
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
 import kotlinx.coroutines.CompletableDeferred
-import org.freedesktop.dbus.DBusMap
 import org.freedesktop.dbus.DBusMatchRule
 import org.freedesktop.dbus.DBusPath
 import org.freedesktop.dbus.Tuple
@@ -174,7 +173,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             if (path == signal.path) {
                 val params = signal.parameters
                 val response = params[0] as UInt32
-                val results = params[1] as DBusMap<String, Variant<*>>
+                val results = params[1] as Map<String, Variant<*>>
 
                 if (response.toInt() == 0) {
                     val uris = (results["uris"]!!.value as List<String>).map { URI(it) }
