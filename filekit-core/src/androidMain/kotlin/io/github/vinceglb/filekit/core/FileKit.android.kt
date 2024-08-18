@@ -12,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
+import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
@@ -66,7 +67,7 @@ public actual object FileKit {
                         mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
                             val contract = PickVisualMedia()
                             registry.register(key, contract) { uri ->
-                                val result = uri?.let { listOf(PlatformFile(it, context)) }
+                                val result = uri?.let { listOf(PlatformUriFile(context, DocumentFile.fromSingleUri(context, it)!!)) }
                                 continuation.resume(result)
                             }
                         }
@@ -77,7 +78,7 @@ public actual object FileKit {
                                 else -> PickMultipleVisualMedia()
                             }
                             registry.register(key, contract) { uri ->
-                                val result = uri.map { PlatformFile(it, context) }
+                                val result = uri.map { PlatformUriFile(context, DocumentFile.fromSingleUri(context, it)!!) }
                                 continuation.resume(result)
                             }
                         }
@@ -92,7 +93,7 @@ public actual object FileKit {
                         is PickerMode.Single -> {
                             val contract = ActivityResultContracts.OpenDocument()
                             val launcher = registry.register(key, contract) { uri ->
-                                val result = uri?.let { listOf(PlatformFile(it, context)) }
+                                val result = uri?.let { listOf(PlatformUriFile(context, DocumentFile.fromSingleUri(context, it)!!)) }
                                 continuation.resume(result)
                             }
                             launcher.launch(getMimeTypes(type.extensions))
@@ -103,7 +104,7 @@ public actual object FileKit {
                             //  I haven't found it yet.
                             val contract = ActivityResultContracts.OpenMultipleDocuments()
                             val launcher = registry.register(key, contract) { uris ->
-                                val result = uris.map { PlatformFile(it, context) }
+                                val result = uris.map { PlatformUriFile(context, DocumentFile.fromSingleUri(context, it)!!) }
                                 continuation.resume(result)
                             }
                             launcher.launch(getMimeTypes(type.extensions))
@@ -120,7 +121,7 @@ public actual object FileKit {
         title: String?,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformDirectory? = withContext(Dispatchers.IO) {
+    ): IPlatformFile? = withContext(Dispatchers.IO) {
         // Throw exception if registry is not initialized
         val registry = registry ?: throw FileKitNotInitializedException()
 
@@ -130,7 +131,7 @@ public actual object FileKit {
         suspendCoroutine { continuation ->
             val contract = ActivityResultContracts.OpenDocumentTree()
             val launcher = registry.register(key, contract) { uri ->
-                val platformDirectory = uri?.let { PlatformDirectory(it) }
+                val platformDirectory = uri?.let { PlatformUriFile(context.get()!!, DocumentFile.fromTreeUri(context.get()!!, it)!!) }
                 continuation.resume(platformDirectory)
             }
             val initialUri = initialDirectory?.let { Uri.parse(it) }
@@ -146,7 +147,7 @@ public actual object FileKit {
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? = withContext(Dispatchers.IO) {
+    ): IPlatformFile? = withContext(Dispatchers.IO) {
         suspendCoroutine { continuation ->
             // Throw exception if registry is not initialized
             val registry = registry ?: throw FileKitNotInitializedException()
@@ -172,7 +173,10 @@ public actual object FileKit {
                         }
                     }
 
-                    PlatformFile(it, context)
+                    PlatformUriFile(
+                        context,
+                        DocumentFile.fromSingleUri(context, it)!!
+                    )
                 }
                 continuation.resume(platformFile)
             }

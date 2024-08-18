@@ -24,10 +24,9 @@ import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.core.IPlatformFile
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
 import io.github.vinceglb.filekit.core.baseName
 import io.github.vinceglb.filekit.core.extension
 import kotlinx.coroutines.launch
@@ -43,13 +42,13 @@ fun App(platformSettings: FileKitPlatformSettings? = null) {
 
 @Composable
 private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
-    var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
-    var directory: PlatformDirectory? by remember { mutableStateOf(null) }
+    var files: Set<IPlatformFile> by remember { mutableStateOf(emptySet()) }
+    var directory: IPlatformFile? by remember { mutableStateOf(null) }
 
     val singleFilePicker = rememberFilePickerLauncher(
         type = PickerType.Image,
         title = "Single file picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.getAbsolutePath(),
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -58,7 +57,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         type = PickerType.Image,
         mode = PickerMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.getAbsolutePath(),
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -66,7 +65,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
     val filePicker = rememberFilePickerLauncher(
         type = PickerType.File(listOf("png")),
         title = "Single file picker, only png",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.getAbsolutePath(),
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -75,30 +74,31 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         type = PickerType.File(listOf("png")),
         mode = PickerMode.Multiple(),
         title = "Multiple files picker, only png",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.getAbsolutePath(),
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
 
     val directoryPicker = rememberDirectoryPickerLauncher(
         title = "Directory picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.getAbsolutePath(),
         onResult = { dir -> directory = dir },
         platformSettings = platformSettings
     )
 
-    val saver = rememberFileSaverLauncher { file ->
+    val saver = rememberFileSaverLauncher { inputFile, file ->
+        inputFile?.openInputStream()?.use { input -> file?.openOutputStream()?.let { output -> input.transferTo(output) } }
         file?.let { files += it }
     }
 
     val scope = rememberCoroutineScope()
-    fun saveFile(file: PlatformFile) {
+    fun saveFile(file: IPlatformFile) {
         scope.launch {
             saver.launch(
-                bytes = file.readBytes(),
+                inputFile = file,
                 baseName = file.baseName,
                 extension = file.extension,
-                initialDirectory = directory?.path
+                initialDirectory = directory?.getAbsolutePath()
             )
         }
     }
@@ -134,7 +134,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
             }
 
             if (FileKit.isDirectoryPickerSupported()) {
-                Text("Selected directory: ${directory?.path ?: "None"}")
+                Text("Selected directory: ${directory?.getAbsolutePath() ?: "None"}")
             } else {
                 Text("Directory picker is not supported")
             }

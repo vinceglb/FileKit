@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.compose
 
+import io.github.vinceglb.filekit.core.IPlatformFile
+
 public class PickerResultLauncher(
     private val onLaunch: () -> Unit,
 ) {
@@ -10,18 +12,18 @@ public class PickerResultLauncher(
 
 public class SaverResultLauncher(
     private val onLaunch: (
-        bytes: ByteArray?,
+        bytes: IPlatformFile?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
     ) -> Unit,
 ) {
     public fun launch(
-        bytes: ByteArray? = null,
+        inputFile: IPlatformFile? = null,
         baseName: String = "file",
         extension: String,
         initialDirectory: String? = null,
     ) {
-        onLaunch(bytes, baseName, extension, initialDirectory)
+        onLaunch(inputFile, baseName, extension, initialDirectory)
     }
 }

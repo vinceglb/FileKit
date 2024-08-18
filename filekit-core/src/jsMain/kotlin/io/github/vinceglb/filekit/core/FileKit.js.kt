@@ -76,7 +76,7 @@ public actual object FileKit {
         title: String?,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformDirectory? = withContext(Dispatchers.Default) {
+    ): IPlatformFile? = withContext(Dispatchers.Default) {
         throw NotImplementedError("Directory selection is not supported on the web")
     }
 
@@ -88,7 +88,7 @@ public actual object FileKit {
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? = withContext(Dispatchers.Default) {
+    ): IPlatformFile? = withContext(Dispatchers.Default) {
         if (bytes == null) {
             throw FileKitFileSaverWithoutBytesException()
         }

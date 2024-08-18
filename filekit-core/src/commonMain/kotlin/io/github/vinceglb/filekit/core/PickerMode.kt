@@ -3,8 +3,8 @@ package io.github.vinceglb.filekit.core
 public sealed class PickerMode<Out> {
     public abstract fun parseResult(value: PlatformFiles?): Out?
 
-    public data object Single : PickerMode<PlatformFile>() {
-        override fun parseResult(value: PlatformFiles?): PlatformFile? {
+    public data object Single : PickerMode<IPlatformFile>() {
+        override fun parseResult(value: PlatformFiles?): IPlatformFile? {
             return value?.firstOrNull()
         }
     }

@@ -43,19 +43,65 @@ kotlin {
     }
 
     sourceSets {
-        commonMain.dependencies {
-            implementation(libs.kotlinx.coroutines.core)
+        val commonMain by getting {
+            dependencies {
+                implementation(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.io.core)
+            }
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.ktx)
+        val appleMain by creating {
+            dependsOn(commonMain)
         }
 
-        jvmMain.dependencies {
-            implementation(libs.jna)
-            implementation(libs.jna.platform)
-            implementation(libs.dbus.java.core)
-            implementation(libs.dbus.java.transport.native.unixsocket)
+        val iosMain by creating {
+            dependsOn(appleMain)
+        }
+
+        val iosSimulatorArm64Main by getting {
+            dependsOn(iosMain)
+        }
+
+        val iosArm64Main by getting {
+            dependsOn(iosMain)
+        }
+
+        val iosX64Main by getting {
+            dependsOn(iosMain)
+        }
+
+        val macosMain by creating {
+            dependsOn(appleMain)
+        }
+
+        val macosX64Main by getting {
+            dependsOn(macosMain)
+        }
+
+        val macosArm64Main by getting {
+            dependsOn(macosMain)
+        }
+
+        val androidAndJvmMain by creating {
+            dependsOn(commonMain)
+        }
+
+        androidMain {
+            dependsOn(androidAndJvmMain)
+            dependencies {
+                implementation(libs.androidx.activity.ktx)
+                implementation(libs.androidx.documentfile)
+            }
+        }
+
+        jvmMain {
+            dependsOn(androidAndJvmMain)
+            dependencies {
+                implementation(libs.jna)
+                implementation(libs.jna.platform)
+                implementation(libs.dbus.java.core)
+                implementation(libs.dbus.java.transport.native.unixsocket)
+            }
         }
     }
 

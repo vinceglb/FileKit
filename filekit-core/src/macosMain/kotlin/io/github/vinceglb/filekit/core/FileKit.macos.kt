@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.core
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
@@ -7,6 +8,7 @@ import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
 public actual object FileKit {
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun <Out> pickFile(
         type: PickerType,
         mode: PickerMode<Out>,
@@ -28,26 +30,28 @@ public actual object FileKit {
         },
     )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformDirectory? = callPicker(
+    ): IPlatformFile? = callPicker(
         mode = Mode.Directory,
         title = title,
         initialDirectory = initialDirectory,
         fileExtensions = null
-    )?.firstOrNull()?.let { PlatformDirectory(it) }
+    )?.firstOrNull()?.let { PlatformFile(it) }
 
     public actual fun isDirectoryPickerSupported(): Boolean = true
 
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun saveFile(
         bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? {
+    ): IPlatformFile? {
         // Create an NSSavePanel
         val nsSavePanel = NSSavePanel()
 

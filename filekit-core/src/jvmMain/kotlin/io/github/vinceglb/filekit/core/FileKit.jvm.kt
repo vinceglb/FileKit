@@ -45,7 +45,7 @@ public actual object FileKit {
         title: String?,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformDirectory? = withContext(Dispatchers.IO) {
+    ): IPlatformFile? = withContext(Dispatchers.IO) {
         // Open native file picker
         val file = PlatformFilePicker.current.pickDirectory(
             title = title,
@@ -54,7 +54,7 @@ public actual object FileKit {
         )
 
         // Return result
-        file?.let { PlatformDirectory(it) }
+        file?.let { PlatformFile(it) }
     }
 
     public actual fun isDirectoryPickerSupported(): Boolean = true
@@ -65,7 +65,7 @@ public actual object FileKit {
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? = withContext(Dispatchers.IO) {
+    ): IPlatformFile? = withContext(Dispatchers.IO) {
         val result = PlatformFilePicker.current.saveFile(
             bytes = bytes,
             baseName = baseName,

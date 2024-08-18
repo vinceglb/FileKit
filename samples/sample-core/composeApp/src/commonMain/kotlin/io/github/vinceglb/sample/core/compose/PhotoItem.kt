@@ -26,12 +26,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.core.IPlatformFile
 
 @Composable
 fun PhotoItem(
-    file: PlatformFile,
-    onSaveFile: (PlatformFile) -> Unit,
+    file: IPlatformFile,
+    onSaveFile: (IPlatformFile) -> Unit,
 ) {
     var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
     var showName by remember { mutableStateOf(false) }

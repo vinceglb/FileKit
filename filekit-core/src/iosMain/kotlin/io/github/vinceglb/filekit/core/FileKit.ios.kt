@@ -39,6 +39,7 @@ public actual object FileKit {
     private lateinit var documentPickerDelegate: DocumentPickerDelegate
     private lateinit var phPickerDelegate: PhPickerDelegate
 
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun <Out> pickFile(
         type: PickerType,
         mode: PickerMode<Out>,
@@ -65,25 +66,27 @@ public actual object FileKit {
         )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
     }
 
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun pickDirectory(
         title: String?,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformDirectory? = callPicker(
+    ): IPlatformFile? = callPicker(
         mode = Mode.Directory,
         contentTypes = listOf(UTTypeFolder),
         initialDirectory = initialDirectory
-    )?.firstOrNull()?.let { PlatformDirectory(it) }
+    )?.firstOrNull()?.let { PlatformFile(it) }
 
     public actual fun isDirectoryPickerSupported(): Boolean = true
 
+    @OptIn(ExperimentalForeignApi::class)
     public actual suspend fun saveFile(
         bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? = suspendCoroutine { continuation ->
+    ): IPlatformFile? = suspendCoroutine { continuation ->
         // Create a picker delegate
         documentPickerDelegate = DocumentPickerDelegate(
             onFilesPicked = { urls ->

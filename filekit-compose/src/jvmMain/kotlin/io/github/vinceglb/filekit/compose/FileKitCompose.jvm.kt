@@ -3,10 +3,9 @@ package io.github.vinceglb.filekit.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.core.IPlatformFile
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
 
 @Composable
 public fun <Out> WindowScope.rememberFilePickerLauncher(
@@ -31,7 +30,7 @@ public fun WindowScope.rememberFilePickerLauncher(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
-    onResult: (PlatformFile?) -> Unit,
+    onResult: (IPlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
         type = type,
@@ -46,7 +45,7 @@ public fun WindowScope.rememberFilePickerLauncher(
 public fun WindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
-    onResult: (PlatformDirectory?) -> Unit,
+    onResult: (IPlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberDirectoryPickerLauncher(
         title = title,
@@ -58,7 +57,7 @@ public fun WindowScope.rememberDirectoryPickerLauncher(
 
 @Composable
 public fun WindowScope.rememberFileSaverLauncher(
-    onResult: (PlatformFile?) -> Unit,
+    onResult: (IPlatformFile?, IPlatformFile?) -> Unit,
 ): SaverResultLauncher {
     return rememberFileSaverLauncher(
         platformSettings = FileKitPlatformSettings(this.window),

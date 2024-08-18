@@ -56,6 +56,7 @@ kotlin {
 
             // FileKit Core
             api(projects.filekitCore)
+            api(libs.kotlinx.io.core)
         }
 
         androidMain.dependencies {

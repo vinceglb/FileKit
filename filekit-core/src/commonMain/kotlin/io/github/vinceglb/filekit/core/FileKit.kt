@@ -13,7 +13,7 @@ public expect object FileKit {
         title: String? = null,
         initialDirectory: String? = null,
         platformSettings: FileKitPlatformSettings? = null,
-    ): PlatformDirectory?
+    ): IPlatformFile?
 
     public fun isDirectoryPickerSupported(): Boolean
 
@@ -23,7 +23,7 @@ public expect object FileKit {
         extension: String,
         initialDirectory: String? = null,
         platformSettings: FileKitPlatformSettings? = null,
-    ): PlatformFile?
+    ): IPlatformFile?
 
     public suspend fun isSaveFileWithoutBytesSupported(): Boolean
 }
@@ -33,7 +33,7 @@ public suspend fun FileKit.pickFile(
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitPlatformSettings? = null,
-): PlatformFile? {
+): IPlatformFile? {
     return pickFile(
         type = type,
         mode = PickerMode.Single,

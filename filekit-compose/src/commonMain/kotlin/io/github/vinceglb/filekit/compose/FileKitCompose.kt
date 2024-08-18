@@ -7,10 +7,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.core.IPlatformFile
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,7 +62,7 @@ public fun rememberFilePickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitPlatformSettings? = null,
-    onResult: (PlatformFile?) -> Unit,
+    onResult: (IPlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
         type = type,
@@ -80,7 +79,7 @@ public fun rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitPlatformSettings? = null,
-    onResult: (PlatformDirectory?) -> Unit,
+    onResult: (IPlatformFile?) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit
     InitFileKit()
@@ -116,7 +115,7 @@ public fun rememberDirectoryPickerLauncher(
 @Composable
 public fun rememberFileSaverLauncher(
     platformSettings: FileKitPlatformSettings? = null,
-    onResult: (PlatformFile?) -> Unit
+    onResult: suspend (IPlatformFile?, IPlatformFile?) -> Unit
 ): SaverResultLauncher {
     // Init FileKit
     InitFileKit()
@@ -132,16 +131,15 @@ public fun rememberFileSaverLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
+        SaverResultLauncher { inputFile, baseName, extension, initialDirectory ->
             coroutineScope.launch {
                 val result = fileKit.saveFile(
-                    bytes = bytes,
                     baseName = baseName,
                     extension = extension,
                     initialDirectory = initialDirectory,
                     platformSettings = platformSettings,
                 )
-                currentOnResult(result)
+                currentOnResult(inputFile, result)
             }
         }
     }

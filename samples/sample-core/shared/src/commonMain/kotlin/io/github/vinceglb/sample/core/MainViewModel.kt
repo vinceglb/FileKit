@@ -5,10 +5,9 @@ import com.rickclephas.kmp.observableviewmodel.ViewModel
 import com.rickclephas.kmp.observableviewmodel.coroutineScope
 import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.core.IPlatformFile
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
 import io.github.vinceglb.filekit.core.baseName
 import io.github.vinceglb.filekit.core.extension
 import io.github.vinceglb.filekit.core.pickFile
@@ -95,10 +94,9 @@ class MainViewModel(
         }
     }
 
-    fun saveFile(file: PlatformFile) = executeWithLoading {
+    fun saveFile(file: IPlatformFile) = executeWithLoading {
         // Save a file
         val newFile = FileKit.saveFile(
-            bytes = file.readBytes(),
             baseName = file.baseName,
             extension = file.extension,
             platformSettings = platformSettings
@@ -106,6 +104,8 @@ class MainViewModel(
 
         // Add file to the state
         if (newFile != null) {
+            newFile.openOutputStream()?.use { output -> file.openInputStream()?.use { input -> input.transferTo(output) } }
+
             val newFiles = _uiState.value.files + newFile
             _uiState.update { it.copy(files = newFiles) }
         }
@@ -121,8 +121,8 @@ class MainViewModel(
 }
 
 data class MainUiState(
-    val files: Set<PlatformFile> = emptySet(),    // Set instead of List to avoid duplicates
-    val directory: PlatformDirectory? = null,
+    val files: Set<IPlatformFile> = emptySet(),    // Set instead of List to avoid duplicates
+    val directory: IPlatformFile? = null,
     val loading: Boolean = false
 ) {
     // Used by SwiftUI code
