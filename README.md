@@ -49,7 +49,7 @@ Compose Multiplatform integration made simple:
 
 ```kotlin
 // Pick files from Compose
-val launcher = rememberFilePickerLauncher(PickerMode.Multiple) { files ->
+val launcher = rememberFilePickerLauncher(mode = PickerMode.Multiple()) { files ->
     // Handle picked files
 }
 
@@ -70,10 +70,10 @@ repositories {
 
 dependencies {
     // Enables FileKit without Compose dependencies
-    implementation("io.github.vinceglb:filekit-core:0.6.2")
+    implementation("io.github.vinceglb:filekit-core:0.8.1")
 
     // Enables FileKit with Composable utilities
-    implementation("io.github.vinceglb:filekit-compose:0.6.2")
+    implementation("io.github.vinceglb:filekit-compose:0.8.1")
 }
 ```
 
@@ -121,8 +121,12 @@ You can pick files in different modes with `PickerMode`. The mode will change th
 
 ```kotlin
 val singleMode = PickerMode.Single
-val multipleMode = PickerMode.Multiple
+val multipleMode = PickerMode.Multiple()
 ```
+
+#### Max items
+
+On Android and iOS, when using `PickerType` `Image`, `Video` or `ImageAndVideo`, we can use `PickerMode.Multiple(maxItems = X)` to limit the number of picked files. The value must be between 1 and 50. Default value is `null` (no limit).
 
 ### Launch the picker
 
@@ -139,8 +143,8 @@ val file = FileKit.pickFile(
 
 // FileKit Compose
 val launcher = rememberFilePickerLauncher(
-    type = PickerSelectionType.ImageAndVideo,
-    mode = PickerSelectionMode.Multiple,
+    type = PickerType.ImageAndVideo,
+    mode = PickerMode.Multiple(),
     title = "Pick a media",
     initialDirectory = "/custom/initial/path"
 ) { files ->
@@ -249,6 +253,15 @@ val file: org.w3c.files.File = platformFile.file
 val file: org.w3c.files.File = // PlatformDirectory not supported on WASM / JS
 ```
 
+## 🤏 Proguard & obfuscation
+
+If using Proguard or obfuscation on JVM, you need to add the following rules:
+
+```proguard
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+```
+
 ## 🌱 Sample projects
 
 You can find 2 sample projects in the `samples` directory:
@@ -262,7 +275,7 @@ FileKit uses the native file picker API on each platform:
 - On Android, it uses `PickVisualMedia`, `OpenDocument` and `OpenDocumentTree` contracts.
 - On iOS, it uses both `UIDocumentPickerViewController` and `PHPickerViewController` APIs.
 - On macOS, it uses the `NSOpenPanel` API.
-- On JVM, it uses JNA to access the file system on Windows and macOS and Awt FileDialog on Linux.
+- On JVM, it uses JNA to access the file system on Windows and macOS and XDG Desktop Portal on Linux.
 - On WASM / JS, it uses the `input` element with the `file` type.
 
 Also, FileKit uses the bear minimum of dependencies to be as lightweight as possible. 
@@ -271,6 +284,7 @@ FileKit Core uses the following libraries:
 - [KotlinX Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
 - Only Android: [AndroidX Activity KTX](https://developer.android.com/jetpack/androidx/releases/activity)
 - Only JVM: [Java Native Access - JNA](https://github.com/java-native-access/jna/tree/master)
+- Only JVM: [XDG Desktop Portal](https://github.com/hypfvieh/dbus-java)
 
 FileKit Compose uses the following libraries:
 - [Jetbrains Compose Runtime](https://github.com/JetBrains/compose-multiplatform)
@@ -285,6 +299,8 @@ FileKit is inspired by the following libraries:
 - [Calf](https://github.com/MohamedRejeb/Calf)
 - [jnafilechooser](https://github.com/steos/jnafilechooser)
 - [swing-jnafilechooser](https://github.com/DJ-Raven/swing-jnafilechooser)
+- [nativefiledialog](https://github.com/mlabbe/nativefiledialog)
+- [IFileDialogImp](https://github.com/dbwiddis/IFileDialogImp)
 - [IntelliJ Community Foundation](https://github.com/JetBrains/intellij-community/blob/master/platform/util/ui/src/com/intellij/ui/mac/foundation/Foundation.java)
 - [file_picker (flutter)](https://pub.dev/packages/file_picker)
 

@@ -53,6 +53,9 @@ kotlin {
 
         jvmMain.dependencies {
             implementation(libs.jna)
+            implementation(libs.jna.platform)
+            implementation(libs.dbus.java.core)
+            implementation(libs.dbus.java.transport.native.unixsocket)
         }
     }
 

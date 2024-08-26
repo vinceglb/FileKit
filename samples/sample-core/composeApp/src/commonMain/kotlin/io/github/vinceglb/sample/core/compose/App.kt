@@ -20,17 +20,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.core.FileKit
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.sample.core.MainViewModel
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.dsl.module
 
 @Composable
-fun App() {
+fun App(platformSettings: FileKitPlatformSettings? = null) {
     KoinApplication(
         application = {
             modules(module {
-                factory { MainViewModel() }
+                factory { MainViewModel(platformSettings) }
             })
         }
     ) {
@@ -41,7 +42,9 @@ fun App() {
 }
 
 @Composable
-private fun SampleApp(viewModel: MainViewModel = koinInject<MainViewModel>()) {
+private fun SampleApp(
+    viewModel: MainViewModel = koinInject<MainViewModel>(),
+) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(

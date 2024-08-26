@@ -37,7 +37,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         parentWindow = parentWindow
     )
 
-    override fun pickDirectory(
+    override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
         parentWindow: Window?,
@@ -78,6 +78,8 @@ internal class AwtFilePicker : PlatformFilePicker {
 
         // Set multiple mode
         dialog.isMultipleMode = isMultipleMode
+
+        // MaxItems is not supported by FileDialog
 
         // Set mime types
         dialog.filenameFilter = FilenameFilter { _, name ->

@@ -2,11 +2,20 @@ package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.core.util.PhPickerDelegate
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import platform.Foundation.NSData
+import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
+import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.fileURLWithPathComponents
+import platform.Foundation.lastPathComponent
 import platform.Foundation.pathComponents
 import platform.Foundation.temporaryDirectory
+import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
@@ -21,7 +30,7 @@ import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
-import platform.UniformTypeIdentifiers.UTTypeVideo
+import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -39,8 +48,9 @@ public actual object FileKit {
     ): Out? = when (type) {
         // Use PHPickerViewController for images and videos
         is PickerType.Image,
-        is PickerType.Video -> callPhPicker(
-            isMultipleMode = mode is PickerMode.Multiple,
+        is PickerType.Video,
+        is PickerType.ImageAndVideo -> callPhPicker(
+            mode = mode,
             type = type
         )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
@@ -153,8 +163,9 @@ public actual object FileKit {
         )
     }
 
-    private suspend fun callPhPicker(
-        isMultipleMode: Boolean,
+    @OptIn(ExperimentalForeignApi::class)
+    private suspend fun <Out> callPhPicker(
+        mode: PickerMode<Out>,
         type: PickerType,
     ): List<NSURL>? {
         val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
@@ -167,7 +178,10 @@ public actual object FileKit {
             val configuration = PHPickerConfiguration(sharedPhotoLibrary())
 
             // Number of medias to select
-            configuration.selectionLimit = if (isMultipleMode) 0 else 1
+            configuration.selectionLimit = when (mode) {
+                is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
+                PickerMode.Single -> 1
+            }
 
             // Filter configuration
             configuration.filter = when (type) {
@@ -195,18 +209,45 @@ public actual object FileKit {
             )
         }
 
-        return pickerResults.mapNotNull { result ->
-            suspendCoroutine<NSURL?> { continuation ->
-                result.itemProvider.loadFileRepresentationForTypeIdentifier(
-                    typeIdentifier = when (type) {
-                        is PickerType.Image -> UTTypeImage.identifier
-                        is PickerType.Video -> UTTypeVideo.identifier
-                        is PickerType.ImageAndVideo -> UTTypeContent.identifier
-                        else -> throw IllegalArgumentException("Unsupported type: $type")
+        return withContext(Dispatchers.IO) {
+            val fileManager = NSFileManager.defaultManager
+
+            pickerResults.mapNotNull { result ->
+                suspendCoroutine<NSURL?> { continuation ->
+                    result.itemProvider.loadFileRepresentationForTypeIdentifier(
+                        typeIdentifier = when (type) {
+                            is PickerType.Image -> UTTypeImage.identifier
+                            is PickerType.Video -> UTTypeMovie.identifier
+                            is PickerType.ImageAndVideo -> UTTypeContent.identifier
+                            else -> throw IllegalArgumentException("Unsupported type: $type")
+                        }
+                    ) { url, _ ->
+                        val tmpUrl = url?.let {
+                            // Get the temporary directory
+                            val fileComponents =
+                                fileManager.temporaryDirectory.pathComponents?.plus(it.lastPathComponent)
+                                    ?: throw IllegalStateException("Failed to get temporary directory")
+
+                            // Create a file URL
+                            val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
+                                ?: throw IllegalStateException("Failed to create file URL")
+
+                            // Read the data from the URL
+                            val data = NSData.dataWithContentsOfURL(it, NSDataReadingUncached, null)
+                                ?: throw IllegalStateException("Failed to read data from $it")
+
+                            // Write the data to the temp file
+                            data.writeToURL(fileUrl, true)
+
+                            // Return the temporary
+                            fileUrl
+                        }
+
+                        continuation.resume(tmpUrl)
                     }
-                ) { url, _ -> continuation.resume(url) }
-            }
-        }.takeIf { it.isNotEmpty() }
+                }
+            }.takeIf { it.isNotEmpty() }
+        }
     }
 
     // How to get Root view controller in Swift
@@ -220,8 +261,8 @@ public actual object FileKit {
     private val PickerType.contentTypes: List<UTType>
         get() = when (this) {
             is PickerType.Image -> listOf(UTTypeImage)
-            is PickerType.Video -> listOf(UTTypeVideo)
-            is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeVideo)
+            is PickerType.Video -> listOf(UTTypeMovie)
+            is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
             is PickerType.File -> extensions
                 ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
                 .ifNullOrEmpty { listOf(UTTypeContent) }

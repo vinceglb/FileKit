@@ -1,9 +1,6 @@
 package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
-import io.github.vinceglb.filekit.core.platform.awt.AwtFileSaver
-import io.github.vinceglb.filekit.core.platform.util.Platform
-import io.github.vinceglb.filekit.core.platform.util.PlatformUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -25,14 +22,14 @@ public actual object FileKit {
 
         // Open native file picker
         val result = when (mode) {
-            PickerMode.Single -> PlatformFilePicker.current.pickFile(
+            is PickerMode.Single -> PlatformFilePicker.current.pickFile(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
                 parentWindow = platformSettings?.parentWindow,
             )?.let { listOf(PlatformFile(it)) }
 
-            PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
+            is PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
@@ -60,11 +57,7 @@ public actual object FileKit {
         file?.let { PlatformDirectory(it) }
     }
 
-    public actual fun isDirectoryPickerSupported(): Boolean = when (PlatformUtil.current) {
-        Platform.MacOS -> true
-        Platform.Windows -> true
-        Platform.Linux -> false
-    }
+    public actual fun isDirectoryPickerSupported(): Boolean = true
 
     public actual suspend fun saveFile(
         bytes: ByteArray?,
@@ -73,13 +66,14 @@ public actual object FileKit {
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
     ): PlatformFile? = withContext(Dispatchers.IO) {
-        AwtFileSaver.saveFile(
+        val result = PlatformFilePicker.current.saveFile(
             bytes = bytes,
             baseName = baseName,
             extension = extension,
             initialDirectory = initialDirectory,
             parentWindow = platformSettings?.parentWindow,
         )
+        result?.let { PlatformFile(result) }
     }
 
     public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true
