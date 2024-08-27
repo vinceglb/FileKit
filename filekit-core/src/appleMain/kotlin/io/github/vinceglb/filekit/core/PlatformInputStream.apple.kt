@@ -23,7 +23,7 @@ public actual class PlatformInputStream(private val nsInputStream: NSInputStream
         return memScoped {
             val pointerBuffer: CPointer<uint8_tVar> = allocArray(maxBytes)
             val numRead = nsInputStream.read(pointerBuffer, maxBytes.toULong()).toInt()
-            for (i in 0..numRead) {
+            for (i in 0 until numRead) {
                 buffer[i] = pointerBuffer[i].toByte()
             }
             numRead
