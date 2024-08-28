@@ -19,7 +19,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSPlatformSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
@@ -34,7 +34,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSPlatformSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
@@ -48,7 +48,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
-            macOSPlatformSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
@@ -57,7 +57,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        macOSPlatformSettings: FileKitMacOSSettings?,
+        macOSSettings: FileKitMacOSSettings?,
     ): T? {
         val pool = Foundation.NSAutoreleasePool()
         return try {
@@ -95,7 +95,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 }
 
                 // Set resolvesAliases
-                macOSPlatformSettings?.resolvesAliases?.let { resolvesAliases ->
+                macOSSettings?.resolvesAliases?.let { resolvesAliases ->
                     Foundation.invoke(openPanel, "setResolvesAliases:", resolvesAliases)
                 }
 
