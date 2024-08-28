@@ -26,14 +26,14 @@ public actual object FileKit {
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
-                parentWindow = platformSettings?.parentWindow,
+                platformSettings = platformSettings,
             )?.let { listOf(PlatformFile(it)) }
 
             is PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
                 title = title,
                 initialDirectory = initialDirectory,
                 fileExtensions = extensions,
-                parentWindow = platformSettings?.parentWindow,
+                platformSettings = platformSettings,
             )?.map { PlatformFile(it) }
         }
 
@@ -50,7 +50,7 @@ public actual object FileKit {
         val file = PlatformFilePicker.current.pickDirectory(
             title = title,
             initialDirectory = initialDirectory,
-            parentWindow = platformSettings?.parentWindow,
+            platformSettings = platformSettings,
         )
 
         // Return result
@@ -71,7 +71,7 @@ public actual object FileKit {
             baseName = baseName,
             extension = extension,
             initialDirectory = initialDirectory,
-            parentWindow = platformSettings?.parentWindow,
+            platformSettings = platformSettings,
         )
         result?.let { PlatformFile(result) }
     }

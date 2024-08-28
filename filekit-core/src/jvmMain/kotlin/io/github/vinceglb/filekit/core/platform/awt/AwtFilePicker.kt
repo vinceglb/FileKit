@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.core.platform.awt
 
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
@@ -15,32 +16,32 @@ internal class AwtFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? = callAwtPicker(
         title = title,
         isMultipleMode = false,
         fileExtensions = fileExtensions,
         initialDirectory = initialDirectory,
-        parentWindow = parentWindow
+        parentWindow = platformSettings?.parentWindow
     )?.firstOrNull()
 
     override suspend fun pickFiles(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): List<File>? = callAwtPicker(
         title = title,
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         initialDirectory = initialDirectory,
-        parentWindow = parentWindow
+        parentWindow = platformSettings?.parentWindow
     )
 
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
     }
