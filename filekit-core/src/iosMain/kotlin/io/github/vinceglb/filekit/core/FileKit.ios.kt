@@ -11,9 +11,6 @@ import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.dataWithContentsOfURL
-import platform.Foundation.fileURLWithPathComponents
-import platform.Foundation.lastPathComponent
-import platform.Foundation.pathComponents
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
