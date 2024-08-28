@@ -253,6 +253,16 @@ val file: org.w3c.files.File = platformFile.file
 val file: org.w3c.files.File = // PlatformDirectory not supported on WASM / JS
 ```
 
+## 🕺 Going further with files
+
+[KMPFile](https://github.com/zacharee/KMPFile) is a library built by [@zacharee](https://github.com/zacharee) that provides a common API to work with files in Kotlin Multiplatform. 
+
+It mimics the Java File API available on Android, JVM, iOS and macOS. It's a great companion to FileKit to work with files in a consistent way across all platforms.
+
+Also, KMPFile provides built-in support for FileKit's `PlatformFile` and `PlatformDirectory` classes thanks to [a dedicated library](https://github.com/zacharee/KMPFile?tab=readme-ov-file#picking-files).
+
+Get started with KMPFile by visiting this repository: https://github.com/zacharee/KMPFile
+
 ## 🤏 Proguard & obfuscation
 
 If using Proguard or obfuscation on JVM, you need to add the following rules:
