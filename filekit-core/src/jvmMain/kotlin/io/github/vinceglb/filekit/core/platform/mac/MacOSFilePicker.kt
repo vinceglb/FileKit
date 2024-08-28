@@ -1,9 +1,10 @@
 package io.github.vinceglb.filekit.core.platform.mac
 
+import io.github.vinceglb.filekit.core.FileKitMacOSSettings
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.core.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.core.platform.mac.foundation.ID
-import java.awt.Window
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
@@ -11,13 +12,14 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.SingleFile,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
-            title = title
+            title = title,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
@@ -25,26 +27,28 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): List<File>? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.MultipleFiles,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
-            title = title
+            title = title,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.Directories,
             initialDirectory = initialDirectory,
             fileExtensions = null,
-            title = title
+            title = title,
+            macOSSettings = platformSettings?.macOS,
         )
     }
 
@@ -53,6 +57,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
+        macOSSettings: FileKitMacOSSettings?,
     ): T? {
         val pool = Foundation.NSAutoreleasePool()
         return try {
@@ -87,6 +92,11 @@ internal class MacOSFilePicker : PlatformFilePicker {
                         *items.toTypedArray(),
                     )
                     Foundation.invoke(openPanel, "setAllowedFileTypes:", nsData)
+                }
+
+                // Set resolvesAliases
+                macOSSettings?.resolvesAliases?.let { resolvesAliases ->
+                    Foundation.invoke(openPanel, "setResolvesAliases:", resolvesAliases)
                 }
 
                 // Open the file picker

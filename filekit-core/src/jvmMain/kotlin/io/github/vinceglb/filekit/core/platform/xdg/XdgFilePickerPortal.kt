@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.core.platform.xdg
 
 import com.sun.jna.Native
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
 import kotlinx.coroutines.CompletableDeferred
 import org.freedesktop.dbus.DBusMatchRule
@@ -21,7 +22,7 @@ import org.freedesktop.dbus.types.Variant
 import java.awt.Window
 import java.io.File
 import java.net.URI
-import java.util.*
+import java.util.UUID
 
 //https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
 internal class XdgFilePickerPortal : PlatformFilePicker {
@@ -45,13 +46,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         return pickFiles(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            parentWindow = parentWindow,
+            parentWindow = platformSettings?.parentWindow,
             multiple = false,
             directory = false
         )?.firstOrNull()
@@ -61,13 +62,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): List<File>? {
         return pickFiles(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            parentWindow = parentWindow,
+            parentWindow = platformSettings?.parentWindow,
             multiple = true,
             directory = false
         )
@@ -76,13 +77,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         return pickFiles(
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
-            parentWindow = parentWindow,
+            parentWindow = platformSettings?.parentWindow,
             multiple = false,
             directory = true
         )?.firstOrNull()
@@ -121,7 +122,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? {
         DBusConnectionBuilder.forSessionBus().build().use { connection ->
             val handleToken = UUID.randomUUID().toString().replace("-", "")
@@ -132,7 +133,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).SaveFile(
-                parentWindow = getWindowIdentifier(parentWindow) ?: "",
+                parentWindow = getWindowIdentifier(platformSettings?.parentWindow) ?: "",
                 title = "",
                 options = options
             )

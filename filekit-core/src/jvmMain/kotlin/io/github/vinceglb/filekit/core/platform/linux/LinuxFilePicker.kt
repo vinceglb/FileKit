@@ -1,10 +1,10 @@
 package io.github.vinceglb.filekit.core.platform.linux
 
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.core.platform.awt.AwtFilePicker
 import io.github.vinceglb.filekit.core.platform.swing.SwingFilePicker
 import io.github.vinceglb.filekit.core.platform.xdg.XdgFilePickerPortal
-import java.awt.Window
 import java.io.File
 
 /**
@@ -25,40 +25,44 @@ internal class LinuxFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickFile(
         initialDirectory,
         fileExtensions,
         title,
-        parentWindow
-    ) else awtFilePicker.pickFile(initialDirectory, fileExtensions, title, parentWindow)
+        platformSettings
+    ) else awtFilePicker.pickFile(initialDirectory, fileExtensions, title, platformSettings)
 
     override suspend fun pickFiles(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): List<File>? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickFiles(
         initialDirectory,
         fileExtensions,
         title,
-        parentWindow
-    ) else awtFilePicker.pickFiles(initialDirectory, fileExtensions, title, parentWindow)
+        platformSettings
+    ) else awtFilePicker.pickFiles(initialDirectory, fileExtensions, title, platformSettings)
 
-    override suspend fun pickDirectory(initialDirectory: String?, title: String?, parentWindow: Window?): File? =
+    override suspend fun pickDirectory(
+        initialDirectory: String?,
+        title: String?,
+        platformSettings: FileKitPlatformSettings?,
+    ): File? =
         if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickDirectory(
             initialDirectory,
             title,
-            parentWindow
-        ) else swingFilePicker.pickDirectory(initialDirectory, title, parentWindow)
+            platformSettings
+        ) else swingFilePicker.pickDirectory(initialDirectory, title, platformSettings)
 
     override suspend fun saveFile(
         bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        parentWindow: Window?
+        platformSettings: FileKitPlatformSettings?,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.saveFile(
-        bytes, baseName, extension, initialDirectory, parentWindow
-    ) else awtFilePicker.saveFile(bytes, baseName, extension, initialDirectory, parentWindow)
+        bytes, baseName, extension, initialDirectory, platformSettings
+    ) else awtFilePicker.saveFile(bytes, baseName, extension, initialDirectory, platformSettings)
 }

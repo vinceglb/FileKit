@@ -1,10 +1,10 @@
 package io.github.vinceglb.filekit.core.platform.awt
 
+import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
 import java.awt.FileDialog
 import java.awt.Frame
-import java.awt.Window
 import java.io.File
 import kotlin.coroutines.resume
 
@@ -14,7 +14,7 @@ internal object AwtFileSaver {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        parentWindow: Window?,
+        platformSettings: FileKitPlatformSettings?,
     ): File? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
             if (value) {
@@ -28,15 +28,15 @@ internal object AwtFileSaver {
         }
 
         // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (parentWindow) {
-            is Dialog -> object : FileDialog(parentWindow, "Save dialog", SAVE) {
+        val dialog = when (platformSettings?.parentWindow) {
+            is Dialog -> object : FileDialog(platformSettings.parentWindow, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)
                 }
             }
 
-            else -> object : FileDialog(parentWindow as? Frame, "Save dialog", SAVE) {
+            else -> object : FileDialog(platformSettings?.parentWindow as? Frame, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)

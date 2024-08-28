@@ -4,4 +4,9 @@ import java.awt.Window
 
 public actual class FileKitPlatformSettings(
     public val parentWindow: Window? = null,
+    public val macOS: FileKitMacOSSettings? = null,
+)
+
+public class FileKitMacOSSettings(
+    public val resolvesAliases: Boolean? = null,
 )
