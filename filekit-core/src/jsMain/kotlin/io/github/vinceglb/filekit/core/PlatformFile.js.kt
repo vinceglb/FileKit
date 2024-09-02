@@ -54,7 +54,13 @@ public actual data class PlatformFile(
         }
     }
 
+    public actual fun getStream(): PlatformInputStream {
+        throw IllegalStateException("JS does not support InputStreams")
+    }
+
     public actual fun getSize(): Long? = file.size.toLong()
+
+    public actual fun supportsStreams(): Boolean = false
 }
 
 public actual data class PlatformDirectory(
