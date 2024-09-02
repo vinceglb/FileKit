@@ -30,7 +30,7 @@ public actual class PlatformInputStream(private val nsInputStream: NSInputStream
         }
     }
 
-    override fun close() {
+    actual override fun close() {
         nsInputStream.close()
     }
 }

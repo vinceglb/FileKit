@@ -9,7 +9,7 @@ public actual class PlatformInputStream : AutoCloseable {
         throw IllegalStateException("JS does not support InputStreams")
     }
 
-    override fun close() {
+    actual override fun close() {
         throw IllegalStateException("JS does not support InputStreams")
     }
 }

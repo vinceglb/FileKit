@@ -15,7 +15,7 @@ public actual class PlatformInputStream(private val inputStream: InputStream) : 
             inputStream.read(buffer, 0, maxBytes)
         }
 
-    override fun close() {
+    actual override fun close() {
         inputStream.close()
     }
 }
