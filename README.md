@@ -77,6 +77,20 @@ dependencies {
 }
 ```
 
+If using JVM target and Linux distribution, you need to add the following module:
+
+```gradle
+compose.desktop {
+    application {
+        nativeDistributions {
+            linux {
+                modules("jdk.security.auth")
+            }
+        }
+    }
+}
+```
+
 ## ⚡ Initialization
 
 Using **FileKit Core methods on Android** requires an initialization: 
