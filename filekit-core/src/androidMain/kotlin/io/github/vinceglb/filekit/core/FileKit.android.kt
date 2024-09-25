@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 import java.util.UUID
 import kotlin.coroutines.resume
@@ -168,6 +169,14 @@ public actual object FileKit {
                     // Write the bytes to the file
                     bytes?.let { bytes ->
                         context.contentResolver.openOutputStream(it)?.use { output ->
+                            if(output is FileOutputStream) {
+                                // If we are overriding a file we want to make sure that we remove
+                                // any extra bytes. Eg. if file was originally 250kb and new file
+                                // would only be 200kb we need to truncate the size, if not the file
+                                // will contain 50kb of garbage which uses space unnecessarily and
+                                // can cause other issues.
+                                output.channel.truncate(bytes.size.toLong())
+                            }
                             output.write(bytes)
                         }
                     }
