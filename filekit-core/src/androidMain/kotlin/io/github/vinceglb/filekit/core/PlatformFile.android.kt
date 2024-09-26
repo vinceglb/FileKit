@@ -16,8 +16,17 @@ public actual data class PlatformFile(
         context.getFileName(uri) ?: throw IllegalStateException("Failed to get file name")
     }
 
-    public actual val path: String? =
-        uri.path
+    // On some devices uri.path doesn't seem to work and instead this OpenableColumns.DISPLAY_NAME
+    // monstrosity has to be used.
+    public actual val path: String?
+        get() = context.contentResolver.let {
+            it.query(uri, null, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                cursor.moveToFirst()
+                val name = cursor.getString(nameIndex)
+                File(context.filesDir, name).path
+            }
+        }
 
     public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.IO) {
         context
