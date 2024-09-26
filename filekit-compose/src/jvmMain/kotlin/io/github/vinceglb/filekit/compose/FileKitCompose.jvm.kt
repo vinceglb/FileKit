@@ -5,7 +5,6 @@ import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
 import io.github.vinceglb.filekit.core.PlatformFile
 
 @Composable
@@ -46,7 +45,7 @@ public fun WindowScope.rememberFilePickerLauncher(
 public fun WindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
-    onResult: (PlatformDirectory?) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberDirectoryPickerLauncher(
         title = title,

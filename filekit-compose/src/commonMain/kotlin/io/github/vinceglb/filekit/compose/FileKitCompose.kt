@@ -9,8 +9,9 @@ import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
 import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.core.pickFile
+import io.github.vinceglb.filekit.core.saveFile
 import kotlinx.coroutines.launch
 
 @Composable
@@ -73,44 +74,6 @@ public fun rememberFilePickerLauncher(
         platformSettings = platformSettings,
         onResult = onResult,
     )
-}
-
-@Composable
-public fun rememberDirectoryPickerLauncher(
-    title: String? = null,
-    initialDirectory: String? = null,
-    platformSettings: FileKitPlatformSettings? = null,
-    onResult: (PlatformDirectory?) -> Unit,
-): PickerResultLauncher {
-    // Init FileKit
-    InitFileKit()
-
-    // Coroutine
-    val coroutineScope = rememberCoroutineScope()
-
-    // Updated state
-    val currentTitle by rememberUpdatedState(title)
-    val currentInitialDirectory by rememberUpdatedState(initialDirectory)
-    val currentOnResult by rememberUpdatedState(onResult)
-
-    // FileKit
-    val fileKit = remember { FileKit }
-
-    // FileKit launcher
-    val returnedLauncher = remember {
-        PickerResultLauncher {
-            coroutineScope.launch {
-                val result = fileKit.pickDirectory(
-                    title = currentTitle,
-                    initialDirectory = currentInitialDirectory,
-                    platformSettings = platformSettings,
-                )
-                currentOnResult(result)
-            }
-        }
-    }
-
-    return returnedLauncher
 }
 
 @Composable
