@@ -20,7 +20,14 @@ public actual val PlatformFile.name: String
     get() = context.getFileName(uri) ?: throw IllegalStateException("Failed to get file name")
 
 public actual val PlatformFile.path: String
-    get() = uri.path ?: throw IllegalStateException("Failed to get file path")
+    get() = context.contentResolver.let {
+        it.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+            cursor.moveToFirst()
+            val name = cursor.getString(nameIndex)
+            File(context.filesDir, name).path
+        }
+    } ?: throw IllegalStateException("Failed to get file path")
 
 public actual val PlatformFile.size: Long
     get() = runCatching {
