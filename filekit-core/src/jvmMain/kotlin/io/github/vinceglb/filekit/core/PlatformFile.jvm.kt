@@ -7,28 +7,24 @@ import java.nio.file.Files
 
 public actual data class PlatformFile(
     val file: File,
-) {
-    public actual val name: String =
-        file.name
+)
 
-    public actual val path: String? =
-        file.absolutePath
+public actual val PlatformFile.underlyingFile: Any
+    get() = file
 
-    public actual suspend fun readBytes(): ByteArray =
-        withContext(Dispatchers.IO) { file.readBytes() }
+public actual val PlatformFile.name: String
+    get() = file.name
 
-    public actual fun getStream(): PlatformInputStream {
-        return PlatformInputStream(file.inputStream())
-    }
+public actual val PlatformFile.size: Long
+    get() = Files.size(file.toPath())
 
-    public actual fun getSize(): Long? = Files.size(file.toPath())
+public actual val PlatformFile.path: String
+    get() = file.absolutePath
 
-    public actual fun supportsStreams(): Boolean = true
+public actual suspend fun PlatformFile.readBytes(): ByteArray =
+    withContext(Dispatchers.IO) { file.readBytes() }
+
+public actual fun PlatformFile.getStream(): PlatformInputStream {
+    return PlatformInputStream(file.inputStream())
 }
 
-public actual data class PlatformDirectory(
-    val file: File,
-) {
-    public actual val path: String? =
-        file.absolutePath
-}

@@ -10,58 +10,52 @@ import java.io.File
 
 public actual data class PlatformFile(
     val uri: Uri,
-    private val context: Context,
-) {
-    public actual val name: String by lazy {
-        context.getFileName(uri) ?: throw IllegalStateException("Failed to get file name")
-    }
+    internal val context: Context,
+)
 
-    public actual val path: String? =
-        uri.path
+public actual val PlatformFile.underlyingFile: Any
+    get() = uri
 
-    public actual suspend fun readBytes(): ByteArray = withContext(Dispatchers.IO) {
-        context
-            .contentResolver
-            .openInputStream(uri)
-            .use { stream -> stream?.readBytes() }
-            ?: throw IllegalStateException("Failed to read file")
-    }
+public actual val PlatformFile.name: String
+    get() = context.getFileName(uri) ?: throw IllegalStateException("Failed to get file name")
 
-    public actual fun getStream(): PlatformInputStream {
-        return context
-            .contentResolver
-            .openInputStream(uri)?.let {
-                PlatformInputStream(it)
-            } ?: throw IllegalStateException("Failed to open stream")
-    }
+public actual val PlatformFile.path: String
+    get() = uri.path ?: throw IllegalStateException("Failed to get file path")
 
-    public actual fun getSize(): Long? = runCatching {
+public actual val PlatformFile.size: Long
+    get() = runCatching {
         context.contentResolver.query(uri, null, null, null, null)
             ?.use { cursor ->
                 cursor.moveToFirst()
                 cursor.getColumnIndex(OpenableColumns.SIZE).let(cursor::getLong)
             }
-    }.getOrNull()
+    }.getOrNull() ?: throw IllegalStateException("Failed to get file size")
 
-    public actual fun supportsStreams(): Boolean = true
+public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Dispatchers.IO) {
+    context
+        .contentResolver
+        .openInputStream(uri)
+        .use { stream -> stream?.readBytes() }
+        ?: throw IllegalStateException("Failed to read file")
+}
 
-    private fun Context.getFileName(uri: Uri): String? = when (uri.scheme) {
-        ContentResolver.SCHEME_CONTENT -> getContentFileName(uri)
-        else -> uri.path?.let(::File)?.name
+public actual fun PlatformFile.getStream(): PlatformInputStream {
+    return context
+        .contentResolver
+        .openInputStream(uri)?.let {
+            PlatformInputStream(it)
+        } ?: throw IllegalStateException("Failed to open stream")
+}
+
+private fun Context.getFileName(uri: Uri): String? = when (uri.scheme) {
+    ContentResolver.SCHEME_CONTENT -> getContentFileName(uri)
+    else -> uri.path?.let(::File)?.name
+}
+
+private fun Context.getContentFileName(uri: Uri): String? = runCatching {
+    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+        cursor.moveToFirst()
+        return@use cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
+            .let(cursor::getString)
     }
-
-    private fun Context.getContentFileName(uri: Uri): String? = runCatching {
-        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-            cursor.moveToFirst()
-            return@use cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
-                .let(cursor::getString)
-        }
-    }.getOrNull()
-}
-
-public actual data class PlatformDirectory(
-    val uri: Uri,
-) {
-    public actual val path: String? =
-        uri.path
-}
+}.getOrNull()
