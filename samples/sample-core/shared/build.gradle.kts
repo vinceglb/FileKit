@@ -6,6 +6,9 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     // Android
     androidTarget()
 
@@ -44,6 +47,15 @@ kotlin {
             // Observable ViewModel
             api(libs.observable.viewmodel)
         }
+
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating { dependsOn(commonMain.get()) }
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
 
         // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
         all {

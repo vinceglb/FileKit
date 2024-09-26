@@ -9,6 +9,9 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     androidTarget()
 
     jvm("desktop")
@@ -73,6 +76,15 @@ kotlin {
             // Coroutines
             implementation(libs.kotlinx.coroutines.swing)
         }
+
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        desktopMain.dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating { dependsOn(commonMain.get()) }
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.dependsOn(webMain)
     }
 }
 

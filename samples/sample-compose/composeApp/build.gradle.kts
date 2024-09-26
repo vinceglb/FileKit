@@ -10,6 +10,8 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
 
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
@@ -49,8 +51,6 @@ kotlin {
     }
 
     sourceSets {
-        val desktopMain by getting
-
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
@@ -67,17 +67,36 @@ kotlin {
             implementation(libs.coil.compose)
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
+        val nonWebMain by creating {
+            dependsOn(commonMain.get())
         }
 
-        desktopMain.dependencies {
-            // Compose
-            implementation(compose.desktop.currentOs)
-
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.swing)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.activity.compose)
+            }
         }
+
+        val desktopMain by getting {
+            dependsOn(nonWebMain)
+            dependencies {
+                // Compose
+                implementation(compose.desktop.currentOs)
+
+                // Coroutines
+                implementation(libs.kotlinx.coroutines.swing)
+            }
+        }
+
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
     }
 }
 

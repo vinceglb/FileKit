@@ -19,17 +19,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
-import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
 import io.github.vinceglb.filekit.core.PlatformFile
 import io.github.vinceglb.filekit.core.baseName
 import io.github.vinceglb.filekit.core.extension
+import io.github.vinceglb.filekit.core.readBytes
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
@@ -44,12 +42,12 @@ fun App(platformSettings: FileKitPlatformSettings? = null) {
 @Composable
 private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
-    var directory: PlatformDirectory? by remember { mutableStateOf(null) }
+    var directory: PlatformFile? by remember { mutableStateOf(null) }
 
     val singleFilePicker = rememberFilePickerLauncher(
         type = PickerType.Image,
         title = "Single file picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -58,7 +56,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         type = PickerType.Image,
         mode = PickerMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -66,7 +64,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
     val filePicker = rememberFilePickerLauncher(
         type = PickerType.File(listOf("png")),
         title = "Single file picker, only png",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
@@ -75,15 +73,8 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         type = PickerType.File(listOf("png")),
         mode = PickerMode.Multiple(),
         title = "Multiple files picker, only png",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
-        platformSettings = platformSettings
-    )
-
-    val directoryPicker = rememberDirectoryPickerLauncher(
-        title = "Directory picker",
-        initialDirectory = directory?.path,
-        onResult = { dir -> directory = dir },
         platformSettings = platformSettings
     )
 
@@ -98,7 +89,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
                 bytes = file.readBytes(),
                 baseName = file.baseName,
                 extension = file.extension,
-                initialDirectory = directory?.path
+                initialDirectory = directory?.safePath
             )
         }
     }
@@ -107,9 +98,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = { singleFilePicker.launch() }) {
                 Text("Single file picker")
             }
@@ -126,18 +115,11 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
                 Text("Multiple files picker, only png")
             }
 
-            Button(
-                onClick = { directoryPicker.launch() },
-                enabled = FileKit.isDirectoryPickerSupported()
-            ) {
-                Text("Directory picker")
-            }
-
-            if (FileKit.isDirectoryPickerSupported()) {
-                Text("Selected directory: ${directory?.path ?: "None"}")
-            } else {
-                Text("Directory picker is not supported")
-            }
+            PickDirectory(
+                platformSettings = platformSettings,
+                directory = directory,
+                onDirectoryPicked = { directory = it }
+            )
 
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 128.dp),
@@ -153,3 +135,12 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
         }
     }
 }
+
+@Composable
+expect fun PickDirectory(
+    platformSettings: FileKitPlatformSettings?,
+    directory: PlatformFile?,
+    onDirectoryPicked: (PlatformFile?) -> Unit,
+)
+
+expect val PlatformFile.safePath: String?
