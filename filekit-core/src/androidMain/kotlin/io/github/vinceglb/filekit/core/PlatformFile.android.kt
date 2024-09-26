@@ -23,7 +23,8 @@ public actual data class PlatformFile(
             it.query(uri, null, null, null, null)?.use { cursor ->
                 val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                 cursor.moveToFirst()
-                cursor.getString(nameIndex)
+                val name = cursor.getString(nameIndex)
+                File(context.filesDir, name).path
             }
         }
 
