@@ -11,7 +11,7 @@ import SamplePickerKt
 
 struct ContentView: View {
     @StateViewModel 
-    var viewModel = MainViewModel()
+    var viewModel = MainViewModel(platformSettings: nil)
     
     var body: some View {
         let uiState = viewModel.uiState.value as? MainUiState
