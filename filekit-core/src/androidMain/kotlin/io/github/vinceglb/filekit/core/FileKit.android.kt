@@ -22,16 +22,20 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 public actual object FileKit {
-    internal var registry: ActivityResultRegistry? = null
-    internal var context: WeakReference<Context?> = WeakReference(null)
+    public var registry: ActivityResultRegistry? = null
+        private set
+
+    private var _context: WeakReference<Context?> = WeakReference(null)
+    public val context: Context?
+        get() = _context.get()
 
     public fun init(activity: ComponentActivity) {
-        context = WeakReference(activity.applicationContext)
+        _context = WeakReference(activity.applicationContext)
         registry = activity.activityResultRegistry
     }
 
     public fun init(context: Context, registry: ActivityResultRegistry) {
-        this.context = WeakReference(context)
+        this._context = WeakReference(context)
         this.registry = registry
     }
 }
@@ -50,7 +54,7 @@ public actual suspend fun <Out> FileKit.pickFile(
     val key = UUID.randomUUID().toString()
 
     // Get context
-    val context = FileKit.context.get()
+    val context = FileKit.context
         ?: throw FileKitNotInitializedException()
 
     val result: List<PlatformFile>? = suspendCoroutine { continuation ->
@@ -134,7 +138,7 @@ public actual suspend fun FileKit.saveFile(
         val key = UUID.randomUUID().toString()
 
         // Get context
-        val context = FileKit.context.get()
+        val context = FileKit.context
             ?: throw FileKitNotInitializedException()
 
         // Get MIME type
@@ -176,7 +180,7 @@ public actual suspend fun FileKit.pickDirectory(
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = registry ?: throw FileKitNotInitializedException()
-    val context = context.get() ?: throw FileKitNotInitializedException()
+    val context = context ?: throw FileKitNotInitializedException()
 
     // It doesn't really matter what the key is, just that it is unique
     val key = UUID.randomUUID().toString()
