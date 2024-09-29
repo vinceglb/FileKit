@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

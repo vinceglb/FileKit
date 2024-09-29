@@ -7,8 +7,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PlatformFile
 import io.github.vinceglb.filekit.core.pickDirectory
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable

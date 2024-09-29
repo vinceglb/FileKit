@@ -1,7 +1,7 @@
 package io.github.vinceglb.sample.core
 
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.PlatformFile
 
 actual suspend fun pickDirectoryIfSupported(
     platformSettings: FileKitPlatformSettings?

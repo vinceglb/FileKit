@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.core
 
+import io.github.vinceglb.filekit.PlatformFile
+
 public expect object FileKit
 
 public expect suspend fun <Out> FileKit.pickFile(

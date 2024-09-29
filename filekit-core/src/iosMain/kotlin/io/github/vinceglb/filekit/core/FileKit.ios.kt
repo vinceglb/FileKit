@@ -4,6 +4,7 @@ import io.github.vinceglb.filekit.core.FileKit.documentPickerDelegate
 import io.github.vinceglb.filekit.core.FileKit.phPickerDelegate
 import io.github.vinceglb.filekit.core.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.core.util.PhPickerDelegate
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO

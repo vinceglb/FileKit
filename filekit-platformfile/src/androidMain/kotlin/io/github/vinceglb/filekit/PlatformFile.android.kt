@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 import android.content.ContentResolver
 import android.content.Context
@@ -49,9 +49,9 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
 public actual fun PlatformFile.getStream(): PlatformInputStream {
     return context
         .contentResolver
-        .openInputStream(uri)?.let {
-            PlatformInputStream(it)
-        } ?: throw IllegalStateException("Failed to open stream")
+        .openInputStream(uri)
+        ?.let { PlatformInputStream(it) }
+        ?: throw IllegalStateException("Failed to open stream")
 }
 
 private fun Context.getFileName(uri: Uri): String? = when (uri.scheme) {
@@ -62,7 +62,8 @@ private fun Context.getFileName(uri: Uri): String? = when (uri.scheme) {
 private fun Context.getContentFileName(uri: Uri): String? = runCatching {
     contentResolver.query(uri, null, null, null, null)?.use { cursor ->
         cursor.moveToFirst()
-        return@use cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
+        return@use cursor
+            .getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME)
             .let(cursor::getString)
     }
 }.getOrNull()

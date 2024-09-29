@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.core
 
+import io.github.vinceglb.filekit.PlatformFile
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel

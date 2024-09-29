@@ -1,11 +1,10 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.InputStream
 
 public actual class PlatformInputStream(private val inputStream: InputStream) : AutoCloseable {
-
     public actual fun hasBytesAvailable(): Boolean {
         return inputStream.available() > 0
     }

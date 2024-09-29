@@ -24,10 +24,10 @@ import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.baseName
-import io.github.vinceglb.filekit.core.extension
-import io.github.vinceglb.filekit.core.readBytes
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.baseName
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
 

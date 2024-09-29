@@ -1,17 +1,15 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import platform.Foundation.NSInputStream
 import platform.posix.uint8_tVar
 
 public actual class PlatformInputStream(private val nsInputStream: NSInputStream) : AutoCloseable {
-
-    init {
-        nsInputStream.open()
+    init { 
+        nsInputStream.open() 
     }
 
     public actual fun hasBytesAvailable(): Boolean {

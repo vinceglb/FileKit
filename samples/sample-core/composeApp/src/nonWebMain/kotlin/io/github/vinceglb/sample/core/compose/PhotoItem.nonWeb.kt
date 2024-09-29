@@ -1,8 +1,8 @@
 package io.github.vinceglb.sample.core.compose
 
 import androidx.compose.runtime.Composable
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.underlyingFile
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.underlyingFile
 
 @Composable
 actual fun rememberFileCoilModel(file: PlatformFile): Any? = file.underlyingFile

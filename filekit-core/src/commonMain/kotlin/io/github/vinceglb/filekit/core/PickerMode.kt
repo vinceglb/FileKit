@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.core
 
+import io.github.vinceglb.filekit.PlatformFile
+
 public sealed class PickerMode<Out> {
     public abstract fun parseResult(value: List<PlatformFile>?): Out?
 

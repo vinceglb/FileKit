@@ -4,8 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.readBytes
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.readBytes
 
 @Composable
 actual fun rememberFileCoilModel(file: PlatformFile): Any? {

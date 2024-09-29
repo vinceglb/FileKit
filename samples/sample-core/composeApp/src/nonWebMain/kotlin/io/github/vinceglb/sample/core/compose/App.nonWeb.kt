@@ -5,8 +5,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.path
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 
 @Composable
 actual fun PickDirectoryButton(

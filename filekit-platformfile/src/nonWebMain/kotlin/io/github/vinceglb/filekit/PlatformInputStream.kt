@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 public expect class PlatformInputStream : AutoCloseable {
     public fun hasBytesAvailable(): Boolean

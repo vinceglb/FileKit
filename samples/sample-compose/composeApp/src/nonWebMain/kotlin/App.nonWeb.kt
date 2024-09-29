@@ -5,8 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.path
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 
 @Composable
 actual fun PickDirectory(

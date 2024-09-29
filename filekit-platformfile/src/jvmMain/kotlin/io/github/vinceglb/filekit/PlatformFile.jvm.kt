@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,6 +25,5 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) { file.readBytes() }
 
 public actual fun PlatformFile.getStream(): PlatformInputStream {
-    return PlatformInputStream(file.inputStream())
+    return io.github.vinceglb.filekit.PlatformInputStream(file.inputStream())
 }
-

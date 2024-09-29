@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.core
 
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

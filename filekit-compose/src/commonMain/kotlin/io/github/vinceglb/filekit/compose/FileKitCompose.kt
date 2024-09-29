@@ -9,9 +9,9 @@ import io.github.vinceglb.filekit.core.FileKit
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformFile
 import io.github.vinceglb.filekit.core.pickFile
 import io.github.vinceglb.filekit.core.saveFile
+import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable

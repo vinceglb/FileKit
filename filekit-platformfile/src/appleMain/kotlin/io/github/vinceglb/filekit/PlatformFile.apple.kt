@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core
+package io.github.vinceglb.filekit
 
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
@@ -69,5 +69,5 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
 }
 
 public actual fun PlatformFile.getStream(): PlatformInputStream {
-    return PlatformInputStream(NSInputStream(nsUrl))
+    return io.github.vinceglb.filekit.PlatformInputStream(NSInputStream(nsUrl))
 }
