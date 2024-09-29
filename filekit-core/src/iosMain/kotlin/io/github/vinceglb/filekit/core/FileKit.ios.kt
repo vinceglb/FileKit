@@ -80,51 +80,53 @@ public actual object FileKit {
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitPlatformSettings?,
-    ): PlatformFile? = suspendCoroutine { continuation ->
-        // Create a picker delegate
-        documentPickerDelegate = DocumentPickerDelegate(
-            onFilesPicked = { urls ->
-                val file = urls.firstOrNull()?.let { PlatformFile(it) }
-                continuation.resume(file)
-            },
-            onPickerCancelled = {
-                continuation.resume(null)
-            }
-        )
+    ): PlatformFile? = withContext(Dispatchers.Main) {
+        suspendCoroutine { continuation ->
+            // Create a picker delegate
+            documentPickerDelegate = DocumentPickerDelegate(
+                onFilesPicked = { urls ->
+                    val file = urls.firstOrNull()?.let { PlatformFile(it) }
+                    continuation.resume(file)
+                },
+                onPickerCancelled = {
+                    continuation.resume(null)
+                }
+            )
 
-        val fileName = "$baseName.$extension"
+            val fileName = "$baseName.$extension"
 
-        // Get the fileManager
-        val fileManager = NSFileManager.defaultManager
+            // Get the fileManager
+            val fileManager = NSFileManager.defaultManager
 
-        // Get the temporary directory
-        val fileComponents = fileManager.temporaryDirectory.pathComponents?.plus(fileName)
-            ?: throw IllegalStateException("Failed to get temporary directory")
+            // Get the temporary directory
+            val fileComponents = fileManager.temporaryDirectory.pathComponents?.plus(fileName)
+                ?: throw IllegalStateException("Failed to get temporary directory")
 
-        // Create a file URL
-        val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
-            ?: throw IllegalStateException("Failed to create file URL")
+            // Create a file URL
+            val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
+                ?: throw IllegalStateException("Failed to create file URL")
 
-        // Write the bytes to the temp file
-        writeBytesArrayToNsUrl(bytes, fileUrl)
+            // Write the bytes to the temp file
+            writeBytesArrayToNsUrl(bytes, fileUrl)
 
-        // Create a picker controller
-        val pickerController = UIDocumentPickerViewController(
-            forExportingURLs = listOf(fileUrl)
-        )
+            // Create a picker controller
+            val pickerController = UIDocumentPickerViewController(
+                forExportingURLs = listOf(fileUrl)
+            )
 
-        // Set the initial directory
-        initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
+            // Set the initial directory
+            initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
 
-        // Assign the delegate to the picker controller
-        pickerController.delegate = documentPickerDelegate
+            // Assign the delegate to the picker controller
+            pickerController.delegate = documentPickerDelegate
 
-        // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
-            pickerController,
-            animated = true,
-            completion = null
-        )
+            // Present the picker controller
+            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+                pickerController,
+                animated = true,
+                completion = null
+            )
+        }
     }
 
     public actual suspend fun isSaveFileWithoutBytesSupported(): Boolean = true
