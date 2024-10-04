@@ -49,10 +49,11 @@ struct ContentView: View {
                 ProgressView()
             }
             
-            Text("Directory: \(String(describing: uiState?.directory?.path))")
+            Text("Directory: \(String(describing:  UtilsKt.getFilePath(file: uiState?.directory)))")
             
             List(files, id: \.nsUrl) { file in
-                Text(file.name)
+                let fileName = UtilsKt.getFileName(file: file)
+                Text(fileName)
                     .onTapGesture { viewModel.saveFile(file: file) }
             }
         }

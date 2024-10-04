@@ -15,44 +15,45 @@ struct ContentView: View {
     
     var body: some View {
         let uiState = viewModel.uiState.value as? MainUiState
-        
+
         // Convert Set to Array
         let files = Array(uiState?.files ?? [])
-        
+
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Hello, world!")
-            
+
             Button("Single image picker") {
                 viewModel.pickImage()
             }
-            
+
             Button("Multiple images picker") {
                 viewModel.pickImages()
             }
-            
+
             Button("Single file picker, only png") {
                 viewModel.pickFile()
             }
-            
+
             Button("Multiple file picker, only png") {
                 viewModel.pickFiles()
             }
-            
+
             Button("Directory picker") {
                 viewModel.pickDirectory()
             }
-        
+
             if uiState?.loading == true {
                 ProgressView()
             }
-            
-            Text("Directory: \(String(describing: uiState?.directory?.path))")
+
+            Text("Directory: \(String(describing:  UtilsKt.getFilePath(file: uiState?.directory)))")
             
             List(files, id: \.nsUrl) { file in
-                Text(file.name)
+                let fileName = UtilsKt.getFileName(file: file)
+                Text(fileName)
                     .onTapGesture { viewModel.saveFile(file: file) }
             }
         }

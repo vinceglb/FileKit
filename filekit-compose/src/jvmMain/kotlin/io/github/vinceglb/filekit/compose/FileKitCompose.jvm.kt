@@ -5,8 +5,8 @@ import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.core.FileKitPlatformSettings
 import io.github.vinceglb.filekit.core.PickerMode
 import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.PlatformFile
+import java.awt.Window
 
 @Composable
 public fun <Out> WindowScope.rememberFilePickerLauncher(
@@ -14,6 +14,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
     mode: PickerMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
@@ -21,7 +22,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
         mode = mode,
         title = title,
         initialDirectory = initialDirectory,
-        platformSettings = FileKitPlatformSettings(this.window),
+        platformSettings = injectPlatformSettings(platformSettings, this.window),
         onResult = onResult,
     )
 }
@@ -31,13 +32,14 @@ public fun WindowScope.rememberFilePickerLauncher(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
         type = type,
         title = title,
         initialDirectory = initialDirectory,
-        platformSettings = FileKitPlatformSettings(this.window),
+        platformSettings = injectPlatformSettings(platformSettings, this.window),
         onResult = onResult,
     )
 }
@@ -46,22 +48,33 @@ public fun WindowScope.rememberFilePickerLauncher(
 public fun WindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,
-    onResult: (PlatformDirectory?) -> Unit,
+    platformSettings: FileKitPlatformSettings? = null,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberDirectoryPickerLauncher(
         title = title,
         initialDirectory = initialDirectory,
-        platformSettings = FileKitPlatformSettings(this.window),
+        platformSettings = injectPlatformSettings(platformSettings, this.window),
         onResult = onResult,
     )
 }
 
 @Composable
 public fun WindowScope.rememberFileSaverLauncher(
+    platformSettings: FileKitPlatformSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     return rememberFileSaverLauncher(
-        platformSettings = FileKitPlatformSettings(this.window),
+        platformSettings = injectPlatformSettings(platformSettings, this.window),
         onResult = onResult,
     )
+}
+
+private fun injectPlatformSettings(
+    platformSettings: FileKitPlatformSettings?,
+    window: Window,
+): FileKitPlatformSettings {
+    return platformSettings
+        ?.copy(parentWindow = window)
+        ?: FileKitPlatformSettings(parentWindow = window)
 }

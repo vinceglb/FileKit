@@ -10,6 +10,8 @@ plugins {
 
 kotlin {
     explicitApi()
+
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
     applyDefaultHierarchyTemplate()
 
     // Android
@@ -58,16 +60,29 @@ kotlin {
             api(projects.filekitCore)
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
+        val nonWebMain by creating {
+            dependsOn(commonMain.get())
         }
 
         val nonAndroidMain by creating {
             dependsOn(commonMain.get())
         }
 
-        nativeMain.get().dependsOn(nonAndroidMain)
-        jvmMain.get().dependsOn(nonAndroidMain)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.activity.compose)
+            }
+        }
+
+        nativeMain {
+            dependsOn(nonWebMain)
+            dependsOn(nonAndroidMain)
+        }
+        jvmMain {
+            dependsOn(nonWebMain)
+            dependsOn(nonAndroidMain)
+        }
         wasmJsMain.dependsOn(nonAndroidMain)
         jsMain.dependsOn(nonAndroidMain)
     }

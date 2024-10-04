@@ -2,7 +2,7 @@ package io.github.vinceglb.filekit.core
 
 import java.awt.Window
 
-public actual class FileKitPlatformSettings(
+public actual data class FileKitPlatformSettings(
     public val parentWindow: Window? = null,
     public val macOS: FileKitMacOSSettings? = null,
 )
