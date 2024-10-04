@@ -1,5 +1,5 @@
 [versions]
-agp = "8.6.1"
+agp = "8.7.0"
 android-activity-ktx = "1.9.2"
 android-compose = "1.9.2"
 coilCompose = "3.0.0-alpha10"
@@ -22,6 +22,7 @@ jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 observable-viewmodel = { module = "com.rickclephas.kmp:kmp-observableviewmodel-core", version.ref = "observable-viewmodel" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinCompose" }
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 

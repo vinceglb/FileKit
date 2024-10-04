@@ -22,6 +22,7 @@ import org.freedesktop.dbus.types.Variant
 import java.awt.Window
 import java.io.File
 import java.net.URI
+import java.nio.file.Paths
 import java.util.UUID
 
 //https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
@@ -177,7 +178,10 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 val results = params[1] as Map<String, Variant<*>>
 
                 if (response.toInt() == 0) {
-                    val uris = (results["uris"]!!.value as List<String>).map { URI(it) }
+                    val uris = (results["uris"]!!.value as List<String>).map { path ->
+                        val filePath = Paths.get(path)
+                        filePath.toUri()
+                    }
                     onComplete(uris, this)
                 } else {
                     onComplete(null, this)
