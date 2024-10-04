@@ -135,38 +135,41 @@ public actual object FileKit {
         mode: Mode,
         contentTypes: List<UTType>,
         initialDirectory: String?,
-    ): List<NSURL>? = suspendCoroutine { continuation ->
-        // Create a picker delegate
-        documentPickerDelegate = DocumentPickerDelegate(
-            onFilesPicked = { urls -> continuation.resume(urls) },
-            onPickerCancelled = { continuation.resume(null) }
-        )
+    ): List<NSURL>? = withContext(Dispatchers.Main) {
+        suspendCoroutine { continuation ->
+            // Create a picker delegate
+            documentPickerDelegate = DocumentPickerDelegate(
+                onFilesPicked = { urls -> continuation.resume(urls) },
+                onPickerCancelled = { continuation.resume(null) }
+            )
 
-        // Create a picker controller
-        val pickerController = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
+            // Create a picker controller
+            val pickerController =
+                UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
 
-        // Set the initial directory
-        initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
+            // Set the initial directory
+            initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
 
-        // Setup the picker mode
-        pickerController.allowsMultipleSelection = mode == Mode.Multiple
+            // Setup the picker mode
+            pickerController.allowsMultipleSelection = mode == Mode.Multiple
 
-        // Assign the delegate to the picker controller
-        pickerController.delegate = documentPickerDelegate
+            // Assign the delegate to the picker controller
+            pickerController.delegate = documentPickerDelegate
 
-        // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
-            pickerController,
-            animated = true,
-            completion = null
-        )
+            // Present the picker controller
+            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+                pickerController,
+                animated = true,
+                completion = null
+            )
+        }
     }
 
     @OptIn(ExperimentalForeignApi::class)
     private suspend fun <Out> callPhPicker(
         mode: PickerMode<Out>,
         type: PickerType,
-    ): List<NSURL>? {
+    ): List<NSURL>? = withContext(Dispatchers.Main) {
         val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
             // Create a picker delegate
             phPickerDelegate = PhPickerDelegate(
@@ -208,7 +211,7 @@ public actual object FileKit {
             )
         }
 
-        return withContext(Dispatchers.IO) {
+        return@withContext withContext(Dispatchers.IO) {
             val fileManager = NSFileManager.defaultManager
 
             pickerResults.mapNotNull { result ->
