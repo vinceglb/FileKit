@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.core
 
 import io.github.vinceglb.filekit.core.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.core.util.PhPickerDelegate
+import io.github.vinceglb.filekit.core.util.PhPickerDismissDelegate
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -23,6 +24,7 @@ import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
+import platform.UIKit.presentationController
 import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
@@ -35,6 +37,7 @@ public actual object FileKit {
     // Create a reference to the picker delegate to prevent it from being garbage collected
     private lateinit var documentPickerDelegate: DocumentPickerDelegate
     private lateinit var phPickerDelegate: PhPickerDelegate
+    private lateinit var phPickerDismissDelegate: PhPickerDismissDelegate
 
     public actual suspend fun <Out> pickFile(
         type: PickerType,
@@ -111,7 +114,7 @@ public actual object FileKit {
 
             // Create a picker controller
             val pickerController = UIDocumentPickerViewController(
-                forExportingURLs = listOf(fileUrl)
+                forExportingURLs = listOf(fileUrl),
             )
 
             // Set the initial directory
@@ -144,8 +147,9 @@ public actual object FileKit {
             )
 
             // Create a picker controller
-            val pickerController =
-                UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
+            val pickerController = UIDocumentPickerViewController(
+                forOpeningContentTypes = contentTypes,
+            )
 
             // Set the initial directory
             initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
@@ -175,6 +179,9 @@ public actual object FileKit {
             phPickerDelegate = PhPickerDelegate(
                 onFilesPicked = continuation::resume
             )
+            phPickerDismissDelegate = PhPickerDismissDelegate(
+                onFilesPicked = continuation::resume
+            )
 
             // Define configuration
             val configuration = PHPickerConfiguration(sharedPhotoLibrary())
@@ -202,6 +209,7 @@ public actual object FileKit {
             // Create a picker controller
             val controller = PHPickerViewController(configuration = configuration)
             controller.delegate = phPickerDelegate
+            controller.presentationController?.delegate = phPickerDismissDelegate
 
             // Present the picker controller
             UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
