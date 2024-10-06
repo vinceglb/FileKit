@@ -70,10 +70,10 @@ repositories {
 
 dependencies {
     // Enables FileKit without Compose dependencies
-    implementation("io.github.vinceglb:filekit-core:0.8.6")
+    implementation("io.github.vinceglb:filekit-core:0.8.7")
 
     // Enables FileKit with Composable utilities
-    implementation("io.github.vinceglb:filekit-compose:0.8.6")
+    implementation("io.github.vinceglb:filekit-compose:0.8.7")
 }
 ```
 
