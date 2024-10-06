@@ -23,6 +23,7 @@ import java.awt.Window
 import java.io.File
 import java.net.URI
 import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 //https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
@@ -179,7 +180,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
                 if (response.toInt() == 0) {
                     val uris = (results["uris"]!!.value as List<String>).map { path ->
-                        path.URI()
+                        path.toURI()
                     }
                     onComplete(uris, this)
                 } else {
@@ -227,7 +228,29 @@ internal class Pair<A, B>(
     @field:Position(1) val b: B
 ) : Tuple()
 
-private fun String.URI(): URI = URLEncoder
-    .encode(this, "UTF-8")
-    .replace("+", "%20")
-    .let { URI(it) }
+private fun splitUrl(url: String): kotlin.Pair<String?, String> {
+    val schemeEndIndex = url.indexOf("://")
+
+    return if (schemeEndIndex != -1) {
+        // If "://" is found, split the string into scheme and rest
+        val scheme = url.substring(0, schemeEndIndex + 3)
+        val rest = url.substring(schemeEndIndex + 3)
+        kotlin.Pair(scheme, rest)
+    } else {
+        // If no scheme is found, return null for scheme and the entire string as the rest
+        kotlin.Pair(null, url)
+    }
+}
+
+internal fun String.toURI(): URI {
+    // Split the URL into scheme and the rest of the path
+    val (_, rest) = splitUrl(this)
+
+    // Encode the rest of the path
+    val encodedRest = URLEncoder
+        .encode(rest, StandardCharsets.UTF_8.toString())
+        .replace("+", "%20") // URLEncoder encodes spaces as '+', so replace with %20
+
+    // Reconstruct the toURI with the encoded path
+    return URI(encodedRest)
+}
