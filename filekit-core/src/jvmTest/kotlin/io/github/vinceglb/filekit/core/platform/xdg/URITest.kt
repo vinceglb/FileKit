@@ -1,31 +1,34 @@
 package io.github.vinceglb.filekit.core.platform.xdg
 
 import java.net.URI
-import java.nio.file.Paths
+import java.net.URLEncoder
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class URITest {
+    private fun String.URI(): URI = URLEncoder
+        .encode(this, "UTF-8")
+        .replace("+", "%20")
+        .let { URI(it) }
+
     @Test
     fun testSimpleURI() {
         val path = "/home/user/file.txt"
-        val uri = URI(path)
+        val uri = path.URI()
         assertEquals(path, uri.path)
     }
 
     @Test
     fun testURIWithSpaces() {
         val path = "/home/user/file with spaces.txt"
-        val filePath = Paths.get(path)
-        val uri = filePath.toUri()
+        val uri = path.URI()
         assertEquals(path, uri.path)
     }
 
     @Test
     fun testURIWithSpecialCharacters() {
         val path = "/home/user/Ubuntu [24.04].file"
-        val filePath = Paths.get(path)
-        val uri = filePath.toUri()
+        val uri = path.URI()
         assertEquals(path, uri.path)
     }
 }
