@@ -22,8 +22,6 @@ import org.freedesktop.dbus.types.Variant
 import java.awt.Window
 import java.io.File
 import java.net.URI
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 //https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
@@ -191,7 +189,8 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     }
 
     // awt only supports X11
-    private fun getWindowIdentifier(parentWindow: Window?) = parentWindow?.let { "X11:${Native.getWindowID(it)}" }
+    private fun getWindowIdentifier(parentWindow: Window?) =
+        parentWindow?.let { "X11:${Native.getWindowID(it)}" }
 
     private fun getFileChooserObject(connection: DBusConnection) = connection.getRemoteObject(
         "org.freedesktop.portal.Desktop",
@@ -215,9 +214,23 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 @DBusInterfaceName(value = "org.freedesktop.portal.FileChooser")
 @Suppress("FunctionName")
 internal interface FileChooserDbusInterface : DBusInterface {
-    fun OpenFile(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
-    fun SaveFile(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
-    fun SaveFiles(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
+    fun OpenFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
+
+    fun SaveFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
+
+    fun SaveFiles(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
 
     @DBusBoundProperty(name = "version", access = Access.READ)
     fun GetVersion(): UInt32
@@ -228,29 +241,9 @@ internal class Pair<A, B>(
     @field:Position(1) val b: B
 ) : Tuple()
 
-private fun splitUrl(url: String): kotlin.Pair<String?, String> {
-    val schemeEndIndex = url.indexOf("://")
-
-    return if (schemeEndIndex != -1) {
-        // If "://" is found, split the string into scheme and rest
-        val scheme = url.substring(0, schemeEndIndex + 3)
-        val rest = url.substring(schemeEndIndex + 3)
-        kotlin.Pair(scheme, rest)
-    } else {
-        // If no scheme is found, return null for scheme and the entire string as the rest
-        kotlin.Pair(null, url)
-    }
-}
-
-internal fun String.toURI(): URI {
-    // Split the URL into scheme and the rest of the path
-    val (_, rest) = splitUrl(this)
-
-    // Encode the rest of the path
-    val encodedRest = URLEncoder
-        .encode(rest, StandardCharsets.UTF_8.toString())
-        .replace("+", "%20") // URLEncoder encodes spaces as '+', so replace with %20
-
-    // Reconstruct the toURI with the encoded path
-    return URI(encodedRest)
-}
+internal fun String.toURI(): URI =
+    this
+        .replace(" ", "%20")
+        .replace("[", "%5B")
+        .replace("]", "%5D")
+        .let { URI(it) }
