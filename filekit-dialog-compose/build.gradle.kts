@@ -28,7 +28,7 @@ kotlin {
         js(),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKitCompose"
+        it.moduleName = "FileKitDialogCompose"
         it.browser()
     }
 
@@ -39,7 +39,7 @@ kotlin {
         iosSimulatorArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "FileKitCompose"
+            baseName = "FileKitDialogCompose"
             isStatic = true
         }
     }

@@ -27,7 +27,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKit"
+        it.moduleName = "FileKitDialog"
         it.browser()
     }
 
@@ -40,7 +40,7 @@ kotlin {
         macosArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "FileKit"
+            baseName = "FileKitDialog"
             isStatic = true
         }
     }
