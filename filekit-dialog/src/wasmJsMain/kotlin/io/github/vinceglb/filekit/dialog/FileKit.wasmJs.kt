@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.dialog
 
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
@@ -14,8 +15,6 @@ import org.w3c.files.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
-
-public actual object FileKit
 
 public actual suspend fun <Out> FileKit.pickFile(
     type: PickerType,

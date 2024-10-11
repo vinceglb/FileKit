@@ -5,10 +5,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import io.github.vinceglb.filekit.dialog.FileKit
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.pickDirectory
-import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable

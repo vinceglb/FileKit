@@ -1,11 +1,10 @@
 package io.github.vinceglb.filekit.dialog
 
-import io.github.vinceglb.filekit.dialog.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.platform.PlatformFilePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-public actual object FileKit
 
 public actual suspend fun <Out> FileKit.pickFile(
     type: PickerType,

@@ -54,7 +54,12 @@ kotlin {
             dependsOn(commonMain.get())
         }
 
-        androidMain.get().dependsOn(nonWebMain)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.activity.ktx)
+            }
+        }
         jvmMain.get().dependsOn(nonWebMain)
         nativeMain.get().dependsOn(nonWebMain)
     }

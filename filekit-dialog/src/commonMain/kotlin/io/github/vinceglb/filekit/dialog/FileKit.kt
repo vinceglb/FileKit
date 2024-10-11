@@ -1,8 +1,7 @@
 package io.github.vinceglb.filekit.dialog
 
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-
-public expect object FileKit
 
 public expect suspend fun <Out> FileKit.pickFile(
     type: PickerType = PickerType.File(),

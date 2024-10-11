@@ -1,13 +1,12 @@
 package io.github.vinceglb.filekit.dialog
 
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
 import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
-
-public actual object FileKit
 
 public actual suspend fun <Out> FileKit.pickFile(
     type: PickerType,

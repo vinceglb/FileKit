@@ -1,10 +1,7 @@
 package io.github.vinceglb.filekit.dialog
 
-import android.content.Context
 import android.net.Uri
 import android.webkit.MimeTypeMap
-import androidx.activity.ComponentActivity
-import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
@@ -12,33 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
-import java.lang.ref.WeakReference
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-
-public actual object FileKit {
-    public var registry: ActivityResultRegistry? = null
-        private set
-
-    private var _context: WeakReference<Context?> = WeakReference(null)
-    public val context: Context?
-        get() = _context.get()
-
-    public fun init(activity: ComponentActivity) {
-        _context = WeakReference(activity.applicationContext)
-        registry = activity.activityResultRegistry
-    }
-
-    public fun init(context: Context, registry: ActivityResultRegistry) {
-        _context = WeakReference(context)
-        FileKit.registry = registry
-    }
-}
 
 public actual suspend fun <Out> FileKit.pickFile(
     type: PickerType,

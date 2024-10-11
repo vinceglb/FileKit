@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
-import io.github.vinceglb.filekit.dialog.FileKit
+import io.github.vinceglb.filekit.FileKit
 
 @Composable
 internal actual fun InitFileKit() {

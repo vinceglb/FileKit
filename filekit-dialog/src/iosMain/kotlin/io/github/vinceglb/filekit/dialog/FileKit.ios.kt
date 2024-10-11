@@ -1,9 +1,10 @@
 package io.github.vinceglb.filekit.dialog
 
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialog.FileKit.documentPickerDelegate
-import io.github.vinceglb.filekit.dialog.FileKit.phPickerDelegate
-import io.github.vinceglb.filekit.dialog.FileKit.phPickerDismissDelegate
+import io.github.vinceglb.filekit.dialog.FileKitDialog.documentPickerDelegate
+import io.github.vinceglb.filekit.dialog.FileKitDialog.phPickerDelegate
+import io.github.vinceglb.filekit.dialog.FileKitDialog.phPickerDismissDelegate
 import io.github.vinceglb.filekit.dialog.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialog.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialog.util.PhPickerDismissDelegate
@@ -37,11 +38,11 @@ import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-public actual object FileKit {
+private object FileKitDialog {
     // Create a reference to the picker delegate to prevent it from being garbage collected
-    internal lateinit var documentPickerDelegate: DocumentPickerDelegate
-    internal lateinit var phPickerDelegate: PhPickerDelegate
-    internal lateinit var phPickerDismissDelegate: PhPickerDismissDelegate
+    lateinit var documentPickerDelegate: DocumentPickerDelegate
+    lateinit var phPickerDelegate: PhPickerDelegate
+    lateinit var phPickerDismissDelegate: PhPickerDismissDelegate
 }
 
 public actual suspend fun <Out> FileKit.pickFile(

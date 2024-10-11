@@ -5,13 +5,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
-import io.github.vinceglb.filekit.dialog.FileKit
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.PickerMode
 import io.github.vinceglb.filekit.dialog.PickerType
 import io.github.vinceglb.filekit.dialog.pickFile
 import io.github.vinceglb.filekit.dialog.saveFile
-import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.launch
 
 @Composable
