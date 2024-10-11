@@ -22,5 +22,5 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) { file.readBytes() }
 
 public actual fun PlatformFile.getStream(): PlatformInputStream {
-    return io.github.vinceglb.filekit.PlatformInputStream(file.inputStream())
+    return PlatformInputStream(file.inputStream())
 }
