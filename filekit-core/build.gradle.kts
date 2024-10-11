@@ -27,7 +27,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKitPlatformFile"
+        it.moduleName = "FileKit"
         it.browser()
     }
 
@@ -40,7 +40,7 @@ kotlin {
         macosArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "FileKitPlatformFile"
+            baseName = "FileKit"
             isStatic = true
         }
     }
@@ -48,6 +48,10 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+        }
+
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
         }
 
         val nonWebMain by creating {
@@ -66,7 +70,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.filekit.core"
+    namespace = "io.github.vinceglb.filekit"
     compileSdk = 34
 
     defaultConfig {

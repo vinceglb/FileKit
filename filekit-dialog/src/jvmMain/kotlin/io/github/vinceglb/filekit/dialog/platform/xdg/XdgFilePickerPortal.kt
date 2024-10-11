@@ -177,7 +177,9 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 val results = params[1] as Map<String, Variant<*>>
 
                 if (response.toInt() == 0) {
-                    val uris = (results["uris"]!!.value as List<String>).map { URI(it) }
+                    val uris = (results["uris"]!!.value as List<String>).map { path ->
+                        path.toURI()
+                    }
                     onComplete(uris, this)
                 } else {
                     onComplete(null, this)
@@ -187,7 +189,8 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     }
 
     // awt only supports X11
-    private fun getWindowIdentifier(parentWindow: Window?) = parentWindow?.let { "X11:${Native.getWindowID(it)}" }
+    private fun getWindowIdentifier(parentWindow: Window?) =
+        parentWindow?.let { "X11:${Native.getWindowID(it)}" }
 
     private fun getFileChooserObject(connection: DBusConnection) = connection.getRemoteObject(
         "org.freedesktop.portal.Desktop",
@@ -211,9 +214,23 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 @DBusInterfaceName(value = "org.freedesktop.portal.FileChooser")
 @Suppress("FunctionName")
 internal interface FileChooserDbusInterface : DBusInterface {
-    fun OpenFile(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
-    fun SaveFile(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
-    fun SaveFiles(parentWindow: String, title: String, options: MutableMap<String, Variant<*>>): DBusPath
+    fun OpenFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
+
+    fun SaveFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
+
+    fun SaveFiles(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>
+    ): DBusPath
 
     @DBusBoundProperty(name = "version", access = Access.READ)
     fun GetVersion(): UInt32
@@ -223,3 +240,10 @@ internal class Pair<A, B>(
     @field:Position(0) val a: A,
     @field:Position(1) val b: B
 ) : Tuple()
+
+internal fun String.toURI(): URI =
+    this
+        .replace(" ", "%20")
+        .replace("[", "%5B")
+        .replace("]", "%5D")
+        .let { URI(it) }
