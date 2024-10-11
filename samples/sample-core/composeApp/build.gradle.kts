@@ -56,6 +56,7 @@ kotlin {
             implementation(compose.components.resources)
 
             // Shared
+            implementation(projects.filekitCoil)
             implementation(projects.samples.sampleCore.shared)
 
             // Koin
