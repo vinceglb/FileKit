@@ -2,8 +2,6 @@ package io.github.vinceglb.filekit
 
 public expect class PlatformFile
 
-public expect val PlatformFile.underlyingFile: Any
-
 public expect val PlatformFile.name: String
 
 public expect val PlatformFile.size: Long

@@ -15,9 +15,6 @@ public actual data class PlatformFile(
     val file: File,
 )
 
-public actual val PlatformFile.underlyingFile: Any
-    get() = file
-
 public actual val PlatformFile.name: String
     get() = file.name
 

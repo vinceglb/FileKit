@@ -26,9 +26,6 @@ public actual data class PlatformFile(
     val nsUrl: NSURL,
 )
 
-public actual val PlatformFile.underlyingFile: Any
-    get() = nsUrl
-
 public actual val PlatformFile.name: String
     get() = nsUrl.lastPathComponent ?: ""
 

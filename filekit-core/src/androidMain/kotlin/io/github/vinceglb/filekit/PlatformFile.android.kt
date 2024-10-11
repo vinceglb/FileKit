@@ -13,9 +13,6 @@ public actual data class PlatformFile(
     internal val context: Context,
 )
 
-public actual val PlatformFile.underlyingFile: Any
-    get() = uri
-
 public actual val PlatformFile.name: String
     get() = context.getFileName(uri) ?: throw IllegalStateException("Failed to get file name")
 
