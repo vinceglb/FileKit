@@ -50,10 +50,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
 
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
-        }
-
         val nonWebMain by creating {
             dependsOn(commonMain.get())
         }

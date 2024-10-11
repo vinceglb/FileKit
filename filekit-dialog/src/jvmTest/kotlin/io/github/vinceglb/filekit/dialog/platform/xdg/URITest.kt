@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core.platform.xdg
+package io.github.vinceglb.filekit.dialog.platform.xdg
 
 import java.io.File
 import kotlin.test.Test

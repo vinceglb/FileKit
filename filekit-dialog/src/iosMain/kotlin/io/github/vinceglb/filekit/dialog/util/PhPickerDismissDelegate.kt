@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.core.util
+package io.github.vinceglb.filekit.dialog.util
 
 import platform.PhotosUI.PHPickerResult
 import platform.UIKit.UIAdaptivePresentationControllerDelegateProtocol
