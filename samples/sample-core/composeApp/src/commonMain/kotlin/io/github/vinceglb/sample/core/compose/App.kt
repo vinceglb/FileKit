@@ -19,7 +19,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.sample.core.MainViewModel
 import org.koin.compose.KoinApplication
@@ -27,7 +27,7 @@ import org.koin.compose.koinInject
 import org.koin.dsl.module
 
 @Composable
-fun App(platformSettings: FileKitPlatformSettings? = null) {
+fun App(platformSettings: FileKitDialogSettings? = null) {
     KoinApplication(
         application = {
             modules(module {

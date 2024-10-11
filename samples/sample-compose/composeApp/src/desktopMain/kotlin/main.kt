@@ -1,10 +1,10 @@
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication, title = "SampleCompose") {
-        val platformSettings = FileKitPlatformSettings(this.window)
+        val platformSettings = FileKitDialogSettings(this.window)
         App(platformSettings)
     }
 }

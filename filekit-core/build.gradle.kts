@@ -27,7 +27,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKit"
+        it.moduleName = "FileKitPlatformFile"
         it.browser()
     }
 
@@ -40,14 +40,13 @@ kotlin {
         macosArm64(),
     ).forEach {
         it.binaries.framework {
-            baseName = "FileKit"
+            baseName = "FileKitPlatformFile"
             isStatic = true
         }
     }
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.filekitPlatformfile)
             implementation(libs.kotlinx.coroutines.core)
         }
 
@@ -55,23 +54,8 @@ kotlin {
             dependsOn(commonMain.get())
         }
 
-        androidMain {
-            dependsOn(nonWebMain)
-            dependencies {
-                implementation(libs.androidx.activity.ktx)
-            }
-        }
-
-        jvmMain {
-            dependsOn(nonWebMain)
-            dependencies {
-                implementation(libs.jna)
-                implementation(libs.jna.platform)
-                implementation(libs.dbus.java.core)
-                implementation(libs.dbus.java.transport.native.unixsocket)
-            }
-        }
-
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
         nativeMain.get().dependsOn(nonWebMain)
     }
 
@@ -82,7 +66,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.filekit"
+    namespace = "io.github.vinceglb.filekit.platformfile"
     compileSdk = 34
 
     defaultConfig {

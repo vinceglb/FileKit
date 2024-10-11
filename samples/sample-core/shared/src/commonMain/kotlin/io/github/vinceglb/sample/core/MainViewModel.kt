@@ -3,12 +3,12 @@ package io.github.vinceglb.sample.core
 import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
 import com.rickclephas.kmp.observableviewmodel.ViewModel
 import com.rickclephas.kmp.observableviewmodel.coroutineScope
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.pickFile
-import io.github.vinceglb.filekit.core.saveFile
+import io.github.vinceglb.filekit.dialog.FileKit
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialog.PickerMode
+import io.github.vinceglb.filekit.dialog.PickerType
+import io.github.vinceglb.filekit.dialog.pickFile
+import io.github.vinceglb.filekit.dialog.saveFile
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.baseName
 import io.github.vinceglb.filekit.extension
@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val platformSettings: FileKitPlatformSettings?
+    private val platformSettings: FileKitDialogSettings?
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
@@ -131,5 +131,5 @@ data class MainUiState(
 expect fun downloadDirectoryPath(): String?
 
 expect suspend fun pickDirectoryIfSupported(
-    platformSettings: FileKitPlatformSettings?
+    platformSettings: FileKitDialogSettings?
 ): PlatformFile?

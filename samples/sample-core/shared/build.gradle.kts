@@ -42,7 +42,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // FileKit Core
-            api(projects.filekitCore)
+            api(projects.filekitDialog)
 
             // Observable ViewModel
             api(libs.observable.viewmodel)

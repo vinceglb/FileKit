@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.baseName
-import io.github.vinceglb.filekit.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.compose.rememberFileSaverLauncher
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
+import io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialog.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialog.PickerMode
+import io.github.vinceglb.filekit.dialog.PickerType
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
@@ -33,14 +33,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun App(platformSettings: FileKitPlatformSettings? = null) {
+fun App(platformSettings: FileKitDialogSettings? = null) {
     MaterialTheme {
         SampleApp(platformSettings)
     }
 }
 
 @Composable
-private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
+private fun SampleApp(platformSettings: FileKitDialogSettings?) {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
     var directory: PlatformFile? by remember { mutableStateOf(null) }
 
@@ -138,7 +138,7 @@ private fun SampleApp(platformSettings: FileKitPlatformSettings?) {
 
 @Composable
 expect fun PickDirectory(
-    platformSettings: FileKitPlatformSettings?,
+    platformSettings: FileKitDialogSettings?,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit,
 )
