@@ -45,18 +45,14 @@ kotlin {
     }
 
     sourceSets {
-        val wasmJsMain by getting
-        val jsMain by getting
-
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
-            implementation(compose.ui)
 
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
 
-            // FileKit Core
+            // FileKit Dialog
             api(projects.filekitDialog)
         }
 
@@ -82,14 +78,17 @@ kotlin {
         jvmMain {
             dependsOn(nonWebMain)
             dependsOn(nonAndroidMain)
+            dependencies {
+                implementation(compose.ui)
+            }
         }
-        wasmJsMain.dependsOn(nonAndroidMain)
-        jsMain.dependsOn(nonAndroidMain)
+        wasmJsMain.get().dependsOn(nonAndroidMain)
+        jsMain.get().dependsOn(nonAndroidMain)
     }
 }
 
 android {
-    namespace = "io.github.vinceglb.filekit.compose"
+    namespace = "io.github.vinceglb.filekit.dialog.compose"
     compileSdk = 34
 
     defaultConfig {

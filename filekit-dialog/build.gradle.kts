@@ -82,7 +82,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.filekit"
+    namespace = "io.github.vinceglb.filekit.dialog"
     compileSdk = 34
 
     defaultConfig {

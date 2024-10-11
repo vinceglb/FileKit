@@ -66,7 +66,7 @@ kotlin {
 }
 
 android {
-    namespace = "io.github.vinceglb.filekit.platformfile"
+    namespace = "io.github.vinceglb.filekit.core"
     compileSdk = 34
 
     defaultConfig {
