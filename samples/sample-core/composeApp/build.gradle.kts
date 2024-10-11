@@ -91,7 +91,7 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.sample.core.compose"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24

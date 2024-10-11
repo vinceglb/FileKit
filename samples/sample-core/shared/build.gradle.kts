@@ -59,14 +59,14 @@ kotlin {
 
         // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
         all {
-            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            // languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
         }
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.core.shared"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
