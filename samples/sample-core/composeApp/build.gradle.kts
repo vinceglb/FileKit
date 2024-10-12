@@ -59,8 +59,8 @@ kotlin {
             implementation(projects.filekitCoil)
             implementation(projects.samples.sampleCore.shared)
 
-            // Koin
-            implementation(libs.koin.compose)
+            // ViewModel Compose
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
 
             // Coil3
             implementation(libs.coil.compose)

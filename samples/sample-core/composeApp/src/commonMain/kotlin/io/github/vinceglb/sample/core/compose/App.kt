@@ -19,32 +19,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
-import org.koin.compose.KoinApplication
-import org.koin.compose.koinInject
-import org.koin.dsl.module
 
 @Composable
 fun App(platformSettings: FileKitDialogSettings? = null) {
-    KoinApplication(
-        application = {
-            modules(module {
-                factory { MainViewModel(platformSettings) }
-            })
-        }
-    ) {
-        MaterialTheme {
-            SampleApp()
-        }
+    MaterialTheme {
+        SampleApp(viewModel = viewModel { MainViewModel(platformSettings) })
     }
 }
 
 @Composable
-private fun SampleApp(
-    viewModel: MainViewModel = koinInject<MainViewModel>(),
-) {
+private fun SampleApp(viewModel: MainViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(

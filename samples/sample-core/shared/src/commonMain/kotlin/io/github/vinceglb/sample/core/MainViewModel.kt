@@ -1,8 +1,7 @@
 package io.github.vinceglb.sample.core
 
-import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
-import com.rickclephas.kmp.observableviewmodel.ViewModel
-import com.rickclephas.kmp.observableviewmodel.coroutineScope
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.baseName
@@ -13,6 +12,7 @@ import io.github.vinceglb.filekit.dialog.pickFile
 import io.github.vinceglb.filekit.dialog.saveFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class MainViewModel(
     private val platformSettings: FileKitDialogSettings?
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
+    private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
     fun pickImage() = executeWithLoading {
@@ -111,7 +111,7 @@ class MainViewModel(
     }
 
     private fun executeWithLoading(block: suspend () -> Unit) {
-        viewModelScope.coroutineScope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
             block()
             _uiState.update { it.copy(loading = false) }

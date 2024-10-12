@@ -36,6 +36,8 @@ kotlin {
         it.binaries.framework {
             baseName = "SamplePickerKt"
             isStatic = true
+            export(libs.androidx.lifecycle.viewmodel)
+            export(projects.filekitCore)
         }
     }
 
@@ -45,7 +47,7 @@ kotlin {
             api(projects.filekitDialog)
 
             // Observable ViewModel
-            api(libs.observable.viewmodel)
+            api(libs.androidx.lifecycle.viewmodel)
         }
 
         val nonWebMain by creating { dependsOn(commonMain.get()) }
