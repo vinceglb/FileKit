@@ -6,50 +6,47 @@
 //
 
 import SwiftUI
-import KMPObservableViewModelSwiftUI
 import SamplePickerKt
 
 struct ContentView: View {
-    @StateViewModel
-    var viewModel = MainViewModel(platformSettings: nil)
+    @State var viewModel = MainViewModel(platformSettings: nil)
+    @State var uiState: MainUiState = .init()
     
     var body: some View {
-        let uiState = viewModel.uiState.value as? MainUiState
-        
         // Convert Set to Array
-        let files = Array(uiState?.files ?? [])
-        
+        let files = Array(uiState.files)
+
         VStack {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Hello, world!")
-            
+
             Button("Single image picker") {
                 viewModel.pickImage()
             }
-            
+
             Button("Multiple images picker") {
                 viewModel.pickImages()
             }
-            
+
             Button("Single file picker, only png") {
                 viewModel.pickFile()
             }
-            
+
             Button("Multiple file picker, only png") {
                 viewModel.pickFiles()
             }
-            
+
             Button("Directory picker") {
                 viewModel.pickDirectory()
             }
-        
-            if uiState?.loading == true {
+
+            if uiState.loading {
                 ProgressView()
             }
-            
-            Text("Directory: \(String(describing: uiState?.directory?.path))")
+
+            Text("Directory: \(String(describing:  uiState.directory?.path))")
             
             List(files, id: \.nsUrl) { file in
                 Text(file.name)
@@ -57,6 +54,11 @@ struct ContentView: View {
             }
         }
         .padding()
+        .task {
+            viewModel.uiState.collect(collector: Collector<MainUiState> { state in
+                self.uiState = state
+            }) { (error) in }
+        }
     }
 }
 

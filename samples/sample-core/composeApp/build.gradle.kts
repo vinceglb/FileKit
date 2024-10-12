@@ -9,6 +9,9 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     androidTarget()
 
     jvm("desktop")
@@ -53,10 +56,11 @@ kotlin {
             implementation(compose.components.resources)
 
             // Shared
+            implementation(projects.filekitCoil)
             implementation(projects.samples.sampleCore.shared)
 
-            // Koin
-            implementation(libs.koin.compose)
+            // ViewModel Compose
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
 
             // Coil3
             implementation(libs.coil.compose)
@@ -73,12 +77,21 @@ kotlin {
             // Coroutines
             implementation(libs.kotlinx.coroutines.swing)
         }
+
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        desktopMain.dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating { dependsOn(commonMain.get()) }
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.dependsOn(webMain)
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.core.compose"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24

@@ -10,6 +10,9 @@ plugins {
 kotlin {
     explicitApi()
 
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     // Android
     androidTarget {
         publishLibraryVariants("release")
@@ -47,20 +50,18 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
 
-        commonTest.dependencies {
-            implementation(libs.kotlin.test)
+        val nonWebMain by creating {
+            dependsOn(commonMain.get())
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.ktx)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.activity.ktx)
+            }
         }
-
-        jvmMain.dependencies {
-            implementation(libs.jna)
-            implementation(libs.jna.platform)
-            implementation(libs.dbus.java.core)
-            implementation(libs.dbus.java.transport.native.unixsocket)
-        }
+        jvmMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -71,7 +72,7 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.filekit"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 21

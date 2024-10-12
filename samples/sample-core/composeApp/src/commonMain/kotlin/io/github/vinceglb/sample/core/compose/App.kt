@@ -19,32 +19,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
-import org.koin.compose.KoinApplication
-import org.koin.compose.koinInject
-import org.koin.dsl.module
 
 @Composable
-fun App(platformSettings: FileKitPlatformSettings? = null) {
-    KoinApplication(
-        application = {
-            modules(module {
-                factory { MainViewModel(platformSettings) }
-            })
-        }
-    ) {
-        MaterialTheme {
-            SampleApp()
-        }
+fun App(platformSettings: FileKitDialogSettings? = null) {
+    MaterialTheme {
+        SampleApp(viewModel = viewModel { MainViewModel(platformSettings) })
     }
 }
 
 @Composable
-private fun SampleApp(
-    viewModel: MainViewModel = koinInject<MainViewModel>(),
-) {
+private fun SampleApp(viewModel: MainViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(
@@ -68,21 +56,13 @@ private fun SampleApp(
                 Text("Multiple files picker, only png")
             }
 
-            Button(
-                onClick = viewModel::pickDirectory,
-                enabled = FileKit.isDirectoryPickerSupported(),
-            ) {
-                Text("Directory picker")
-            }
+            PickDirectoryButton(
+                directory = uiState.directory,
+                onClick = viewModel::pickDirectory
+            )
 
             if (uiState.loading) {
                 CircularProgressIndicator()
-            }
-
-            if (FileKit.isDirectoryPickerSupported()) {
-                Text("Selected directory: ${uiState.directory?.path ?: "None"}")
-            } else {
-                Text("Directory picker is not supported")
             }
 
             LazyVerticalGrid(
@@ -99,3 +79,9 @@ private fun SampleApp(
         }
     }
 }
+
+@Composable
+expect fun PickDirectoryButton(
+    directory: PlatformFile?,
+    onClick: () -> Unit
+)

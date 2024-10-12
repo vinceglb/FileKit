@@ -6,6 +6,9 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     // Android
     androidTarget()
 
@@ -33,28 +36,39 @@ kotlin {
         it.binaries.framework {
             baseName = "SamplePickerKt"
             isStatic = true
+            export(libs.androidx.lifecycle.viewmodel)
+            export(projects.filekitCore)
         }
     }
 
     sourceSets {
         commonMain.dependencies {
             // FileKit Core
-            api(projects.filekitCore)
+            api(projects.filekitDialog)
 
             // Observable ViewModel
-            api(libs.observable.viewmodel)
+            api(libs.androidx.lifecycle.viewmodel)
         }
+
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating { dependsOn(commonMain.get()) }
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
 
         // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
         all {
-            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            // languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
         }
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.core.shared"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
