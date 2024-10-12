@@ -27,7 +27,7 @@ jobs:
 
   publish:
     name: Publish to Snapshot
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: check-version
     if: ${{ needs.check-version.outputs.is_snapshot == 'true' }}
     steps:
