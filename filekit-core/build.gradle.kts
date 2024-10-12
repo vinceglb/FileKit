@@ -48,6 +48,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            api(libs.kotlinx.io)
         }
 
         val nonWebMain by creating {
@@ -58,6 +59,7 @@ kotlin {
             dependsOn(nonWebMain)
             dependencies {
                 implementation(libs.androidx.activity.ktx)
+                implementation("androidx.documentfile:documentfile:1.0.1")
             }
         }
         jvmMain.get().dependsOn(nonWebMain)
