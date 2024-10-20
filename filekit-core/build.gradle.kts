@@ -59,7 +59,7 @@ kotlin {
             dependsOn(nonWebMain)
             dependencies {
                 implementation(libs.androidx.activity.ktx)
-                implementation("androidx.documentfile:documentfile:1.0.1")
+                implementation(libs.androidx.documentfile)
             }
         }
         jvmMain.get().dependsOn(nonWebMain)
