@@ -11,6 +11,8 @@ public expect suspend fun <Out> FileKit.pickFile(
     platformSettings: FileKitDialogSettings? = null,
 ): Out?
 
+// TODO to deprecate or keep for the helper? Create new function without bytes parameter? (if target supports it)
+// TODO rename baseName to nameWithoutExtension?
 public expect suspend fun FileKit.saveFile(
     bytes: ByteArray? = null,
     baseName: String = "file",

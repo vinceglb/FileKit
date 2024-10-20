@@ -26,14 +26,10 @@ public actual suspend fun <Out> FileKit.pickFile(
     platformSettings: FileKitDialogSettings?,
 ): Out? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
-    val registry = registry ?: throw FileKitNotInitializedException()
+    val registry = FileKit.registry
 
     // It doesn't really matter what the key is, just that it is unique
     val key = UUID.randomUUID().toString()
-
-    // Get context
-    val context = FileKit.context
-        ?: throw FileKitNotInitializedException()
 
     val result: List<PlatformFile>? = suspendCoroutine { continuation ->
         when (type) {
@@ -51,7 +47,7 @@ public actual suspend fun <Out> FileKit.pickFile(
                     mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
                         val contract = PickVisualMedia()
                         registry.register(key, contract) { uri ->
-                            val result = uri?.let { listOf(PlatformFile(it, context)) }
+                            val result = uri?.let { listOf(PlatformFile(it)) }
                             continuation.resume(result)
                         }
                     }
@@ -62,7 +58,7 @@ public actual suspend fun <Out> FileKit.pickFile(
                             else -> PickMultipleVisualMedia()
                         }
                         registry.register(key, contract) { uri ->
-                            val result = uri.map { PlatformFile(it, context) }
+                            val result = uri.map { PlatformFile(it) }
                             continuation.resume(result)
                         }
                     }
@@ -77,7 +73,7 @@ public actual suspend fun <Out> FileKit.pickFile(
                     is PickerMode.Single -> {
                         val contract = ActivityResultContracts.OpenDocument()
                         val launcher = registry.register(key, contract) { uri ->
-                            val result = uri?.let { listOf(PlatformFile(it, context)) }
+                            val result = uri?.let { listOf(PlatformFile(it)) }
                             continuation.resume(result)
                         }
                         launcher.launch(getMimeTypes(type.extensions))
@@ -88,7 +84,7 @@ public actual suspend fun <Out> FileKit.pickFile(
                         //  I haven't found it yet.
                         val contract = ActivityResultContracts.OpenMultipleDocuments()
                         val launcher = registry.register(key, contract) { uris ->
-                            val result = uris.map { PlatformFile(it, context) }
+                            val result = uris.map { PlatformFile(it) }
                             continuation.resume(result)
                         }
                         launcher.launch(getMimeTypes(type.extensions))
@@ -110,14 +106,13 @@ public actual suspend fun FileKit.saveFile(
 ): PlatformFile? = withContext(Dispatchers.IO) {
     suspendCoroutine { continuation ->
         // Throw exception if registry is not initialized
-        val registry = registry ?: throw FileKitNotInitializedException()
+        val registry = FileKit.registry
 
         // It doesn't really matter what the key is, just that it is unique
         val key = UUID.randomUUID().toString()
 
         // Get context
         val context = FileKit.context
-            ?: throw FileKitNotInitializedException()
 
         // Get MIME type
         val mimeType = getMimeType(extension)
@@ -141,7 +136,7 @@ public actual suspend fun FileKit.saveFile(
                     }
                 }
 
-                PlatformFile(it, context)
+                PlatformFile(it)
             }
             continuation.resume(platformFile)
         }
@@ -157,8 +152,7 @@ public actual suspend fun FileKit.pickDirectory(
     platformSettings: FileKitDialogSettings?,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
-    val registry = registry ?: throw FileKitNotInitializedException()
-    val context = context ?: throw FileKitNotInitializedException()
+    val registry = FileKit.registry
 
     // It doesn't really matter what the key is, just that it is unique
     val key = UUID.randomUUID().toString()
@@ -166,7 +160,7 @@ public actual suspend fun FileKit.pickDirectory(
     suspendCoroutine { continuation ->
         val contract = ActivityResultContracts.OpenDocumentTree()
         val launcher = registry.register(key, contract) { uri ->
-            val platformDirectory = uri?.let { PlatformFile(it, context) }
+            val platformDirectory = uri?.let { PlatformFile(it) }
             continuation.resume(platformDirectory)
         }
         val initialUri = initialDirectory?.let { Uri.parse(it) }

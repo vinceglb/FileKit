@@ -6,10 +6,10 @@ import io.github.vinceglb.filekit.dialog.platform.awt.AwtFileSaver
 import io.github.vinceglb.filekit.dialog.platform.linux.LinuxFilePicker
 import io.github.vinceglb.filekit.dialog.platform.mac.MacOSFilePicker
 import io.github.vinceglb.filekit.dialog.platform.swing.SwingFilePicker
-import io.github.vinceglb.filekit.dialog.platform.util.Platform
-import io.github.vinceglb.filekit.dialog.platform.util.PlatformUtil
 import io.github.vinceglb.filekit.dialog.platform.windows.WindowsFilePicker
 import io.github.vinceglb.filekit.dialog.platform.xdg.XdgFilePickerPortal
+import io.github.vinceglb.filekit.utils.Platform
+import io.github.vinceglb.filekit.utils.PlatformUtil
 import java.io.File
 
 internal interface PlatformFilePicker {
