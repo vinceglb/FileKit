@@ -15,13 +15,13 @@ public actual data class PlatformFile(
     val file: File,
 )
 
-public actual val PlatformFile.name: String
+public actual val PlatformFile.name: String?
     get() = file.name
 
-public actual val PlatformFile.size: Long
+public actual val PlatformFile.size: Long?
     get() = file.size.toLong()
 
-public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Dispatchers.Main) {
+public actual suspend fun PlatformFile.readBytes(): ByteArray? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         val reader = FileReader()
         reader.onload = { event ->
