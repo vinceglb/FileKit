@@ -63,17 +63,17 @@ private fun SampleApp(platformSettings: FileKitDialogSettings?) {
     )
 
     val filePicker = rememberFilePickerLauncher(
-        type = PickerType.File(listOf("png")),
-        title = "Single file picker, only png",
+        type = PickerType.File(listOf("jpg", "png")),
+        title = "Single file picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings
     )
 
     val filesPicker = rememberFilePickerLauncher(
-        type = PickerType.File(listOf("png")),
+        type = PickerType.File(listOf("jpg", "png")),
         mode = PickerMode.Multiple(),
-        title = "Multiple files picker, only png",
+        title = "Multiple files picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
         platformSettings = platformSettings

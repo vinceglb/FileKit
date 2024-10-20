@@ -58,8 +58,8 @@ kotlin {
         androidMain {
             dependsOn(nonWebMain)
             dependencies {
-                implementation(libs.androidx.activity.ktx)
                 implementation(libs.androidx.documentfile)
+                implementation(libs.androidx.startup)
             }
         }
         jvmMain.get().dependsOn(nonWebMain)

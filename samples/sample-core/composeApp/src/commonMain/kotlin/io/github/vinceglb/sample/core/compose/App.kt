@@ -49,11 +49,11 @@ private fun SampleApp(viewModel: MainViewModel) {
             }
 
             Button(onClick = viewModel::pickFile) {
-                Text("Single file picker, only png")
+                Text("Single file picker, only jpg / png")
             }
 
             Button(onClick = viewModel::pickFiles) {
-                Text("Multiple files picker, only png")
+                Text("Multiple files picker, only jpg / png")
             }
 
             PickDirectoryButton(

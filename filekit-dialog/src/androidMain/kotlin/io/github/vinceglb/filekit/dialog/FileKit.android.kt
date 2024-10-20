@@ -2,6 +2,8 @@ package io.github.vinceglb.filekit.dialog
 
 import android.net.Uri
 import android.webkit.MimeTypeMap
+import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultRegistry
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickMultipleVisualMedia
@@ -10,6 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
 import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.FileKitNotInitializedException
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -181,4 +184,29 @@ private fun getMimeTypes(fileExtensions: List<String>?): Array<String> {
 private fun getMimeType(fileExtension: String): String {
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return mimeTypeMap.getMimeTypeFromExtension(fileExtension) ?: "*/*"
+}
+
+internal object FileKitDialog {
+    private var _registry: ActivityResultRegistry? = null
+    val registry: ActivityResultRegistry
+        get() = _registry
+            ?: throw FileKitNotInitializedException()
+
+    fun init(registry: ActivityResultRegistry) {
+        _registry = registry
+    }
+}
+
+@Suppress("UnusedReceiverParameter")
+internal val FileKit.registry: ActivityResultRegistry
+    get() = FileKitDialog.registry
+
+@Suppress("UnusedReceiverParameter")
+public fun FileKit.init(registry: ActivityResultRegistry) {
+    FileKitDialog.init(registry)
+}
+
+@Suppress("UnusedReceiverParameter")
+public fun FileKit.init(activity: ComponentActivity) {
+    FileKitDialog.init(activity.activityResultRegistry)
 }
