@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 @Composable
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
-    initialDirectory: String? = null,
+    initialDirectory: String? = null,               // TODO change to PlatformFile?
     platformSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {

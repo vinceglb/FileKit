@@ -1,3 +1,4 @@
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.baseName
-import io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.dialog.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.PickerMode
 import io.github.vinceglb.filekit.dialog.PickerType
+import io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialog.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -87,8 +88,8 @@ private fun SampleApp(platformSettings: FileKitDialogSettings?) {
         scope.launch {
             saver.launch(
                 bytes = file.readBytes(),
-                baseName = file.baseName,
-                extension = file.extension,
+                baseName = file.nameWithoutExtension ?: "file",
+                extension = file.extension ?: "txt",
                 initialDirectory = directory?.safePath
             )
         }

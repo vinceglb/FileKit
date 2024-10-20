@@ -18,6 +18,6 @@ actual fun PickDirectoryButton(
             Text("Directory picker")
         }
 
-        Text("Selected directory: ${directory?.path ?: "None"}")
+        Text("Selected directory: ${directory?.path?.toString() ?: "None"}")
     }
 }

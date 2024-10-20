@@ -27,6 +27,7 @@ import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.rememberPlatformFileCoilModel
 import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.size
 
 @Composable
 fun PhotoItem(
@@ -79,7 +80,7 @@ fun PhotoItem(
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Text(
-                        file.name,
+                        "${file.name} - ${file.size}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(4.dp)
                     )

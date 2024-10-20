@@ -1,11 +1,12 @@
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
-import io.github.vinceglb.filekit.dialog.compose.rememberDirectoryPickerLauncher
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialog.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.path
 
 @Composable
@@ -16,7 +17,7 @@ actual fun PickDirectory(
 ) {
     val directoryPicker = rememberDirectoryPickerLauncher(
         title = "Directory picker",
-        initialDirectory = directory?.path,
+        initialDirectory = directory?.path.toString(),
         onResult = onDirectoryPicked,
         platformSettings = platformSettings
     )
@@ -31,4 +32,4 @@ actual fun PickDirectory(
 }
 
 actual val PlatformFile.safePath: String?
-    get() = path
+    get() = path.toString()

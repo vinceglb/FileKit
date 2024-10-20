@@ -4,13 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.baseName
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.PickerMode
 import io.github.vinceglb.filekit.dialog.PickerType
 import io.github.vinceglb.filekit.dialog.pickFile
 import io.github.vinceglb.filekit.dialog.saveFile
 import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -58,7 +58,7 @@ class MainViewModel(
     fun pickFile() = executeWithLoading {
         // Pick a file
         val file = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
+            type = PickerType.File(extensions = listOf("png", "jpg")),
             platformSettings = platformSettings,
         )
 
@@ -72,7 +72,7 @@ class MainViewModel(
     fun pickFiles() = executeWithLoading {
         // Pick files
         val files = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
+            type = PickerType.File(extensions = listOf("png", "jpg")),
             mode = PickerMode.Multiple(),
             platformSettings = platformSettings,
         )
@@ -98,8 +98,8 @@ class MainViewModel(
         // Save a file
         val newFile = FileKit.saveFile(
             bytes = file.readBytes(),
-            baseName = file.baseName,
-            extension = file.extension,
+            baseName = file.nameWithoutExtension ?: "file",
+            extension = file.extension ?: "txt",
             platformSettings = platformSettings
         )
 
