@@ -7,20 +7,29 @@ import java.lang.ref.WeakReference
 
 // TODO add a FileKitInitializer? Remove registry from FileKit?
 public actual object FileKit {
-    public var registry: ActivityResultRegistry? = null
-        private set
+    private var _registry: ActivityResultRegistry? = null
+    public val registry: ActivityResultRegistry
+        get() = _registry
+            ?: throw FileKitNotInitializedException()
 
     private var _context: WeakReference<Context?> = WeakReference(null)
-    public val context: Context?
+    public val context: Context
         get() = _context.get()
+            ?: throw FileKitNotInitializedException()
 
     public fun init(activity: ComponentActivity) {
         _context = WeakReference(activity.applicationContext)
-        registry = activity.activityResultRegistry
+        _registry = activity.activityResultRegistry
     }
 
     public fun init(context: Context, registry: ActivityResultRegistry) {
         _context = WeakReference(context)
-        FileKit.registry = registry
+        _registry = registry
     }
 }
+
+public actual val FileKit.filesDir: PlatformFile
+    get() = context.filesDir.let(::PlatformFile)
+
+public actual val FileKit.cacheDir: PlatformFile
+    get() = context.cacheDir.let(::PlatformFile)
