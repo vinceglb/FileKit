@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -8,32 +9,52 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.refTo
 import kotlinx.cinterop.value
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.withContext
-import platform.Foundation.NSData
-import platform.Foundation.NSDataReadingUncached
+import kotlinx.io.RawSink
+import kotlinx.io.RawSource
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import platform.Foundation.NSError
-import platform.Foundation.NSInputStream
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
-import platform.Foundation.dataWithContentsOfURL
-import platform.posix.memcpy
+import platform.Foundation.NSURLIsDirectoryKey
+import platform.Foundation.NSURLIsRegularFileKey
 
 public actual data class PlatformFile(
     val nsUrl: NSURL,
 )
 
-public actual val PlatformFile.name: String
-    get() = nsUrl.lastPathComponent ?: ""
+// Constructors
 
-public actual val PlatformFile.path: String
-    get() = nsUrl.absoluteString ?: ""
+public actual fun PlatformFile(path: Path): PlatformFile =
+    PlatformFile(NSURL.fileURLWithPath(path.toString()))
+
+// Extension Properties
+
+public actual val PlatformFile.path: Path?
+    get() = nsUrl.toKotlinxPath()
+
+public actual val PlatformFile.name: String?
+    get() = path?.name
+
+@OptIn(ExperimentalForeignApi::class)
+public actual val PlatformFile.isFile: Boolean
+    get() {
+        val values = nsUrl.resourceValuesForKeys(listOf(NSURLIsRegularFileKey), null)
+        val isFile = values?.get(NSURLIsRegularFileKey) as? Boolean
+        return isFile == true
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+public actual val PlatformFile.isDirectory: Boolean
+    get() {
+        val values = nsUrl.resourceValuesForKeys(listOf(NSURLIsDirectoryKey), null)
+        val isDirectory = values?.get(NSURLIsDirectoryKey) as? Boolean
+        return isDirectory == true
+    }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-public actual val PlatformFile.size: Long
+public actual val PlatformFile.size: Long?
     get() {
         memScoped {
             val valuePointer: CPointer<ObjCObjectVar<Any?>> = alloc<ObjCObjectVar<Any?>>().ptr
@@ -44,27 +65,16 @@ public actual val PlatformFile.size: Long
         }
     }
 
-@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Dispatchers.IO) {
-    memScoped {
-        // Start accessing the security scoped resource
-        nsUrl.startAccessingSecurityScopedResource()
+public actual val PlatformFile.exists: Boolean
+    get() = path?.let { SystemFileSystem.exists(it) } ?: false
 
-        // Read the data
-        val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
-        val nsData = NSData.dataWithContentsOfURL(nsUrl, NSDataReadingUncached, error)
-            ?: throw IllegalStateException("Failed to read data from $nsUrl. Error: ${error.pointed.value}")
+public actual val PlatformFile.parent: PlatformFile?
+    get() = nsUrl.URLByDeletingLastPathComponent()?.let { PlatformFile(it) }
 
-        // Stop accessing the security scoped resource
-        nsUrl.stopAccessingSecurityScopedResource()
+// IO Operations with kotlinx-io
 
-        // Copy the data to a ByteArray
-        ByteArray(nsData.length.toInt()).apply {
-            memcpy(this.refTo(0), nsData.bytes, nsData.length)
-        }
-    }
-}
+public actual fun PlatformFile.source(): RawSource? =
+    path?.let { SystemFileSystem.source(path = it) }
 
-public actual fun PlatformFile.getStream(): PlatformInputStream {
-    return io.github.vinceglb.filekit.PlatformInputStream(NSInputStream(nsUrl))
-}
+public actual fun PlatformFile.sink(append: Boolean): RawSink? =
+    path?.let { SystemFileSystem.sink(path = it, append = append) }

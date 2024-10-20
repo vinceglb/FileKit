@@ -1,7 +1,7 @@
-package io.github.vinceglb.filekit.dialog.platform.util
+package io.github.vinceglb.filekit.utils
 
-internal object PlatformUtil {
-	val current: Platform
+public object PlatformUtil {
+	public val current: Platform
 		get() {
 			val system = System.getProperty("os.name").lowercase()
 			return if (system.contains("win")) {
@@ -20,7 +20,7 @@ internal object PlatformUtil {
 		}
 }
 
-internal enum class Platform {
+public enum class Platform {
 	Linux,
 	MacOS,
 	Windows
