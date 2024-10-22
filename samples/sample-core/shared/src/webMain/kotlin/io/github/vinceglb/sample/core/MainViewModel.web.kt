@@ -8,3 +8,5 @@ actual suspend fun pickDirectoryIfSupported(
 ): PlatformFile? = null
 
 actual fun downloadDirectoryPath(): String? = null
+
+actual suspend fun takePhotoIfSupported(): PlatformFile? = null

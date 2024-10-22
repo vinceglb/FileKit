@@ -110,6 +110,16 @@ class MainViewModel(
         }
     }
 
+    fun takePhoto() = executeWithLoading {
+        val image = takePhotoIfSupported()
+
+        // Add image to the state
+        if (image != null) {
+            val newFiles = _uiState.value.files + image
+            _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
     private fun executeWithLoading(block: suspend () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
@@ -133,3 +143,5 @@ expect fun downloadDirectoryPath(): String?
 expect suspend fun pickDirectoryIfSupported(
     platformSettings: FileKitDialogSettings?
 ): PlatformFile?
+
+expect suspend fun takePhotoIfSupported(): PlatformFile?

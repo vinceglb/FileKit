@@ -56,6 +56,10 @@ private fun SampleApp(viewModel: MainViewModel) {
                 Text("Multiple files picker, only jpg / png")
             }
 
+            Button(onClick = viewModel::takePhoto) {
+                Text("Take photo")
+            }
+
             PickDirectoryButton(
                 directory = uiState.directory,
                 onClick = viewModel::pickDirectory
