@@ -48,8 +48,8 @@ public expect fun PlatformFile.sink(append: Boolean = false): RawSink?      // T
  * @param child The child path to append.
  * @return A new [PlatformFile] representing the combined path, or `null` if the base path is invalid.
  */
-public fun PlatformFile(base: PlatformFile, child: String): PlatformFile? {
-    val path = base.path ?: return null
+public fun PlatformFile(base: PlatformFile, child: String): PlatformFile {
+    val path = base.path ?: throw IllegalStateException("Invalid base path")
     return PlatformFile(path / child)
 }
 
@@ -126,5 +126,5 @@ public suspend fun PlatformFile.delete(mustExist: Boolean = true): Boolean =
         path?.let { SystemFileSystem.delete(path = it, mustExist = mustExist) } != null
     }
 
-public operator fun PlatformFile.div(child: String): PlatformFile? =
+public operator fun PlatformFile.div(child: String): PlatformFile =
     PlatformFile(this, child)

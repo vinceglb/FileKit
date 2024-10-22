@@ -37,7 +37,7 @@ public actual suspend fun FileKit.saveImageToGallery(
     }
 
     val imageDetails = ContentValues().apply {
-        put(MediaStore.Images.Media.DISPLAY_NAME, "${baseName}_new.$extension")
+        put(MediaStore.Images.Media.DISPLAY_NAME, "$baseName.$extension")
     }
 
     val resolver = context.contentResolver
