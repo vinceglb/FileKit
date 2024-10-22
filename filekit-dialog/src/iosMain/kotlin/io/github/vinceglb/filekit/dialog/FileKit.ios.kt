@@ -2,9 +2,11 @@ package io.github.vinceglb.filekit.dialog
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.FileKitDialog.cameraControllerDelegate
 import io.github.vinceglb.filekit.dialog.FileKitDialog.documentPickerDelegate
 import io.github.vinceglb.filekit.dialog.FileKitDialog.phPickerDelegate
 import io.github.vinceglb.filekit.dialog.FileKitDialog.phPickerDismissDelegate
+import io.github.vinceglb.filekit.dialog.util.CameraControllerDelegate
 import io.github.vinceglb.filekit.dialog.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialog.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialog.util.PhPickerDismissDelegate
@@ -15,7 +17,9 @@ import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
+import platform.Foundation.NSUUID
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
@@ -26,6 +30,9 @@ import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UIImageJPEGRepresentation
+import platform.UIKit.UIImagePickerController
+import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
@@ -43,6 +50,7 @@ private object FileKitDialog {
     lateinit var documentPickerDelegate: DocumentPickerDelegate
     lateinit var phPickerDelegate: PhPickerDelegate
     lateinit var phPickerDismissDelegate: PhPickerDismissDelegate
+    lateinit var cameraControllerDelegate: CameraControllerDelegate
 }
 
 public actual suspend fun <Out> FileKit.pickFile(
@@ -128,6 +136,48 @@ public actual suspend fun FileKit.saveFile(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
+        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+            pickerController,
+            animated = true,
+            completion = null
+        )
+    }
+}
+
+public actual suspend fun FileKit.takePhoto(): PlatformFile? = withContext(Dispatchers.Main) {
+    suspendCoroutine { continuation ->
+        cameraControllerDelegate = CameraControllerDelegate(
+            onImagePicked = { image ->
+                if (image != null) {
+                    // Convert UIImage to NSData (JPEG format with compression quality 1.0)
+                    val imageData = UIImageJPEGRepresentation(image, 1.0)
+
+                    // Get the path for the temporary directory
+                    val tempDir = NSTemporaryDirectory()
+                    val fileName = "image_${NSUUID().UUIDString}.jpg"
+                    val filePath = tempDir + fileName
+
+                    // Create an NSURL for the file path
+                    val fileUrl = NSURL.fileURLWithPath(filePath)
+
+                    // Write the NSData to the file
+                    if (imageData?.writeToURL(fileUrl, true) == true) {
+                        // Return the NSURL of the saved image file
+                        continuation.resume(PlatformFile(fileUrl))
+                    } else {
+                        // If saving fails, return null
+                        continuation.resume(null)
+                    }
+                } else {
+                    continuation.resume(null)
+                }
+            }
+        )
+
+        val pickerController = UIImagePickerController()
+        pickerController.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+        pickerController.delegate = cameraControllerDelegate
+
         UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
             pickerController,
             animated = true,

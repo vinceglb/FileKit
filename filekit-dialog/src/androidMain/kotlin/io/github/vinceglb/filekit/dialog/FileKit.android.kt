@@ -14,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.FileKitNotInitializedException
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.cacheDir
+import io.github.vinceglb.filekit.div
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.FileOutputStream
@@ -168,6 +170,31 @@ public actual suspend fun FileKit.pickDirectory(
         }
         val initialUri = initialDirectory?.let { Uri.parse(it) }
         launcher.launch(initialUri)
+    }
+}
+
+public actual suspend fun FileKit.takePhoto(): PlatformFile? = withContext(Dispatchers.IO) {
+    // Throw exception if registry is not initialized
+    val registry = FileKit.registry
+
+    // It doesn't really matter what the key is, just that it is unique
+    val key = UUID.randomUUID().toString()
+
+    // Get URI
+    val cacheImage = FileKit.cacheDir / "$key.jpg"
+    val cacheImageUri = cacheImage.uri
+
+    val isSaved = suspendCoroutine { continuation ->
+        val contract = ActivityResultContracts.TakePicture()
+        val launcher = registry.register(key, contract) { isSaved ->
+            continuation.resume(isSaved)
+        }
+        launcher.launch(cacheImageUri)
+    }
+
+    when (isSaved) {
+        true -> cacheImage
+        else -> null
     }
 }
 
