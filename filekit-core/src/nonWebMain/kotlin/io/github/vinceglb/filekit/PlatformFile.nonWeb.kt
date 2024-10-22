@@ -32,14 +32,14 @@ public expect val PlatformFile.parent: PlatformFile?
  * Returns a [RawSource] for reading from this [PlatformFile].
  * Returns `null` if a source cannot be opened.
  */
-public expect fun PlatformFile.source(): RawSource?
+public expect fun PlatformFile.source(): RawSource?     // TODO: replace by Source?
 
 /**
  * Returns a [RawSink] for writing to this [PlatformFile].
  * If [append] is set to `true`, the content will be appended; otherwise, it will overwrite the existing content.
  * Returns `null` if a sink cannot be opened.
  */
-public expect fun PlatformFile.sink(append: Boolean = false): RawSink?
+public expect fun PlatformFile.sink(append: Boolean = false): RawSink?      // TODO: replace by Sink?
 
 /**
  * Creates a [PlatformFile] by appending a [child] path to the [base] file's path.
@@ -87,7 +87,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray? =
  * @param bytes The content to write to the file.
  * @return `true` if the write operation is successful, `false` otherwise.
  */
-public suspend fun PlatformFile.write(bytes: ByteArray): Boolean =
+public suspend infix fun PlatformFile.write(bytes: ByteArray): Boolean =
     withContext(Dispatchers.IO) {
         sink()?.buffered()?.use { it.write(bytes) } != null
     }
@@ -103,7 +103,7 @@ public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Boolean
         val source = platformFile.source()
         val size = platformFile.size
         if (source == null || size == null) return@withContext false
-        sink()?.buffered()?.use { it.write(source, size) } != null
+        sink()?.buffered()?.use { it.write(source, size) } != null      // TODO use transferFrom / transferTo?
     }
 
 /**
