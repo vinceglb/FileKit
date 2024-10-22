@@ -55,8 +55,13 @@ kotlin {
             dependsOn(commonMain.get())
         }
 
+        val mobileMain by creating {
+            dependsOn(nonWebMain)
+        }
+
         androidMain {
             dependsOn(nonWebMain)
+            dependsOn(mobileMain)
             dependencies {
                 implementation(libs.androidx.documentfile)
                 implementation(libs.androidx.startup)
@@ -64,6 +69,7 @@ kotlin {
         }
         jvmMain.get().dependsOn(nonWebMain)
         nativeMain.get().dependsOn(nonWebMain)
+        iosMain.get().dependsOn(mobileMain)
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
