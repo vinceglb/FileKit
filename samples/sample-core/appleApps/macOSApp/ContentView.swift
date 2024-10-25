@@ -49,7 +49,7 @@ struct ContentView: View {
             Text("Directory: \(String(describing:  uiState.directory?.path))")
             
             List(files, id: \.nsUrl) { file in
-                Text(file.name)
+                Text(file.name ?? "??")
                     .onTapGesture { viewModel.saveFile(file: file) }
             }
         }

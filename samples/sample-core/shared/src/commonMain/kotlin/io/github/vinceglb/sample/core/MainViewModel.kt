@@ -120,6 +120,12 @@ class MainViewModel(
         }
     }
 
+    fun compressImageAndSaveToGallery(file: PlatformFile) = executeWithLoading {
+        file.readBytes()?.let {
+            compressImage(it)
+        }
+    }
+
     private fun executeWithLoading(block: suspend () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
@@ -145,3 +151,5 @@ expect suspend fun pickDirectoryIfSupported(
 ): PlatformFile?
 
 expect suspend fun takePhotoIfSupported(): PlatformFile?
+
+expect suspend fun compressImage(bytes: ByteArray)
