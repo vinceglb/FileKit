@@ -24,9 +24,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.coil.rememberPlatformFileCoilModel
+import io.github.vinceglb.filekit.coil.AsyncImage
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.size
 
@@ -36,7 +35,6 @@ fun PhotoItem(
     onSaveFile: (PlatformFile) -> Unit,
 ) {
     var showName by remember { mutableStateOf(false) }
-    val coilModel = rememberPlatformFileCoilModel(file)
 
     Surface(
         onClick = { showName = !showName },
@@ -46,7 +44,7 @@ fun PhotoItem(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             AsyncImage(
-                coilModel,
+                file,
                 contentDescription = file.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
