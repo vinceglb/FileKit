@@ -35,16 +35,16 @@ public val FileKit.pictureDir: PlatformFile
 internal actual fun compress(
     nsData: NSData,
     quality: Int,
-    targetWidth: Int?,
-    targetHeight: Int?,
+    maxWidth: Int?,
+    maxHeight: Int?,
     compressFormat: CompressFormat,
 ): NSData? {
     val originalImage = NSImage(data = nsData)
     val (newWidth, newHeight) = calculateNewDimensions(
         originalImage.size.useContents { width }.toInt(),
         originalImage.size.useContents { height }.toInt(),
-        targetWidth,
-        targetHeight
+        maxWidth,
+        maxHeight
     )
 
     val resizedImage = originalImage.resizeTo(newWidth / 2, newHeight / 2)

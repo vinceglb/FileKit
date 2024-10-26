@@ -15,11 +15,11 @@ actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSetti
 actual suspend fun compressImage(bytes: ByteArray) {
     FileKit.compressPhoto(
         imageData = bytes,
-        targetWidth = 200,
-        targetHeight = 200,
+        maxWidth = 200,
+        maxHeight = 200,
         quality = 80,
         compressFormat = CompressFormat.JPEG
     )?.let {
-        FileKit.saveImageToGallery(it, "compressed.png")
+        FileKit.saveImageToGallery(it, "compressed.jpg")
     }
 }

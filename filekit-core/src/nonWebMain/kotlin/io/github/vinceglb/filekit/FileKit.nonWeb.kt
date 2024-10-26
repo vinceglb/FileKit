@@ -14,8 +14,8 @@ public expect suspend fun FileKit.saveImageToGallery(
 public expect suspend fun FileKit.compressPhoto(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int = 80,
-    targetWidth: Int? = null,
-    targetHeight: Int? = null,
+    maxWidth: Int? = null,
+    maxHeight: Int? = null,
     compressFormat: CompressFormat = CompressFormat.JPEG,
 ): ByteArray?
 

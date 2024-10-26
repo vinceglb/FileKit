@@ -74,8 +74,8 @@ private fun Path.assertExists() {
 public actual suspend fun FileKit.compressPhoto(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
-    targetWidth: Int?,
-    targetHeight: Int?,
+    maxWidth: Int?,
+    maxHeight: Int?,
     compressFormat: CompressFormat,
 ): ByteArray? = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to BufferedImage
@@ -86,8 +86,8 @@ public actual suspend fun FileKit.compressPhoto(
     val (newWidth, newHeight) = calculateNewDimensions(
         originalImage.width,
         originalImage.height,
-        targetWidth,
-        targetHeight
+        maxWidth,
+        maxHeight
     )
 
     // Step 3: Resize the BufferedImage

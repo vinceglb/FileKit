@@ -51,12 +51,17 @@ kotlin {
             api(libs.kotlinx.io)
         }
 
+        commonTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
+
         val nonWebMain by creating {
             dependsOn(commonMain.get())
             dependencies {
                 implementation(libs.androidx.annotation)
             }
         }
+        val nonWebTest by creating { dependsOn(commonTest.get()) }
 
         androidMain {
             dependsOn(nonWebMain)
@@ -65,8 +70,11 @@ kotlin {
                 implementation(libs.androidx.startup)
             }
         }
+        androidUnitTest.get().dependsOn(nonWebTest)
         jvmMain.get().dependsOn(nonWebMain)
+        jvmTest.get().dependsOn(nonWebTest)
         nativeMain.get().dependsOn(nonWebMain)
+        nativeTest.get().dependsOn(nonWebTest)
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)

@@ -52,8 +52,8 @@ public actual suspend fun FileKit.saveImageToGallery(
 public actual suspend fun FileKit.compressPhoto(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
-    targetWidth: Int?,
-    targetHeight: Int?,
+    maxWidth: Int?,
+    maxHeight: Int?,
     compressFormat: CompressFormat,
 ): ByteArray? = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to Bitmap
@@ -64,8 +64,8 @@ public actual suspend fun FileKit.compressPhoto(
     val (newWidth, newHeight) = calculateNewDimensions(
         originalBitmap.width,
         originalBitmap.height,
-        targetWidth,
-        targetHeight
+        maxWidth,
+        maxHeight
     )
 
     // Step 3: Resize the Bitmap

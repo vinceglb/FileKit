@@ -2,26 +2,35 @@ package io.github.vinceglb.filekit.utils
 
 import kotlin.math.roundToInt
 
-// Helper function to calculate the new dimensions while maintaining aspect ratio
+/**
+ * Calculate the new dimensions of an image based on the original dimensions and the maximum width and height.
+ *
+ * @param originalWidth The original width of the image.
+ * @param originalHeight The original height of the image.
+ * @param maxWidth The maximum width of the image.
+ * @param maxHeight The maximum height of the image.
+ * @return A pair containing the new width and height of the image.
+ */
 internal fun calculateNewDimensions(
     originalWidth: Int,
     originalHeight: Int,
-    targetWidth: Int?,
-    targetHeight: Int?
+    maxWidth: Int?,
+    maxHeight: Int?
 ): Pair<Int, Int> {
-    return when {
-        targetWidth != null -> {
-            val aspectRatio = originalHeight.toFloat() / originalWidth
-            val newHeight = (targetWidth * aspectRatio).roundToInt()
-            targetWidth to newHeight
-        }
+    var newWidth = originalWidth
+    var newHeight = originalHeight
 
-        targetHeight != null -> {
-            val aspectRatio = originalWidth.toFloat() / originalHeight
-            val newWidth = (targetHeight * aspectRatio).roundToInt()
-            newWidth to targetHeight
-        }
-
-        else -> originalWidth to originalHeight  // No resizing if no target dimensions are specified
+    if (maxWidth != null && newWidth > maxWidth) {
+        val aspectRatio = newHeight.toFloat() / newWidth
+        newWidth = maxWidth
+        newHeight = (newWidth * aspectRatio).roundToInt()
     }
+
+    if (maxHeight != null && newHeight > maxHeight) {
+        val aspectRatio = newWidth.toFloat() / newHeight
+        newHeight = maxHeight
+        newWidth = (newHeight * aspectRatio).roundToInt()
+    }
+
+    return newWidth to newHeight
 }

@@ -77,7 +77,7 @@ private fun SampleApp(viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(uiState.files.toList()) {
-                    PhotoItem(it, viewModel::saveFile)
+                    PhotoItem(it, viewModel::compressImageAndSaveToGallery)
                 }
             }
         }

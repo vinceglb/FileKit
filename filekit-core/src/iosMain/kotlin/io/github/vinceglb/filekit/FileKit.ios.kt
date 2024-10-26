@@ -41,8 +41,8 @@ public actual suspend fun FileKit.saveImageToGallery(
 internal actual fun compress(
     nsData: NSData,
     quality: Int,
-    targetWidth: Int?,
-    targetHeight: Int?,
+    maxWidth: Int?,
+    maxHeight: Int?,
     compressFormat: CompressFormat,
 ): NSData? {
     val originalImage = UIImage(data = nsData)
@@ -52,8 +52,8 @@ internal actual fun compress(
     val (newWidth, newHeight) = calculateNewDimensions(
         originalWidth,
         originalHeight,
-        targetWidth,
-        targetHeight
+        maxWidth,
+        maxHeight
     )
 
     val resizedImage = originalImage.scaleToSize(newWidth, newHeight)
