@@ -1,7 +1,34 @@
 package io.github.vinceglb.filekit.coil
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.DefaultAlpha
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.drawscope.DrawScope.Companion.DefaultFilterQuality
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImagePainter.Companion.DefaultTransform
+import coil3.compose.AsyncImagePainter.State
+import coil3.compose.DefaultModelEqualityDelegate
+import coil3.compose.EqualityDelegate
 import io.github.vinceglb.filekit.PlatformFile
 
 @Composable
-public expect fun rememberPlatformFileCoilModel(file: PlatformFile): Any?
+public expect fun rememberPlatformFileCoilModel(file: PlatformFile?): Any?
+
+@Composable
+public expect fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    transform: (State) -> State = DefaultTransform,
+    onState: ((State) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+    modelEqualityDelegate: EqualityDelegate = DefaultModelEqualityDelegate,
+)

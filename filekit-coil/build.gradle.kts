@@ -32,7 +32,7 @@ kotlin {
         it.browser()
     }
 
-    // iOS / macOS
+    // iOS
     listOf(
         iosX64(),
         iosArm64(),
@@ -51,6 +51,9 @@ kotlin {
 
             // FileKit Core
             implementation(projects.filekitCore)
+
+            // Coil
+            implementation(libs.coil.compose)
         }
 
         val nonWebMain by creating {
