@@ -49,11 +49,11 @@ kotlin {
             // Compose
             implementation(compose.runtime)
 
-            // FileKit Core
-            implementation(projects.filekitCore)
-
             // Coil
             implementation(libs.coil.compose)
+
+            // FileKit
+            implementation(projects.filekitCore)
         }
 
         val nonWebMain by creating {

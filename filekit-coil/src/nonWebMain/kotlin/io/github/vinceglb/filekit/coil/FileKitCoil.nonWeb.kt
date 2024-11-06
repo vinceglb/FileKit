@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImagePainter
-import coil3.compose.EqualityDelegate
 import coil3.compose.LocalPlatformContext
 import io.github.vinceglb.filekit.PlatformFile
 
@@ -30,8 +29,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean,
-    modelEqualityDelegate: EqualityDelegate
+    clipToBounds: Boolean
 ): Unit = coil3.compose.AsyncImage(
     model = file?.coilModel,
     contentDescription = contentDescription,
@@ -45,5 +43,4 @@ public actual fun AsyncImage(
     colorFilter = colorFilter,
     filterQuality = filterQuality,
     clipToBounds = clipToBounds,
-    modelEqualityDelegate = modelEqualityDelegate,
 )

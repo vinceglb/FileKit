@@ -10,8 +10,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope.Companion.DefaultFilterQ
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImagePainter.Companion.DefaultTransform
 import coil3.compose.AsyncImagePainter.State
-import coil3.compose.DefaultModelEqualityDelegate
-import coil3.compose.EqualityDelegate
 import io.github.vinceglb.filekit.PlatformFile
 
 @Composable
@@ -30,5 +28,4 @@ public expect fun AsyncImage(
     colorFilter: ColorFilter? = null,
     filterQuality: FilterQuality = DefaultFilterQuality,
     clipToBounds: Boolean = true,
-    modelEqualityDelegate: EqualityDelegate = DefaultModelEqualityDelegate,
 )

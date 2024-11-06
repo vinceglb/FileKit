@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImagePainter
-import coil3.compose.EqualityDelegate
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.readBytes
 
@@ -39,8 +38,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean,
-    modelEqualityDelegate: EqualityDelegate
+    clipToBounds: Boolean
 ) {
     val model = rememberPlatformFileCoilModel(file)
 
@@ -56,6 +54,5 @@ public actual fun AsyncImage(
         colorFilter = colorFilter,
         filterQuality = filterQuality,
         clipToBounds = clipToBounds,
-        modelEqualityDelegate = modelEqualityDelegate,
     )
 }
