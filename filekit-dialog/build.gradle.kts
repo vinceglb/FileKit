@@ -83,6 +83,10 @@ kotlin {
 
         nativeMain.get().dependsOn(nonWebMain)
         iosMain.get().dependsOn(mobileMain)
+
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
+        }
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
