@@ -11,6 +11,7 @@ compose-plugin = "1.7.0"
 dbus-java = "5.1.0"
 jna = "5.15.0"
 kotlin = "2.1.0-RC"
+kotlinx-browser = "0.2"
 kotlinx-coroutines = "1.9.0"
 kotlinx-io = "0.5.4"
 mavenPublishVanniktech = "0.30.0"
@@ -29,6 +30,7 @@ dbus-java-transport-native-unixsocket = { module = "com.github.hypfvieh:dbus-jav
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-browser = { module = "org.jetbrains.kotlinx:kotlinx-browser", version.ref = "kotlinx-browser"}
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }

@@ -75,6 +75,10 @@ kotlin {
         jvmTest.get().dependsOn(nonWebTest)
         nativeMain.get().dependsOn(nonWebMain)
         nativeTest.get().dependsOn(nonWebTest)
+
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
+        }
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
