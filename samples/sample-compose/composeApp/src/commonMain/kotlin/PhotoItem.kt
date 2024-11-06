@@ -46,9 +46,7 @@ fun PhotoItem(
                 file,
                 contentDescription = file.name,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-
+                modifier = Modifier.fillMaxSize(),
             )
 
             Surface(

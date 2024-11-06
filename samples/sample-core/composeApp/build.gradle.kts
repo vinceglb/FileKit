@@ -56,8 +56,11 @@ kotlin {
             implementation(compose.components.resources)
 
             // Shared
-            implementation(projects.filekitCoil)
             implementation(projects.samples.sampleCore.shared)
+
+            // FileKit
+            implementation(projects.filekitCore)
+            implementation(projects.filekitCoil)
 
             // ViewModel Compose
             implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -95,7 +98,6 @@ android {
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 34
     }
 
     compileOptions {
