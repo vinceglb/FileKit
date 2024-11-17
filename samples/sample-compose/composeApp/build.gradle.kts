@@ -63,6 +63,7 @@ kotlin {
             // FileKit
             implementation(projects.filekitCore)
             implementation(projects.filekitCoil)
+            implementation(projects.filekitDialog)
             implementation(projects.filekitDialogCompose)
 
             // Coil3
@@ -113,7 +114,6 @@ android {
     defaultConfig {
         applicationId = "io.github.vinceglb.sample.compose"
         minSdk = 24
-        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
