@@ -33,7 +33,7 @@ public actual val FileKit.cacheDir: PlatformFile
         ?.let(::PlatformFile)
         ?: throw IllegalStateException("Could not find cache directory")
 
-public actual suspend fun FileKit.compressPhoto(
+public actual suspend fun FileKit.compressImage(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,

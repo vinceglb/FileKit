@@ -71,7 +71,7 @@ private fun Path.assertExists() {
     }
 }
 
-public actual suspend fun FileKit.compressPhoto(
+public actual suspend fun FileKit.compressImage(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,

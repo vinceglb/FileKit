@@ -11,7 +11,8 @@ public expect suspend fun FileKit.saveImageToGallery(
     filename: String,
 ): Boolean
 
-public expect suspend fun FileKit.compressPhoto(
+// TODO: Add compressImage with platformFile instead of ByteArray
+public expect suspend fun FileKit.compressImage(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int = 80,
     maxWidth: Int? = null,
