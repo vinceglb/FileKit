@@ -3,7 +3,7 @@ package io.github.vinceglb.sample.core
 import io.github.vinceglb.filekit.CompressFormat
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.compressPhoto
+import io.github.vinceglb.filekit.compressImage
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.pickDirectory
 import io.github.vinceglb.filekit.saveImageToGallery
@@ -13,7 +13,7 @@ actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSetti
 }
 
 actual suspend fun compressImage(bytes: ByteArray) {
-    FileKit.compressPhoto(
+    FileKit.compressImage(
         imageData = bytes,
         maxWidth = 200,
         maxHeight = 200,
