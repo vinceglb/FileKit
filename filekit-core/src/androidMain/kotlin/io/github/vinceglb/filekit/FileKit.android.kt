@@ -4,6 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.media.ExifInterface
 import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
@@ -11,7 +13,10 @@ import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.lang.ref.WeakReference
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 public actual object FileKit {
     private var _context: WeakReference<Context?> = WeakReference(null)
@@ -49,7 +54,7 @@ public actual suspend fun FileKit.saveImageToGallery(
     resolver.openOutputStream(imageUri)?.use { it.write(bytes + ByteArray(1)) } != null
 }
 
-public actual suspend fun FileKit.compressPhoto(
+public actual suspend fun FileKit.compressImage(
     imageData: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
@@ -60,27 +65,61 @@ public actual suspend fun FileKit.compressPhoto(
     val originalBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
         ?: return@withContext null
 
-    // Step 2: Calculate the new dimensions while maintaining aspect ratio
+    // Step 2: Correct the orientation using EXIF data
+    val correctedBitmap = correctBitmapOrientation(imageData, originalBitmap)
+
+    // Step 3: Calculate the new dimensions while maintaining aspect ratio
     val (newWidth, newHeight) = calculateNewDimensions(
-        originalBitmap.width,
-        originalBitmap.height,
+        correctedBitmap.width,
+        correctedBitmap.height,
         maxWidth,
         maxHeight
     )
 
-    // Step 3: Resize the Bitmap
-    val resizedBitmap = Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+    // Step 4: Resize the Bitmap
+    val resizedBitmap = Bitmap.createScaledBitmap(correctedBitmap, newWidth, newHeight, true)
 
-    // Step 4: Create a ByteArrayOutputStream to hold the compressed data
+    // Step 5: Create a ByteArrayOutputStream to hold the compressed data
     val outputStream = ByteArrayOutputStream()
 
-    // Step 5: Compress the resized Bitmap
+    // Step 6: Compress the resized Bitmap
     val format = when (compressFormat) {
         CompressFormat.JPEG -> Bitmap.CompressFormat.JPEG
         CompressFormat.PNG -> Bitmap.CompressFormat.PNG
     }
     resizedBitmap.compress(format, quality, outputStream)
 
-    // Step 6: Convert the compressed data back to ByteArray
+    // Step 7: Convert the compressed data back to ByteArray
     outputStream.toByteArray()
+}
+
+// Helper function to correct bitmap orientation
+@OptIn(ExperimentalUuidApi::class)
+private fun correctBitmapOrientation(imageData: ByteArray, bitmap: Bitmap): Bitmap {
+    // Step 1: Write ByteArray to a temporary file
+    val tempId = Uuid.random().toString()
+    val tempFile = File.createTempFile("image-${tempId}", null)
+    tempFile.writeBytes(imageData)
+
+    // Step 2: Read EXIF data from the temporary file
+    val exif = ExifInterface(tempFile.path)
+    val orientation = exif.getAttributeInt(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL
+    )
+
+    // Step 3: Apply rotation or flipping based on the orientation
+    val matrix = Matrix()
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+    }
+
+    // Step 4: Return the corrected bitmap
+    return Bitmap
+        .createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        .also { tempFile.delete() }
 }
