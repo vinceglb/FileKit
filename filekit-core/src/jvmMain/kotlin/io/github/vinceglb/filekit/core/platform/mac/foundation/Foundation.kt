@@ -59,7 +59,9 @@ internal object Foundation {
 		// objc_msgSend is called with the calling convention of the target method
 		// on x86_64 this does not make a difference, but arm64 uses a different calling convention for varargs
 		// it is therefore important to not call objc_msgSend as a vararg function
-		return ID(myObjcMsgSend.invokeLong(prepInvoke(id, selector, args)))
+		val result = ID(myObjcMsgSend.invokeLong(prepInvoke(id, selector, args)))
+		signJNATemporaryFiles()
+		return result
 	}
 
 	/**
@@ -68,10 +70,12 @@ internal object Foundation {
 	 */
 	fun invokeVarArg(id: ID?, selector: Pointer?, vararg args: Any?): ID? {
 		// c functions and objc methods have at least 1 fixed argument, we therefore need to separate out the first argument
-		return myFoundationLibrary.objc_msgSend(
+		val result = myFoundationLibrary.objc_msgSend(
 			id, selector,
 			args[0], *Arrays.copyOfRange(args, 1, args.size)
 		)
+		signJNATemporaryFiles()
+		return result
 	}
 
 	fun invoke(cls: String?, selector: String?, vararg args: Any?): ID {
@@ -587,4 +591,15 @@ internal object Foundation {
 //		var width: CoreGraphics.CGFloat = CGFloat(width)
 //		var height: CoreGraphics.CGFloat = CGFloat(height)
 //	}
+
+	private fun signJNATemporaryFiles() {
+		val tmpDir = System.getProperty("java.io.tmpdir")
+		val jnaTmpFiles = File(tmpDir).listFiles { _, name -> name.startsWith("jna") && name.endsWith(".tmp") }
+		jnaTmpFiles?.forEach { file ->
+			val process = ProcessBuilder("codesign", "--force", "--sign", "-", file.absolutePath)
+				.redirectErrorStream(true)
+				.start()
+			process.waitFor()
+		}
+	}
 }

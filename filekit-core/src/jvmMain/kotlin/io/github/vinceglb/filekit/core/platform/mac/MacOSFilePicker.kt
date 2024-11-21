@@ -106,6 +106,9 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 if (result.toInt() == 1) {
                     response = mode.getResult(openPanel)
                 }
+
+                // Ensure JNA temporary files are properly signed
+                Foundation.signJNATemporaryFiles()
             }
 
             response

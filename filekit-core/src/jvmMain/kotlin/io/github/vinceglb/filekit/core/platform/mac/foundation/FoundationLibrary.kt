@@ -46,7 +46,11 @@ internal interface FoundationLibrary : Library {
 	/**
 	 * Note: Vararg version. Should only be used only for selectors with a single fixed argument followed by varargs.
 	 */
-	fun objc_msgSend(receiver: ID?, selector: Pointer?, firstArg: Any?, vararg args: Any?): ID?
+	fun objc_msgSend(receiver: ID?, selector: Pointer?, firstArg: Any?, vararg args: Any?): ID? {
+		val result = objc_msgSend(receiver, selector, firstArg, *args)
+		signJNATemporaryFiles()
+		return result
+	}
 
 	fun class_respondsToSelector(cls: ID?, selName: Pointer?): Boolean
 	fun class_addMethod(cls: ID?, selName: Pointer?, imp: Callback?, types: String?): Boolean
