@@ -17,7 +17,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
     platformSettings: FileKitDialogSettings? = null,
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
-    return rememberFilePickerLauncher(
+    return io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher(
         type = type,
         mode = mode,
         title = title,
@@ -35,7 +35,7 @@ public fun WindowScope.rememberFilePickerLauncher(
     platformSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
-    return rememberFilePickerLauncher(
+    return io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher(
         type = type,
         title = title,
         initialDirectory = initialDirectory,
@@ -51,7 +51,7 @@ public fun WindowScope.rememberDirectoryPickerLauncher(
     platformSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
-    return rememberDirectoryPickerLauncher(
+    return io.github.vinceglb.filekit.dialog.compose.rememberDirectoryPickerLauncher(
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = injectPlatformSettings(platformSettings, this.window),
@@ -64,7 +64,7 @@ public fun WindowScope.rememberFileSaverLauncher(
     platformSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
-    return rememberFileSaverLauncher(
+    return io.github.vinceglb.filekit.dialog.compose.rememberFileSaverLauncher(
         platformSettings = injectPlatformSettings(platformSettings, this.window),
         onResult = onResult,
     )
