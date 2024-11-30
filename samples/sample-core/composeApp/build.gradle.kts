@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -12,7 +13,11 @@ kotlin {
     // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
     applyDefaultHierarchyTemplate()
 
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
 
     jvm("desktop")
 
