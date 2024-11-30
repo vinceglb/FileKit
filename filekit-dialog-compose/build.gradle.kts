@@ -53,7 +53,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
 
             // FileKit Dialog
-            api(projects.filekitCore)
             api(projects.filekitDialog)
         }
 

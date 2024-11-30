@@ -53,7 +53,7 @@ kotlin {
             implementation(libs.coil.compose)
 
             // FileKit
-            implementation(projects.filekitCore)
+            api(projects.filekitCore)
         }
 
         val nonWebMain by creating {

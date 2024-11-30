@@ -59,7 +59,6 @@ kotlin {
             implementation(projects.samples.sampleCore.shared)
 
             // FileKit
-            implementation(projects.filekitCore)
             implementation(projects.filekitCoil)
 
             // ViewModel Compose

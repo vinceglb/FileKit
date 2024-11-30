@@ -47,8 +47,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(projects.filekitCore)
+            // Coroutines
             implementation(libs.kotlinx.coroutines.core)
+
+            // FileKit Core
+            api(projects.filekitCore)
         }
 
         commonTest.dependencies {

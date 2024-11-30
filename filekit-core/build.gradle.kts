@@ -47,7 +47,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // Coroutines
             implementation(libs.kotlinx.coroutines.core)
+
+            // Kotlinx IO
             api(libs.kotlinx.io)
         }
 

@@ -61,9 +61,7 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
 
             // FileKit
-            implementation(projects.filekitCore)
             implementation(projects.filekitCoil)
-            implementation(projects.filekitDialog)
             implementation(projects.filekitDialogCompose)
 
             // Coil3
