@@ -58,24 +58,13 @@ kotlin {
         val webMain by creating { dependsOn(commonMain.get()) }
         jsMain.get().dependsOn(webMain)
         wasmJsMain.get().dependsOn(webMain)
-
-        // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
-        all {
-            // languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        }
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.core.shared"
-    compileSdk = 35
-
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 24
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

@@ -1,10 +1,9 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.mavenPublishVanniktech)
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 kotlin {
@@ -38,8 +37,8 @@ kotlin {
         iosSimulatorArm64(),
         macosX64(),
         macosArm64(),
-    ).forEach {
-        it.binaries.framework {
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
             baseName = "FileKit"
             isStatic = true
         }
@@ -71,6 +70,7 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.documentfile)
                 implementation(libs.androidx.startup)
+                implementation(libs.androidx.exifinterface)
             }
         }
         androidUnitTest.get().dependsOn(nonWebTest)
@@ -84,7 +84,6 @@ kotlin {
         }
     }
 
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
@@ -92,14 +91,8 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.filekit"
-    compileSdk = 35
-
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 21
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

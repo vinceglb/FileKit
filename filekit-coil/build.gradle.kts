@@ -2,10 +2,10 @@ import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
     alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.jetbrainsCompose)
-    alias(libs.plugins.mavenPublishVanniktech)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 kotlin {
@@ -80,14 +80,8 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.filekit.coil"
-    compileSdk = 35
-
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 21
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }
