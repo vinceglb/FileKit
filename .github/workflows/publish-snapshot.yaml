@@ -15,14 +15,15 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
       - name: Check for SNAPSHOT suffix
         id: check_snapshot
         run: |
           VERSION_NAME=$(grep "^VERSION_NAME=" gradle.properties | cut -d '=' -f 2)
           if [[ $VERSION_NAME == *-SNAPSHOT ]]; then
-            echo "::set-output name=is_snapshot::true"
+            echo "is_snapshot=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=is_snapshot::false"
+            echo "is_snapshot=false" >> $GITHUB_OUTPUT
           fi
 
   publish:
