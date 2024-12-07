@@ -14,6 +14,21 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+public fun createVisuallyHiddenInput(): HTMLInputElement {
+    val input = document.createElement("input") as HTMLInputElement
+    input.style.setProperty("position", "absolute")
+    input.style.setProperty("width", "1px")
+    input.style.setProperty("height", "1px")
+    input.style.setProperty("border", "0")
+    input.style.setProperty("padding", "0")
+    input.style.setProperty("margin", "-1px")
+    input.style.setProperty("white-space", "nowrap")
+    input.style.setProperty("clip-path", "inset(100%)")
+    input.style.setProperty("clip", "rect(0, 0, 0, 0)")
+    input.style.setProperty("overflow", "hidden")
+    return input
+}
+
 public actual object FileKit {
     public actual suspend fun <Out> pickFile(
         type: PickerType,
@@ -23,8 +38,10 @@ public actual object FileKit {
         platformSettings: FileKitPlatformSettings?,
     ): Out? = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
-            // Create input element
-            val input = document.createElement("input") as HTMLInputElement
+            // Create visually hidden input element
+            val input = createVisuallyHiddenInput()
+
+            document.body?.appendChild(input)
 
             // Configure the input element
             input.apply {
@@ -60,11 +77,14 @@ public actual object FileKit {
                     continuation.resume(mode.parseResult(result))
                 } catch (e: Throwable) {
                     continuation.resumeWithException(e)
+                } finally {
+                    document.body?.removeChild(input)
                 }
             }
 
             input.oncancel = {
                 continuation.resume(null)
+                document.body?.removeChild(input)
             }
 
             // Trigger the file picker
