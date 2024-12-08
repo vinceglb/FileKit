@@ -116,6 +116,10 @@ private fun SampleApp(platformSettings: FileKitDialogSettings?) {
                 Text("Multiple files picker, only png")
             }
 
+            TakePhoto(
+                onPhotoTaken = { file -> file?.let { files += it } }
+            )
+
             PickDirectory(
                 platformSettings = platformSettings,
                 directory = directory,
@@ -143,5 +147,8 @@ expect fun PickDirectory(
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit,
 )
+
+@Composable
+expect fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit)
 
 expect val PlatformFile.safePath: String?
