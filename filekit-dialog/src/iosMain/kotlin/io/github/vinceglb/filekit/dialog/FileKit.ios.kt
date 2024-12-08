@@ -249,7 +249,7 @@ private suspend fun <Out> callPhPicker(
             is PickerType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
                 listOf(
                     PHPickerFilter.imagesFilter,
-                    PHPickerFilter.videosFilter
+                    PHPickerFilter.videosFilter,
                 )
             )
 
