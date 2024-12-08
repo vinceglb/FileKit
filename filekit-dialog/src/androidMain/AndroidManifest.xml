@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-
     <application>
         <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="${applicationId}.fileprovider"
+            android:name=".FileKitFileProvider"
+            android:authorities="${applicationId}.filekit.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -12,5 +11,4 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-
 </manifest>

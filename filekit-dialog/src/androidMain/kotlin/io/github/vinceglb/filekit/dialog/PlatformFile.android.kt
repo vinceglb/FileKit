@@ -12,7 +12,7 @@ public val PlatformFile.uri: Uri
             is AndroidFile.UriWrapper -> androidFile.uri
             is AndroidFile.FileWrapper -> {
                 val context = FileKit.context
-                val authority = "${context.packageName}.fileprovider"
+                val authority = "${context.packageName}.filekit.fileprovider"
                 FileProvider.getUriForFile(context, authority, androidFile.file)
             }
         }
