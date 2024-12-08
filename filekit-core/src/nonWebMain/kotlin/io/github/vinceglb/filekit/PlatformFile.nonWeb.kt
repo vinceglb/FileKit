@@ -133,3 +133,5 @@ public suspend fun PlatformFile.delete(mustExist: Boolean = true): Boolean =
 
 public operator fun PlatformFile.div(child: String): PlatformFile =
     PlatformFile(this, child)
+
+public fun PlatformFile.resolve(relative: String): PlatformFile = this / relative
