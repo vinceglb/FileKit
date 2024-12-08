@@ -29,6 +29,11 @@ public expect val PlatformFile.path: Path?
 public expect val PlatformFile.parent: PlatformFile?
 
 /**
+ * Returns the absolute path of this [PlatformFile].
+ */
+public expect val PlatformFile.absolutePath: String
+
+/**
  * Returns a [RawSource] for reading from this [PlatformFile].
  * Returns `null` if a source cannot be opened.
  */
