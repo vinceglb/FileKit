@@ -14,21 +14,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-public fun createVisuallyHiddenInput(): HTMLInputElement {
-    val input = document.createElement("input") as HTMLInputElement
-    input.style.setProperty("position", "absolute")
-    input.style.setProperty("width", "1px")
-    input.style.setProperty("height", "1px")
-    input.style.setProperty("border", "0")
-    input.style.setProperty("padding", "0")
-    input.style.setProperty("margin", "-1px")
-    input.style.setProperty("white-space", "nowrap")
-    input.style.setProperty("clip-path", "inset(100%)")
-    input.style.setProperty("clip", "rect(0, 0, 0, 0)")
-    input.style.setProperty("overflow", "hidden")
-    return input
-}
-
 public actual object FileKit {
     public actual suspend fun <Out> pickFile(
         type: PickerType,
@@ -38,8 +23,10 @@ public actual object FileKit {
         platformSettings: FileKitPlatformSettings?,
     ): Out? = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
-            // Create visually hidden input element
-            val input = createVisuallyHiddenInput()
+            // Create input element
+            val input = document.createElement("input") as HTMLInputElement
+            // Visually hide the element
+            input.style.setProperty("display", "none")
 
             document.body?.appendChild(input)
 
