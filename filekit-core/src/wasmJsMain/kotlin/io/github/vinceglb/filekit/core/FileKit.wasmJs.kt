@@ -25,6 +25,8 @@ public actual object FileKit {
         suspendCoroutine { continuation ->
             // Create input element
             val input = document.createElement("input") as HTMLInputElement
+            // Visually hide the element
+            input.style.setProperty("display", "none")
 
             // Configure the input element
             input.apply {
@@ -60,11 +62,14 @@ public actual object FileKit {
                     continuation.resume(mode.parseResult(result))
                 } catch (e: Throwable) {
                     continuation.resumeWithException(e)
+                } finally {
+                    document.body?.removeChild(input)
                 }
             }
 
             input.oncancel = {
                 continuation.resume(null)
+                document.body?.removeChild(input)
             }
 
             // Trigger the file picker
