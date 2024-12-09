@@ -26,7 +26,7 @@ public actual object FileKit {
             // Create input element
             val input = document.createElement("input") as HTMLInputElement
             // Visually hide the element
-            input.style.setProperty("display", "none")
+            input.style.display = "none"
 
             document.body?.appendChild(input)
 
