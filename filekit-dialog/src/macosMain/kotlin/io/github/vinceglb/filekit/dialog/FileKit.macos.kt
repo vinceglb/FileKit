@@ -13,7 +13,7 @@ public actual suspend fun <Out> FileKit.pickFile(
     mode: PickerMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): Out? = callPicker(
     mode = when (mode) {
         is PickerMode.Single -> Mode.Single
@@ -27,17 +27,19 @@ public actual suspend fun <Out> FileKit.pickFile(
         PickerType.ImageAndVideo -> imageExtensions + videoExtensions
         is PickerType.File -> type.extensions
     },
+    platformSettings = platformSettings,
 )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
 public actual suspend fun FileKit.pickDirectory(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     title = title,
     initialDirectory = initialDirectory,
-    fileExtensions = null
+    fileExtensions = null,
+    platformSettings = platformSettings,
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.saveFile(
@@ -45,7 +47,7 @@ public actual suspend fun FileKit.saveFile(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): PlatformFile? {
     // Create an NSSavePanel
     val nsSavePanel = NSSavePanel()
@@ -58,7 +60,7 @@ public actual suspend fun FileKit.saveFile(
     nsSavePanel.allowedFileTypes = listOf(extension)
 
     // Accept the creation of directories
-    nsSavePanel.canCreateDirectories = true
+    nsSavePanel.canCreateDirectories = platformSettings.canCreateDirectories
 
     // Run the NSSavePanel
     val result = nsSavePanel.runModal()
@@ -85,12 +87,16 @@ private fun callPicker(
     title: String?,
     initialDirectory: String?,
     fileExtensions: List<String>?,
+    platformSettings: FileKitDialogSettings,
 ): List<NSURL>? {
     // Create an NSOpenPanel
     val nsOpenPanel = NSOpenPanel()
 
     // Configure the NSOpenPanel
     nsOpenPanel.configure(mode, title, fileExtensions, initialDirectory)
+
+    // Accept the creation of directories
+    nsOpenPanel.canCreateDirectories = platformSettings.canCreateDirectories
 
     // Run the NSOpenPanel
     val result = nsOpenPanel.runModal()
