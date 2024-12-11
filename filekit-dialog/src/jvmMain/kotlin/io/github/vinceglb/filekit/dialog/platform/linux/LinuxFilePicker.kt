@@ -25,7 +25,7 @@ internal class LinuxFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickFile(
         initialDirectory,
         fileExtensions,
@@ -37,7 +37,7 @@ internal class LinuxFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): List<File>? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickFiles(
         initialDirectory,
         fileExtensions,
@@ -48,7 +48,7 @@ internal class LinuxFilePicker(
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? =
         if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.pickDirectory(
             initialDirectory,
@@ -61,7 +61,7 @@ internal class LinuxFilePicker(
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.saveFile(
         bytes, baseName, extension, initialDirectory, platformSettings
     ) else awtFilePicker.saveFile(bytes, baseName, extension, initialDirectory, platformSettings)

@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.path
 
 @Composable
 actual fun PickDirectory(
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit
 ) {

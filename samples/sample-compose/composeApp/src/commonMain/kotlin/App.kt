@@ -34,14 +34,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun App(platformSettings: FileKitDialogSettings? = null) {
+fun App(platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     MaterialTheme {
         SampleApp(platformSettings)
     }
 }
 
 @Composable
-private fun SampleApp(platformSettings: FileKitDialogSettings?) {
+private fun SampleApp(platformSettings: FileKitDialogSettings) {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
     var directory: PlatformFile? by remember { mutableStateOf(null) }
 
@@ -143,7 +143,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings?) {
 
 @Composable
 expect fun PickDirectory(
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit,
 )

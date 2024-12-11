@@ -1,7 +1,7 @@
 package io.github.vinceglb.filekit.dialog.platform.mac
 
-import io.github.vinceglb.filekit.dialog.FileKitMacOSSettings
 import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialog.FileKitMacOSSettings
 import io.github.vinceglb.filekit.dialog.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialog.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialog.platform.mac.foundation.ID
@@ -12,14 +12,14 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.SingleFile,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings.macOS,
         )
     }
 
@@ -27,28 +27,28 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): List<File>? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.MultipleFiles,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings.macOS,
         )
     }
 
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.Directories,
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
-            macOSSettings = platformSettings?.macOS,
+            macOSSettings = platformSettings.macOS,
         )
     }
 
@@ -57,7 +57,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        macOSSettings: FileKitMacOSSettings?,
+        macOSSettings: FileKitMacOSSettings,
     ): T? {
         val pool = Foundation.NSAutoreleasePool()
         return try {
@@ -72,6 +72,9 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
                 // Setup single, multiple selection or directory mode
                 mode.setupPickerMode(openPanel)
+
+                // Set canCreateDirectories
+                Foundation.invoke(openPanel, "setCanCreateDirectories:", macOSSettings.canCreateDirectories)
 
                 // Set the title
                 title?.let {
@@ -95,7 +98,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 }
 
                 // Set resolvesAliases
-                macOSSettings?.resolvesAliases?.let { resolvesAliases ->
+                macOSSettings.resolvesAliases?.let { resolvesAliases ->
                     Foundation.invoke(openPanel, "setResolvesAliases:", resolvesAliases)
                 }
 

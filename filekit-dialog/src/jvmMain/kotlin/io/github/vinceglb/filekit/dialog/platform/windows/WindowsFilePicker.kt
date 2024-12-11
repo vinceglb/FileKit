@@ -43,7 +43,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
         initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
@@ -60,7 +60,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
             ?.takeIf { it.isNotEmpty() }
             ?.let { fileOpenDialog.addFiltersToDialog(it) }
 
-        fileOpenDialog.show(platformSettings?.parentWindow) {
+        fileOpenDialog.show(platformSettings.parentWindow) {
             it.getResult(SIGDN_FILESYSPATH)
         }
     }
@@ -69,7 +69,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): List<File>? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
         initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
@@ -89,7 +89,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         // Set a flag for multiple options
         fileOpenDialog.setFlag(FOS_ALLOWMULTISELECT)
 
-        fileOpenDialog.show(platformSettings?.parentWindow) {
+        fileOpenDialog.show(platformSettings.parentWindow) {
             it.getResults()
         }
     }
@@ -97,7 +97,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
         initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
@@ -113,7 +113,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         fileOpenDialog.setFlag(FOS_PICKFOLDERS)
 
         // Show the dialog to the user
-        fileOpenDialog.show(platformSettings?.parentWindow) {
+        fileOpenDialog.show(platformSettings.parentWindow) {
             it.getResult(SIGDN_DESKTOPABSOLUTEPARSING)
         }
     }
@@ -123,7 +123,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Save) { fileSaveDialog ->
         // Set the initial directory
         initialDirectory?.let { fileSaveDialog.setDefaultPath(it) }
@@ -142,7 +142,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         fileSaveDialog.addFiltersToDialog(listOf(extension))
 
         // Show the dialog to the user
-        fileSaveDialog.show(platformSettings?.parentWindow) {
+        fileSaveDialog.show(platformSettings.parentWindow) {
             val file = it.getResult(SIGDN_FILESYSPATH)
 
             // Write the bytes to the file

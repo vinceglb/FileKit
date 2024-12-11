@@ -16,7 +16,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? = callAwtPicker(
         title = title,
         isMultipleMode = false,
@@ -29,19 +29,19 @@ internal class AwtFilePicker : PlatformFilePicker {
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): List<File>? = callAwtPicker(
         title = title,
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         initialDirectory = initialDirectory,
-        parentWindow = platformSettings?.parentWindow
+        parentWindow = platformSettings.parentWindow
     )
 
     override suspend fun pickDirectory(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings?,
+        platformSettings: FileKitDialogSettings,
     ): File? {
         throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
     }

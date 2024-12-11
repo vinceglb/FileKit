@@ -9,7 +9,7 @@ import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 
 @Composable
 actual fun PickDirectory(
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit
 ) {

@@ -21,7 +21,7 @@ public actual suspend fun <Out> FileKit.pickFile(
     mode: PickerMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.Default) {
     suspendCoroutine { continuation ->
         // Create input element
@@ -78,7 +78,7 @@ public actual suspend fun FileKit.saveFile(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.Default) {
     if (bytes == null) {
         throw FileKitFileSaverWithoutBytesException()

@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,               // TODO change to PlatformFile?
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit

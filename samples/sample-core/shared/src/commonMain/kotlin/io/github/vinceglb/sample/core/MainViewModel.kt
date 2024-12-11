@@ -18,8 +18,12 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val platformSettings: FileKitDialogSettings?
+    private val platformSettings: FileKitDialogSettings
 ) : ViewModel() {
+    // Used for SwiftUI code
+    @Suppress("unused")
+    constructor() : this(FileKitDialogSettings.createDefault())
+
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
@@ -147,7 +151,7 @@ data class MainUiState(
 expect fun downloadDirectoryPath(): String?
 
 expect suspend fun pickDirectoryIfSupported(
-    platformSettings: FileKitDialogSettings?
+    platformSettings: FileKitDialogSettings
 ): PlatformFile?
 
 expect suspend fun takePhotoIfSupported(): PlatformFile?

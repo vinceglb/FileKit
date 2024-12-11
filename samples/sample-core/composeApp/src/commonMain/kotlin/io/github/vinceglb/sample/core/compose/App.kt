@@ -25,7 +25,7 @@ import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
 
 @Composable
-fun App(platformSettings: FileKitDialogSettings? = null) {
+fun App(platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     MaterialTheme {
         SampleApp(viewModel = viewModel { MainViewModel(platformSettings) })
     }

@@ -11,7 +11,7 @@ public actual suspend fun <Out> FileKit.pickFile(
     mode: PickerMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.IO) {
     // Filter by extension
     val extensions = when (type) {
@@ -45,7 +45,7 @@ public actual suspend fun <Out> FileKit.pickFile(
 public actual suspend fun FileKit.pickDirectory(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Open native file picker
     val file = PlatformFilePicker.current.pickDirectory(
@@ -63,7 +63,7 @@ public actual suspend fun FileKit.saveFile(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings?,
+    platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     val result = PlatformFilePicker.current.saveFile(
         bytes = bytes,

@@ -8,7 +8,7 @@ import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialog.pickDirectory
 import io.github.vinceglb.filekit.saveImageToGallery
 
-actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSettings?): PlatformFile? {
+actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSettings): PlatformFile? {
     return FileKit.pickDirectory(platformSettings = platformSettings)
 }
 

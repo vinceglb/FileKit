@@ -8,7 +8,7 @@ public expect suspend fun <Out> FileKit.pickFile(
     mode: PickerMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): Out?
 
 // TODO to deprecate or keep for the helper? Create new function without bytes parameter? (if target supports it)
@@ -18,14 +18,14 @@ public expect suspend fun FileKit.saveFile(
     baseName: String = "file",
     extension: String,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?
 
 public suspend fun FileKit.pickFile(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile? {
     return pickFile(
         type = type,

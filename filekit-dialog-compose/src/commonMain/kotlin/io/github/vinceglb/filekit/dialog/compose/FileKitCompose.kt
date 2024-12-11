@@ -20,7 +20,7 @@ public fun <Out> rememberFilePickerLauncher(
     mode: PickerMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit
@@ -63,7 +63,7 @@ public fun rememberFilePickerLauncher(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
@@ -78,7 +78,7 @@ public fun rememberFilePickerLauncher(
 
 @Composable
 public fun rememberFileSaverLauncher(
-    platformSettings: FileKitDialogSettings? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher {
     // Init FileKit
