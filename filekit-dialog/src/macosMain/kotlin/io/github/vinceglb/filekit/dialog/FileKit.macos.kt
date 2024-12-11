@@ -93,10 +93,13 @@ private fun callPicker(
     val nsOpenPanel = NSOpenPanel()
 
     // Configure the NSOpenPanel
-    nsOpenPanel.configure(mode, title, fileExtensions, initialDirectory)
-
-    // Accept the creation of directories
-    nsOpenPanel.canCreateDirectories = platformSettings.canCreateDirectories
+    nsOpenPanel.configure(
+        mode = mode,
+        title = title,
+        extensions = fileExtensions,
+        initialDirectory = initialDirectory,
+        canCreateDirectories = platformSettings.canCreateDirectories
+    )
 
     // Run the NSOpenPanel
     val result = nsOpenPanel.runModal()
@@ -115,6 +118,7 @@ private fun NSOpenPanel.configure(
     title: String?,
     extensions: List<String>?,
     initialDirectory: String?,
+    canCreateDirectories: Boolean,
 ): NSOpenPanel {
     // Set the title
     title?.let { message = it }
@@ -145,6 +149,9 @@ private fun NSOpenPanel.configure(
             allowsMultipleSelection = false
         }
     }
+
+    // Accept the creation of directories
+    this.canCreateDirectories = canCreateDirectories
 
     return this
 }

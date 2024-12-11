@@ -71,10 +71,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 val openPanel = Foundation.invoke("NSOpenPanel", "new")
 
                 // Setup single, multiple selection or directory mode
-                mode.setupPickerMode(openPanel)
-
-                // Set canCreateDirectories
-                Foundation.invoke(openPanel, "setCanCreateDirectories:", macOSSettings.canCreateDirectories)
+                mode.setupPickerMode(openPanel, macOSSettings.canCreateDirectories)
 
                 // Set the title
                 title?.let {
@@ -139,23 +136,25 @@ internal class MacOSFilePicker : PlatformFilePicker {
     }
 
     private sealed class MacOSFilePickerMode<T> {
-        abstract fun setupPickerMode(openPanel: ID)
+        abstract fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean)
         abstract fun getResult(openPanel: ID): T?
 
         data object SingleFile : MacOSFilePickerMode<File?>() {
-            override fun setupPickerMode(openPanel: ID) {
+            override fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean) {
                 Foundation.invoke(openPanel, "setCanChooseFiles:", true)
                 Foundation.invoke(openPanel, "setCanChooseDirectories:", false)
+                Foundation.invoke(openPanel, "setCanCreateDirectories:", canCreateDirectories)
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
         }
 
         data object MultipleFiles : MacOSFilePickerMode<List<File>>() {
-            override fun setupPickerMode(openPanel: ID) {
+            override fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean) {
                 Foundation.invoke(openPanel, "setCanChooseFiles:", true)
                 Foundation.invoke(openPanel, "setCanChooseDirectories:", false)
                 Foundation.invoke(openPanel, "setAllowsMultipleSelection:", true)
+                Foundation.invoke(openPanel, "setCanCreateDirectories:", canCreateDirectories)
                 // MaxItems is not supported by MacOSFilePicker
             }
 
@@ -163,9 +162,10 @@ internal class MacOSFilePicker : PlatformFilePicker {
         }
 
         data object Directories : MacOSFilePickerMode<File>() {
-            override fun setupPickerMode(openPanel: ID) {
+            override fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean) {
                 Foundation.invoke(openPanel, "setCanChooseFiles:", false)
                 Foundation.invoke(openPanel, "setCanChooseDirectories:", true)
+                Foundation.invoke(openPanel, "setCanCreateDirectories:", canCreateDirectories)
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
