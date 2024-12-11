@@ -1,25 +1,30 @@
 package io.github.vinceglb.sample.core
 
-import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
-import com.rickclephas.kmp.observableviewmodel.ViewModel
-import com.rickclephas.kmp.observableviewmodel.coroutineScope
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.baseName
-import io.github.vinceglb.filekit.core.extension
-import io.github.vinceglb.filekit.core.pickFile
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialog.PickerMode
+import io.github.vinceglb.filekit.dialog.PickerType
+import io.github.vinceglb.filekit.dialog.pickFile
+import io.github.vinceglb.filekit.dialog.saveFile
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.nameWithoutExtension
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val platformSettings: FileKitPlatformSettings?
+    private val platformSettings: FileKitDialogSettings
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
+    // Used for SwiftUI code
+    @Suppress("unused")
+    constructor() : this(FileKitDialogSettings.createDefault())
+
+    private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
     fun pickImage() = executeWithLoading {
@@ -57,7 +62,7 @@ class MainViewModel(
     fun pickFile() = executeWithLoading {
         // Pick a file
         val file = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
+            type = PickerType.File(extensions = listOf("png", "jpg")),
             platformSettings = platformSettings,
         )
 
@@ -71,7 +76,7 @@ class MainViewModel(
     fun pickFiles() = executeWithLoading {
         // Pick files
         val files = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
+            type = PickerType.File(extensions = listOf("png", "jpg")),
             mode = PickerMode.Multiple(),
             platformSettings = platformSettings,
         )
@@ -85,9 +90,7 @@ class MainViewModel(
 
     fun pickDirectory() = executeWithLoading {
         // Pick a directory
-        val directory = FileKit.pickDirectory(
-            platformSettings = platformSettings,
-        )
+        val directory = pickDirectoryIfSupported(platformSettings)
 
         // Update the state
         if (directory != null) {
@@ -99,8 +102,8 @@ class MainViewModel(
         // Save a file
         val newFile = FileKit.saveFile(
             bytes = file.readBytes(),
-            baseName = file.baseName,
-            extension = file.extension,
+            baseName = file.nameWithoutExtension ?: "file",
+            extension = file.extension ?: "txt",
             platformSettings = platformSettings
         )
 
@@ -111,8 +114,24 @@ class MainViewModel(
         }
     }
 
+    fun takePhoto() = executeWithLoading {
+        val image = takePhotoIfSupported()
+
+        // Add image to the state
+        if (image != null) {
+            val newFiles = _uiState.value.files + image
+            _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
+    fun compressImageAndSaveToGallery(file: PlatformFile) = executeWithLoading {
+        file.readBytes()?.let {
+            compressImage(it)
+        }
+    }
+
     private fun executeWithLoading(block: suspend () -> Unit) {
-        viewModelScope.coroutineScope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
             block()
             _uiState.update { it.copy(loading = false) }
@@ -122,7 +141,7 @@ class MainViewModel(
 
 data class MainUiState(
     val files: Set<PlatformFile> = emptySet(),    // Set instead of List to avoid duplicates
-    val directory: PlatformDirectory? = null,
+    val directory: PlatformFile? = null,
     val loading: Boolean = false
 ) {
     // Used by SwiftUI code
@@ -130,3 +149,11 @@ data class MainUiState(
 }
 
 expect fun downloadDirectoryPath(): String?
+
+expect suspend fun pickDirectoryIfSupported(
+    platformSettings: FileKitDialogSettings
+): PlatformFile?
+
+expect suspend fun takePhotoIfSupported(): PlatformFile?
+
+expect suspend fun compressImage(bytes: ByteArray)

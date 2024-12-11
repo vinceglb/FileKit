@@ -1,18 +1,26 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.mavenPublishVanniktech)
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 kotlin {
     explicitApi()
 
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     // Android
     androidTarget {
         publishLibraryVariants("release")
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
     }
 
     // JVM / Desktop
@@ -35,8 +43,8 @@ kotlin {
         iosSimulatorArm64(),
         macosX64(),
         macosArm64(),
-    ).forEach {
-        it.binaries.framework {
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
             baseName = "FileKit"
             isStatic = true
         }
@@ -44,22 +52,41 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            // Coroutines
             implementation(libs.kotlinx.coroutines.core)
+
+            // Kotlinx IO
+            api(libs.kotlinx.io)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.ktx)
+        val nonWebMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.androidx.annotation)
+            }
         }
+        val nonWebTest by creating { dependsOn(commonTest.get()) }
 
-        jvmMain.dependencies {
-            implementation(libs.jna)
-            implementation(libs.jna.platform)
-            implementation(libs.dbus.java.core)
-            implementation(libs.dbus.java.transport.native.unixsocket)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.documentfile)
+                implementation(libs.androidx.startup)
+                implementation(libs.androidx.exifinterface)
+            }
+        }
+        androidUnitTest.get().dependsOn(nonWebTest)
+        jvmMain.get().dependsOn(nonWebMain)
+        jvmTest.get().dependsOn(nonWebTest)
+        nativeMain.get().dependsOn(nonWebMain)
+        nativeTest.get().dependsOn(nonWebTest)
+
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
         }
     }
 
@@ -71,12 +98,10 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.filekit"
-    compileSdk = 34
-
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 21
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
-
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
