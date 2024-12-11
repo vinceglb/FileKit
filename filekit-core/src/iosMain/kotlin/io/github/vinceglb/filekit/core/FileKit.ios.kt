@@ -160,12 +160,25 @@ public actual object FileKit {
             // Assign the delegate to the picker controller
             pickerController.delegate = documentPickerDelegate
 
-            // Present the picker controller
-            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
-                pickerController,
-                animated = true,
-                completion = null
-            )
+            // Check if a view controller is already presenting another view controller
+            val rootViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
+            if (rootViewController?.presentedViewController != null) {
+                rootViewController.dismissViewControllerAnimated(false) {
+                    // Present the picker controller
+                    rootViewController.presentViewController(
+                        pickerController,
+                        animated = true,
+                        completion = null
+                    )
+                }
+            } else {
+                // Present the picker controller
+                rootViewController?.presentViewController(
+                    pickerController,
+                    animated = true,
+                    completion = null
+                )
+            }
         }
     }
 
@@ -211,12 +224,25 @@ public actual object FileKit {
             controller.delegate = phPickerDelegate
             controller.presentationController?.delegate = phPickerDismissDelegate
 
-            // Present the picker controller
-            UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
-                controller,
-                animated = true,
-                completion = null
-            )
+            // Check if a view controller is already presenting another view controller
+            val rootViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
+            if (rootViewController?.presentedViewController != null) {
+                rootViewController.dismissViewControllerAnimated(false) {
+                    // Present the picker controller
+                    rootViewController.presentViewController(
+                        controller,
+                        animated = true,
+                        completion = null
+                    )
+                }
+            } else {
+                // Present the picker controller
+                rootViewController?.presentViewController(
+                    controller,
+                    animated = true,
+                    completion = null
+                )
+            }
         }
 
         return@withContext withContext(Dispatchers.IO) {
