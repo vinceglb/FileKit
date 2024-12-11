@@ -163,7 +163,7 @@ public actual object FileKit {
             // Check if a view controller is already presenting another view controller
             val rootViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
             if (rootViewController?.presentedViewController != null) {
-                rootViewController.dismissViewControllerAnimated(false) {
+                rootViewController.dismissViewControllerAnimated(true) {
                     // Present the picker controller
                     rootViewController.presentViewController(
                         pickerController,
@@ -227,7 +227,7 @@ public actual object FileKit {
             // Check if a view controller is already presenting another view controller
             val rootViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
             if (rootViewController?.presentedViewController != null) {
-                rootViewController.dismissViewControllerAnimated(false) {
+                rootViewController.dismissViewControllerAnimated(true) {
                     // Present the picker controller
                     rootViewController.presentViewController(
                         controller,
