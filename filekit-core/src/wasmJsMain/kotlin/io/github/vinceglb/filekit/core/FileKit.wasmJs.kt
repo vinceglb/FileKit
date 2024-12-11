@@ -25,8 +25,11 @@ public actual object FileKit {
         suspendCoroutine { continuation ->
             // Create input element
             val input = document.createElement("input") as HTMLInputElement
+
             // Visually hide the element
             input.style.display = "none"
+
+            document.body?.appendChild(input)
 
             // Configure the input element
             input.apply {
