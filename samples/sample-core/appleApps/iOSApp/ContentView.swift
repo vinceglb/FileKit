@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  iOSApp
-//
-//  Created by Vincent Guillebaud on 04/04/2024.
-//
-
 import SwiftUI
 import KMPObservableViewModelSwiftUI
 import SamplePickerKt
@@ -13,6 +6,8 @@ struct ContentView: View {
     @StateViewModel
     var viewModel = MainViewModel(platformSettings: nil)
     
+    @State private var sheetIsPresented: Bool = false
+    
     var body: some View {
         let uiState = viewModel.uiState.value as? MainUiState
         
@@ -20,30 +15,14 @@ struct ContentView: View {
         let files = Array(uiState?.files ?? [])
         
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-            
-            Button("Single image picker") {
-                viewModel.pickImage()
+            Button("ShowSheet") {
+                sheetIsPresented.toggle()
             }
-            
-            Button("Multiple images picker") {
-                viewModel.pickImages()
-            }
-            
-            Button("Single file picker, only png") {
-                viewModel.pickFile()
-            }
-            
-            Button("Multiple file picker, only png") {
-                viewModel.pickFiles()
-            }
-            
-            Button("Directory picker") {
-                viewModel.pickDirectory()
-            }
+            .sheet(isPresented: $sheetIsPresented, content: {
+                Button("Multiple file picker, only png") {
+                    viewModel.pickFiles()
+                }
+            })
         
             if uiState?.loading == true {
                 ProgressView()
@@ -58,8 +37,4 @@ struct ContentView: View {
         }
         .padding()
     }
-}
-
-#Preview {
-    ContentView()
 }
