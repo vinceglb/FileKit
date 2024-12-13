@@ -16,11 +16,9 @@ import kotlinx.coroutines.withContext
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSError
-import platform.Foundation.NSInputStream
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.dataWithContentsOfURL
-import platform.Foundation.lastPathComponent
 import platform.posix.memcpy
 
 public actual data class PlatformFile(
@@ -54,7 +52,7 @@ public actual data class PlatformFile(
     }
 
     public actual fun getStream(): PlatformInputStream {
-        return PlatformInputStream(NSInputStream(nsUrl))
+        return PlatformInputStream(nsUrl)
     }
 
     @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
