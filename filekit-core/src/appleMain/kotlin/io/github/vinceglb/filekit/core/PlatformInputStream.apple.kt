@@ -5,12 +5,14 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
+import platform.Foundation.NSURL
 import platform.Foundation.NSInputStream
 import platform.posix.uint8_tVar
 
-public actual class PlatformInputStream(private val nsInputStream: NSInputStream) : AutoCloseable {
-
+public actual class PlatformInputStream(private val nsUrl: NSURL) : AutoCloseable {
+    public val nsInputStream: NSInputStream = NSInputStream(nsUrl)
     init {
+        nsUrl.startAccessingSecurityScopedResource()
         nsInputStream.open()
     }
 
@@ -26,11 +28,12 @@ public actual class PlatformInputStream(private val nsInputStream: NSInputStream
             for (i in 0 until numRead) {
                 buffer[i] = pointerBuffer[i].toByte()
             }
-            numRead
+            numRead.takeIf { it > 0 } ?: -1
         }
     }
 
     actual override fun close() {
         nsInputStream.close()
+        nsUrl.stopAccessingSecurityScopedResource()
     }
 }
