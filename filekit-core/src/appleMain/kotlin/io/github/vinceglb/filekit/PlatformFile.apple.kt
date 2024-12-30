@@ -55,7 +55,8 @@ public actual val PlatformFile.isDirectory: Boolean
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 public actual val PlatformFile.size: Long?
-    get() {
+    get() = try {
+        nsUrl.startAccessingSecurityScopedResource()
         memScoped {
             val valuePointer: CPointer<ObjCObjectVar<Any?>> = alloc<ObjCObjectVar<Any?>>().ptr
             val errorPointer: CPointer<ObjCObjectVar<NSError?>> =
@@ -63,6 +64,8 @@ public actual val PlatformFile.size: Long?
             nsUrl.getResourceValue(valuePointer, NSURLFileSizeKey, errorPointer)
             return valuePointer.pointed.value as Long
         }
+    } finally {
+        nsUrl.stopAccessingSecurityScopedResource()
     }
 
 public actual val PlatformFile.exists: Boolean
@@ -73,8 +76,13 @@ public actual val PlatformFile.parent: PlatformFile?
 
 // IO Operations with kotlinx-io
 
-public actual fun PlatformFile.source(): RawSource? =
+public actual fun PlatformFile.source(): RawSource? = try {
+    nsUrl.startAccessingSecurityScopedResource()
     path?.let { SystemFileSystem.source(path = it) }
+} finally {
+    nsUrl.stopAccessingSecurityScopedResource()
+}
+
 
 public actual fun PlatformFile.sink(append: Boolean): RawSink? =
     path?.let { SystemFileSystem.sink(path = it, append = append) }
