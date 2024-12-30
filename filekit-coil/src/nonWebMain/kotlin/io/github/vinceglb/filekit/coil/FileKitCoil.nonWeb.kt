@@ -30,17 +30,24 @@ public actual fun AsyncImage(
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
     clipToBounds: Boolean
-): Unit = coil3.compose.AsyncImage(
-    model = file?.coilModel,
-    contentDescription = contentDescription,
-    imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
-    modifier = modifier,
-    transform = transform,
-    onState = onState,
-    alignment = alignment,
-    contentScale = contentScale,
-    alpha = alpha,
-    colorFilter = colorFilter,
-    filterQuality = filterQuality,
-    clipToBounds = clipToBounds,
-)
+) {
+    AsyncImagePlatformEffects(file)
+
+    coil3.compose.AsyncImage(
+        model = file?.coilModel,
+        contentDescription = contentDescription,
+        imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Composable
+internal expect fun AsyncImagePlatformEffects(file: PlatformFile?)

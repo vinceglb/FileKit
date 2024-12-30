@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.coil
 
+import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.PlatformFile
 
@@ -10,3 +11,6 @@ public actual val PlatformFile.coilModel: Any
             is AndroidFile.UriWrapper -> it.uri
         }
     }
+
+@Composable
+internal actual fun AsyncImagePlatformEffects(file: PlatformFile?) {}
