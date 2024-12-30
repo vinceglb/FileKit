@@ -9,7 +9,7 @@ import SwiftUI
 import SamplePickerKt
 
 struct ContentView: View {
-    @State var viewModel = MainViewModel(platformSettings: nil)
+    @State var viewModel = MainViewModel(platformSettings: Filekit_dialogFileKitDialogSettings(canCreateDirectories: true))
     @State var uiState: MainUiState = .init()
     
     var body: some View {
