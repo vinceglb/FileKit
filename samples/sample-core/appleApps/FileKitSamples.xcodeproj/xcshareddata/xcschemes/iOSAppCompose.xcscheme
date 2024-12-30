@@ -18,7 +18,7 @@
                BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
                BuildableName = "iOSAppCompose.app"
                BlueprintName = "iOSAppCompose"
-               ReferencedContainer = "container:PickerKotlinSampleCore.xcodeproj">
+               ReferencedContainer = "container:FileKitSamples.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -47,7 +47,7 @@
             BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
             BuildableName = "iOSAppCompose.app"
             BlueprintName = "iOSAppCompose"
-            ReferencedContainer = "container:PickerKotlinSampleCore.xcodeproj">
+            ReferencedContainer = "container:FileKitSamples.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -64,7 +64,7 @@
             BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
             BuildableName = "iOSAppCompose.app"
             BlueprintName = "iOSAppCompose"
-            ReferencedContainer = "container:PickerKotlinSampleCore.xcodeproj">
+            ReferencedContainer = "container:FileKitSamples.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>
