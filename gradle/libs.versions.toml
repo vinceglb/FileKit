@@ -17,7 +17,7 @@ jna = "5.16.0"
 kotlin = "2.0.21"
 kotlinx-browser = "0.3"
 kotlinx-coroutines = "1.9.0"
-kotlinx-io = "0.5.4"
+kotlinx-io = "0.6.0"
 vanniktech-mavenPublish = "0.30.0"
 
 [libraries]
