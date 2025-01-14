@@ -74,6 +74,78 @@ public actual fun AsyncImage(
     file: PlatformFile?,
     contentDescription: String?,
     modifier: Modifier,
+    placeholder: Painter?,
+    error: Painter?,
+    fallback: Painter?,
+    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
+    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
+    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val model = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
+        onLoading = onLoading,
+        onSuccess = onSuccess,
+        onError = onError,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier,
+    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
+    onState: ((AsyncImagePainter.State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val model = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier,
     transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
     onState: ((AsyncImagePainter.State) -> Unit)?,
     alignment: Alignment,
