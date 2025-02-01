@@ -37,14 +37,14 @@ public expect val PlatformFile.absolutePath: String
  * Returns a [RawSource] for reading from this [PlatformFile].
  * Returns `null` if a source cannot be opened.
  */
-public expect fun PlatformFile.source(): RawSource?     // TODO: replace by Source?
+public expect fun PlatformFile.source(): RawSource?
 
 /**
  * Returns a [RawSink] for writing to this [PlatformFile].
  * If [append] is set to `true`, the content will be appended; otherwise, it will overwrite the existing content.
  * Returns `null` if a sink cannot be opened.
  */
-public expect fun PlatformFile.sink(append: Boolean = false): RawSink?      // TODO: replace by Sink?
+public expect fun PlatformFile.sink(append: Boolean = false): RawSink?
 
 /**
  * Creates a [PlatformFile] by appending a [child] path to the [base] file's path.
