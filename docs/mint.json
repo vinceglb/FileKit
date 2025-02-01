@@ -33,7 +33,13 @@
       "pages": [
         "introduction",
         "quickstart",
-        "development"
+        "installation"
+      ]
+    },
+    {
+      "group": "Dialogs",
+      "pages": [
+        "dialogs/setup"
       ]
     },
     {

@@ -1,0 +1,68 @@
+---
+title: Installation
+description: 'Install FileKit in your Kotlin Multiplatform project'
+---
+
+import FilekitVersion from '/snippets/filekit-version.mdx'
+
+To use FileKit in your Kotlin Multiplatform / Compose Multiplatform project, you need to add the dependency to your `build.gradle.kts` file.
+
+FileKit supports those targets:
+- Android
+- iOS, macOS
+- JVM (Windows, macOS, Linux)
+- JS, WASM
+
+## Dialogs
+
+FileKit can helps you to display dialogs to the user like file, directory and photo pickers, save dialogs, camera and more. FileKit dialogs are available in two flavors:
+
+```kotlin build.gradle.kts
+// Enables FileKit dialogs without Compose dependencies
+implementation("io.github.vinceglb:filekit-dialogs:0.10.0")
+
+// Enables FileKit dialogs with Composable utilities
+implementation("io.github.vinceglb:filekit-dialogs-compose:0.10.0")
+```
+
+## PlatformFile
+
+FileKit provides a platform-agnostic file abstraction called `PlatformFile`. It allows you to work with files in a platform-agnostic way. You can create, read, write, and delete files using the `PlatformFile` API.
+
+You can use `PlatformFile` in your project by adding the following dependency:
+
+```kotlin build.gradle.kts
+implementation("io.github.vinceglb:filekit-core:0.10.0")
+```
+
+## Coil
+
+FileKit provides a Coil extension to load images from a `PlatformFile` object. You can use the `PlatformFile` object to load images from a file.
+
+You can use the Coil extension in your project by adding the following dependency:
+
+```kotlin build.gradle.kts
+implementation("io.github.vinceglb:filekit-coil:0.10.0")
+```
+
+## Linux setup
+
+If using JVM target and Linux distribution, you need to add the following module:
+
+```kotlin build.gradle.kts
+compose.desktop {
+    application {
+        nativeDistributions {
+            linux {
+                modules("jdk.security.auth")
+            }
+        }
+    }
+}
+```
+
+It prevents having a `NoClassDefFoundError` on some cases. Read more about it [here](https://github.com/vinceglb/FileKit/issues/107).
+
+---
+
+Next, continue your journey with the [Setup](/dialogs/setup) guide.
