@@ -4,8 +4,8 @@ import io.github.vinceglb.filekit.CompressFormat
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.compressImage
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialog.pickDirectory
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.pickDirectory
 import io.github.vinceglb.filekit.saveImageToGallery
 
 actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSettings): PlatformFile? {

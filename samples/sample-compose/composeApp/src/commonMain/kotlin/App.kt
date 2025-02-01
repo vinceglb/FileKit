@@ -20,11 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialog.PickerMode
-import io.github.vinceglb.filekit.dialog.PickerType
-import io.github.vinceglb.filekit.dialog.compose.rememberFilePickerLauncher
-import io.github.vinceglb.filekit.dialog.compose.rememberFileSaverLauncher
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.PickerMode
+import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes

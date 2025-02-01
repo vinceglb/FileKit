@@ -69,7 +69,7 @@ kotlin {
 
             // FileKit
             implementation(projects.filekitCoil)
-            implementation(projects.filekitDialogCompose)
+            implementation(projects.filekitDialogsCompose)
 
             // Coil3
             implementation(libs.coil.compose)

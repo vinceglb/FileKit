@@ -1,0 +1,37 @@
+package io.github.vinceglb.filekit.dialogs
+
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+
+public expect suspend fun <Out> FileKit.pickFile(
+    type: PickerType = PickerType.File(),
+    mode: PickerMode<Out>,
+    title: String? = null,
+    initialDirectory: String? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+): Out?
+
+// TODO to deprecate or keep for the helper? Create new function without bytes parameter? (if target supports it)
+// TODO rename baseName to nameWithoutExtension?
+public expect suspend fun FileKit.saveFile(
+    bytes: ByteArray? = null,
+    baseName: String = "file",
+    extension: String,
+    initialDirectory: String? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+): PlatformFile?
+
+public suspend fun FileKit.pickFile(
+    type: PickerType = PickerType.File(),
+    title: String? = null,
+    initialDirectory: String? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+): PlatformFile? {
+    return pickFile(
+        type = type,
+        mode = PickerMode.Single,
+        title = title,
+        initialDirectory = initialDirectory,
+        platformSettings = platformSettings,
+    )
+}

@@ -5,8 +5,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialog.compose.rememberDirectoryPickerLauncher
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.path
 
 @Composable

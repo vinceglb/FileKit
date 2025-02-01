@@ -21,7 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
 
 @Composable

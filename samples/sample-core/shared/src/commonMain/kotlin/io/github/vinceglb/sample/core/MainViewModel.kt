@@ -4,11 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialog.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialog.PickerMode
-import io.github.vinceglb.filekit.dialog.PickerType
-import io.github.vinceglb.filekit.dialog.pickFile
-import io.github.vinceglb.filekit.dialog.saveFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.PickerMode
+import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.pickFile
+import io.github.vinceglb.filekit.dialogs.saveFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes

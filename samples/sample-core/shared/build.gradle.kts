@@ -51,7 +51,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // FileKit Core
-            api(projects.filekitDialog)
+            api(projects.filekitDialogs)
 
             // ViewModel
             api(libs.androidx.lifecycle.viewmodel)
