@@ -1,0 +1,54 @@
+---
+title: 'Directory picker'
+description: 'Open a folder picker dialog in a Kotlin Multiplatform project'
+---
+
+<Check>Supported on Android, iOS, macOS and JVM targets</Check>
+
+## Quick start
+
+Easily open a folder picker dialog to let users select a directory.
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+val directory = FileKit.pickDirectory()
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberDirectoryPickerLauncher { directory ->
+    // Handle the directory
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick a directory")
+}
+```
+
+</CodeGroup>
+
+## Customizing the dialog
+
+You can customize the dialog by setting the title and the initial directory.
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+val directory = FileKit.pickDirectory(
+    title = "Directory picker",
+    initialDirectory = "/custom/initial/path",
+    platformSettings = platformSettings,
+)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberDirectoryPickerLauncher(
+    title = "Directory picker",
+    initialDirectory = "/custom/initial/path",
+    platformSettings = platformSettings,
+) { directory ->
+    // Handle the directory
+}
+```
+
+</CodeGroup>
