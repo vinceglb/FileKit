@@ -6,7 +6,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 fun main() = application {
-	FileKit.init("FileKitSampleCore")
+	FileKit.init(appId = "FileKitSampleCore")
 	Window(onCloseRequest = ::exitApplication, title = "Picker Core Sample") {
 		val platformSettings = FileKitDialogSettings(this.window)
 		App(platformSettings)
