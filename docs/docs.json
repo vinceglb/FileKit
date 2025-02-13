@@ -31,7 +31,10 @@
         "group": "FileKit Dialogs",
         "pages": [
           "dialogs/setup",
-          "dialogs/file-picker"
+          "dialogs/file-picker",
+          "dialogs/gallery-picker",
+          "dialogs/directory-picker",
+          "dialogs/platform-settings"
         ]
       },
       {
