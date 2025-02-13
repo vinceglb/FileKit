@@ -1,0 +1,29 @@
+---
+title: 'File Picker'
+description: 'Open a file picker dialog to allow the user to select a file.'
+---
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+## Quick start
+
+The File Picker component provides a the native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+val file = FileKit.pickFile()
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher { file ->
+  // Handle the file
+}
+
+Button(onClick = { launcher.launch() }) {
+  Text("Pick a file")
+}
+```
+
+</CodeGroup>
+

@@ -1,4 +1,56 @@
 ---
 title: 'Setup'
-description: 'Learn how to preview changes locally'
+description: 'Setup FileKit Dialogs in your Kotlin Multiplatform project'
 ---
+
+import VersionDialogs from '/snippets/version-dialogs.mdx'
+import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
+
+## Installation
+
+<VersionDialogs/>
+
+## Platform-specific setup
+
+It's required to setup FileKit Dialogs on Android and JVM targets. All other platforms are supported out of the box.
+
+### Android setup
+
+Using <Tooltip tip="io.github.vinceglb:filekit-dialogs">filekit-dialogs</Tooltip> needs an initialization step in your Android application.
+
+<Note>This initialization step is not needed when using filekit-dialogs-compose.</Note>
+
+FileKit needs to have access to the `ActivityResultRegistry` to handle the result of the file picker dialog. To do this, you need to add the following code to your `MainActivity`:
+
+```kotlin MainActivity.kt
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+
+    // Initialize FileKit
+    FileKit.init(this)
+  }
+}
+```
+
+### JVM setup
+
+<SetupJVMCore/>
+
+### Linux setup
+
+If using JVM target and Linux distribution, you need to add the following module in your `build.gradle.kts` file:
+
+```kotlin build.gradle.kts
+compose.desktop {
+    application {
+        nativeDistributions {
+            linux {
+                modules("jdk.security.auth")
+            }
+        }
+    }
+}
+```
+
+It prevents having a `NoClassDefFoundError` on some cases. Read more about it [here](https://github.com/vinceglb/FileKit/issues/107).
