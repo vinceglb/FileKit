@@ -22,7 +22,7 @@ import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-public actual suspend fun <Out> FileKit.pickFile(
+public actual suspend fun <Out> FileKit.openFilePicker(
     type: PickerType,
     mode: PickerMode<Out>,
     title: String?,

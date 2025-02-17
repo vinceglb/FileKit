@@ -6,7 +6,7 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-public actual suspend fun <Out> FileKit.pickFile(
+public actual suspend fun <Out> FileKit.openFilePicker(
     type: PickerType,
     mode: PickerMode<Out>,
     title: String?,

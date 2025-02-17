@@ -10,7 +10,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.PickerMode
 import io.github.vinceglb.filekit.dialogs.PickerType
-import io.github.vinceglb.filekit.dialogs.pickFile
+import io.github.vinceglb.filekit.dialogs.openFilePicker
 import kotlinx.coroutines.launch
 
 @Composable
@@ -39,7 +39,7 @@ public fun <Out> rememberFilePickerLauncher(
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = FileKit.pickFile(
+                val result = FileKit.openFilePicker(
                     type = currentType,
                     mode = currentMode,
                     title = currentTitle,

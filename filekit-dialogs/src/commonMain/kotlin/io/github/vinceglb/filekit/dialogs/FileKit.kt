@@ -3,7 +3,7 @@ package io.github.vinceglb.filekit.dialogs
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 
-public expect suspend fun <Out> FileKit.pickFile(
+public expect suspend fun <Out> FileKit.openFilePicker(
     type: PickerType = PickerType.File(),
     mode: PickerMode<Out>,
     title: String? = null,
@@ -11,13 +11,13 @@ public expect suspend fun <Out> FileKit.pickFile(
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): Out?
 
-public suspend fun FileKit.pickFile(
+public suspend fun FileKit.openFilePicker(
     type: PickerType = PickerType.File(),
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile? {
-    return pickFile(
+    return openFilePicker(
         type = type,
         mode = PickerMode.Single,
         title = title,

@@ -53,7 +53,7 @@ private object FileKitDialog {
     lateinit var cameraControllerDelegate: CameraControllerDelegate
 }
 
-public actual suspend fun <Out> FileKit.pickFile(
+public actual suspend fun <Out> FileKit.openFilePicker(
     type: PickerType,
     mode: PickerMode<Out>,
     title: String?,

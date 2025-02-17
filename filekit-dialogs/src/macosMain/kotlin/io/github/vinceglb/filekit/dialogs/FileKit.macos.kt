@@ -8,7 +8,7 @@ import platform.AppKit.NSSavePanel
 import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
-public actual suspend fun <Out> FileKit.pickFile(
+public actual suspend fun <Out> FileKit.openFilePicker(
     type: PickerType,
     mode: PickerMode<Out>,
     title: String?,
