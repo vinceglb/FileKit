@@ -11,7 +11,6 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.PickerMode
 import io.github.vinceglb.filekit.dialogs.PickerType
 import io.github.vinceglb.filekit.dialogs.pickFile
-import io.github.vinceglb.filekit.dialogs.saveFile
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,14 +35,11 @@ public fun <Out> rememberFilePickerLauncher(
     val currentInitialDirectory by rememberUpdatedState(initialDirectory)
     val currentOnResult by rememberUpdatedState(onResult)
 
-    // FileKit
-    val fileKit = remember { FileKit }
-
     // FileKit launcher
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = fileKit.pickFile(
+                val result = FileKit.pickFile(
                     type = currentType,
                     mode = currentMode,
                     title = currentTitle,
@@ -76,41 +72,12 @@ public fun rememberFilePickerLauncher(
     )
 }
 
+@Deprecated(message = "Opening file saver dialog is not supported on web targets. Please use expect/actual to provide web and non-web implementations.")
 @Composable
-public fun rememberFileSaverLauncher(
+public expect fun rememberFileSaverLauncher(
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit
-): SaverResultLauncher {
-    // Init FileKit
-    InitFileKit()
-
-    // Coroutine
-    val coroutineScope = rememberCoroutineScope()
-
-    // Updated state
-    val currentOnResult by rememberUpdatedState(onResult)
-
-    // FileKit
-    val fileKit = remember { FileKit }
-
-    // FileKit launcher
-    val returnedLauncher = remember {
-        SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
-            coroutineScope.launch {
-                val result = fileKit.saveFile(
-                    bytes = bytes,
-                    baseName = baseName,
-                    extension = extension,
-                    initialDirectory = initialDirectory,
-                    platformSettings = platformSettings,
-                )
-                currentOnResult(result)
-            }
-        }
-    }
-
-    return returnedLauncher
-}
+): SaverResultLauncher
 
 @Composable
 internal expect fun InitFileKit()

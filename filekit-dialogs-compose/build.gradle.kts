@@ -63,13 +63,11 @@ kotlin {
         val nonWebMain by creating {
             dependsOn(commonMain.get())
         }
-
+        val webMain by creating {
+            dependsOn(commonMain.get())
+        }
         val mobileMain by creating {
             dependsOn(nonWebMain)
-        }
-
-        val nonAndroidMain by creating {
-            dependsOn(commonMain.get())
         }
 
         androidMain {
@@ -82,20 +80,16 @@ kotlin {
 
         jvmMain {
             dependsOn(nonWebMain)
-            dependsOn(nonAndroidMain)
             dependencies {
                 implementation(compose.ui)
             }
         }
 
-        nativeMain {
-            dependsOn(nonWebMain)
-            dependsOn(nonAndroidMain)
-        }
+        nativeMain.get().dependsOn(nonWebMain)
         iosMain.get().dependsOn(mobileMain)
 
-        wasmJsMain.get().dependsOn(nonAndroidMain)
-        jsMain.get().dependsOn(nonAndroidMain)
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
     }
 }
 

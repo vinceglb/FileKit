@@ -2,10 +2,10 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.WindowScope
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.PickerMode
 import io.github.vinceglb.filekit.dialogs.PickerType
-import io.github.vinceglb.filekit.PlatformFile
 import java.awt.Window
 
 @Composable
@@ -69,6 +69,9 @@ public fun WindowScope.rememberFileSaverLauncher(
         onResult = onResult,
     )
 }
+
+@Composable
+internal actual fun InitFileKit() {}
 
 private fun injectPlatformSettings(
     platformSettings: FileKitDialogSettings?,

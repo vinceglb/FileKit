@@ -15,7 +15,7 @@ internal actual fun InitFileKit() {
         // if null then MainActivity is not an Activity that implements ActivityResultRegistryOwner e.g. ComponentActivity
         // This should not generally happen
         // Calls to launcher should fail with FileKitNotInitializedException if it wasn't previously initialized
-        LaunchedEffect(Unit) {
+        LaunchedEffect(registry) {
             if (registry != null) {
                 FileKit.init(registry)
             }

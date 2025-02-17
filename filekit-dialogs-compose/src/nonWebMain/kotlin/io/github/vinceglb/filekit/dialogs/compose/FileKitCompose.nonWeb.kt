@@ -9,6 +9,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.pickDirectory
+import io.github.vinceglb.filekit.dialogs.saveFile
 import kotlinx.coroutines.launch
 
 @Composable
@@ -29,16 +30,46 @@ public fun rememberDirectoryPickerLauncher(
     val currentInitialDirectory by rememberUpdatedState(initialDirectory)
     val currentOnResult by rememberUpdatedState(onResult)
 
-    // FileKit
-    val fileKit = remember { FileKit }
-
     // FileKit launcher
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = fileKit.pickDirectory(
+                val result = FileKit.pickDirectory(
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
+                    platformSettings = platformSettings,
+                )
+                currentOnResult(result)
+            }
+        }
+    }
+
+    return returnedLauncher
+}
+
+@Composable
+public actual fun rememberFileSaverLauncher(
+    platformSettings: FileKitDialogSettings,
+    onResult: (PlatformFile?) -> Unit
+): SaverResultLauncher {
+    // Init FileKit
+    InitFileKit()
+
+    // Coroutine
+    val coroutineScope = rememberCoroutineScope()
+
+    // Updated state
+    val currentOnResult by rememberUpdatedState(onResult)
+
+    // FileKit launcher
+    val returnedLauncher = remember {
+        SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
+            coroutineScope.launch {
+                val result = FileKit.saveFile(
+                    bytes = bytes,
+                    baseName = baseName,
+                    extension = extension,
+                    initialDirectory = initialDirectory,
                     platformSettings = platformSettings,
                 )
                 currentOnResult(result)
