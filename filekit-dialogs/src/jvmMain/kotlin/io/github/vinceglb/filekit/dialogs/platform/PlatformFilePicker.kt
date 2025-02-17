@@ -34,19 +34,16 @@ internal interface PlatformFilePicker {
     ): File?
 
     suspend fun saveFile(
-        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitDialogSettings,
     ): File? = AwtFileSaver.saveFile(
-        bytes = bytes,
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,
         platformSettings = platformSettings,
     )
-
 
     companion object {
         val current: PlatformFilePicker by lazy { createPlatformFilePicker() }

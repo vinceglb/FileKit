@@ -59,14 +59,12 @@ public actual suspend fun FileKit.pickDirectory(
 }
 
 public actual suspend fun FileKit.saveFile(
-    bytes: ByteArray?,
     baseName: String,
     extension: String,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     val result = PlatformFilePicker.current.saveFile(
-        bytes = bytes,
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,

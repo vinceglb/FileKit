@@ -43,7 +43,6 @@ public actual suspend fun FileKit.pickDirectory(
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.saveFile(
-    bytes: ByteArray?,
     baseName: String,
     extension: String,
     initialDirectory: String?,
@@ -73,7 +72,7 @@ public actual suspend fun FileKit.saveFile(
     // Return the result
     val platformFile = nsSavePanel.URL?.let { nsUrl ->
         // Write the bytes to the file
-        writeBytesArrayToNsUrl(bytes, nsUrl)
+        // writeBytesArrayToNsUrl(bytes, nsUrl)
 
         // Create the PlatformFile
         PlatformFile(nsUrl)

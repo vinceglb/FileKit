@@ -90,7 +90,6 @@ public actual suspend fun FileKit.pickDirectory(
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.saveFile(
-    bytes: ByteArray?,
     baseName: String,
     extension: String,
     initialDirectory: String?,
@@ -122,7 +121,7 @@ public actual suspend fun FileKit.saveFile(
             ?: throw IllegalStateException("Failed to create file URL")
 
         // Write the bytes to the temp file
-        writeBytesArrayToNsUrl(bytes, fileUrl)
+        // writeBytesArrayToNsUrl(bytes, fileUrl)
 
         // Create a picker controller
         val pickerController = UIDocumentPickerViewController(

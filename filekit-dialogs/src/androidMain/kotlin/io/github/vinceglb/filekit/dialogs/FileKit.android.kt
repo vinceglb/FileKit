@@ -18,7 +18,6 @@ import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.div
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.FileOutputStream
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -103,7 +102,6 @@ public actual suspend fun <Out> FileKit.pickFile(
 }
 
 public actual suspend fun FileKit.saveFile(
-    bytes: ByteArray?,
     baseName: String,
     extension: String,
     initialDirectory: String?,
@@ -117,7 +115,7 @@ public actual suspend fun FileKit.saveFile(
         val key = UUID.randomUUID().toString()
 
         // Get context
-        val context = FileKit.context
+        // val context = FileKit.context
 
         // Get MIME type
         val mimeType = getMimeType(extension)
@@ -127,19 +125,19 @@ public actual suspend fun FileKit.saveFile(
         val launcher = registry.register(key, contract) { uri ->
             val platformFile = uri?.let {
                 // Write the bytes to the file
-                bytes?.let { bytes ->
-                    context.contentResolver.openOutputStream(it)?.use { output ->
-                        if(output is FileOutputStream) {
-                            // If we are overriding a file we want to make sure that we remove
-                            // any extra bytes. Eg. if file was originally 250kb and new file
-                            // would only be 200kb we need to truncate the size, if not the file
-                            // will contain 50kb of garbage which uses space unnecessarily and
-                            // can cause other issues.
-                            output.channel.truncate(bytes.size.toLong())
-                        }
-                        output.write(bytes)
-                    }
-                }
+//                bytes?.let { bytes ->
+//                    context.contentResolver.openOutputStream(it)?.use { output ->
+//                        if(output is FileOutputStream) {
+//                            // If we are overriding a file we want to make sure that we remove
+//                            // any extra bytes. Eg. if file was originally 250kb and new file
+//                            // would only be 200kb we need to truncate the size, if not the file
+//                            // will contain 50kb of garbage which uses space unnecessarily and
+//                            // can cause other issues.
+//                            output.channel.truncate(bytes.size.toLong())
+//                        }
+//                        output.write(bytes)
+//                    }
+//                }
 
                 PlatformFile(it)
             }

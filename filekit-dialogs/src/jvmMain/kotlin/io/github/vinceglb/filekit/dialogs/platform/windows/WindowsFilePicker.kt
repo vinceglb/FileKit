@@ -119,7 +119,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     override suspend fun saveFile(
-        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -146,7 +145,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
             val file = it.getResult(SIGDN_FILESYSPATH)
 
             // Write the bytes to the file
-            bytes?.let { bytes -> file.writeBytes(bytes) }
+            // bytes?.let { bytes -> file.writeBytes(bytes) }
 
             file
         }

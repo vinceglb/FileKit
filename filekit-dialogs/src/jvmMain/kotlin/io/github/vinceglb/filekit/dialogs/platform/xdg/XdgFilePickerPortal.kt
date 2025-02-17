@@ -118,7 +118,6 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     }
 
     override suspend fun saveFile(
-        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -139,8 +138,8 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             )
 
             val file = deferredResult.await()?.first()?.let { File(it) }
-            if (bytes != null && file != null) file.writeBytes(bytes)
-            else file?.createNewFile()
+            // if (bytes != null && file != null) file.writeBytes(bytes)
+            // else file?.createNewFile()
 
             return file
         }

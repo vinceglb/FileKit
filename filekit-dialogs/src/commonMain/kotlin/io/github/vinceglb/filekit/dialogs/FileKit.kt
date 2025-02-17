@@ -11,16 +11,6 @@ public expect suspend fun <Out> FileKit.pickFile(
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): Out?
 
-// TODO to deprecate or keep for the helper? Create new function without bytes parameter? (if target supports it)
-// TODO rename baseName to nameWithoutExtension?
-public expect suspend fun FileKit.saveFile(
-    bytes: ByteArray? = null,
-    baseName: String = "file",
-    extension: String,
-    initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
-): PlatformFile?
-
 public suspend fun FileKit.pickFile(
     type: PickerType = PickerType.File(),
     title: String? = null,
@@ -35,3 +25,17 @@ public suspend fun FileKit.pickFile(
         platformSettings = platformSettings,
     )
 }
+
+// TODO to deprecate or keep for the helper? Create new function without bytes parameter? (if target supports it)
+// TODO rename baseName to nameWithoutExtension?
+@Deprecated(
+    message = "Use the function without the bytes parameter. If necessary, save the bytes in the returned PlatformFile. On web targets, you can use FileKit.download() to download the bytes. More info here: https://filekit.mintlify.app/migrate-to-v0.10",
+    replaceWith = ReplaceWith("saveFile(baseName, extension, initialDirectory, platformSettings)"),
+)
+public expect suspend fun FileKit.saveFile(
+    bytes: ByteArray?,
+    baseName: String = "file",
+    extension: String,
+    initialDirectory: String? = null,
+    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+): PlatformFile?

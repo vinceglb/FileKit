@@ -10,7 +10,6 @@ import kotlin.coroutines.resume
 
 internal object AwtFileSaver {
     suspend fun saveFile(
-        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
@@ -20,7 +19,7 @@ internal object AwtFileSaver {
             if (value) {
                 val file = files?.firstOrNull()?.let { file ->
                     // Write bytes to file, or create a new file
-                    bytes?.let { file.writeBytes(bytes) } ?: file.createNewFile()
+                    // bytes?.let { file.writeBytes(bytes) } ?: file.createNewFile()
                     file
                 }
                 continuation.resume(file)

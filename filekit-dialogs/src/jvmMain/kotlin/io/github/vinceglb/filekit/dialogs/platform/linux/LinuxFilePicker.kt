@@ -57,12 +57,11 @@ internal class LinuxFilePicker(
         ) else swingFilePicker.pickDirectory(initialDirectory, title, platformSettings)
 
     override suspend fun saveFile(
-        bytes: ByteArray?,
         baseName: String,
         extension: String,
         initialDirectory: String?,
         platformSettings: FileKitDialogSettings,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.saveFile(
-        bytes, baseName, extension, initialDirectory, platformSettings
-    ) else awtFilePicker.saveFile(bytes, baseName, extension, initialDirectory, platformSettings)
+        baseName, extension, initialDirectory, platformSettings
+    ) else awtFilePicker.saveFile(baseName, extension, initialDirectory, platformSettings)
 }
