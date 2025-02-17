@@ -5,13 +5,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.khronos.webgl.Uint8Array
-import org.khronos.webgl.set
-import org.w3c.dom.HTMLAnchorElement
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.asList
-import org.w3c.dom.url.URL
-import org.w3c.files.File
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -71,43 +66,4 @@ public actual suspend fun <Out> FileKit.pickFile(
         // Trigger the file picker
         input.click()
     }
-}
-
-public actual suspend fun FileKit.saveFile(
-    bytes: ByteArray?,
-    baseName: String,
-    extension: String,
-    initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
-): PlatformFile? = withContext(Dispatchers.Default) {
-    if (bytes == null) {
-        throw FileKitFileSaverWithoutBytesException()
-    }
-
-    // Create a byte array
-    val array = Uint8Array(bytes.size)
-    for (i in bytes.indices) {
-        array[i] = bytes[i]
-    }
-
-    // Create a dynamic array
-    val dynamicArray: Array<dynamic> = emptyArray()
-    dynamicArray[0] = array
-
-    // Create a blob
-    val file = File(
-        fileBits = dynamicArray,
-        fileName = "$baseName.$extension",
-    )
-
-    // Create a element
-    val a = document.createElement("a") as HTMLAnchorElement
-    a.href = URL.createObjectURL(file)
-    a.download = "$baseName.$extension"
-
-    // Trigger the download
-    a.click()
-
-    // Return the file
-    PlatformFile(file)
 }

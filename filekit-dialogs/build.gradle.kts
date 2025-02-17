@@ -64,7 +64,9 @@ kotlin {
         val nonWebMain by creating {
             dependsOn(commonMain.get())
         }
-
+        val webMain by creating {
+            dependsOn(commonMain.get())
+        }
         val mobileMain by creating {
             dependsOn(nonWebMain)
         }
@@ -90,8 +92,12 @@ kotlin {
         nativeMain.get().dependsOn(nonWebMain)
         iosMain.get().dependsOn(mobileMain)
 
-        wasmJsMain.dependencies {
-            implementation(libs.kotlinx.browser)
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain {
+            dependsOn(webMain)
+            dependencies {
+                implementation(libs.kotlinx.browser)
+            }
         }
     }
 
