@@ -160,7 +160,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             result.complete(uris)
         }
         connection.addGenericSigHandler(matchRule, handler)
-        return result;
+        return result
     }
 
     private class ResponseHandler(
@@ -205,7 +205,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     private fun createCurrentFolderOption(currentFolder: String): Variant<*> {
         val stringBytes = currentFolder.encodeToByteArray()
         val nullTerminated = ByteArray(stringBytes.size + 1)
-        System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size);
+        System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
         return Variant(nullTerminated)
     }
 }
