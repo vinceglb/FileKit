@@ -4,7 +4,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.write
 
-public expect suspend fun FileKit.pickDirectory(
+public expect suspend fun FileKit.openDirectoryPicker(
     title: String? = null,
     initialDirectory: String? = null,            // TODO change to PlatformFile?
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),

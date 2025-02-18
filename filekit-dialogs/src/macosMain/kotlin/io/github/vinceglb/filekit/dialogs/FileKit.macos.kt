@@ -30,7 +30,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     platformSettings = platformSettings,
 )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
-public actual suspend fun FileKit.pickDirectory(
+public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,

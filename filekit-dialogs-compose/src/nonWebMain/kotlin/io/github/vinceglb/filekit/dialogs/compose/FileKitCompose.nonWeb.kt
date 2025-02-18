@@ -8,7 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.pickDirectory
+import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
 
@@ -34,7 +34,7 @@ public fun rememberDirectoryPickerLauncher(
     val returnedLauncher = remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = FileKit.pickDirectory(
+                val result = FileKit.openDirectoryPicker(
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
                     platformSettings = platformSettings,

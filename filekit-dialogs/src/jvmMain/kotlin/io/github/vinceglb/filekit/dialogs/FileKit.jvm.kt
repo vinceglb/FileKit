@@ -42,7 +42,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode.parseResult(result)
 }
 
-public actual suspend fun FileKit.pickDirectory(
+public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
