@@ -8,7 +8,7 @@ import io.github.vinceglb.filekit.download
     message = "Download the file using FileKit.download() instead. More info here: https://filekit.mintlify.app/migrate-to-v0.10",
     replaceWith = ReplaceWith("FileKit.download(bytes = bytes, fileName = \"\$baseName.\$extension\")"),
 )
-public actual suspend fun FileKit.saveFile(
+public actual suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     baseName: String,
     extension: String,

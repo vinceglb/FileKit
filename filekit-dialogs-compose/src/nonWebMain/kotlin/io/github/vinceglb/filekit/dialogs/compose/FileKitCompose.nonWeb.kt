@@ -9,7 +9,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.pickDirectory
-import io.github.vinceglb.filekit.dialogs.saveFile
+import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
 
 @Composable
@@ -65,7 +65,7 @@ public actual fun rememberFileSaverLauncher(
     val returnedLauncher = remember {
         SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
             coroutineScope.launch {
-                val result = FileKit.saveFile(
+                val result = FileKit.openFileSaver(
                     bytes = bytes,
                     baseName = baseName,
                     extension = extension,

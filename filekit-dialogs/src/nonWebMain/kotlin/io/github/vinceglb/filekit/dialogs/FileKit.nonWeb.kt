@@ -10,7 +10,7 @@ public expect suspend fun FileKit.pickDirectory(
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?
 
-public expect suspend fun FileKit.saveFile(
+public expect suspend fun FileKit.openFileSaver(
     baseName: String = "file",
     extension: String,
     initialDirectory: String? = null,
@@ -21,14 +21,14 @@ public expect suspend fun FileKit.saveFile(
     message = "Use the function without the bytes parameter. If necessary, save the bytes in the returned PlatformFile. On web targets, you can use FileKit.download() to download the bytes. More info here: https://filekit.mintlify.app/migrate-to-v0.10",
     replaceWith = ReplaceWith("saveFile(baseName, extension, initialDirectory, platformSettings)"),
 )
-public actual suspend fun FileKit.saveFile(
+public actual suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     baseName: String,
     extension: String,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings
 ): PlatformFile? {
-    val file = FileKit.saveFile(
+    val file = FileKit.openFileSaver(
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,

@@ -58,7 +58,7 @@ public actual suspend fun FileKit.pickDirectory(
     file?.let { PlatformFile(it) }
 }
 
-public actual suspend fun FileKit.saveFile(
+public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,

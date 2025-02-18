@@ -8,7 +8,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.PickerMode
 import io.github.vinceglb.filekit.dialogs.PickerType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.dialogs.saveFile
+import io.github.vinceglb.filekit.dialogs.openFileSaver
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
@@ -100,7 +100,7 @@ class MainViewModel(
 
     fun saveFile(file: PlatformFile) = executeWithLoading {
         // Save a file
-        val newFile = FileKit.saveFile(
+        val newFile = FileKit.openFileSaver(
             bytes = file.readBytes(),
             baseName = file.nameWithoutExtension ?: "file",
             extension = file.extension ?: "txt",

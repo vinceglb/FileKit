@@ -101,7 +101,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode.parseResult(result)
 }
 
-public actual suspend fun FileKit.saveFile(
+public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
