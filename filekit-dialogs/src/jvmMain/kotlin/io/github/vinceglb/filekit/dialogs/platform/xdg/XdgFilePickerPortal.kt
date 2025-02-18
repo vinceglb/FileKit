@@ -42,13 +42,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         }
     }
 
-    override suspend fun pickFile(
+    override suspend fun openFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): File? {
-        return pickFiles(
+        return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
@@ -58,13 +58,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         )?.firstOrNull()
     }
 
-    override suspend fun pickFiles(
+    override suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): List<File>? {
-        return pickFiles(
+        return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
@@ -74,12 +74,12 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         )
     }
 
-    override suspend fun pickDirectory(
+    override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): File? {
-        return pickFiles(
+        return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
@@ -89,7 +89,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         )?.firstOrNull()
     }
 
-    private suspend fun pickFiles(
+    private suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -117,7 +117,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         }
     }
 
-    override suspend fun saveFile(
+    override suspend fun openFileSaver(
         baseName: String,
         extension: String,
         initialDirectory: String?,

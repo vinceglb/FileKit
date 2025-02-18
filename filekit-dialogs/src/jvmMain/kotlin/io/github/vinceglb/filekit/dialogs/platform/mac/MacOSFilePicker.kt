@@ -8,7 +8,7 @@ import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
-    override suspend fun pickFile(
+    override suspend fun openFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -23,7 +23,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         )
     }
 
-    override suspend fun pickFiles(
+    override suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -38,7 +38,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         )
     }
 
-    override suspend fun pickDirectory(
+    override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
         platformSettings: FileKitDialogSettings,

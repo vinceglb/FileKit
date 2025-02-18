@@ -23,14 +23,14 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 
     // Open native file picker
     val result = when (mode) {
-        is PickerMode.Single -> PlatformFilePicker.current.pickFile(
+        is PickerMode.Single -> PlatformFilePicker.current.openFilePicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,
             platformSettings = platformSettings,
         )?.let { listOf(PlatformFile(it)) }
 
-        is PickerMode.Multiple -> PlatformFilePicker.current.pickFiles(
+        is PickerMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,
@@ -48,7 +48,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
     platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Open native file picker
-    val file = PlatformFilePicker.current.pickDirectory(
+    val file = PlatformFilePicker.current.openDirectoryPicker(
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = platformSettings,
@@ -64,7 +64,7 @@ public actual suspend fun FileKit.openFileSaver(
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
-    val result = PlatformFilePicker.current.saveFile(
+    val result = PlatformFilePicker.current.openFileSaver(
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,

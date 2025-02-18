@@ -13,27 +13,27 @@ import io.github.vinceglb.filekit.utils.PlatformUtil
 import java.io.File
 
 internal interface PlatformFilePicker {
-    suspend fun pickFile(
+    suspend fun openFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): File?
 
-    suspend fun pickFiles(
+    suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): List<File>?
 
-    suspend fun pickDirectory(
+    suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
         platformSettings: FileKitDialogSettings,
     ): File?
 
-    suspend fun saveFile(
+    suspend fun openFileSaver(
         baseName: String,
         extension: String,
         initialDirectory: String?,

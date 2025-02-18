@@ -39,7 +39,7 @@ import java.awt.Window
 import java.io.File
 
 internal class WindowsFilePicker : PlatformFilePicker {
-    override suspend fun pickFile(
+    override suspend fun openFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -65,7 +65,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 
-    override suspend fun pickFiles(
+    override suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -94,7 +94,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 
-    override suspend fun pickDirectory(
+    override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
         platformSettings: FileKitDialogSettings,
@@ -118,7 +118,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 
-    override suspend fun saveFile(
+    override suspend fun openFileSaver(
         baseName: String,
         extension: String,
         initialDirectory: String?,

@@ -12,7 +12,7 @@ import java.io.FilenameFilter
 import kotlin.coroutines.resume
 
 internal class AwtFilePicker : PlatformFilePicker {
-    override suspend fun pickFile(
+    override suspend fun openFilePicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -25,7 +25,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         parentWindow = platformSettings?.parentWindow
     )?.firstOrNull()
 
-    override suspend fun pickFiles(
+    override suspend fun openFilesPicker(
         initialDirectory: String?,
         fileExtensions: List<String>?,
         title: String?,
@@ -38,7 +38,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         parentWindow = platformSettings.parentWindow
     )
 
-    override suspend fun pickDirectory(
+    override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
         platformSettings: FileKitDialogSettings,
