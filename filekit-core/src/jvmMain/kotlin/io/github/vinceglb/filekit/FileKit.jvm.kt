@@ -72,14 +72,14 @@ private fun Path.assertExists() {
 }
 
 public actual suspend fun FileKit.compressImage(
-    imageData: ByteArray,
+    bytes: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
 ): ByteArray? = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to BufferedImage
-    val inputStream = ByteArrayInputStream(imageData)
+    val inputStream = ByteArrayInputStream(bytes)
     val originalImage = ImageIO.read(inputStream) ?: return@withContext null
 
     // Step 2: Calculate the new dimensions while maintaining aspect ratio

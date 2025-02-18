@@ -5,10 +5,10 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
+import androidx.exifinterface.media.ExifInterface
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -55,18 +55,18 @@ public actual suspend fun FileKit.saveImageToGallery(
 }
 
 public actual suspend fun FileKit.compressImage(
-    imageData: ByteArray,
+    bytes: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
 ): ByteArray? = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to Bitmap
-    val originalBitmap = BitmapFactory.decodeByteArray(imageData, 0, imageData.size)
+    val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
         ?: return@withContext null
 
     // Step 2: Correct the orientation using EXIF data
-    val correctedBitmap = correctBitmapOrientation(imageData, originalBitmap)
+    val correctedBitmap = correctBitmapOrientation(bytes, originalBitmap)
 
     // Step 3: Calculate the new dimensions while maintaining aspect ratio
     val (newWidth, newHeight) = calculateNewDimensions(

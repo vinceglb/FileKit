@@ -34,14 +34,14 @@ public actual val FileKit.cacheDir: PlatformFile
         ?: throw IllegalStateException("Could not find cache directory")
 
 public actual suspend fun FileKit.compressImage(
-    imageData: ByteArray,
+    bytes: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
 ): ByteArray? = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to UIImage (iOS) or NSImage (macOS)
-    val nsData = imageData.toNSData()
+    val nsData = bytes.toNSData()
 
     // Step 2: Compress the UIImage
     val compressedData = compress(nsData, quality, maxWidth, maxHeight, compressFormat)
