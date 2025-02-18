@@ -24,7 +24,12 @@
       {
         "group": "FileKit Core",
         "pages": [
-          "core/setup"
+          "core/setup",
+          "core/platform-file",
+          "core/read-file",
+          "core/write-file",
+          "core/file-utils",
+          "core/image-utils"
         ]
       },
       {
@@ -34,6 +39,8 @@
           "dialogs/file-picker",
           "dialogs/gallery-picker",
           "dialogs/directory-picker",
+          "dialogs/file-saver",
+          "dialogs/take-photo",
           "dialogs/platform-settings"
         ]
       },

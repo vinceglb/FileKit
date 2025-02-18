@@ -1,5 +1,6 @@
 ---
-title: 'File picker'
+title: 'File picker dialog'
+sidebarTitle: 'File picker'
 description: 'Open a file picker dialog in a Kotlin Multiplatform project'
 ---
 
@@ -10,9 +11,8 @@ description: 'Open a file picker dialog in a Kotlin Multiplatform project'
 The file picker component provides a the native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
 
 <CodeGroup>
-
 ```kotlin filekit-dialogs
-val file = FileKit.pickFile()
+val file = FileKit.openFilePicker()
 ```
 
 ```kotlin filekit-dialogs-compose
@@ -24,7 +24,6 @@ Button(onClick = { launcher.launch() }) {
     Text("Pick a file")
 }
 ```
-
 </CodeGroup>
 
 ## Selection mode
@@ -34,9 +33,8 @@ Select one or multiple files using the `mode` parameter.
 - `Multiple()` - Allows the user to select multiple files.
 
 <CodeGroup>
-
 ```kotlin filekit-dialogs
-val files = FileKit.pickFile(mode = PickerMode.Multiple())
+val files = FileKit.openFilePicker(mode = PickerMode.Multiple())
 ```
 
 ```kotlin filekit-dialogs-compose
@@ -46,7 +44,6 @@ val launcher = rememberFilePickerLauncher(
     // Handle the files
 }
 ```
-
 </CodeGroup>
 
 ## Filter by type
@@ -59,7 +56,7 @@ Filter the files by their type using the `type` parameter. You can pick differen
 
 <CodeGroup>
 ```kotlin filekit-dialogs
-val file = FileKit.pickFile(type = PickerType.File(listOf("pdf", "docx")))
+val file = FileKit.openFilePicker(type = PickerType.File(listOf("pdf", "docx")))
 ```
 
 ```kotlin filekit-dialogs-compose
@@ -78,9 +75,8 @@ val launcher = rememberFilePickerLauncher(
 You can customize the dialog by setting the title, the initial directory and some settings relative to the platform.
 
 <CodeGroup>
-
 ```kotlin filekit-dialogs
-val file = FileKit.pickFile(
+val file = FileKit.openFilePicker(
     title = "Custom title",
     initialDirectory = "/custom/initial/path",
     platformSettings = FileKitDialogSettings.createDefault()
@@ -96,5 +92,4 @@ val launcher = rememberFilePickerLauncher(
     // Handle the file
 }
 ```
-
 </CodeGroup>

@@ -1,5 +1,6 @@
 ---
-title: 'Gallery picker'
+title: 'Gallery picker dialog'
+sidebarTitle: 'Gallery picker'
 description: 'Open the native photos and videos picker on Android and iOS'
 ---
 
@@ -25,7 +26,7 @@ To open the gallery picker dialog on Android and iOS, simply pass `Image`, `Vide
 
 <CodeGroup>
 ```kotlin filekit-dialogs
-val image = FileKit.pickFile(type = PickerType.Image)
+val image = FileKit.openFilePicker(type = PickerType.Image)
 ```
 
 ```kotlin filekit-dialogs-compose
