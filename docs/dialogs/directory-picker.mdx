@@ -35,16 +35,18 @@ You can customize the dialog by setting the title and the initial directory.
 val directory = FileKit.openDirectoryPicker(
     title = "Directory picker",
     initialDirectory = "/custom/initial/path",
-    platformSettings = platformSettings,
+    dialogSettings = dialogSettings,
 )
 ```
 ```kotlin filekit-dialogs-compose
 val launcher = rememberDirectoryPickerLauncher(
     title = "Directory picker",
     initialDirectory = "/custom/initial/path",
-    platformSettings = platformSettings,
+    dialogSettings = dialogSettings,
 ) { directory ->
     // Handle the directory
 }
 ```
 </CodeGroup>
+
+Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.

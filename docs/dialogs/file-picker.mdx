@@ -8,7 +8,7 @@ description: 'Open a file picker dialog in a Kotlin Multiplatform project'
 
 ## Quick start
 
-The file picker component provides a the native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
+The file picker component provides a native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
 
 <CodeGroup>
 ```kotlin filekit-dialogs
@@ -34,12 +34,12 @@ Select one or multiple files using the `mode` parameter.
 
 <CodeGroup>
 ```kotlin filekit-dialogs
-val files = FileKit.openFilePicker(mode = PickerMode.Multiple())
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
-    mode = FilePickerMode.Multiple()
+    mode = FileKitMode.Multiple()
 ) { files ->
     // Handle the files
 }
@@ -48,7 +48,7 @@ val launcher = rememberFilePickerLauncher(
 
 ## Filter by type
 
-Filter the files by their type using the `type` parameter. You can pick different types of files with `PickerType`:
+Filter the files by their type using the `type` parameter. You can pick different types of files with `FileKitType`:
 - `Image`: Pick an image file.
 - `Video`: Pick a video file.
 - `ImageAndVideo`: Pick an image or a video file.
@@ -56,19 +56,19 @@ Filter the files by their type using the `type` parameter. You can pick differen
 
 <CodeGroup>
 ```kotlin filekit-dialogs
-val file = FileKit.openFilePicker(type = PickerType.File(listOf("pdf", "docx")))
+val file = FileKit.openFilePicker(type = FileKitType.File(listOf("pdf", "docx")))
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
-    type = PickerType.File(extensions = listOf("pdf", "docx"))
+    type = FileKitType.File(extensions = listOf("pdf", "docx"))
 ) { file ->
     // Handle the pdf or docx file
 }
 ```
 </CodeGroup>
 
-<Info>On Android and iOS, using Image, Video or ImageAndVideo PickerType will open a gallery picker. [Read more here.](/dialogs/gallery-picker)</Info>
+<Info>On Android and iOS, using Image, Video or ImageAndVideo FileKitType will open a gallery picker. [Read more here.](/dialogs/gallery-picker)</Info>
 
 ## Customizing the dialog
 
@@ -79,7 +79,7 @@ You can customize the dialog by setting the title, the initial directory and som
 val file = FileKit.openFilePicker(
     title = "Custom title",
     initialDirectory = "/custom/initial/path",
-    platformSettings = FileKitDialogSettings.createDefault()
+    dialogSettings = FileKitDialogSettings.createDefault()
 )
 ```
 
@@ -87,9 +87,11 @@ val file = FileKit.openFilePicker(
 val launcher = rememberFilePickerLauncher(
     title = "Custom title",
     initialDirectory = "/custom/initial/path",
-    platformSettings = FileKitDialogSettings.createDefault()
+    dialogSettings = FileKitDialogSettings.createDefault()
 ) { file ->
     // Handle the file
 }
 ```
 </CodeGroup>
+
+Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
