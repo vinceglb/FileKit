@@ -198,7 +198,7 @@ public actual suspend fun FileKit.openCameraPicker(
     }
 }
 
-private fun getMimeTypes(fileExtensions: List<String>?): Array<String> {
+private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return fileExtensions
         ?.takeIf { it.isNotEmpty() }

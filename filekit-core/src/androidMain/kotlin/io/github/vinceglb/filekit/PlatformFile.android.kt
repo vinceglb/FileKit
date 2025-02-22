@@ -101,6 +101,14 @@ public actual val PlatformFile.parent: PlatformFile?
         )?.parentFile?.let { PlatformFile(it.uri) }
     }
 
+public actual val PlatformFile.absolutePath: String
+    get() = androidFile.let { androidFile ->
+        when (androidFile) {
+            is AndroidFile.UriWrapper -> androidFile.uri.path ?: ""
+            is AndroidFile.FileWrapper -> androidFile.file.absolutePath
+        }
+    }
+
 // IO Operations with kotlinx-io
 
 // Get Source for reading from PlatformFile

@@ -8,6 +8,8 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
 import java.nio.file.Files
+import kotlin.io.path.readBytes
+import kotlin.io.path.Path as KotlinPath
 
 public actual data class PlatformFile(
     val file: File,
@@ -41,6 +43,9 @@ public actual val PlatformFile.size: Long?
 public actual val PlatformFile.parent: PlatformFile?
     get() = file.parentFile?.let { PlatformFile(it) }
 
+public actual val PlatformFile.absolutePath: String
+    get() = file.absolutePath
+
 // IO Operations with kotlinx-io
 
 public actual fun PlatformFile.source(): RawSource? =
@@ -48,3 +53,8 @@ public actual fun PlatformFile.source(): RawSource? =
 
 public actual fun PlatformFile.sink(append: Boolean): RawSink? =
     path?.let { SystemFileSystem.sink(path = it, append = append) }
+
+private fun main() {
+    val path = KotlinPath("test.txt")
+    path.readBytes()
+}

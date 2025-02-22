@@ -74,6 +74,9 @@ public actual val PlatformFile.exists: Boolean
 public actual val PlatformFile.parent: PlatformFile?
     get() = nsUrl.URLByDeletingLastPathComponent()?.let { PlatformFile(it) }
 
+public actual val PlatformFile.absolutePath: String
+    get() = nsUrl.path ?: ""
+
 // IO Operations with kotlinx-io
 
 public actual fun PlatformFile.source(): RawSource? = try {
