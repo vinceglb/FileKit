@@ -4,7 +4,7 @@
   "background": {
     "decoration": "windows"
   },
-  "name": "Starter Kit",
+  "name": "FileKit",
   "colors": {
     "primary": "#0D9373",
     "light": "#07C983",
@@ -39,20 +39,9 @@
           "dialogs/file-picker",
           "dialogs/gallery-picker",
           "dialogs/directory-picker",
+          "dialogs/camera-picker",
           "dialogs/file-saver",
-          "dialogs/take-photo",
           "dialogs/platform-settings"
-        ]
-      },
-      {
-        "group": "Essentials",
-        "pages": [
-          "essentials/markdown",
-          "essentials/code",
-          "essentials/images",
-          "essentials/settings",
-          "essentials/navigation",
-          "essentials/reusable-snippets"
         ]
       }
     ]
