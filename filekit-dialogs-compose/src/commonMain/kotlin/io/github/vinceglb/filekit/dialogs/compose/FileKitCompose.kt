@@ -8,15 +8,15 @@ import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.PickerMode
-import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import kotlinx.coroutines.launch
 
 @Composable
 public fun <Out> rememberFilePickerLauncher(
-    type: PickerType = PickerType.File(),
-    mode: PickerMode<Out>,
+    type: FileKitType = FileKitType.File(),
+    mode: FileKitMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
@@ -56,7 +56,7 @@ public fun <Out> rememberFilePickerLauncher(
 
 @Composable
 public fun rememberFilePickerLauncher(
-    type: PickerType = PickerType.File(),
+    type: FileKitType = FileKitType.File(),
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
@@ -64,7 +64,7 @@ public fun rememberFilePickerLauncher(
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
         type = type,
-        mode = PickerMode.Single,
+        mode = FileKitMode.Single,
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = platformSettings,

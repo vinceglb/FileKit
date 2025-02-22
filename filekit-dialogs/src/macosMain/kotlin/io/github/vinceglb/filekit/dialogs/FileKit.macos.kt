@@ -9,23 +9,23 @@ import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
 public actual suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType,
-    mode: PickerMode<Out>,
+    type: FileKitType,
+    mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
 ): Out? = callPicker(
     mode = when (mode) {
-        is PickerMode.Single -> Mode.Single
-        is PickerMode.Multiple -> Mode.Multiple
+        is FileKitMode.Single -> Mode.Single
+        is FileKitMode.Multiple -> Mode.Multiple
     },
     title = title,
     initialDirectory = initialDirectory,
     fileExtensions = when (type) {
-        PickerType.Image -> imageExtensions
-        PickerType.Video -> videoExtensions
-        PickerType.ImageAndVideo -> imageExtensions + videoExtensions
-        is PickerType.File -> type.extensions
+        FileKitType.Image -> imageExtensions
+        FileKitType.Video -> videoExtensions
+        FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
+        is FileKitType.File -> type.extensions
     },
     platformSettings = platformSettings,
 )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }

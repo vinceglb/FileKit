@@ -21,8 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.PickerMode
-import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
 import io.github.vinceglb.filekit.extension
@@ -45,7 +45,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
     var directory: PlatformFile? by remember { mutableStateOf(null) }
 
     val singleFilePicker = rememberFilePickerLauncher(
-        type = PickerType.Image,
+        type = FileKitType.Image,
         title = "Single file picker",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
@@ -53,8 +53,8 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
     )
 
     val multipleFilesPicker = rememberFilePickerLauncher(
-        type = PickerType.Image,
-        mode = PickerMode.Multiple(maxItems = 4),
+        type = FileKitType.Image,
+        mode = FileKitMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
@@ -62,7 +62,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
     )
 
     val filePicker = rememberFilePickerLauncher(
-        type = PickerType.File(listOf("jpg", "png")),
+        type = FileKitType.File(listOf("jpg", "png")),
         title = "Single file picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
@@ -70,8 +70,8 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
     )
 
     val filesPicker = rememberFilePickerLauncher(
-        type = PickerType.File(listOf("jpg", "png")),
-        mode = PickerMode.Multiple(),
+        type = FileKitType.File(listOf("jpg", "png")),
+        mode = FileKitMode.Multiple(),
         title = "Multiple files picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },

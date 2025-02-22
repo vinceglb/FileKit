@@ -54,16 +54,16 @@ private object FileKitDialog {
 }
 
 public actual suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType,
-    mode: PickerMode<Out>,
+    type: FileKitType,
+    mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
 ): Out? = when (type) {
     // Use PHPickerViewController for images and videos
-    is PickerType.Image,
-    is PickerType.Video,
-    is PickerType.ImageAndVideo -> callPhPicker(
+    is FileKitType.Image,
+    is FileKitType.Video,
+    is FileKitType.ImageAndVideo -> callPhPicker(
         mode = mode,
         type = type
     )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
@@ -71,8 +71,8 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     // Use UIDocumentPickerViewController for other types
     else -> callPicker(
         mode = when (mode) {
-            is PickerMode.Single -> Mode.Single
-            is PickerMode.Multiple -> Mode.Multiple
+            is FileKitMode.Single -> Mode.Single
+            is FileKitMode.Multiple -> Mode.Multiple
         },
         contentTypes = type.contentTypes,
         initialDirectory = initialDirectory
@@ -143,7 +143,9 @@ public actual suspend fun FileKit.openFileSaver(
     }
 }
 
-public actual suspend fun FileKit.takePhoto(): PlatformFile? = withContext(Dispatchers.Main) {
+public actual suspend fun FileKit.openCameraPicker(
+    type: FileKitCameraType
+): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         cameraControllerDelegate = CameraControllerDelegate(
             onImagePicked = { image ->
@@ -220,8 +222,8 @@ private suspend fun callPicker(
 
 @OptIn(ExperimentalForeignApi::class)
 private suspend fun <Out> callPhPicker(
-    mode: PickerMode<Out>,
-    type: PickerType,
+    mode: FileKitMode<Out>,
+    type: FileKitType,
 ): List<NSURL>? = withContext(Dispatchers.Main) {
     val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
         // Create a picker delegate
@@ -237,15 +239,15 @@ private suspend fun <Out> callPhPicker(
 
         // Number of medias to select
         configuration.selectionLimit = when (mode) {
-            is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
-            PickerMode.Single -> 1
+            is FileKitMode.Multiple -> mode.maxItems?.toLong() ?: 0
+            FileKitMode.Single -> 1
         }
 
         // Filter configuration
         configuration.filter = when (type) {
-            is PickerType.Image -> PHPickerFilter.imagesFilter
-            is PickerType.Video -> PHPickerFilter.videosFilter
-            is PickerType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
+            is FileKitType.Image -> PHPickerFilter.imagesFilter
+            is FileKitType.Video -> PHPickerFilter.videosFilter
+            is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
                 listOf(
                     PHPickerFilter.imagesFilter,
                     PHPickerFilter.videosFilter,
@@ -275,9 +277,9 @@ private suspend fun <Out> callPhPicker(
             suspendCoroutine<NSURL?> { continuation ->
                 result.itemProvider.loadFileRepresentationForTypeIdentifier(
                     typeIdentifier = when (type) {
-                        is PickerType.Image -> UTTypeImage.identifier
-                        is PickerType.Video -> UTTypeMovie.identifier
-                        is PickerType.ImageAndVideo -> UTTypeContent.identifier
+                        is FileKitType.Image -> UTTypeImage.identifier
+                        is FileKitType.Video -> UTTypeMovie.identifier
+                        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
                 ) { url, _ ->
@@ -317,12 +319,12 @@ private val UIApplication.firstKeyWindow: UIWindow?
         .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
         ?.keyWindow
 
-private val PickerType.contentTypes: List<UTType>
+private val FileKitType.contentTypes: List<UTType>
     get() = when (this) {
-        is PickerType.Image -> listOf(UTTypeImage)
-        is PickerType.Video -> listOf(UTTypeMovie)
-        is PickerType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
-        is PickerType.File -> extensions
+        is FileKitType.Image -> listOf(UTTypeImage)
+        is FileKitType.Video -> listOf(UTTypeMovie)
+        is FileKitType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
+        is FileKitType.File -> extensions
             ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
             .ifNullOrEmpty { listOf(UTTypeContent) }
     }

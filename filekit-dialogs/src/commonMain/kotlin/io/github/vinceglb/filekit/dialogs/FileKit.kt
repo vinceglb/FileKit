@@ -4,22 +4,22 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 
 public expect suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType = PickerType.File(),
-    mode: PickerMode<Out>,
+    type: FileKitType = FileKitType.File(),
+    mode: FileKitMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): Out?
 
 public suspend fun FileKit.openFilePicker(
-    type: PickerType = PickerType.File(),
+    type: FileKitType = FileKitType.File(),
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile? {
     return openFilePicker(
         type = type,
-        mode = PickerMode.Single,
+        mode = FileKitMode.Single,
         title = title,
         initialDirectory = initialDirectory,
         platformSettings = platformSettings,

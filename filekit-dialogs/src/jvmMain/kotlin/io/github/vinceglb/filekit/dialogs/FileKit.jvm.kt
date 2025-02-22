@@ -7,30 +7,30 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 public actual suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType,
-    mode: PickerMode<Out>,
+    type: FileKitType,
+    mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.IO) {
     // Filter by extension
     val extensions = when (type) {
-        PickerType.Image -> imageExtensions
-        PickerType.Video -> videoExtensions
-        PickerType.ImageAndVideo -> imageExtensions + videoExtensions
-        is PickerType.File -> type.extensions
+        FileKitType.Image -> imageExtensions
+        FileKitType.Video -> videoExtensions
+        FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
+        is FileKitType.File -> type.extensions
     }
 
     // Open native file picker
     val result = when (mode) {
-        is PickerMode.Single -> PlatformFilePicker.current.openFilePicker(
+        is FileKitMode.Single -> PlatformFilePicker.current.openFilePicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,
             platformSettings = platformSettings,
         )?.let { listOf(PlatformFile(it)) }
 
-        is PickerMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
+        is FileKitMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,

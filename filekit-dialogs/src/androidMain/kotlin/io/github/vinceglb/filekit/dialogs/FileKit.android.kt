@@ -23,8 +23,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 public actual suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType,
-    mode: PickerMode<Out>,
+    type: FileKitType,
+    mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
@@ -37,18 +37,18 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 
     val result: List<PlatformFile>? = suspendCoroutine { continuation ->
         when (type) {
-            PickerType.Image,
-            PickerType.Video,
-            PickerType.ImageAndVideo -> {
+            FileKitType.Image,
+            FileKitType.Video,
+            FileKitType.ImageAndVideo -> {
                 val request = when (type) {
-                    PickerType.Image -> PickVisualMediaRequest(ImageOnly)
-                    PickerType.Video -> PickVisualMediaRequest(VideoOnly)
-                    PickerType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
+                    FileKitType.Image -> PickVisualMediaRequest(ImageOnly)
+                    FileKitType.Video -> PickVisualMediaRequest(VideoOnly)
+                    FileKitType.ImageAndVideo -> PickVisualMediaRequest(ImageAndVideo)
                     else -> throw IllegalArgumentException("Unsupported type: $type")
                 }
 
                 val launcher = when {
-                    mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
+                    mode is FileKitMode.Single || mode is FileKitMode.Multiple && mode.maxItems == 1 -> {
                         val contract = PickVisualMedia()
                         registry.register(key, contract) { uri ->
                             val result = uri?.let { listOf(PlatformFile(it)) }
@@ -56,7 +56,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
                         }
                     }
 
-                    mode is PickerMode.Multiple -> {
+                    mode is FileKitMode.Multiple -> {
                         val contract = when {
                             mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
                             else -> PickMultipleVisualMedia()
@@ -72,9 +72,9 @@ public actual suspend fun <Out> FileKit.openFilePicker(
                 launcher.launch(request)
             }
 
-            is PickerType.File -> {
+            is FileKitType.File -> {
                 when (mode) {
-                    is PickerMode.Single -> {
+                    is FileKitMode.Single -> {
                         val contract = ActivityResultContracts.OpenDocument()
                         val launcher = registry.register(key, contract) { uri ->
                             val result = uri?.let { listOf(PlatformFile(it)) }
@@ -83,7 +83,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
                         launcher.launch(getMimeTypes(type.extensions))
                     }
 
-                    is PickerMode.Multiple -> {
+                    is FileKitMode.Multiple -> {
                         // TODO there might be a way to limit the amount of documents, but
                         //  I haven't found it yet.
                         val contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -171,7 +171,9 @@ public actual suspend fun FileKit.openDirectoryPicker(
     }
 }
 
-public actual suspend fun FileKit.takePhoto(): PlatformFile? = withContext(Dispatchers.IO) {
+public actual suspend fun FileKit.openCameraPicker(
+    type: FileKitCameraType
+): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
 

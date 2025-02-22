@@ -4,14 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.PickerMode
-import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
 import java.awt.Window
 
 @Composable
 public fun <Out> WindowScope.rememberFilePickerLauncher(
-    type: PickerType = PickerType.File(),
-    mode: PickerMode<Out>,
+    type: FileKitType = FileKitType.File(),
+    mode: FileKitMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings? = null,
@@ -29,7 +29,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
 
 @Composable
 public fun WindowScope.rememberFilePickerLauncher(
-    type: PickerType = PickerType.File(),
+    type: FileKitType = FileKitType.File(),
     title: String? = null,
     initialDirectory: String? = null,
     platformSettings: FileKitDialogSettings? = null,

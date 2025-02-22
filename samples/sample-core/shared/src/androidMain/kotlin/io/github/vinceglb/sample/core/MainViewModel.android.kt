@@ -2,11 +2,11 @@ package io.github.vinceglb.sample.core
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.takePhoto
+import io.github.vinceglb.filekit.dialogs.openCameraPicker
 
 actual fun downloadDirectoryPath(): String? =
     null
 
 actual suspend fun takePhotoIfSupported(): PlatformFile? {
-    return FileKit.takePhoto()
+    return FileKit.openCameraPicker()
 }

@@ -12,8 +12,8 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 public actual suspend fun <Out> FileKit.openFilePicker(
-    type: PickerType,
-    mode: PickerMode<Out>,
+    type: FileKitType,
+    mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
     platformSettings: FileKitDialogSettings,
@@ -28,16 +28,16 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 
             // Set the allowed file types
             when (type) {
-                is PickerType.Image -> accept = "image/*"
-                is PickerType.Video -> accept = "video/*"
-                is PickerType.ImageAndVideo -> accept = "image/*,video/*"
-                is PickerType.File -> type.extensions?.let {
+                is FileKitType.Image -> accept = "image/*"
+                is FileKitType.Video -> accept = "video/*"
+                is FileKitType.ImageAndVideo -> accept = "image/*,video/*"
+                is FileKitType.File -> type.extensions?.let {
                     accept = type.extensions.joinToString(",") { ".$it" }
                 }
             }
 
             // Set the multiple attribute
-            multiple = mode is PickerMode.Multiple
+            multiple = mode is FileKitMode.Multiple
 
             // max is not supported for file inputs
         }

@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.PickerMode
-import io.github.vinceglb.filekit.dialogs.PickerType
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import io.github.vinceglb.filekit.extension
@@ -30,7 +30,7 @@ class MainViewModel(
     fun pickImage() = executeWithLoading {
         // Pick a file
         val file = FileKit.openFilePicker(
-            type = PickerType.Image,
+            type = FileKitType.Image,
             title = "Custom title here",
             initialDirectory = downloadDirectoryPath(),
             platformSettings = platformSettings,
@@ -46,8 +46,8 @@ class MainViewModel(
     fun pickImages() = executeWithLoading {
         // Pick files
         val files = FileKit.openFilePicker(
-            type = PickerType.Image,
-            mode = PickerMode.Multiple(),
+            type = FileKitType.Image,
+            mode = FileKitMode.Multiple(),
             platformSettings = platformSettings,
         )
 
@@ -62,7 +62,7 @@ class MainViewModel(
     fun pickFile() = executeWithLoading {
         // Pick a file
         val file = FileKit.openFilePicker(
-            type = PickerType.File(extensions = listOf("png", "jpg")),
+            type = FileKitType.File(extensions = listOf("png", "jpg")),
             platformSettings = platformSettings,
         )
 
@@ -76,8 +76,8 @@ class MainViewModel(
     fun pickFiles() = executeWithLoading {
         // Pick files
         val files = FileKit.openFilePicker(
-            type = PickerType.File(extensions = listOf("png", "jpg")),
-            mode = PickerMode.Multiple(),
+            type = FileKitType.File(extensions = listOf("png", "jpg")),
+            mode = FileKitMode.Multiple(),
             platformSettings = platformSettings,
         )
 
