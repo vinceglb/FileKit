@@ -1,0 +1,109 @@
+---
+title: 'Dialog settings'
+description: 'Customize the dialogs with platform-specific settings'
+---
+FileKit allows you to customize dialog behavior with platform-specific settings. Each platform has its own settings class that can be configured according to your needs.
+
+## Platform-Specific Settings
+
+### JVM Settings
+
+On JVM platforms (Windows, macOS, Linux), you can customize:
+
+- `parentWindow`: Set the parent window for the dialog (useful for modal behavior)
+- `macOS`: Configure macOS-specific settings
+
+```kotlin
+// Basic settings with parent window
+val settings = FileKitDialogSettings(
+    parentWindow = window
+)
+
+// With macOS-specific settings
+val settings = FileKitDialogSettings(
+    parentWindow = window,
+    macOS = FileKitMacOSSettings(
+        resolvesAliases = false,
+        canCreateDirectories = true
+    )
+)
+```
+
+For desktop applications, it's recommended to pass the window reference:
+
+```kotlin
+Window(onCloseRequest = ::exitApplication) {
+    val dialogSettings = FileKitDialogSettings(this.window)
+    App(dialogSettings)
+}
+```
+
+### macOS Settings
+
+On macOS, you can configure:
+
+- `canCreateDirectories`: Allow or prevent directory creation in dialogs (default: true)
+
+```kotlin
+val settings = FileKitDialogSettings(
+    canCreateDirectories = true
+)
+```
+
+### Android, Web, and WASM
+
+These platforms currently don't have any specific settings to configure. Use the default settings:
+
+```kotlin
+val settings = FileKitDialogSettings.createDefault()
+```
+
+## Using DialogSettings in KMP
+
+When working with Kotlin Multiplatform projects, you might need to handle platform-specific settings differently. Here's how to use expect/actual to manage dialog settings:
+
+For platforms that need specific configuration, use **expect/actual**:
+
+```kotlin
+// commonMain
+expect fun createDialogSettings(): FileKitDialogSettings
+
+// desktopMain
+actual fun createDialogSettings(): FileKitDialogSettings {
+    return FileKitDialogSettings(
+        parentWindow = window,
+        macOS = FileKitMacOSSettings(
+            canCreateDirectories = true
+        )
+    )
+}
+
+// androidMain, iosMain, jsMain
+actual fun createDialogSettings(): FileKitDialogSettings {
+    return FileKitDialogSettings.createDefault()
+}
+```
+
+You can then use the platform-specific settings in your shared code:
+
+```kotlin
+class SharedViewModel {
+    private val dialogSettings = createDialogSettings()
+    
+    suspend fun pickFile() {
+        FileKit.openFilePicker(
+            dialogSettings = dialogSettings
+        )
+    }
+}
+```
+
+This approach allows you to:
+- Keep your common code platform-agnostic
+- Provide platform-specific configurations where needed
+- Maintain type safety across platforms
+
+<Note>
+Platform-specific settings are continuously evolving. You can ask for a feature or report a bug on the [GitHub repository](https://github.com/vinceglb/FileKit/issues).
+</Note>
+
