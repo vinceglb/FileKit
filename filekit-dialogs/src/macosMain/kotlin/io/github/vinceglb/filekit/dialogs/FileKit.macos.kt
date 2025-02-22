@@ -13,7 +13,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): Out? = callPicker(
     mode = when (mode) {
         is FileKitMode.Single -> Mode.Single
@@ -27,26 +27,26 @@ public actual suspend fun <Out> FileKit.openFilePicker(
         FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
         is FileKitType.File -> type.extensions
     },
-    platformSettings = platformSettings,
+    dialogSettings = dialogSettings,
 )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     title = title,
     initialDirectory = initialDirectory,
     fileExtensions = null,
-    platformSettings = platformSettings,
+    dialogSettings = dialogSettings,
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
     // Create an NSSavePanel
     val nsSavePanel = NSSavePanel()
@@ -59,7 +59,7 @@ public actual suspend fun FileKit.openFileSaver(
     nsSavePanel.allowedFileTypes = listOf(extension)
 
     // Accept the creation of directories
-    nsSavePanel.canCreateDirectories = platformSettings.canCreateDirectories
+    nsSavePanel.canCreateDirectories = dialogSettings.canCreateDirectories
 
     // Run the NSSavePanel
     val result = nsSavePanel.runModal()
@@ -85,8 +85,8 @@ private fun callPicker(
     mode: Mode,
     title: String?,
     initialDirectory: String?,
-    fileExtensions: List<String>?,
-    platformSettings: FileKitDialogSettings,
+    fileExtensions: Set<String>?,
+    dialogSettings: FileKitDialogSettings,
 ): List<NSURL>? {
     // Create an NSOpenPanel
     val nsOpenPanel = NSOpenPanel()
@@ -97,7 +97,7 @@ private fun callPicker(
         title = title,
         extensions = fileExtensions,
         initialDirectory = initialDirectory,
-        canCreateDirectories = platformSettings.canCreateDirectories
+        canCreateDirectories = dialogSettings.canCreateDirectories
     )
 
     // Run the NSOpenPanel
@@ -115,7 +115,7 @@ private fun callPicker(
 private fun NSOpenPanel.configure(
     mode: Mode,
     title: String?,
-    extensions: List<String>?,
+    extensions: Set<String>?,
     initialDirectory: String?,
     canCreateDirectories: Boolean,
 ): NSOpenPanel {
@@ -126,7 +126,7 @@ private fun NSOpenPanel.configure(
     initialDirectory?.let { directoryURL = NSURL.fileURLWithPath(it) }
 
     // Set the allowed file types
-    extensions?.let { allowedFileTypes = extensions }
+    extensions?.let { allowedFileTypes = extensions.toList() }
 
     // Setup the picker mode and files extensions
     when (mode) {

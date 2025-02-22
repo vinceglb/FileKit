@@ -4,7 +4,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 fun main() = application {
     Window(onCloseRequest = ::exitApplication, title = "SampleCompose") {
-        val platformSettings = FileKitDialogSettings(this.window)
-        App(platformSettings)
+        val dialogSettings = FileKitDialogSettings(this.window)
+        App(dialogSettings)
     }
 }

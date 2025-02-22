@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val platformSettings: FileKitDialogSettings
+    private val dialogSettings: FileKitDialogSettings
 ) : ViewModel() {
     // Used for SwiftUI code
     @Suppress("unused")
@@ -33,7 +33,7 @@ class MainViewModel(
             type = FileKitType.Image,
             title = "Custom title here",
             initialDirectory = downloadDirectoryPath(),
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )
 
         // Add file to the state
@@ -48,7 +48,7 @@ class MainViewModel(
         val files = FileKit.openFilePicker(
             type = FileKitType.Image,
             mode = FileKitMode.Multiple(),
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )
 
         // Add files to the state
@@ -63,7 +63,7 @@ class MainViewModel(
         // Pick a file
         val file = FileKit.openFilePicker(
             type = FileKitType.File(extensions = listOf("png", "jpg")),
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )
 
         // Add file to the state
@@ -78,7 +78,7 @@ class MainViewModel(
         val files = FileKit.openFilePicker(
             type = FileKitType.File(extensions = listOf("png", "jpg")),
             mode = FileKitMode.Multiple(),
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )
 
         // Add files to the state
@@ -90,7 +90,7 @@ class MainViewModel(
 
     fun pickDirectory() = executeWithLoading {
         // Pick a directory
-        val directory = pickDirectoryIfSupported(platformSettings)
+        val directory = pickDirectoryIfSupported(dialogSettings)
 
         // Update the state
         if (directory != null) {
@@ -104,7 +104,7 @@ class MainViewModel(
             bytes = file.readBytes(),
             baseName = file.nameWithoutExtension ?: "file",
             extension = file.extension ?: "txt",
-            platformSettings = platformSettings
+            dialogSettings = dialogSettings
         )
 
         // Add file to the state
@@ -151,7 +151,7 @@ data class MainUiState(
 expect fun downloadDirectoryPath(): String?
 
 expect suspend fun pickDirectoryIfSupported(
-    platformSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings
 ): PlatformFile?
 
 expect suspend fun takePhotoIfSupported(): PlatformFile?

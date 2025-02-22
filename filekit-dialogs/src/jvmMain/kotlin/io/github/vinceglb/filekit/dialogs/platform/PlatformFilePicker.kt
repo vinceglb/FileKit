@@ -15,34 +15,34 @@ import java.io.File
 internal interface PlatformFilePicker {
     suspend fun openFilePicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File?
 
     suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): List<File>?
 
     suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File?
 
     suspend fun openFileSaver(
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? = AwtFileSaver.saveFile(
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
     )
 
     companion object {

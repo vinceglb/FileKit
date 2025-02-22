@@ -4,7 +4,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 actual suspend fun pickDirectoryIfSupported(
-    platformSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings
 ): PlatformFile? = null
 
 actual fun downloadDirectoryPath(): String? = null

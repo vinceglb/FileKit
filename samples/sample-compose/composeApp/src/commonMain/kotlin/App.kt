@@ -33,14 +33,14 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-fun App(platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
+fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     MaterialTheme {
-        SampleApp(platformSettings)
+        SampleApp(dialogSettings)
     }
 }
 
 @Composable
-private fun SampleApp(platformSettings: FileKitDialogSettings) {
+private fun SampleApp(dialogSettings: FileKitDialogSettings) {
     var files: Set<PlatformFile> by remember { mutableStateOf(emptySet()) }
     var directory: PlatformFile? by remember { mutableStateOf(null) }
 
@@ -49,7 +49,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
         title = "Single file picker",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
-        platformSettings = platformSettings
+        dialogSettings = dialogSettings
     )
 
     val multipleFilesPicker = rememberFilePickerLauncher(
@@ -58,7 +58,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
         title = "Multiple files picker",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
-        platformSettings = platformSettings
+        dialogSettings = dialogSettings
     )
 
     val filePicker = rememberFilePickerLauncher(
@@ -66,16 +66,16 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
         title = "Single file picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
-        platformSettings = platformSettings
+        dialogSettings = dialogSettings
     )
 
     val filesPicker = rememberFilePickerLauncher(
-        type = FileKitType.File(listOf("jpg", "png")),
+        type = FileKitType.File("jpg", "png"),
         mode = FileKitMode.Multiple(),
         title = "Multiple files picker, only jpg / png",
         initialDirectory = directory?.safePath,
         onResult = { file -> file?.let { files += it } },
-        platformSettings = platformSettings
+        dialogSettings = dialogSettings
     )
 
     val saver = rememberFileSaverLauncher { file ->
@@ -120,7 +120,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
             )
 
             PickDirectory(
-                platformSettings = platformSettings,
+                dialogSettings = dialogSettings,
                 directory = directory,
                 onDirectoryPicked = { directory = it }
             )
@@ -142,7 +142,7 @@ private fun SampleApp(platformSettings: FileKitDialogSettings) {
 
 @Composable
 expect fun PickDirectory(
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit,
 )

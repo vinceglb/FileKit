@@ -16,7 +16,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.Default) {
     suspendCoroutine { continuation ->
         // Create input element

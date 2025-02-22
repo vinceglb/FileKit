@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
     initialDirectory: String? = null,               // TODO change to PlatformFile?
-    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit
@@ -37,7 +37,7 @@ public fun rememberDirectoryPickerLauncher(
                 val result = FileKit.openDirectoryPicker(
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
-                    platformSettings = platformSettings,
+                    dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
             }
@@ -49,7 +49,7 @@ public fun rememberDirectoryPickerLauncher(
 
 @Composable
 public actual fun rememberFileSaverLauncher(
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher {
     // Init FileKit
@@ -70,7 +70,7 @@ public actual fun rememberFileSaverLauncher(
                     baseName = baseName,
                     extension = extension,
                     initialDirectory = initialDirectory,
-                    platformSettings = platformSettings,
+                    dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
             }

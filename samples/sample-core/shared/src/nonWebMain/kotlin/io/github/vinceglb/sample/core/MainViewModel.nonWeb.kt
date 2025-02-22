@@ -8,8 +8,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import io.github.vinceglb.filekit.saveImageToGallery
 
-actual suspend fun pickDirectoryIfSupported(platformSettings: FileKitDialogSettings): PlatformFile? {
-    return FileKit.openDirectoryPicker(platformSettings = platformSettings)
+actual suspend fun pickDirectoryIfSupported(dialogSettings: FileKitDialogSettings): PlatformFile? {
+    return FileKit.openDirectoryPicker(dialogSettings = dialogSettings)
 }
 
 actual suspend fun compressImage(bytes: ByteArray) {

@@ -19,7 +19,7 @@ public fun <Out> rememberFilePickerLauncher(
     mode: FileKitMode<Out>,
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit
@@ -44,7 +44,7 @@ public fun <Out> rememberFilePickerLauncher(
                     mode = currentMode,
                     title = currentTitle,
                     initialDirectory = currentInitialDirectory,
-                    platformSettings = platformSettings,
+                    dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
             }
@@ -59,7 +59,7 @@ public fun rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     title: String? = null,
     initialDirectory: String? = null,
-    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
@@ -67,7 +67,7 @@ public fun rememberFilePickerLauncher(
         mode = FileKitMode.Single,
         title = title,
         initialDirectory = initialDirectory,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
         onResult = onResult,
     )
 }
@@ -75,7 +75,7 @@ public fun rememberFilePickerLauncher(
 @Deprecated(message = "Opening file saver dialog is not supported on web targets. Please use expect/actual to provide web and non-web implementations.")
 @Composable
 public expect fun rememberFileSaverLauncher(
-    platformSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher
 

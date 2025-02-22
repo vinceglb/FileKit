@@ -58,7 +58,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): Out? = when (type) {
     // Use PHPickerViewController for images and videos
     is FileKitType.Image,
@@ -82,7 +82,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     contentTypes = listOf(UTTypeFolder),
@@ -93,7 +93,7 @@ public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         // Create a picker delegate

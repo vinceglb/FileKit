@@ -8,7 +8,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 fun main() = application {
 	FileKit.init(appId = "FileKitSampleCore")
 	Window(onCloseRequest = ::exitApplication, title = "Picker Core Sample") {
-		val platformSettings = FileKitDialogSettings(this.window)
-		App(platformSettings)
+		val dialogSettings = FileKitDialogSettings(this.window)
+		App(dialogSettings)
 	}
 }

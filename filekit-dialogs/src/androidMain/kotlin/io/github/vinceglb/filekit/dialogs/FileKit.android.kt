@@ -27,7 +27,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -105,7 +105,7 @@ public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     suspendCoroutine { continuation ->
         // Throw exception if registry is not initialized
@@ -152,7 +152,7 @@ public actual suspend fun FileKit.openFileSaver(
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry

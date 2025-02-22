@@ -10,52 +10,52 @@ import java.io.File
 internal class MacOSFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.SingleFile,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSSettings = platformSettings.macOS,
+            macOSSettings = dialogSettings.macOS,
         )
     }
 
     override suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): List<File>? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.MultipleFiles,
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            macOSSettings = platformSettings.macOS,
+            macOSSettings = dialogSettings.macOS,
         )
     }
 
     override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.Directories,
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
-            macOSSettings = platformSettings.macOS,
+            macOSSettings = dialogSettings.macOS,
         )
     }
 
     private fun <T> callNativeMacOSPicker(
         mode: MacOSFilePickerMode<T>,
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
         macOSSettings: FileKitMacOSSettings,
     ): T? {

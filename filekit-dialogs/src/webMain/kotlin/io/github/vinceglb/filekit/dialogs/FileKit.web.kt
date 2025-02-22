@@ -13,7 +13,7 @@ public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings
 ): PlatformFile? {
     if (bytes == null) {
         throw IllegalArgumentException("bytes must not be null")

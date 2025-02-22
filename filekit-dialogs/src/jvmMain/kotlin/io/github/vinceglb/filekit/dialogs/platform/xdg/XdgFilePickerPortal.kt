@@ -44,15 +44,15 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     override suspend fun openFilePicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? {
         return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            parentWindow = platformSettings.parentWindow,
+            parentWindow = dialogSettings.parentWindow,
             multiple = false,
             directory = false
         )?.firstOrNull()
@@ -60,15 +60,15 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     override suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): List<File>? {
         return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = fileExtensions,
             title = title,
-            parentWindow = platformSettings.parentWindow,
+            parentWindow = dialogSettings.parentWindow,
             multiple = true,
             directory = false
         )
@@ -77,13 +77,13 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? {
         return openFilesPicker(
             initialDirectory = initialDirectory,
             fileExtensions = null,
             title = title,
-            parentWindow = platformSettings.parentWindow,
+            parentWindow = dialogSettings.parentWindow,
             multiple = false,
             directory = true
         )?.firstOrNull()
@@ -91,7 +91,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     private suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
         parentWindow: Window?,
         multiple: Boolean,
@@ -121,7 +121,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? {
         DBusConnectionBuilder.forSessionBus().build().use { connection ->
             val handleToken = UUID.randomUUID().toString().replace("-", "")
@@ -132,7 +132,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).SaveFile(
-                parentWindow = getWindowIdentifier(platformSettings.parentWindow) ?: "",
+                parentWindow = getWindowIdentifier(dialogSettings.parentWindow) ?: "",
                 title = "",
                 options = options
             )
@@ -197,7 +197,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         FileChooserDbusInterface::class.java
     )
 
-    private fun createFilterOption(extensions: List<String>) = Variant(
+    private fun createFilterOption(extensions: Set<String>) = Variant(
         extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) },
         "a(sa(us))"
     )

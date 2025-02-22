@@ -11,7 +11,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     mode: FileKitMode<Out>,
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.IO) {
     // Filter by extension
     val extensions = when (type) {
@@ -27,14 +27,14 @@ public actual suspend fun <Out> FileKit.openFilePicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )?.let { listOf(PlatformFile(it)) }
 
         is FileKitMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
             title = title,
             initialDirectory = initialDirectory,
             fileExtensions = extensions,
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )?.map { PlatformFile(it) }
     }
 
@@ -45,13 +45,13 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Open native file picker
     val file = PlatformFilePicker.current.openDirectoryPicker(
         title = title,
         initialDirectory = initialDirectory,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
     )
 
     // Return result
@@ -62,13 +62,13 @@ public actual suspend fun FileKit.openFileSaver(
     baseName: String,
     extension: String,
     initialDirectory: String?,
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     val result = PlatformFilePicker.current.openFileSaver(
         baseName = baseName,
         extension = extension,
         initialDirectory = initialDirectory,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
     )
     result?.let { PlatformFile(result) }
 }

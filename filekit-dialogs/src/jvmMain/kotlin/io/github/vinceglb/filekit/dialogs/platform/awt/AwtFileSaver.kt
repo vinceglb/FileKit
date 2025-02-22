@@ -13,7 +13,7 @@ internal object AwtFileSaver {
         baseName: String,
         extension: String,
         initialDirectory: String?,
-        platformSettings: FileKitDialogSettings?,
+        dialogSettings: FileKitDialogSettings?,
     ): File? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
             if (value) {
@@ -27,15 +27,15 @@ internal object AwtFileSaver {
         }
 
         // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (platformSettings?.parentWindow) {
-            is Dialog -> object : FileDialog(platformSettings.parentWindow, "Save dialog", SAVE) {
+        val dialog = when (dialogSettings?.parentWindow) {
+            is Dialog -> object : FileDialog(dialogSettings.parentWindow, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)
                 }
             }
 
-            else -> object : FileDialog(platformSettings?.parentWindow as? Frame, "Save dialog", SAVE) {
+            else -> object : FileDialog(dialogSettings?.parentWindow as? Frame, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)

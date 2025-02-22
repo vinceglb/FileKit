@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 @Deprecated(message = "Opening file saver dialog is not supported on web targets. Please use expect/actual to provide web and non-web implementations.")
 @Composable
 public actual fun rememberFileSaverLauncher(
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit
 ): SaverResultLauncher {
     // Coroutine

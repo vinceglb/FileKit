@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.path
 
 @Composable
 actual fun PickDirectory(
-    platformSettings: FileKitDialogSettings,
+    dialogSettings: FileKitDialogSettings,
     directory: PlatformFile?,
     onDirectoryPicked: (PlatformFile?) -> Unit
 ) {
@@ -19,7 +19,7 @@ actual fun PickDirectory(
         title = "Directory picker",
         initialDirectory = directory?.path.toString(),
         onResult = onDirectoryPicked,
-        platformSettings = platformSettings
+        dialogSettings = dialogSettings
     )
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {

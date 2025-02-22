@@ -21,36 +21,36 @@ internal class SwingFilePicker : PlatformFilePicker {
 
     override suspend fun openFilePicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? = callSwingFilePicker(
         title = title,
         mode = JFileChooser.FILES_ONLY,
         isMultiSelectionEnabled = false,
         initialDirectory = initialDirectory,
         fileExtensions = fileExtensions,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
     )?.firstOrNull()
 
     override suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): List<File>? = callSwingFilePicker(
         title = title,
         mode = JFileChooser.FILES_ONLY,
         isMultiSelectionEnabled = true,
         initialDirectory = initialDirectory,
         fileExtensions = fileExtensions,
-        platformSettings = platformSettings,
+        dialogSettings = dialogSettings,
     )
 
     override suspend fun openDirectoryPicker(
         initialDirectory: String?,
         title: String?,
-        platformSettings: FileKitDialogSettings,
+        dialogSettings: FileKitDialogSettings,
     ): File? =
         callSwingFilePicker(
             title = title,
@@ -58,7 +58,7 @@ internal class SwingFilePicker : PlatformFilePicker {
             isMultiSelectionEnabled = false,
             initialDirectory = initialDirectory,
             fileExtensions = null,
-            platformSettings = platformSettings,
+            dialogSettings = dialogSettings,
         )?.firstOrNull()
 
     private suspend fun callSwingFilePicker(
@@ -66,8 +66,8 @@ internal class SwingFilePicker : PlatformFilePicker {
         mode: Int,
         isMultiSelectionEnabled: Boolean,
         initialDirectory: String?,
-        fileExtensions: List<String>?,
-        platformSettings: FileKitDialogSettings,
+        fileExtensions: Set<String>?,
+        dialogSettings: FileKitDialogSettings,
     ): List<File>? = suspendCancellableCoroutine { continuation ->
         val jFileChooser = JFileChooser(initialDirectory)
         jFileChooser.fileSelectionMode = mode
@@ -82,7 +82,7 @@ internal class SwingFilePicker : PlatformFilePicker {
             jFileChooser.dialogTitle = title
         }
 
-        val returnValue = jFileChooser.showOpenDialog(platformSettings.parentWindow)
+        val returnValue = jFileChooser.showOpenDialog(dialogSettings.parentWindow)
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             continuation.resume(jFileChooser.selectedFiles.toList())
         }
