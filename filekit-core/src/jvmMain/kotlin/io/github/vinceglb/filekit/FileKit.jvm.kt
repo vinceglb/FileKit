@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import androidx.annotation.IntRange
+import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.utils.Platform
 import io.github.vinceglb.filekit.utils.PlatformUtil
 import io.github.vinceglb.filekit.utils.calculateNewDimensions

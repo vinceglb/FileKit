@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.documentfile.provider.DocumentFile
+import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
@@ -40,10 +41,10 @@ public fun PlatformFile(file: File): PlatformFile =
 // Extension Properties
 
 // Get the Path representation, only for File-based PlatformFile
-public actual val PlatformFile.path: Path?
+public actual val PlatformFile.path: Path
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
-        is AndroidFile.UriWrapper -> null // Uri does not directly map to a Path
+        is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
     }
 
 // Check if PlatformFile is a file (only works for File-based PlatformFile)
@@ -78,14 +79,14 @@ public actual val PlatformFile.exists: Boolean
     }
 
 // Get the size of the file in bytes. For Uri, it will query the content resolver.
-public actual val PlatformFile.size: Long?
+public actual val PlatformFile.size: Long
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.length()
         is AndroidFile.UriWrapper -> getUriFileSize(androidFile.uri)
     }
 
 // Get the name of the file. For Uri, it queries the content resolver.
-public actual val PlatformFile.name: String?
+public actual val PlatformFile.name: String
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.name
         is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri)
@@ -142,11 +143,11 @@ private fun getUriFileSize(uri: Uri): Long? {
 }
 
 // Get the name of a Uri-based file
-private fun getUriFileName(uri: Uri): String? {
+private fun getUriFileName(uri: Uri): String {
     return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
         val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (cursor.moveToFirst()) cursor.getString(nameIndex) else null
-    } ?: uri.lastPathSegment // Fallback to the Uri's last path segment
+    } ?: uri.lastPathSegment ?: "" // Fallback to the Uri's last path segment
 }
 
 // Get the DocumentFile from a Uri

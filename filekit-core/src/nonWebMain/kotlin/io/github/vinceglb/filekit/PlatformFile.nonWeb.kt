@@ -20,7 +20,8 @@ public expect fun PlatformFile(path: Path): PlatformFile
  * The platform-specific file path.
  * Returns `null` if the path is not available or applicable (e.g., Uri-based files on Android).
  */
-public expect val PlatformFile.path: Path?
+// TODO rename toPath()
+public expect val PlatformFile.path: Path
 
 /**
  * Returns the parent directory of this [PlatformFile].
@@ -81,7 +82,7 @@ public expect val PlatformFile.exists: Boolean
  *
  * @return The content of the file as bytes, or `null` if the file cannot be read or does not exist.
  */
-public actual suspend fun PlatformFile.readBytes(): ByteArray? =
+public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) {
         source()?.buffered()?.readByteArray()
     }

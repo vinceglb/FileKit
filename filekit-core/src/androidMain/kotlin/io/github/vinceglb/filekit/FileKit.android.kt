@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
 import androidx.exifinterface.media.ExifInterface
+import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

@@ -31,11 +31,11 @@ public actual fun PlatformFile(path: Path): PlatformFile =
 
 // Extension Properties
 
-public actual val PlatformFile.path: Path?
+public actual val PlatformFile.path: Path
     get() = nsUrl.toKotlinxPath()
 
-public actual val PlatformFile.name: String?
-    get() = path?.name
+public actual val PlatformFile.name: String
+    get() = path.name
 
 @OptIn(ExperimentalForeignApi::class)
 public actual val PlatformFile.isFile: Boolean
@@ -54,7 +54,7 @@ public actual val PlatformFile.isDirectory: Boolean
     }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-public actual val PlatformFile.size: Long?
+public actual val PlatformFile.size: Long
     get() = try {
         nsUrl.startAccessingSecurityScopedResource()
         memScoped {

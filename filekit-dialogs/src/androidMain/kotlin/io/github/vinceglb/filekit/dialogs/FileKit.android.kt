@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
 import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.FileKitNotInitializedException
+import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.div
