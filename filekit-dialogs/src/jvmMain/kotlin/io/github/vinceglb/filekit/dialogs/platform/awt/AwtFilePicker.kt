@@ -14,7 +14,7 @@ import kotlin.coroutines.resume
 internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
         dialogSettings: FileKitDialogSettings,
     ): File? = callAwtPicker(
@@ -27,7 +27,7 @@ internal class AwtFilePicker : PlatformFilePicker {
 
     override suspend fun openFilesPicker(
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         title: String?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = callAwtPicker(
@@ -50,7 +50,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         title: String?,
         isMultipleMode: Boolean,
         initialDirectory: String?,
-        fileExtensions: List<String>?,
+        fileExtensions: Set<String>?,
         parentWindow: Window?
     ): List<File>? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
