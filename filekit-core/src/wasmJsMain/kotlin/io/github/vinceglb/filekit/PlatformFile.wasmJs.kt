@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.khronos.webgl.ArrayBuffer
@@ -18,6 +19,12 @@ public actual data class PlatformFile(
 public actual val PlatformFile.name: String
     get() = file.name
 
+public actual val PlatformFile.extension: String
+    get() = name.substringAfterLast(".", "")
+
+public actual val PlatformFile.nameWithoutExtension: String
+    get() = name.substringBeforeLast(".", name)
+
 public actual val PlatformFile.size: Long
     get() = file.size.toDouble().toLong()
 
@@ -32,7 +39,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
                     ?.unsafeCast<FileReader>()
                     ?.result
                     ?.unsafeCast<ArrayBuffer>()
-                    ?: throw IllegalStateException("Could not read file")
+                    ?: throw FileKitException("Could not read file")
 
                 // Convert the ArrayBuffer to a ByteArray
                 val bytes = Uint8Array(arrayBuffer)

@@ -12,23 +12,19 @@ public expect class PlatformFile
 public expect val PlatformFile.name: String
 
 /**
+ * The file extension, which is the part of the name after the last period ('.').
+ *
+ * @return The file extension (e.g., "txt" for "document.txt"), or `null` if the file has no extension or the name is unavailable.
+ */
+public expect val PlatformFile.extension: String
+
+/**
  * The name of the file, excluding its extension.
  *
  * @return The name of the file without the extension, or `null` if the file name is not available.
  * For example, "document.txt" becomes "document".
  */
-// TODO refactor
-public val PlatformFile.nameWithoutExtension: String?
-    get() = name?.let { name -> name.substringBeforeLast(".", name) }
-
-/**
- * The file extension, which is the part of the name after the last period ('.').
- *
- * @return The file extension (e.g., "txt" for "document.txt"), or `null` if the file has no extension or the name is unavailable.
- */
-// TODO refactor
-public val PlatformFile.extension: String?
-    get() = name?.substringAfterLast(".", "")
+public expect val PlatformFile.nameWithoutExtension: String
 
 /**
  * The size of the file in bytes.

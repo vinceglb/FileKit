@@ -7,9 +7,8 @@ public expect suspend fun FileKit.download(
 
 public suspend fun FileKit.download(
     file: PlatformFile,
-    fileName: String = file.name ?: "file",
+    fileName: String = file.name,
 ) {
-    file.readBytes()?.let {
-        download(bytes = it, fileName = fileName)
-    }
+    val bytes = file.readBytes()
+    download(bytes = bytes, fileName = fileName)
 }
