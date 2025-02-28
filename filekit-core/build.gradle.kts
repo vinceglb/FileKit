@@ -114,3 +114,12 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 }
+
+tasks.register<Copy>("copyTestResourcesToIos") {
+    from("src/nonWebTest/resources")
+    into("build/bin/iosSimulatorArm64/debugTest/src/nonWebTest/resources")
+}
+
+tasks.named("iosSimulatorArm64Test") {
+    dependsOn("copyTestResourcesToIos")
+}

@@ -5,7 +5,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class PlatformFileTest {
+class PlatformFileWebTest {
     private val platformFile = createTestFile(
         name = "hello.txt",
         content = "Hello, World!",
@@ -52,7 +52,7 @@ class PlatformFileTest {
     fun testPlatformFileSize() {
         assertEquals(
             expected = 13L,
-            actual = platformFile.size,
+            actual = platformFile.size(),
         )
     }
 
