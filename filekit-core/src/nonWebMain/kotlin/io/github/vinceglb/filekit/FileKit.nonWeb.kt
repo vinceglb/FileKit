@@ -9,14 +9,15 @@ public expect val FileKit.cacheDir: PlatformFile
 public expect suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String,
-): Boolean
+): Unit
 
 public suspend fun FileKit.saveImageToGallery(
     file: PlatformFile,
     filename: String,
-): Boolean = file.readBytes()
-    ?.let { saveImageToGallery(it, filename) }
-    ?: false
+): Unit = saveImageToGallery(
+    bytes = file.readBytes(),
+    filename = filename,
+)
 
 public expect suspend fun FileKit.compressImage(
     bytes: ByteArray,
@@ -32,8 +33,13 @@ public suspend fun FileKit.compressImage(
     maxWidth: Int? = null,
     maxHeight: Int? = null,
     compressFormat: CompressFormat = CompressFormat.JPEG,
-): ByteArray? = file.readBytes()
-    ?.let { compressImage(it, quality, maxWidth, maxHeight, compressFormat) }
+): ByteArray? = compressImage(
+    bytes = file.readBytes(),
+    quality = quality,
+    maxWidth = maxWidth,
+    maxHeight = maxHeight,
+    compressFormat = compressFormat
+)
 
 public enum class CompressFormat {
     JPEG,

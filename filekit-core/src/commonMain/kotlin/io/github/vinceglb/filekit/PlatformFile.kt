@@ -30,7 +30,7 @@ public expect val PlatformFile.nameWithoutExtension: String
  * The size of the file in bytes.
  * Returns `null` if the file does not exist or its size cannot be determined.
  */
-public expect val PlatformFile.size: Long
+public expect fun PlatformFile.size(): Long
 
 /**
  * Reads the content of the file as a [ByteArray].

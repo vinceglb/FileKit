@@ -25,7 +25,7 @@ import platform.UIKit.UIImageWriteToSavedPhotosAlbum
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String
-): Boolean = withContext(Dispatchers.IO) {
+): Unit = withContext(Dispatchers.IO) {
     val nsData = bytes.usePinned {
         NSData.create(
             bytes = it.addressOf(0),
@@ -34,7 +34,6 @@ public actual suspend fun FileKit.saveImageToGallery(
     }
     val uiImage = UIImage(nsData)
     UIImageWriteToSavedPhotosAlbum(uiImage, null, null, null)
-    true
 }
 
 @OptIn(ExperimentalForeignApi::class)

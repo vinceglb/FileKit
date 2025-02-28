@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.documentfile.provider.DocumentFile
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.io.RawSink
@@ -41,95 +42,100 @@ public fun PlatformFile(file: File): PlatformFile =
 // Extension Properties
 
 // Get the Path representation, only for File-based PlatformFile
-public actual val PlatformFile.path: Path
-    get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
-        is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
-    }
-
-// Check if PlatformFile is a file (only works for File-based PlatformFile)
-public actual val PlatformFile.isFile: Boolean
-    get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.isFile
-        is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
-            FileKit.context,
-            androidFile.uri
-        )?.isFile == true
-    }
-
-// Check if PlatformFile is a directory (only works for File-based PlatformFile)
-public actual val PlatformFile.isDirectory: Boolean
-    get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.isDirectory
-        is AndroidFile.UriWrapper -> try {
-            DocumentFile.fromTreeUri(
-                FileKit.context,
-                androidFile.uri
-            )?.isDirectory == true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-// Check if PlatformFile exists
-public actual val PlatformFile.exists: Boolean
-    get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.exists()
-        is AndroidFile.UriWrapper -> getDocumentFile(androidFile.uri)?.exists() == true
-    }
-
-// Get the size of the file in bytes. For Uri, it will query the content resolver.
-public actual val PlatformFile.size: Long
-    get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.length()
-        is AndroidFile.UriWrapper -> getUriFileSize(androidFile.uri)
-    }
+public actual fun PlatformFile.toPath(): Path = when (androidFile) {
+    is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
+    is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
+}
 
 // Get the name of the file. For Uri, it queries the content resolver.
 public actual val PlatformFile.name: String
     get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.name
+        is AndroidFile.FileWrapper -> toPath().name
         is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri)
     }
 
-// Get the parent directory path, only applicable for File-based PlatformFile
-public actual val PlatformFile.parent: PlatformFile?
+public actual val PlatformFile.extension: String
     get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> androidFile.file.parentFile?.let { PlatformFile(it.toKotlinxPath()) }
-        is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
-            FileKit.context,
-            androidFile.uri
-        )?.parentFile?.let { PlatformFile(it.uri) }
+        is AndroidFile.FileWrapper -> androidFile.file.extension
+        is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri).substringAfterLast(".", "")
     }
 
-public actual val PlatformFile.absolutePath: String
-    get() = androidFile.let { androidFile ->
-        when (androidFile) {
-            is AndroidFile.UriWrapper -> androidFile.uri.path ?: ""
-            is AndroidFile.FileWrapper -> androidFile.file.absolutePath
-        }
+public actual val PlatformFile.nameWithoutExtension: String
+    get() = when (androidFile) {
+        is AndroidFile.FileWrapper -> androidFile.file.nameWithoutExtension
+        is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri).substringBeforeLast(".", "")
     }
+
+// Check if PlatformFile is a file (only works for File-based PlatformFile)
+public actual fun PlatformFile.isRegularFile(): Boolean = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.isRegularFile ?: false
+    is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
+        FileKit.context,
+        androidFile.uri
+    )?.isFile == true
+}
+
+// Check if PlatformFile is a directory (only works for File-based PlatformFile)
+public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.isDirectory ?: false
+    is AndroidFile.UriWrapper -> try {
+        DocumentFile.fromTreeUri(
+            FileKit.context,
+            androidFile.uri
+        )?.isDirectory == true
+    } catch (e: Exception) {
+        false
+    }
+}
+
+// Check if PlatformFile exists
+public actual fun PlatformFile.exists(): Boolean = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.exists(toPath())
+    is AndroidFile.UriWrapper -> getDocumentFile(androidFile.uri)?.exists() == true
+}
+
+// Get the size of the file in bytes. For Uri, it will query the content resolver.
+public actual fun PlatformFile.size(): Long = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.size ?: -1
+    is AndroidFile.UriWrapper -> getUriFileSize(androidFile.uri) ?: -1
+}
+
+// Get the parent directory path, only applicable for File-based PlatformFile
+public actual fun PlatformFile.parent(): PlatformFile? = when (androidFile) {
+    is AndroidFile.FileWrapper -> toPath().parent?.let(::PlatformFile)
+    is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
+        FileKit.context,
+        androidFile.uri
+    )?.parentFile?.let { PlatformFile(it.uri) }
+}
+
+public actual fun PlatformFile.absolutePath(): PlatformFile = androidFile.let { androidFile ->
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toPath()))
+        is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
+    }
+}
 
 // IO Operations with kotlinx-io
 
 // Get Source for reading from PlatformFile
-public actual fun PlatformFile.source(): RawSource? = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem
-        .source(androidFile.file.toKotlinxPath())
+public actual fun PlatformFile.source(): RawSource = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.source(toPath())
 
     is AndroidFile.UriWrapper -> FileKit.context.contentResolver
         .openInputStream(androidFile.uri)
         ?.asSource()
+        ?: throw FileKitException("Could not open input stream for Uri")
 }
 
 // Get Sink for writing to PlatformFile, append option only for File
-public actual fun PlatformFile.sink(append: Boolean): RawSink? = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem
-        .sink(androidFile.file.toKotlinxPath(), append = append)
+public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.sink(toPath(), append)
 
     is AndroidFile.UriWrapper -> FileKit.context.contentResolver
         .openOutputStream(androidFile.uri)
         ?.asSink()
+        ?: throw FileKitException("Could not open output stream for Uri")
 }
 
 // Helper Functions for Uri-based PlatformFile

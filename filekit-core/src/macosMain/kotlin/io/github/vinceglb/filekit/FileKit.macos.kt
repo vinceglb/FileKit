@@ -19,7 +19,7 @@ import platform.Foundation.NSUserDomainMask
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String
-): Boolean = FileKit.pictureDir / filename write bytes
+): Unit = FileKit.pictureDir / filename write bytes
 
 @Suppress("UnusedReceiverParameter")
 public val FileKit.pictureDir: PlatformFile

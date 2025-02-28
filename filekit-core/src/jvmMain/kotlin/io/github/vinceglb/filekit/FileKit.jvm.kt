@@ -119,4 +119,4 @@ public actual suspend fun FileKit.compressImage(
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String
-): Boolean = FileKit.pictureDir / filename write bytes
+): Unit = FileKit.pictureDir / filename write bytes

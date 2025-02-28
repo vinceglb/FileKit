@@ -25,8 +25,8 @@ public actual val PlatformFile.extension: String
 public actual val PlatformFile.nameWithoutExtension: String
     get() = name.substringBeforeLast(".", name)
 
-public actual val PlatformFile.size: Long
-    get() = file.size.toLong()
+public actual fun PlatformFile.size(): Long =
+    file.size.toLong()
 
 public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->

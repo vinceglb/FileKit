@@ -39,7 +39,7 @@ public actual val FileKit.cacheDir: PlatformFile
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String
-): Boolean = withContext(Dispatchers.IO) {
+): Unit = withContext(Dispatchers.IO) {
     val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
     } else {
@@ -51,8 +51,9 @@ public actual suspend fun FileKit.saveImageToGallery(
     }
 
     val resolver = context.contentResolver
-    val imageUri = resolver.insert(collection, imageDetails) ?: return@withContext false
-    resolver.openOutputStream(imageUri)?.use { it.write(bytes + ByteArray(1)) } != null
+    resolver.insert(collection, imageDetails)?.let { imageUri ->
+        resolver.openOutputStream(imageUri)?.use { it.write(bytes + ByteArray(1)) }
+    }
 }
 
 public actual suspend fun FileKit.compressImage(
