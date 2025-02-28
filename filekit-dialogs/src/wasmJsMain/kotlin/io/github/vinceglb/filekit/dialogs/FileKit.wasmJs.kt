@@ -22,6 +22,11 @@ public actual suspend fun <Out> FileKit.openFilePicker(
         // Create input element
         val input = document.createElement("input") as HTMLInputElement
 
+        // Visually hide the element
+        input.style.display = "none"
+
+        document.body?.appendChild(input)
+
         // Configure the input element
         input.apply {
             this.type = "file"
@@ -56,11 +61,14 @@ public actual suspend fun <Out> FileKit.openFilePicker(
                 continuation.resume(mode.parseResult(result))
             } catch (e: Throwable) {
                 continuation.resumeWithException(e)
+            } finally {
+                document.body?.removeChild(input)
             }
         }
 
         input.oncancel = {
             continuation.resume(null)
+            document.body?.removeChild(input)
         }
 
         // Trigger the file picker
