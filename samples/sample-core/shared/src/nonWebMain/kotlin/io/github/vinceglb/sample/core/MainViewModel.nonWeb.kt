@@ -14,7 +14,7 @@ actual suspend fun pickDirectoryIfSupported(dialogSettings: FileKitDialogSetting
 
 actual suspend fun compressImage(bytes: ByteArray) {
     FileKit.compressImage(
-        imageData = bytes,
+        bytes = bytes,
         maxWidth = 200,
         maxHeight = 200,
         quality = 80,

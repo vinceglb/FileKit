@@ -6,7 +6,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.toPath
 
 @Composable
 actual fun PickDirectoryButton(
@@ -18,6 +18,6 @@ actual fun PickDirectoryButton(
             Text("Directory picker")
         }
 
-        Text("Selected directory: ${directory?.path?.toString() ?: "None"}")
+        Text("Selected directory: ${directory?.toPath()?.toString() ?: "None"}")
     }
 }

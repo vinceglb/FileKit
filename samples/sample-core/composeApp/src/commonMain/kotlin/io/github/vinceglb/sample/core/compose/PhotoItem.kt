@@ -77,7 +77,7 @@ fun PhotoItem(
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Text(
-                        "${file.name} - ${file.size}",
+                        "${file.name} - ${file.size()}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(4.dp)
                     )
