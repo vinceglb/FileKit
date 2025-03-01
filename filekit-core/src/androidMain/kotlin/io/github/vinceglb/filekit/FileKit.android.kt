@@ -36,6 +36,11 @@ public actual val FileKit.filesDir: PlatformFile
 public actual val FileKit.cacheDir: PlatformFile
     get() = context.cacheDir.let(::PlatformFile)
 
+public actual val FileKit.databasesDir: PlatformFile
+    get() = context.getDatabasePath("dummy").parentFile.let { directory ->
+        PlatformFile(requireNotNull(directory) { "Databases directory is null" })
+    }
+
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String

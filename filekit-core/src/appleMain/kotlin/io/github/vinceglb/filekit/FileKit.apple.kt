@@ -34,6 +34,9 @@ public actual val FileKit.cacheDir: PlatformFile
         ?.let(::PlatformFile)
         ?: throw FileKitException("Could not find cache directory")
 
+public actual val FileKit.databasesDir: PlatformFile
+    get() = FileKit.filesDir / "databases"
+
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
     @IntRange(from = 0, to = 100) quality: Int,

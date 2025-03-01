@@ -45,6 +45,9 @@ public actual val FileKit.cacheDir: PlatformFile
         Platform.Windows -> getEnv("LOCALAPPDATA").toPath() / appId / "Cache"
     }.also(Path::assertExists).let(::PlatformFile)
 
+public actual val FileKit.databasesDir: PlatformFile
+    get() = FileKit.filesDir / "databases"
+
 @Suppress("UnusedReceiverParameter")
 public val FileKit.downloadDir: PlatformFile
     get() = when (PlatformUtil.current) {
