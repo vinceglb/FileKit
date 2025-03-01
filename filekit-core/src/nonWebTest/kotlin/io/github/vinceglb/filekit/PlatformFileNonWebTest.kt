@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
+import kotlinx.io.files.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -53,14 +54,21 @@ class PlatformFileNonWebTest {
     }
 
     @Test
+    fun testPlatformFileToKotlinxIoPath() {
+        val path = Path("my/file.txt")
+        val file = PlatformFile(path)
+        assertEquals(expected = path, actual = file.toKotlinxIoPath())
+    }
+
+    @Test
     fun testPlatformFileParent() {
-        assertEquals(expected = resourceDirectory.toPath(), actual = textFile.parent()?.toPath())
-        assertEquals(expected = resourceDirectory.toPath(), actual = imageFile.parent()?.toPath())
-        assertEquals(expected = resourceDirectory.toPath(), actual = emptyFile.parent()?.toPath())
-        assertEquals(expected = resourceDirectory.toPath(), actual = notExistingFile.parent()?.toPath())
+        assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = textFile.parent()?.toKotlinxIoPath())
+        assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = imageFile.parent()?.toKotlinxIoPath())
+        assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = emptyFile.parent()?.toKotlinxIoPath())
+        assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = notExistingFile.parent()?.toKotlinxIoPath())
         assertEquals(
-            expected = (moduleRoot / "src/nonWebTest").toPath(),
-            actual = resourceDirectory.parent()?.toPath()
+            expected = (moduleRoot / "src/nonWebTest").toKotlinxIoPath(),
+            actual = resourceDirectory.parent()?.toKotlinxIoPath()
         )
     }
 
@@ -118,6 +126,32 @@ class PlatformFileNonWebTest {
         // Delete
         newFile.delete()
         assertFalse { newFile.exists() }
+    }
+
+    @Test
+    fun testPlatformFileEquality() {
+        val textFile2 = resourceDirectory / "hello.txt"
+        val textFile3 = resourceDirectory / "hello.txt"
+        val imageFile2 = resourceDirectory / "compose-logo.png"
+        val emptyFile2 = resourceDirectory / "empty-file"
+        val notExistingFile2 = resourceDirectory / "not-existing-file.pdf"
+
+        assertTrue { textFile == textFile2 }
+        assertTrue { textFile == textFile3 }
+        assertTrue { textFile2 == textFile3 }
+        assertTrue { imageFile == imageFile2 }
+        assertTrue { emptyFile == emptyFile2 }
+        assertTrue { notExistingFile == notExistingFile2 }
+        assertFalse { textFile == imageFile }
+    }
+
+    @Test
+    fun testPlatformFileToString() {
+        assertEquals(expected = textFile.path, actual = textFile.toString())
+        assertEquals(expected = imageFile.path, actual = imageFile.toString())
+        assertEquals(expected = emptyFile.path, actual = emptyFile.toString())
+        assertEquals(expected = notExistingFile.path, actual = notExistingFile.toString())
+        assertEquals(expected = resourceDirectory.path, actual = resourceDirectory.toString())
     }
 }
 
