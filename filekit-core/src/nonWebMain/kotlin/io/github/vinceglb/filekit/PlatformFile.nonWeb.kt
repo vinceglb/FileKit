@@ -15,22 +15,30 @@ public expect fun PlatformFile(path: Path): PlatformFile
 
 public fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
 
-public expect fun PlatformFile.toPath(): Path
+public expect fun PlatformFile.toKotlinxIoPath(): Path
+
+public expect val PlatformFile.path: String
 
 public expect fun PlatformFile.parent(): PlatformFile?
 
-public expect fun PlatformFile.absolutePath(): PlatformFile
+public expect fun PlatformFile.resolve(): PlatformFile
+
+public expect fun PlatformFile.absolutePath(): String
+
+public fun PlatformFile.absoluteFile(): PlatformFile = resolve()
 
 public expect fun PlatformFile.source(): RawSource
 
 public expect fun PlatformFile.sink(append: Boolean = false): RawSink
 
 public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
-    PlatformFile(base.toPath() / child)
+    PlatformFile(base.toKotlinxIoPath() / child)
 
 public expect fun PlatformFile.isRegularFile(): Boolean
 
 public expect fun PlatformFile.isDirectory(): Boolean
+
+public expect fun PlatformFile.isAbsolute(): Boolean
 
 public expect fun PlatformFile.exists(): Boolean
 
@@ -65,11 +73,8 @@ public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
 
 public suspend fun PlatformFile.delete(mustExist: Boolean = true): Unit =
     withContext(Dispatchers.IO) {
-        SystemFileSystem.delete(path = toPath(), mustExist = mustExist)
+        SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
     }
 
 public operator fun PlatformFile.div(child: String): PlatformFile =
     PlatformFile(this, child)
-
-public fun PlatformFile.resolve(relative: String): PlatformFile =
-    this / relative

@@ -1,6 +1,8 @@
 package io.github.vinceglb.filekit
 
-public expect class PlatformFile
+public expect class PlatformFile {
+    override fun toString(): String
+}
 
 public expect val PlatformFile.name: String
 

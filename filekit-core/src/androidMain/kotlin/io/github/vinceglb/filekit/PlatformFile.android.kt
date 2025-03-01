@@ -16,7 +16,9 @@ import java.io.File
 
 public actual data class PlatformFile(
     val androidFile: AndroidFile
-)
+) {
+    public actual override fun toString(): String = path
+}
 
 public sealed class AndroidFile {
     public data class FileWrapper(val file: File) : AndroidFile()
@@ -32,14 +34,14 @@ public fun PlatformFile(uri: Uri): PlatformFile =
 public fun PlatformFile(file: File): PlatformFile =
     PlatformFile(AndroidFile.FileWrapper(file))
 
-public actual fun PlatformFile.toPath(): Path = when (androidFile) {
+public actual fun PlatformFile.toKotlinxIoPath(): Path = when (androidFile) {
     is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
     is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
 }
 
 public actual val PlatformFile.name: String
     get() = when (androidFile) {
-        is AndroidFile.FileWrapper -> toPath().name
+        is AndroidFile.FileWrapper -> toKotlinxIoPath().name
         is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri)
     }
 
@@ -55,8 +57,16 @@ public actual val PlatformFile.nameWithoutExtension: String
         is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri).substringBeforeLast(".", "")
     }
 
+public actual val PlatformFile.path: String
+    get() = when (androidFile) {
+        is AndroidFile.FileWrapper -> toKotlinxIoPath().toString()
+        is AndroidFile.UriWrapper -> androidFile.uri.toString()
+    }
+
 public actual fun PlatformFile.isRegularFile(): Boolean = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.isRegularFile ?: false
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isRegularFile
+        ?: false
+
     is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
         FileKit.context,
         androidFile.uri
@@ -64,7 +74,9 @@ public actual fun PlatformFile.isRegularFile(): Boolean = when (androidFile) {
 }
 
 public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.isDirectory ?: false
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isDirectory
+        ?: false
+
     is AndroidFile.UriWrapper -> try {
         DocumentFile.fromTreeUri(
             FileKit.context,
@@ -75,33 +87,41 @@ public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
     }
 }
 
+public actual fun PlatformFile.isAbsolute(): Boolean = when (androidFile) {
+    is AndroidFile.FileWrapper -> toKotlinxIoPath().isAbsolute
+    is AndroidFile.UriWrapper -> true
+}
+
 public actual fun PlatformFile.exists(): Boolean = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.exists(toPath())
+    is AndroidFile.FileWrapper -> SystemFileSystem.exists(toKotlinxIoPath())
     is AndroidFile.UriWrapper -> getDocumentFile(androidFile.uri)?.exists() == true
 }
 
 public actual fun PlatformFile.size(): Long = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toPath())?.size ?: -1
+    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.size ?: -1
     is AndroidFile.UriWrapper -> getUriFileSize(androidFile.uri) ?: -1
 }
 
 public actual fun PlatformFile.parent(): PlatformFile? = when (androidFile) {
-    is AndroidFile.FileWrapper -> toPath().parent?.let(::PlatformFile)
+    is AndroidFile.FileWrapper -> toKotlinxIoPath().parent?.let(::PlatformFile)
     is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
         FileKit.context,
         androidFile.uri
     )?.parentFile?.let { PlatformFile(it.uri) }
 }
 
-public actual fun PlatformFile.absolutePath(): PlatformFile = androidFile.let { androidFile ->
-    when (androidFile) {
-        is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toPath()))
-        is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
-    }
+public actual fun PlatformFile.resolve(): PlatformFile = when (androidFile) {
+    is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
+    is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
+}
+
+public actual fun PlatformFile.absolutePath(): String = when (androidFile) {
+    is AndroidFile.FileWrapper -> androidFile.file.absolutePath
+    is AndroidFile.UriWrapper -> androidFile.uri.toString()
 }
 
 public actual fun PlatformFile.source(): RawSource = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.source(toPath())
+    is AndroidFile.FileWrapper -> SystemFileSystem.source(toKotlinxIoPath())
 
     is AndroidFile.UriWrapper -> FileKit.context.contentResolver
         .openInputStream(androidFile.uri)
@@ -110,7 +130,7 @@ public actual fun PlatformFile.source(): RawSource = when (androidFile) {
 }
 
 public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.sink(toPath(), append)
+    is AndroidFile.FileWrapper -> SystemFileSystem.sink(toKotlinxIoPath(), append)
 
     is AndroidFile.UriWrapper -> FileKit.context.contentResolver
         .openOutputStream(androidFile.uri)
