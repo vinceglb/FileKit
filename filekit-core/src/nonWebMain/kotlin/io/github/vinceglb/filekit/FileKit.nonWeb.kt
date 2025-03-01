@@ -9,7 +9,7 @@ public expect val FileKit.cacheDir: PlatformFile
 public expect suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String,
-): Unit
+)
 
 public suspend fun FileKit.saveImageToGallery(
     file: PlatformFile,

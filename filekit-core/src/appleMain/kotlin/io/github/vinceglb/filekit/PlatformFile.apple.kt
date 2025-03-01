@@ -11,12 +11,8 @@ public actual data class PlatformFile(
     val nsUrl: NSURL,
 )
 
-// Constructors
-
 public actual fun PlatformFile(path: Path): PlatformFile =
     PlatformFile(NSURL.fileURLWithPath(path.toString()))
-
-// Extension Properties
 
 public actual fun PlatformFile.toPath(): Path =
     nsUrl.toKotlinxPath()
@@ -47,8 +43,6 @@ public actual fun PlatformFile.parent(): PlatformFile? =
 
 public actual fun PlatformFile.absolutePath(): PlatformFile =
     PlatformFile(SystemFileSystem.resolve(toPath()))
-
-// IO Operations with kotlinx-io
 
 public actual fun PlatformFile.source(): RawSource = try {
     nsUrl.startAccessingSecurityScopedResource()

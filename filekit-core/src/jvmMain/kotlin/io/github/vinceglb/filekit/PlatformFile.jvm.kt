@@ -12,12 +12,8 @@ public actual data class PlatformFile(
     val file: File,
 )
 
-// Constructors
-
 public actual fun PlatformFile(path: Path): PlatformFile =
     PlatformFile(path.toFile())
-
-// Extension Properties
 
 public actual fun PlatformFile.toPath(): Path =
     file.toKotlinxPath()
@@ -48,8 +44,6 @@ public actual fun PlatformFile.parent(): PlatformFile? =
 
 public actual fun PlatformFile.absolutePath(): PlatformFile =
     PlatformFile(SystemFileSystem.resolve(toPath()))
-
-// IO Operations with kotlinx-io
 
 public actual fun PlatformFile.source(): RawSource =
     SystemFileSystem.source(toPath())

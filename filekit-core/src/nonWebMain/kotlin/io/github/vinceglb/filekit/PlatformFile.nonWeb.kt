@@ -11,79 +11,29 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
 
-/**
- * Creates a [PlatformFile] from a given [Path].
- */
 public expect fun PlatformFile(path: Path): PlatformFile
 
-/**
- * Creates a [PlatformFile] from String.
- */
 public fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
 
-/**
- * The platform-specific file path.
- * Returns `null` if the path is not available or applicable (e.g., Uri-based files on Android).
- */
 public expect fun PlatformFile.toPath(): Path
 
-/**
- * Returns the parent directory of this [PlatformFile].
- * Returns `null` if the parent directory is not available or applicable.
- */
 public expect fun PlatformFile.parent(): PlatformFile?
 
-/**
- * Returns the absolute path of this [PlatformFile].
- */
 public expect fun PlatformFile.absolutePath(): PlatformFile
 
-/**
- * Returns a [RawSource] for reading from this [PlatformFile].
- * Returns `null` if a source cannot be opened.
- */
 public expect fun PlatformFile.source(): RawSource
 
-/**
- * Returns a [RawSink] for writing to this [PlatformFile].
- * If [append] is set to `true`, the content will be appended; otherwise, it will overwrite the existing content.
- * Returns `null` if a sink cannot be opened.
- */
 public expect fun PlatformFile.sink(append: Boolean = false): RawSink
 
-/**
- * Creates a [PlatformFile] by appending a [child] path to the [base] file's path.
- *
- * @param base The base platform file.
- * @param child The child path to append.
- * @return A new [PlatformFile] representing the combined path, or `null` if the base path is invalid.
- */
 public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
     PlatformFile(base.toPath() / child)
 
-/**
- * Returns `true` if this [PlatformFile] represents a regular file.
- * Returns `false` if it represents a directory or does not exist.
- */
 public expect fun PlatformFile.isRegularFile(): Boolean
 
-/**
- * Returns `true` if this [PlatformFile] represents a directory.
- * Returns `false` if it represents a file or does not exist.
- */
 public expect fun PlatformFile.isDirectory(): Boolean
 
-/**
- * Returns `true` if this [PlatformFile] exists in the file system.
- * Returns `false` if it does not exist.
- */
 public expect fun PlatformFile.exists(): Boolean
 
-/**
- * Reads the content of the file as a [ByteArray].
- *
- * @return The content of the file as bytes, or `null` if the file cannot be read or does not exist.
- */
 public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) {
         this@readBytes
@@ -92,12 +42,6 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
             .readByteArray()
     }
 
-/**
- * Writes the given [bytes] to this [PlatformFile].
- *
- * @param bytes The content to write to the file.
- * @return `true` if the write operation is successful, `false` otherwise.
- */
 public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
     withContext(Dispatchers.IO) {
         this@write
@@ -106,12 +50,6 @@ public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
             .use { it.write(bytes) }
     }
 
-/**
- * Writes the content of another [PlatformFile] to this file.
- *
- * @param platformFile The source file to copy from.
- * @return `true` if the copy operation is successful, `false` otherwise.
- */
 public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Unit =
     withContext(Dispatchers.IO) {
         val source = platformFile.source()
@@ -122,21 +60,9 @@ public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Unit =
             .use { it.write(source, size) }
     }
 
-/**
- * Copies the content of this [PlatformFile] to the [destination] file.
- *
- * @param destination The file to copy to.
- * @return `true` if the copy operation is successful, `false` otherwise.
- */
 public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
     destination write this
 
-/**
- * Deletes this [PlatformFile] from the file system.
- *
- * @param mustExist If set to `true`, throws an error if the file does not exist. Default is `true`.
- * @return `true` if the file is successfully deleted, `false` otherwise.
- */
 public suspend fun PlatformFile.delete(mustExist: Boolean = true): Unit =
     withContext(Dispatchers.IO) {
         SystemFileSystem.delete(path = toPath(), mustExist = mustExist)

@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import androidx.annotation.IntRange
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toNSData
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +23,7 @@ public actual val FileKit.filesDir: PlatformFile
         .firstOrNull()
         ?.let { it as NSURL? }
         ?.let(::PlatformFile)
-        ?: throw IllegalStateException("Could not find files directory")
+        ?: throw FileKitException("Could not find files directory")
 
 public actual val FileKit.cacheDir: PlatformFile
     get() = NSFileManager
@@ -31,7 +32,7 @@ public actual val FileKit.cacheDir: PlatformFile
         .firstOrNull()
         ?.let { it as NSURL? }
         ?.let(::PlatformFile)
-        ?: throw IllegalStateException("Could not find cache directory")
+        ?: throw FileKitException("Could not find cache directory")
 
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
