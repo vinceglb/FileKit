@@ -8,6 +8,8 @@ public expect val FileKit.cacheDir: PlatformFile
 
 public expect val FileKit.databasesDir: PlatformFile
 
+public expect val FileKit.projectDir: PlatformFile
+
 public expect suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String,

@@ -48,6 +48,9 @@ public actual val FileKit.cacheDir: PlatformFile
 public actual val FileKit.databasesDir: PlatformFile
     get() = FileKit.filesDir / "databases"
 
+public actual val FileKit.projectDir: PlatformFile
+    get() = PlatformFile(".")
+
 @Suppress("UnusedReceiverParameter")
 public val FileKit.downloadDir: PlatformFile
     get() = when (PlatformUtil.current) {

@@ -21,11 +21,9 @@ public expect val PlatformFile.path: String
 
 public expect fun PlatformFile.parent(): PlatformFile?
 
-public expect fun PlatformFile.resolve(): PlatformFile
-
 public expect fun PlatformFile.absolutePath(): String
 
-public fun PlatformFile.absoluteFile(): PlatformFile = resolve()
+public expect fun PlatformFile.absoluteFile(): PlatformFile
 
 public expect fun PlatformFile.source(): RawSource
 
@@ -78,3 +76,6 @@ public suspend fun PlatformFile.delete(mustExist: Boolean = true): Unit =
 
 public operator fun PlatformFile.div(child: String): PlatformFile =
     PlatformFile(this, child)
+
+public fun PlatformFile.resolve(relative: String): PlatformFile =
+    this / relative

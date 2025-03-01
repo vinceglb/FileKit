@@ -41,6 +41,9 @@ public actual val FileKit.databasesDir: PlatformFile
         PlatformFile(requireNotNull(directory) { "Databases directory is null" })
     }
 
+public actual val FileKit.projectDir: PlatformFile
+    get() = PlatformFile(".")
+
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
     filename: String

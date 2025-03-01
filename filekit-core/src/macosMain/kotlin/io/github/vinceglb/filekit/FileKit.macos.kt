@@ -21,6 +21,9 @@ public actual suspend fun FileKit.saveImageToGallery(
     filename: String
 ): Unit = FileKit.pictureDir / filename write bytes
 
+public actual val FileKit.projectDir: PlatformFile
+    get() = PlatformFile(".")
+
 @Suppress("UnusedReceiverParameter")
 public val FileKit.pictureDir: PlatformFile
     get() = NSFileManager

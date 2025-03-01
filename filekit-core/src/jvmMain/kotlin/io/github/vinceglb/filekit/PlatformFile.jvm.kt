@@ -50,11 +50,11 @@ public actual fun PlatformFile.size(): Long =
 public actual fun PlatformFile.parent(): PlatformFile? =
     toKotlinxIoPath().parent?.let(::PlatformFile)
 
-public actual fun PlatformFile.resolve(): PlatformFile =
-    PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
-
 public actual fun PlatformFile.absolutePath(): String =
     file.absolutePath
+
+public actual fun PlatformFile.absoluteFile(): PlatformFile =
+    PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
 
 public actual fun PlatformFile.source(): RawSource =
     SystemFileSystem.source(toKotlinxIoPath())

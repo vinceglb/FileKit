@@ -110,14 +110,14 @@ public actual fun PlatformFile.parent(): PlatformFile? = when (androidFile) {
     )?.parentFile?.let { PlatformFile(it.uri) }
 }
 
-public actual fun PlatformFile.resolve(): PlatformFile = when (androidFile) {
-    is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
-    is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
-}
-
 public actual fun PlatformFile.absolutePath(): String = when (androidFile) {
     is AndroidFile.FileWrapper -> androidFile.file.absolutePath
     is AndroidFile.UriWrapper -> androidFile.uri.toString()
+}
+
+public actual fun PlatformFile.absoluteFile(): PlatformFile = when (androidFile) {
+    is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
+    is AndroidFile.UriWrapper -> this
 }
 
 public actual fun PlatformFile.source(): RawSource = when (androidFile) {

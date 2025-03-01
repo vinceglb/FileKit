@@ -11,7 +11,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PlatformFileNonWebTest {
-    private val resourceDirectory = moduleRoot / "src/nonWebTest/resources"
+    private val resourceDirectory = FileKit.projectDir / "src/nonWebTest/resources"
     private val textFile = resourceDirectory / "hello.txt"
     private val imageFile = resourceDirectory / "compose-logo.png"
     private val emptyFile = resourceDirectory / "empty-file"
@@ -67,7 +67,7 @@ class PlatformFileNonWebTest {
         assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = emptyFile.parent()?.toKotlinxIoPath())
         assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = notExistingFile.parent()?.toKotlinxIoPath())
         assertEquals(
-            expected = (moduleRoot / "src/nonWebTest").toKotlinxIoPath(),
+            expected = FileKit.projectDir.resolve("src/nonWebTest").toKotlinxIoPath(),
             actual = resourceDirectory.parent()?.toKotlinxIoPath()
         )
     }
@@ -154,5 +154,3 @@ class PlatformFileNonWebTest {
         assertEquals(expected = resourceDirectory.path, actual = resourceDirectory.toString())
     }
 }
-
-expect val moduleRoot: PlatformFile
