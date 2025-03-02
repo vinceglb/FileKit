@@ -47,7 +47,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
     val singleFilePicker = rememberFilePickerLauncher(
         type = FileKitType.Image,
         title = "Single file picker",
-        initialDirectory = directory?.safePath,
+        directory = directory,
         onResult = { file -> file?.let { files += it } },
         dialogSettings = dialogSettings
     )
@@ -56,7 +56,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         type = FileKitType.Image,
         mode = FileKitMode.Multiple(maxItems = 4),
         title = "Multiple files picker",
-        initialDirectory = directory?.safePath,
+        directory = directory,
         onResult = { file -> file?.let { files += it } },
         dialogSettings = dialogSettings
     )
@@ -64,7 +64,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
     val filePicker = rememberFilePickerLauncher(
         type = FileKitType.File(listOf("jpg", "png")),
         title = "Single file picker, only jpg / png",
-        initialDirectory = directory?.safePath,
+        directory = directory,
         onResult = { file -> file?.let { files += it } },
         dialogSettings = dialogSettings
     )
@@ -73,7 +73,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         type = FileKitType.File("jpg", "png"),
         mode = FileKitMode.Multiple(),
         title = "Multiple files picker, only jpg / png",
-        initialDirectory = directory?.safePath,
+        directory = directory,
         onResult = { file -> file?.let { files += it } },
         dialogSettings = dialogSettings
     )
@@ -89,7 +89,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
                 bytes = file.readBytes(),
                 baseName = file.nameWithoutExtension ?: "file",
                 extension = file.extension ?: "txt",
-                initialDirectory = directory?.safePath
+                directory = directory
             )
         }
     }

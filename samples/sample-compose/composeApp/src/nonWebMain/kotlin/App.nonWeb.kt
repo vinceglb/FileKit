@@ -17,7 +17,7 @@ actual fun PickDirectory(
 ) {
     val directoryPicker = rememberDirectoryPickerLauncher(
         title = "Directory picker",
-        initialDirectory = directory?.toKotlinxIoPath().toString(),
+        directory = directory,
         onResult = onDirectoryPicked,
         dialogSettings = dialogSettings
     )

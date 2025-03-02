@@ -7,8 +7,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
 import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.dialogs.openFileSaver
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
@@ -32,7 +32,7 @@ class MainViewModel(
         val file = FileKit.openFilePicker(
             type = FileKitType.Image,
             title = "Custom title here",
-            initialDirectory = downloadDirectoryPath(),
+            directory = downloadDirectoryPath(),
             dialogSettings = dialogSettings,
         )
 
@@ -148,7 +148,7 @@ data class MainUiState(
     constructor() : this(emptySet(), null, false)
 }
 
-expect fun downloadDirectoryPath(): String?
+expect fun downloadDirectoryPath(): PlatformFile?
 
 expect suspend fun pickDirectoryIfSupported(
     dialogSettings: FileKitDialogSettings

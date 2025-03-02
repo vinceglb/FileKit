@@ -7,7 +7,7 @@ actual suspend fun pickDirectoryIfSupported(
     dialogSettings: FileKitDialogSettings
 ): PlatformFile? = null
 
-actual fun downloadDirectoryPath(): String? = null
+actual fun downloadDirectoryPath(): PlatformFile? = null
 
 actual suspend fun takePhotoIfSupported(): PlatformFile? = null
 

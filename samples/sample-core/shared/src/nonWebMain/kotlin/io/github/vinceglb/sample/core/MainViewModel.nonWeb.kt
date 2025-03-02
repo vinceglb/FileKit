@@ -13,13 +13,17 @@ actual suspend fun pickDirectoryIfSupported(dialogSettings: FileKitDialogSetting
 }
 
 actual suspend fun compressImage(bytes: ByteArray) {
-    FileKit.compressImage(
+    val compressedImage = FileKit.compressImage(
         bytes = bytes,
         maxWidth = 200,
         maxHeight = 200,
         quality = 80,
         compressFormat = CompressFormat.JPEG
-    )?.let {
-        FileKit.saveImageToGallery(it, "compressed.jpg")
-    }
+    )
+
+    FileKit.saveImageToGallery(compressedImage, "compressed.jpg")
+}
+
+suspend fun main() {
+
 }
