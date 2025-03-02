@@ -13,7 +13,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     mode: FileKitMode<Out>,
     title: String? = null,
-    initialDirectory: String? = null,
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
@@ -21,7 +21,7 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
         type = type,
         mode = mode,
         title = title,
-        initialDirectory = initialDirectory,
+        directory = directory,
         dialogSettings = injectDialogSettings(dialogSettings, this.window),
         onResult = onResult,
     )
@@ -31,14 +31,14 @@ public fun <Out> WindowScope.rememberFilePickerLauncher(
 public fun WindowScope.rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     title: String? = null,
-    initialDirectory: String? = null,
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
-    return rememberFilePickerLauncher(
+    return io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
         type = type,
         title = title,
-        initialDirectory = initialDirectory,
+        directory = directory,
         dialogSettings = injectDialogSettings(dialogSettings, this.window),
         onResult = onResult,
     )
@@ -47,13 +47,13 @@ public fun WindowScope.rememberFilePickerLauncher(
 @Composable
 public fun WindowScope.rememberDirectoryPickerLauncher(
     title: String? = null,
-    initialDirectory: String? = null,
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
-    return rememberDirectoryPickerLauncher(
+    return io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher(
         title = title,
-        initialDirectory = initialDirectory,
+        directory = directory,
         dialogSettings = injectDialogSettings(dialogSettings, this.window),
         onResult = onResult,
     )
@@ -64,7 +64,7 @@ public fun WindowScope.rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
-    return rememberFileSaverLauncher(
+    return io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher(
         dialogSettings = injectDialogSettings(dialogSettings, this.window),
         onResult = onResult,
     )

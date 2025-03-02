@@ -24,13 +24,10 @@ public actual fun rememberFileSaverLauncher(
     val currentOnResult by rememberUpdatedState(onResult)
 
     return remember {
-        SaverResultLauncher { bytes, baseName, extension, _ ->
+        SaverResultLauncher { suggestedName, extension, _, bytes ->
             coroutineScope.launch {
                 if (bytes != null) {
-                    FileKit.download(
-                        bytes = bytes,
-                        fileName = "$baseName.$extension"
-                    )
+                    FileKit.download(bytes = bytes, fileName = "$suggestedName.$extension")
                     currentOnResult(null)
                 }
             }

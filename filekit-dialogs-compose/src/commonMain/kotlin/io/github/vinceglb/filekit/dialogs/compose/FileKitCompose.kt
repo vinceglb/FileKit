@@ -18,7 +18,7 @@ public fun <Out> rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     mode: FileKitMode<Out>,
     title: String? = null,
-    initialDirectory: String? = null,
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (Out?) -> Unit,
 ): PickerResultLauncher {
@@ -32,7 +32,7 @@ public fun <Out> rememberFilePickerLauncher(
     val currentType by rememberUpdatedState(type)
     val currentMode by rememberUpdatedState(mode)
     val currentTitle by rememberUpdatedState(title)
-    val currentInitialDirectory by rememberUpdatedState(initialDirectory)
+    val currentDirectory by rememberUpdatedState(directory)
     val currentOnResult by rememberUpdatedState(onResult)
 
     // FileKit launcher
@@ -43,7 +43,7 @@ public fun <Out> rememberFilePickerLauncher(
                     type = currentType,
                     mode = currentMode,
                     title = currentTitle,
-                    initialDirectory = currentInitialDirectory,
+                    directory = currentDirectory,
                     dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
@@ -58,7 +58,7 @@ public fun <Out> rememberFilePickerLauncher(
 public fun rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     title: String? = null,
-    initialDirectory: String? = null,
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
@@ -66,7 +66,7 @@ public fun rememberFilePickerLauncher(
         type = type,
         mode = FileKitMode.Single,
         title = title,
-        initialDirectory = initialDirectory,
+        directory = directory,
         dialogSettings = dialogSettings,
         onResult = onResult,
     )

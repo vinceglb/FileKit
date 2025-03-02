@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.dialogs.compose
 
+import io.github.vinceglb.filekit.PlatformFile
+
 public class PickerResultLauncher(
     private val onLaunch: () -> Unit,
 ) {
@@ -10,30 +12,30 @@ public class PickerResultLauncher(
 
 public class SaverResultLauncher(
     private val onLaunch: (
-        bytes: ByteArray?,
-        baseName: String,
+        suggestedName: String,
         extension: String,
-        initialDirectory: String?,
+        directory: PlatformFile?,
+        bytes: ByteArray?,
     ) -> Unit,
 ) {
     public fun launch(
-        baseName: String = "file",
+        suggestedName: String,
         extension: String,
-        initialDirectory: String? = null,
+        directory: PlatformFile? = null,
     ) {
-        onLaunch(null, baseName, extension, initialDirectory)
+        onLaunch(suggestedName, extension, directory, null)
     }
 
     @Deprecated(
         message = "Use the function without the bytes parameter. If necessary, save the bytes in the returned PlatformFile. On web targets, you can use FileKit.download() to download the bytes. More info here: https://filekit.mintlify.app/migrate-to-v0.10",
-        replaceWith = ReplaceWith("launch(baseName, extension, initialDirectory)"),
+        replaceWith = ReplaceWith("launch(suggestedName, extension, directory)"),
     )
     public fun launch(
-        bytes: ByteArray? = null,
+        bytes: ByteArray?,
         baseName: String = "file",
         extension: String,
-        initialDirectory: String? = null,
+        directory: PlatformFile? = null,
     ) {
-        onLaunch(bytes, baseName, extension, initialDirectory)
+        onLaunch(baseName, extension, directory, bytes)
     }
 }

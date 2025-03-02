@@ -8,14 +8,14 @@ import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
-import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
 
 @Composable
 public fun rememberDirectoryPickerLauncher(
     title: String? = null,
-    initialDirectory: String? = null,               // TODO change to PlatformFile?
+    directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
@@ -27,7 +27,7 @@ public fun rememberDirectoryPickerLauncher(
 
     // Updated state
     val currentTitle by rememberUpdatedState(title)
-    val currentInitialDirectory by rememberUpdatedState(initialDirectory)
+    val currentDirectory by rememberUpdatedState(directory)
     val currentOnResult by rememberUpdatedState(onResult)
 
     // FileKit launcher
@@ -36,7 +36,7 @@ public fun rememberDirectoryPickerLauncher(
             coroutineScope.launch {
                 val result = FileKit.openDirectoryPicker(
                     title = currentTitle,
-                    initialDirectory = currentInitialDirectory,
+                    directory = currentDirectory,
                     dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
@@ -63,13 +63,13 @@ public actual fun rememberFileSaverLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        SaverResultLauncher { bytes, baseName, extension, initialDirectory ->
+        SaverResultLauncher { suggestedName, extension, directory, bytes ->
             coroutineScope.launch {
                 val result = FileKit.openFileSaver(
                     bytes = bytes,
-                    baseName = baseName,
+                    suggestedName = suggestedName,
                     extension = extension,
-                    initialDirectory = initialDirectory,
+                    directory = directory,
                     dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
