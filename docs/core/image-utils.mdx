@@ -1,2 +1,93 @@
-- FileKit.saveImageToGallery
-- FileKit.compressImage
+---
+title: 'Image utilities'
+description: 'Utilities for working with images in Kotlin Multiplatform'
+---
+
+<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+
+FileKit Core provides powerful utilities for working with images across platforms. These utilities enable common image operations like compression, resizing, and saving to the device gallery, with a consistent API across all supported platforms.
+
+## Compressing Images
+
+You can compress images to reduce their file size while maintaining acceptable quality:
+
+```kotlin
+suspend fun compressAndSaveImage() {
+    // Read an image file
+    val originalImageFile = PlatformFile("/path/to/original.jpg")
+    val imageBytes = originalImageFile.readBytes()
+    
+    // Compress the image
+    val compressedBytes = FileKit.compressImage(
+        bytes = imageBytes,
+        quality = 80, // 0-100, where 100 is highest quality
+        maxWidth = 1024, // Optional maximum width
+        maxHeight = 1024, // Optional maximum height
+        compressFormat = CompressFormat.JPEG // JPEG or PNG
+    )
+    
+    // Save the compressed image
+    if (compressedBytes != null) {
+        val compressedFile = PlatformFile(FileKit.filesDir, "compressed.jpg")
+        compressedFile.write(compressedBytes)
+    }
+}
+```
+
+The `compressImage` function provides several key features:
+- **Quality control**: Reduces the image quality based on the `quality` parameter (0-100)
+- **Resizing**: Resizes the image if `maxWidth` or `maxHeight` is specified, maintaining the aspect ratio
+- **Format conversion**: Converts the image to the specified format (JPEG or PNG)
+- **Metadata handling**: On Android, automatically handles EXIF orientation metadata
+
+## Saving Images to Gallery
+
+FileKit provides a way to save images to the device's photo gallery:
+
+```kotlin
+suspend fun saveImageToDeviceGallery() {
+    // Read an image file
+    val imageFile = PlatformFile(FileKit.filesDir, "photo.jpg")
+
+    // Save to the device's photo gallery
+    FileKit.saveImageToGallery(file = imageFile)
+}
+```
+
+The behavior of `saveImageToGallery` varies slightly by platform:
+
+| Platform | Behavior |
+|----------|----------|
+| Android | Saves to the device's Pictures directory and makes it visible in the gallery app |
+| iOS | Saves to the device's Camera Roll |
+| macOS/JVM | Saves to the user's Pictures directory |
+| JS/WASM | Not supported (no-op) |
+
+## Example: Creating a Thumbnail
+
+This function creates a thumbnail version of an image by resizing it to a maximum dimension while maintaining the aspect ratio.
+
+```kotlin
+suspend fun createThumbnail(originalImageFile: PlatformFile, maxSize: Int = 200): PlatformFile {
+    // Read the original image
+    val imageBytes = originalImageFile.readBytes()
+    
+    // Create a thumbnail by compressing and resizing
+    val thumbnailBytes = FileKit.compressImage(
+        bytes = imageBytes,
+        quality = 85,
+        maxWidth = maxSize,
+        maxHeight = maxSize,
+        compressFormat = CompressFormat.JPEG
+    )
+    
+    // Save the thumbnail
+    val thumbnailFile = PlatformFile(
+        FileKit.cacheDir,
+        "thumb_${originalImageFile.nameWithoutExtension}.jpg"
+    )
+    thumbnailFile write thumbnailBytes
+    
+    return thumbnailFile
+}
+```

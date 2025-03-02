@@ -1,3 +1,197 @@
 ---
 title: 'PlatformFile'
+description: 'Cross-platform file representation for Kotlin Multiplatform'
 ---
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+## Introduction
+
+`PlatformFile` is the core class in FileKit that provides a unified representation of files across all platforms. It abstracts away platform-specific file implementations and provides a consistent API for working with files in your Kotlin Multiplatform project.
+
+## Creating a PlatformFile
+
+You can create a `PlatformFile` instance in several ways:
+
+```kotlin
+// From a path string
+val file = PlatformFile("/path/to/file.txt")
+
+// From a kotlinx.io.files.Path
+val path = Path("/path/to/file.txt")
+val file = PlatformFile(path)
+
+// From a parent file and child path
+val parentDir = PlatformFile("/path/to")
+val file = PlatformFile(parentDir, "file.txt")
+// or using the convenient / operator
+val file = parentDir / "file.txt"
+```
+
+## Platform-specific constructors
+
+Each platform also provides specific constructors:
+
+<CodeGroup>
+```kotlin Android
+// From a Java File
+val javaFile = File("/path/to/file.txt")
+val file = PlatformFile(javaFile)
+
+// From an Android Uri
+val uri = Uri.parse("content://...")
+val file = PlatformFile(uri)
+```
+
+```kotlin JVM
+// From a Java File
+val javaFile = File("/path/to/file.txt")
+val file = PlatformFile(javaFile)
+```
+
+```kotlin iOS/macOS
+// From an NSURL
+val nsUrl = NSURL(string = "/path/to/file.txt")
+val file = PlatformFile(nsUrl)
+```
+
+```kotlin JS/WASM
+// From a Browser File
+val browserFile: File = event.target.unsafeCast<HTMLInputElement>().files[0]
+val file = PlatformFile(browserFile)
+```
+</CodeGroup>
+
+## Properties
+
+`PlatformFile` provides several properties to access file information:
+
+```kotlin
+val file = PlatformFile("/path/to/document.pdf")
+
+// Get the file name with extension
+val name: String = file.name // "document.pdf"
+
+// Get just the file extension
+val extension: String = file.extension // "pdf"
+
+// Get the file name without extension
+val nameWithoutExtension: String = file.nameWithoutExtension // "document"
+
+// Get the file path
+val path: String = file.path // "/path/to/document.pdf"
+
+// Get the file size in bytes
+val size: Long = file.size()
+
+// Get the parent directory
+val parent: PlatformFile? = file.parent()
+
+// Get the absolute path string
+val absolutePath: String = file.absolutePath()
+
+// Get the absolute file
+val absoluteFile: PlatformFile = file.absoluteFile()
+```
+
+## File operations
+
+`PlatformFile` provides methods for common file operations:
+
+```kotlin
+// Check if the file exists
+val exists: Boolean = file.exists()
+
+// Check if it's a regular file
+val isFile: Boolean = file.isRegularFile()
+
+// Check if it's a directory
+val isDirectory: Boolean = file.isDirectory()
+
+// Check if it's an absolute path
+val isAbsolute: Boolean = file.isAbsolute()
+
+// Create directories
+file.createDirectories()
+
+// Copy the file to a new location
+file.copyTo(newFile)
+
+// Move the file to a new location
+file.atomicMove(newFile)
+
+// Delete the file
+file.delete()
+
+// List files in the directory
+val files: List<PlatformFile> = file.list()
+
+// Get input stream as a source
+val source: RawSource = file.source()
+
+// Get output stream as a sink
+val sink: RawSink = file.sink(append = false)
+
+// Read bytes from the file
+val bytes: ByteArray = file.readBytes()
+
+// Read string from the file
+val content: String = file.readString()
+
+// Write bytes to the file
+file.write(bytes)
+
+// Write string to the file
+file.writeString(content)
+```
+
+## Working with directories
+
+You can use the `resolve` method or the `/` operator to navigate through directories:
+
+```kotlin
+val baseDir = PlatformFile("/path/to/base")
+
+// Create a reference to a subdirectory or file
+val subDir = baseDir / "subdirectory"
+val file = subDir / "file.txt"
+
+// Alternative using resolve
+val file2 = baseDir.resolve("subdirectory/file.txt")
+
+// Get the absolute path from a relative path
+val relativeDir = PlatformFile("/path/to/relative")
+val absoluteDir: PlatformFile = relativeDir.absoluteFile()
+```
+
+## Converting to kotlinx-io
+
+`PlatformFile` provides built-in integration with [kotlinx-io](https://github.com/Kotlin/kotlinx-io).
+
+```kotlin
+// Convert to kotlinx.io.files.Path
+val path: Path = file.toKotlinxIoPath()
+
+// Convert to kotlinx.io.RawSource
+val source: RawSource = file.source()
+
+// Convert to kotlinx.io.RawSink
+val sink: RawSink = file.sink()
+```
+
+## Example usage
+
+```kotlin
+// Create a file reference
+val file = PlatformFile(FileKit.filesDir, "document.txt")
+
+// Check if it exists
+if (!file.exists()) {
+    // Write content to the file
+    file.writeString("Hello, FileKit!")
+}
+
+// Read the file content
+val content = file.readString()
+println(content) // "Hello, FileKit!"
+```
