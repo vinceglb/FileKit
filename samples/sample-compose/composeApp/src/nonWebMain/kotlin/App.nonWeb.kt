@@ -30,6 +30,3 @@ actual fun PickDirectory(
         Text("Selected directory: ${directory?.toKotlinxIoPath() ?: "None"}")
     }
 }
-
-actual val PlatformFile.safePath: String?
-    get() = toKotlinxIoPath().toString()

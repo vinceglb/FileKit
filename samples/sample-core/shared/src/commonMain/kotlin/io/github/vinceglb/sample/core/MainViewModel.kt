@@ -102,8 +102,8 @@ class MainViewModel(
         // Save a file
         val newFile = FileKit.openFileSaver(
             bytes = file.readBytes(),
-            baseName = file.nameWithoutExtension ?: "file",
-            extension = file.extension ?: "txt",
+            suggestedName = file.nameWithoutExtension,
+            extension = file.extension,
             dialogSettings = dialogSettings
         )
 

@@ -87,8 +87,8 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         scope.launch {
             saver.launch(
                 bytes = file.readBytes(),
-                baseName = file.nameWithoutExtension ?: "file",
-                extension = file.extension ?: "txt",
+                baseName = file.nameWithoutExtension,
+                extension = file.extension,
                 directory = directory
             )
         }
@@ -149,5 +149,3 @@ expect fun PickDirectory(
 
 @Composable
 expect fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit)
-
-expect val PlatformFile.safePath: String?

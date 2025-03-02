@@ -23,7 +23,3 @@ actual suspend fun compressImage(bytes: ByteArray) {
 
     FileKit.saveImageToGallery(compressedImage, "compressed.jpg")
 }
-
-suspend fun main() {
-
-}

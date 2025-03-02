@@ -22,9 +22,6 @@ actual fun PickDirectory(
     }
 }
 
-actual val PlatformFile.safePath: String?
-    get() = null
-
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
 }
