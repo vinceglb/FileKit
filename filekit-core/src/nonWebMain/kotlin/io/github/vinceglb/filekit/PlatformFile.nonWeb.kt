@@ -87,6 +87,24 @@ public suspend fun PlatformFile.writeString(string: String): Unit =
 public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
     destination write this
 
+public suspend fun PlatformFile.createDirectories(mustCreate: Boolean = false): Unit =
+    withContext(Dispatchers.IO) {
+        SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
+    }
+
+public suspend fun PlatformFile.list(): List<PlatformFile> =
+    withContext(Dispatchers.IO) {
+        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+    }
+
+public suspend fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
+    withContext(Dispatchers.IO) {
+        SystemFileSystem.atomicMove(
+            source = toKotlinxIoPath(),
+            destination = destination.toKotlinxIoPath(),
+        )
+    }
+
 public suspend fun PlatformFile.delete(mustExist: Boolean = true): Unit =
     withContext(Dispatchers.IO) {
         SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
