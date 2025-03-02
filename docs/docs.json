@@ -60,5 +60,10 @@
     "socials": {
       "github": "https://github.com/vinceglb/FileKit"
     }
+  },
+  "integrations": {
+    "mixpanel": {
+      "projectToken": "00fb70ba023ea0e3922aaa9047193b72"
+    }
   }
 }
