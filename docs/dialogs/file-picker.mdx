@@ -78,7 +78,7 @@ You can customize the dialog by setting the title, the initial directory and som
 ```kotlin filekit-dialogs
 val file = FileKit.openFilePicker(
     title = "Custom title",
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault()
 )
 ```
@@ -86,7 +86,7 @@ val file = FileKit.openFilePicker(
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
     title = "Custom title",
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault()
 ) { file ->
     // Handle the file

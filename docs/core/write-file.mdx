@@ -3,6 +3,8 @@ title: 'Writing files'
 description: 'Write files with FileKit Core in Kotlin Multiplatform'
 ---
 
+import DownloadFilesWeb from '/snippets/download-files-web.mdx'
+
 <Check>Supported on Android, iOS, macOS, JVM targets</Check>
 
 FileKit Core provides a consistent API for writing files across all platforms. The `PlatformFile` class offers multiple methods to write data to files, from simple strings to binary data and streaming operations.
@@ -149,6 +151,10 @@ try {
     println("Error writing file: ${e.message}")
 }
 ```
+
+## Downloading files from web
+
+<DownloadFilesWeb/>
 
 ## Example: Creating a Simple Logger
 

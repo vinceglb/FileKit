@@ -18,7 +18,7 @@ Here's a basic example:
 ```kotlin filekit-dialogs
 // Open file saver dialog
 val file = FileKit.openFileSaver(
-    baseName = "document",
+    suggestedName = "document",
     extension = "pdf"
 )
 
@@ -49,24 +49,24 @@ Button(onClick = { launcher.launch("document", "pdf") }) {
 
 The file saver can be customized with several parameters:
 
-- `baseName` (default: "file"): The default name for the file without extension
+- `suggestedName`: The default name for the file without extension
 - `extension`: The file extension without the dot (e.g., "pdf", "txt")
-- `initialDirectory`: The starting directory for the save dialog
+- `directory`: The starting directory for the save dialog
 - `dialogSettings`: Platform-specific settings for customizing the dialog behavior
 
 <CodeGroup>
 ```kotlin filekit-dialogs
 val file = FileKit.openFileSaver(
-    baseName = "my-document",
+    suggestedName = "my-document",
     extension = "pdf",
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault()
 )
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFileSaverLauncher(
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault()
 ) { file ->
     // Handle the selected save location
@@ -83,7 +83,7 @@ Read more about [dialog settings](/dialogs/dialog-settings) to customize the dia
 The file saver returns a `PlatformFile` object representing the selected save location. You can write data to this file using the `write()` extension function:
 
 ```kotlin
-val file = FileKit.openFileSaver(baseName = "document", extension = "pdf")
+val file = FileKit.openFileSaver(suggestedName = "document", extension = "pdf")
 
 if (file != null) {
     // Write bytes to the file

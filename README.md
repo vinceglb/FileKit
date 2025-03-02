@@ -19,72 +19,7 @@
 
 FileKit is a library that allows you to pick and save files in a simple way. On each platform, it uses the native file picker API to provide a consistent experience.
 
-## 🚀 Quick Start
-
-Pick a file, a directory or save a file in common code:
-
-```kotlin
-// Pick a file
-val file = FileKit.pickFile()
-
-// Pick a directory
-val directory = FileKit.pickDirectory()
-
-// Save a file
-val file = FileKit.saveFile(
-    extension = "txt",
-    bytes = "Hello, World!".encodeToByteArray()
-)
-```
-
-Get file information in common code:
-
-```kotlin
-val filePath = file?.path
-val fileName = file?.name
-val bytes = file?.readBytes()
-```
-
-Compose Multiplatform integration made simple:
-
-```kotlin
-// Pick files from Compose
-val launcher = rememberFilePickerLauncher(mode = PickerMode.Multiple()) { files ->
-    // Handle picked files
-}
-
-// Use the pickerLauncher
-Button(onClick = { launcher.launch() }) {
-    Text("Pick files")
-}
-```
-
 ![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
-
-## 📦 Installation
-
-```gradle
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    // Enables FileKit without Compose dependencies
-    implementation("io.github.vinceglb:filekit-core:0.10.0-SNAPSHOT")
-
-    // Enables FileKit with Composable utilities
-    implementation("io.github.vinceglb:filekit-compose:0.10.0-SNAPSHOT")
-}
-```
-
-## 🤏 Proguard & obfuscation
-
-If using Proguard or obfuscation on JVM, you need to add the following rules:
-
-```proguard
--keep class com.sun.jna.** { *; }
--keep class * implements com.sun.jna.** { *; }
-```
 
 ## 🌱 Sample projects
 

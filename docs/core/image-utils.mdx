@@ -27,10 +27,8 @@ suspend fun compressAndSaveImage() {
     )
     
     // Save the compressed image
-    if (compressedBytes != null) {
-        val compressedFile = PlatformFile(FileKit.filesDir, "compressed.jpg")
-        compressedFile.write(compressedBytes)
-    }
+    val compressedFile = PlatformFile(FileKit.filesDir, "compressed.jpg")
+    compressedFile.write(compressedBytes)
 }
 ```
 

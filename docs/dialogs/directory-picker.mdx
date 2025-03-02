@@ -34,14 +34,14 @@ You can customize the dialog by setting the title and the initial directory.
 ```kotlin filekit-dialogs
 val directory = FileKit.openDirectoryPicker(
     title = "Directory picker",
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = dialogSettings,
 )
 ```
 ```kotlin filekit-dialogs-compose
 val launcher = rememberDirectoryPickerLauncher(
     title = "Directory picker",
-    initialDirectory = "/custom/initial/path",
+    directory = PlatformFile("/custom/initial/path"),
     dialogSettings = dialogSettings,
 ) { directory ->
     // Handle the directory

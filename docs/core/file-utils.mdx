@@ -3,9 +3,11 @@ title: 'File utilities'
 description: 'Utility functions for working with files in Kotlin Multiplatform'
 ---
 
-<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+import DownloadFilesWeb from '/snippets/download-files-web.mdx'
 
 ## Standard Directories
+
+<Check>Supported on Android, iOS, macOS, JVM targets</Check>
 
 FileKit provides access to standard platform-specific directories:
 
@@ -26,22 +28,22 @@ These directories are automatically created if they don't exist and are properly
 
 Each platform maps these standard directories to different locations according to platform conventions:
 
-#### Android
+**Android**
 - **filesDir**: Maps to `context.filesDir`, which is the app's private internal storage
 - **cacheDir**: Maps to `context.cacheDir`, which is the app's private cache directory
 - **databasesDir**: Maps to a `databases` subdirectory in the app's internal storage
 
-#### iOS
+**iOS**
 - **filesDir**: Maps to the app's Documents directory, which is backed up with iCloud
 - **cacheDir**: Maps to the app's Caches directory, which isn't backed up and may be cleared by the system
 - **databasesDir**: Maps to a `databases` subdirectory in the app's Documents directory
 
-#### macOS
+**macOS**
 - **filesDir**: Maps to `~/Library/Application Support/<app-id>/`, requiring FileKit initialization with an app ID
 - **cacheDir**: Maps to `~/Library/Caches/<app-id>/`
 - **databasesDir**: Maps to a `databases` subdirectory in the application support directory
 
-#### JVM (Desktop)
+**JVM (Desktop)**
 - **filesDir**: Maps to platform-specific app data locations:
   - Linux: `~/.local/share/<app-id>/`
   - macOS: `~/Library/Application Support/<app-id>/`
@@ -85,3 +87,6 @@ val dbFile = FileKit.databasesDir / "app.db"
 // Use the database file with your preferred database library
 ```
 
+## Downloading files from web
+
+<DownloadFilesWeb/>
