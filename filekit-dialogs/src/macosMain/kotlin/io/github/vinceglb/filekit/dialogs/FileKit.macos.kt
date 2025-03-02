@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
@@ -12,7 +13,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     type: FileKitType,
     mode: FileKitMode<Out>,
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Out? = callPicker(
     mode = when (mode) {
@@ -20,7 +21,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
         is FileKitMode.Multiple -> Mode.Multiple
     },
     title = title,
-    initialDirectory = initialDirectory,
+    directory = directory,
     fileExtensions = when (type) {
         FileKitType.Image -> imageExtensions
         FileKitType.Video -> videoExtensions
@@ -32,30 +33,30 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     title = title,
-    initialDirectory = initialDirectory,
+    directory = directory,
     fileExtensions = null,
     dialogSettings = dialogSettings,
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.openFileSaver(
-    baseName: String,
+    suggestedName: String,
     extension: String,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
     // Create an NSSavePanel
     val nsSavePanel = NSSavePanel()
 
     // Set the initial directory
-    initialDirectory?.let { nsSavePanel.directoryURL = NSURL.fileURLWithPath(it) }
+    directory?.let { nsSavePanel.directoryURL = NSURL.fileURLWithPath(it.path) }
 
     // Set the file name
-    nsSavePanel.nameFieldStringValue = "$baseName.$extension"
+    nsSavePanel.nameFieldStringValue = "$suggestedName.$extension"
     nsSavePanel.allowedFileTypes = listOf(extension)
 
     // Accept the creation of directories
@@ -84,7 +85,7 @@ public actual suspend fun FileKit.openFileSaver(
 private fun callPicker(
     mode: Mode,
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     fileExtensions: Set<String>?,
     dialogSettings: FileKitDialogSettings,
 ): List<NSURL>? {
@@ -96,7 +97,7 @@ private fun callPicker(
         mode = mode,
         title = title,
         extensions = fileExtensions,
-        initialDirectory = initialDirectory,
+        directory = directory,
         canCreateDirectories = dialogSettings.canCreateDirectories
     )
 
@@ -116,14 +117,14 @@ private fun NSOpenPanel.configure(
     mode: Mode,
     title: String?,
     extensions: Set<String>?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     canCreateDirectories: Boolean,
 ): NSOpenPanel {
     // Set the title
     title?.let { message = it }
 
     // Set the initial directory
-    initialDirectory?.let { directoryURL = NSURL.fileURLWithPath(it) }
+    directory?.let { directoryURL = NSURL.fileURLWithPath(it.path) }
 
     // Set the allowed file types
     extensions?.let { allowedFileTypes = extensions.toList() }

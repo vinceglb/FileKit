@@ -12,10 +12,11 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
 import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
@@ -26,7 +27,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     type: FileKitType,
     mode: FileKitMode<Out>,
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
@@ -102,9 +103,9 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 }
 
 public actual suspend fun FileKit.openFileSaver(
-    baseName: String,
+    suggestedName: String,
     extension: String,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     suspendCoroutine { continuation ->
@@ -145,13 +146,13 @@ public actual suspend fun FileKit.openFileSaver(
         }
 
         // Launch
-        launcher.launch("$baseName.$extension")
+        launcher.launch("$suggestedName.$extension")
     }
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
@@ -166,7 +167,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
             val platformDirectory = uri?.let { PlatformFile(it) }
             continuation.resume(platformDirectory)
         }
-        val initialUri = initialDirectory?.let { Uri.parse(it) }
+        val initialUri = directory?.let { Uri.parse(it.path) }
         launcher.launch(initialUri)
     }
 }

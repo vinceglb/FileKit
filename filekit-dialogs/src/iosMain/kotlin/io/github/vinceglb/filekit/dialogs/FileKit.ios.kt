@@ -10,6 +10,7 @@ import io.github.vinceglb.filekit.dialogs.util.CameraControllerDelegate
 import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
+import io.github.vinceglb.filekit.path
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -57,7 +58,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     type: FileKitType,
     mode: FileKitMode<Out>,
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Out? = when (type) {
     // Use PHPickerViewController for images and videos
@@ -75,24 +76,24 @@ public actual suspend fun <Out> FileKit.openFilePicker(
             is FileKitMode.Multiple -> Mode.Multiple
         },
         contentTypes = type.contentTypes,
-        initialDirectory = initialDirectory
+        directory = directory
     )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     contentTypes = listOf(UTTypeFolder),
-    initialDirectory = initialDirectory
+    directory = directory
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 public actual suspend fun FileKit.openFileSaver(
-    baseName: String,
+    suggestedName: String,
     extension: String,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
@@ -107,7 +108,7 @@ public actual suspend fun FileKit.openFileSaver(
             }
         )
 
-        val fileName = "$baseName.$extension"
+        val fileName = "$suggestedName.$extension"
 
         // Get the fileManager
         val fileManager = NSFileManager.defaultManager
@@ -129,7 +130,7 @@ public actual suspend fun FileKit.openFileSaver(
         )
 
         // Set the initial directory
-        initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
+        directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
 
         // Assign the delegate to the picker controller
         pickerController.delegate = documentPickerDelegate
@@ -190,7 +191,7 @@ public actual suspend fun FileKit.openCameraPicker(
 private suspend fun callPicker(
     mode: Mode,
     contentTypes: List<UTType>,
-    initialDirectory: String?,
+    directory: PlatformFile?,
 ): List<NSURL>? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         // Create a picker delegate
@@ -203,7 +204,7 @@ private suspend fun callPicker(
         val pickerController = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
 
         // Set the initial directory
-        initialDirectory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it) }
+        directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
 
         // Setup the picker mode
         pickerController.allowsMultipleSelection = mode == Mode.Multiple

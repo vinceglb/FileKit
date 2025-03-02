@@ -16,6 +16,7 @@ import com.sun.jna.platform.win32.WinError.ERROR_INVALID_DRIVE
 import com.sun.jna.platform.win32.WinNT.HRESULT
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
@@ -33,6 +34,7 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.Shell32
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItemArray
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.Window
@@ -40,13 +42,13 @@ import java.io.File
 
 internal class WindowsFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
-        initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
+        directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
         title?.let {
@@ -66,13 +68,13 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openFilesPicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
-        initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
+        directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
         title?.let {
@@ -95,12 +97,12 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openDirectoryPicker(
-        initialDirectory: String?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
         // Set the initial directory
-        initialDirectory?.let { fileOpenDialog.setDefaultPath(it) }
+        directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
         title?.let {
@@ -119,17 +121,17 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openFileSaver(
-        baseName: String,
+        suggestedName: String,
         extension: String,
-        initialDirectory: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Save) { fileSaveDialog ->
         // Set the initial directory
-        initialDirectory?.let { fileSaveDialog.setDefaultPath(it) }
+        directory?.let { fileSaveDialog.setDefaultPath(it) }
 
         // Set the default file name
         fileSaveDialog
-            .SetFileName(WString(baseName))
+            .SetFileName(WString(suggestedName))
             .verify("SetFileName failed")
 
         // Set the default extension
@@ -213,10 +215,10 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 
-    private fun FileDialog.setDefaultPath(defaultPath: String) {
+    private fun FileDialog.setDefaultPath(defaultPath: PlatformFile) {
         val pbrFolder = PointerByReference()
         val resultFolder = Shell32.INSTANCE.SHCreateItemFromParsingName(
-            WString(defaultPath),
+            WString(defaultPath.path),
             null,
             Guid.REFIID(IShellItem.IID_ISHELLITEM),
             pbrFolder

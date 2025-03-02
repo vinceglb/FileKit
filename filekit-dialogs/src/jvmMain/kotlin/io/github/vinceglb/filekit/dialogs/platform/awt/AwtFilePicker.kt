@@ -1,7 +1,9 @@
 package io.github.vinceglb.filekit.dialogs.platform.awt
 
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
 import java.awt.FileDialog
@@ -13,34 +15,34 @@ import kotlin.coroutines.resume
 
 internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = callAwtPicker(
         title = title,
         isMultipleMode = false,
         fileExtensions = fileExtensions,
-        initialDirectory = initialDirectory,
+        directory = directory,
         parentWindow = dialogSettings.parentWindow
     )?.firstOrNull()
 
     override suspend fun openFilesPicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = callAwtPicker(
         title = title,
         isMultipleMode = true,
         fileExtensions = fileExtensions,
-        initialDirectory = initialDirectory,
+        directory = directory,
         parentWindow = dialogSettings.parentWindow
     )
 
     override suspend fun openDirectoryPicker(
-        initialDirectory: String?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? {
         throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
@@ -49,7 +51,7 @@ internal class AwtFilePicker : PlatformFilePicker {
     private suspend fun callAwtPicker(
         title: String?,
         isMultipleMode: Boolean,
-        initialDirectory: String?,
+        directory: PlatformFile?,
         fileExtensions: Set<String>?,
         parentWindow: Window?
     ): List<File>? = suspendCancellableCoroutine { continuation ->
@@ -88,7 +90,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         }
 
         // Set initial directory
-        dialog.directory = initialDirectory
+        directory?.let { dialog.directory = directory.path }
 
         // Show the dialog
         dialog.isVisible = true

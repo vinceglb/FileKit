@@ -1,22 +1,24 @@
 package io.github.vinceglb.filekit.dialogs.platform.mac
 
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
+import io.github.vinceglb.filekit.path
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.SingleFile,
-            initialDirectory = initialDirectory,
+            directory = directory,
             fileExtensions = fileExtensions,
             title = title,
             macOSSettings = dialogSettings.macOS,
@@ -24,14 +26,14 @@ internal class MacOSFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openFilesPicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.MultipleFiles,
-            initialDirectory = initialDirectory,
+            directory = directory,
             fileExtensions = fileExtensions,
             title = title,
             macOSSettings = dialogSettings.macOS,
@@ -39,13 +41,13 @@ internal class MacOSFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openDirectoryPicker(
-        initialDirectory: String?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? {
         return callNativeMacOSPicker(
             mode = MacOSFilePickerMode.Directories,
-            initialDirectory = initialDirectory,
+            directory = directory,
             fileExtensions = null,
             title = title,
             macOSSettings = dialogSettings.macOS,
@@ -54,7 +56,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
     private fun <T> callNativeMacOSPicker(
         mode: MacOSFilePickerMode<T>,
-        initialDirectory: String?,
+        directory: PlatformFile?,
         fileExtensions: Set<String>?,
         title: String?,
         macOSSettings: FileKitMacOSSettings,
@@ -79,8 +81,8 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 }
 
                 // Set initial directory
-                initialDirectory?.let {
-                    Foundation.invoke(openPanel, "setDirectoryURL:", Foundation.nsURL(it))
+                directory?.let {
+                    Foundation.invoke(openPanel, "setDirectoryURL:", Foundation.nsURL(it.path))
                 }
 
                 // Set file extensions

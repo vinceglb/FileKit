@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit.dialogs.platform
 
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.awt.AwtFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.awt.AwtFileSaver
@@ -14,34 +15,34 @@ import java.io.File
 
 internal interface PlatformFilePicker {
     suspend fun openFilePicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File?
 
     suspend fun openFilesPicker(
-        initialDirectory: String?,
         fileExtensions: Set<String>?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>?
 
     suspend fun openDirectoryPicker(
-        initialDirectory: String?,
         title: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File?
 
     suspend fun openFileSaver(
-        baseName: String,
+        suggestedName: String,
         extension: String,
-        initialDirectory: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = AwtFileSaver.saveFile(
-        baseName = baseName,
+        suggestedName = suggestedName,
         extension = extension,
-        initialDirectory = initialDirectory,
+        directory = directory,
         dialogSettings = dialogSettings,
     )
 

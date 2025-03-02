@@ -15,7 +15,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     type: FileKitType,
     mode: FileKitMode<Out>,
     title: String?,
-    initialDirectory: String?,
+    directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Out? = withContext(Dispatchers.Default) {
     suspendCoroutine { continuation ->

@@ -1,6 +1,8 @@
 package io.github.vinceglb.filekit.dialogs.platform.awt
 
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
 import java.awt.FileDialog
@@ -10,9 +12,9 @@ import kotlin.coroutines.resume
 
 internal object AwtFileSaver {
     suspend fun saveFile(
-        baseName: String,
+        suggestedName: String,
         extension: String,
-        initialDirectory: String?,
+        directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings?,
     ): File? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
@@ -44,10 +46,10 @@ internal object AwtFileSaver {
         }
 
         // Set initial directory
-        dialog.directory = initialDirectory
+        directory?.let { dialog.directory = directory.path }
 
         // Set file name
-        dialog.file = "$baseName.$extension"
+        dialog.file = "$suggestedName.$extension"
 
         // Show the dialog
         dialog.isVisible = true
