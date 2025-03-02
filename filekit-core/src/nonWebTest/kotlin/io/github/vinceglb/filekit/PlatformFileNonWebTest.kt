@@ -101,7 +101,7 @@ class PlatformFileNonWebTest {
 
     @Test
     fun testPlatformFileReadBytes() = runTest {
-        val textFileContent = textFile.readBytes().decodeToString()
+        val textFileContent = textFile.readString()
         assertEquals(expected = "Hello, World!", actual = textFileContent)
 
         val emptyFileContent = emptyFile.readBytes()
@@ -120,8 +120,8 @@ class PlatformFileNonWebTest {
         val content = "Hello Test!"
 
         // Write
-        newFile.write(content.encodeToByteArray())
-        assertEquals(expected = content, actual = newFile.readBytes().decodeToString())
+        newFile.writeString(content)
+        assertEquals(expected = content, actual = newFile.readString())
 
         // Delete
         newFile.delete()

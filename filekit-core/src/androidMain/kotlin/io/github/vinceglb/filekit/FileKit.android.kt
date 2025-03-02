@@ -9,6 +9,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
 import androidx.exifinterface.media.ExifInterface
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.coroutines.Dispatchers
@@ -70,10 +71,10 @@ public actual suspend fun FileKit.compressImage(
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
-): ByteArray? = withContext(Dispatchers.IO) {
+): ByteArray = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to Bitmap
     val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-        ?: return@withContext null
+        ?: throw FileKitException("Failed to decode image")
 
     // Step 2: Correct the orientation using EXIF data
     val correctedBitmap = correctBitmapOrientation(bytes, originalBitmap)

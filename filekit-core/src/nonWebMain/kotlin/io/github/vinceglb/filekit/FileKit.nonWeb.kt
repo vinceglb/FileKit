@@ -17,7 +17,7 @@ public expect suspend fun FileKit.saveImageToGallery(
 
 public suspend fun FileKit.saveImageToGallery(
     file: PlatformFile,
-    filename: String,
+    filename: String = file.name,
 ): Unit = saveImageToGallery(
     bytes = file.readBytes(),
     filename = filename,
@@ -29,7 +29,7 @@ public expect suspend fun FileKit.compressImage(
     maxWidth: Int? = null,
     maxHeight: Int? = null,
     compressFormat: CompressFormat = CompressFormat.JPEG,
-): ByteArray?
+): ByteArray
 
 public suspend fun FileKit.compressImage(
     file: PlatformFile,
@@ -37,7 +37,7 @@ public suspend fun FileKit.compressImage(
     maxWidth: Int? = null,
     maxHeight: Int? = null,
     compressFormat: CompressFormat = CompressFormat.JPEG,
-): ByteArray? = compressImage(
+): ByteArray = compressImage(
     bytes = file.readBytes(),
     quality = quality,
     maxWidth = maxWidth,

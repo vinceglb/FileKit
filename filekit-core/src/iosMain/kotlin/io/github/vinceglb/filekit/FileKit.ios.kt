@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -47,7 +48,7 @@ internal actual fun compress(
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
-): NSData? {
+): NSData {
     val originalImage = UIImage(data = nsData)
     val originalWidth = originalImage.size.useContents { width }.toInt()
     val originalHeight = originalImage.size.useContents { height }.toInt()
@@ -60,12 +61,12 @@ internal actual fun compress(
     )
 
     val resizedImage = originalImage.scaleToSize(newWidth, newHeight)
-        ?: return null
+        ?: throw FileKitException("Failed to resize image")
 
     return when (compressFormat) {
         CompressFormat.JPEG -> UIImageJPEGRepresentation(resizedImage, quality / 100.0)
         CompressFormat.PNG -> UIImagePNGRepresentation(resizedImage)
-    }
+    } ?: throw FileKitException("Failed to compress image")
 }
 
 @OptIn(ExperimentalForeignApi::class)

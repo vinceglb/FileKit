@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import androidx.annotation.IntRange
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.utils.Platform
 import io.github.vinceglb.filekit.utils.PlatformUtil
@@ -84,10 +85,11 @@ public actual suspend fun FileKit.compressImage(
     maxWidth: Int?,
     maxHeight: Int?,
     compressFormat: CompressFormat,
-): ByteArray? = withContext(Dispatchers.IO) {
+): ByteArray = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to BufferedImage
     val inputStream = ByteArrayInputStream(bytes)
-    val originalImage = ImageIO.read(inputStream) ?: return@withContext null
+    val originalImage = ImageIO.read(inputStream)
+        ?: throw FileKitException("Failed to read image")
 
     // Step 2: Calculate the new dimensions while maintaining aspect ratio
     val (newWidth, newHeight) = calculateNewDimensions(
