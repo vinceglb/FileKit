@@ -13,3 +13,5 @@ public expect val PlatformFile.nameWithoutExtension: String
 public expect fun PlatformFile.size(): Long
 
 public expect suspend fun PlatformFile.readBytes(): ByteArray
+
+public expect suspend fun PlatformFile.readString(): String

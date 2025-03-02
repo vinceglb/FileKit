@@ -10,10 +10,15 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
+import kotlinx.io.readString
+import kotlinx.io.writeString
 
 public expect fun PlatformFile(path: Path): PlatformFile
 
 public fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
+
+public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
+    PlatformFile(base.toKotlinxIoPath() / child)
 
 public expect fun PlatformFile.toKotlinxIoPath(): Path
 
@@ -29,9 +34,6 @@ public expect fun PlatformFile.source(): RawSource
 
 public expect fun PlatformFile.sink(append: Boolean = false): RawSink
 
-public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
-    PlatformFile(base.toKotlinxIoPath() / child)
-
 public expect fun PlatformFile.isRegularFile(): Boolean
 
 public expect fun PlatformFile.isDirectory(): Boolean
@@ -46,6 +48,14 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
             .source()
             .buffered()
             .readByteArray()
+    }
+
+public actual suspend fun PlatformFile.readString(): String =
+    withContext(Dispatchers.IO) {
+        this@readString
+            .source()
+            .buffered()
+            .readString()
     }
 
 public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
@@ -64,6 +74,14 @@ public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Unit =
             .sink()
             .buffered()
             .use { it.write(source, size) }
+    }
+
+public suspend fun PlatformFile.writeString(string: String): Unit =
+    withContext(Dispatchers.IO) {
+        this@writeString
+            .sink()
+            .buffered()
+            .use { it.writeString(string) }
     }
 
 public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
