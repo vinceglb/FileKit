@@ -19,12 +19,21 @@
 
 ## ✨ Features
 
-- 📱 **Cross-Platform Support**: Works seamlessly on Android, iOS, macOS, JVM (Windows, Linux), JS, and WASM
+- 📱 **Cross-Platform Support**: Works seamlessly on Android, iOS, macOS, JVM (Windows, macOS, Linux), JS, and WASM
 - 🎯 **Native Experience**: Uses platform-native file pickers for the best user experience
 - 🪶 **Lightweight**: Minimal dependencies to keep your app fast and lean
 - 🔌 **Rich Integrations**: Works with Compose Multiplatform, Coroutines, kotlinx-io, Coil, and more
 - 📂 **Comprehensive File Operations**: Pick files, save documents, access photos, manage directories
 - 🎨 **Image Utilities**: Built-in image compression and gallery integration
+
+## 📚 Documentation
+
+Visit our [documentation](https://filekit.mintlify.app) to learn more: https://filekit.mintlify.app
+
+- [FileKit Introduction](https://filekit.mintlify.app/introduction)
+- [Getting Started Guide](https://filekit.mintlify.app/quickstart)
+- [Core API Documentation](https://filekit.mintlify.app/core/setup)
+- [Dialogs Documentation](https://filekit.mintlify.app/dialogs/setup)
 
 ## 🚀 Quick Start
 
@@ -39,6 +48,8 @@ dependencies {
     implementation("io.github.vinceglb:filekit-coil:$version")
 }
 ```
+
+Follow the [installation guide](https://filekit.mintlify.app/installation) to learn how to install and setup FileKit in your project.
 
 ### Usage Examples
 
@@ -75,6 +86,8 @@ val compressedBytes = FileKit.compressImage(
 )
 ```
 
+See the [quickstart guide](https://filekit.mintlify.app/quickstart) to learn more about the different file operations and utilities available in FileKit.
+
 ## 📦 Modular Structure
 
 FileKit is designed to be modular, allowing you to include only what you need:
@@ -83,15 +96,6 @@ FileKit is designed to be modular, allowing you to include only what you need:
 - **FileKit Dialogs**: File pickers and save dialogs
 - **FileKit Dialogs Compose**: Compose Multiplatform integration
 - **FileKit Coil**: Integration with Coil for image loading
-
-## 📚 Documentation
-
-Visit our [comprehensive documentation](https://filekit.mintlify.app) to learn more:
-
-- [Getting Started Guide](https://filekit.mintlify.app/quickstart)
-- [Core API Documentation](https://filekit.mintlify.app/core/setup)
-- [Dialogs Documentation](https://filekit.mintlify.app/dialogs/setup)
-- [Sample Projects](https://github.com/vinceglb/FileKit/tree/main/samples)
 
 ![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
 
