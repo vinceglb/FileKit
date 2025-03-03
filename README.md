@@ -35,6 +35,8 @@ Visit our [documentation](https://filekit.mintlify.app) to learn more: https://f
 - [Core API Documentation](https://filekit.mintlify.app/core/setup)
 - [Dialogs Documentation](https://filekit.mintlify.app/dialogs/setup)
 
+> Migrate from FileKit 0.8 to 0.10 by following the [migration guide](https://filekit.mintlify.app/migrate-to-v0.10).
+
 ## 🚀 Quick Start
 
 ### Installation
