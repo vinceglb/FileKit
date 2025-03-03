@@ -25,8 +25,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize FileKit with application context
-        FileKit.init(applicationContext)
+        // Initialize FileKit
+        FileKit.init(this)
     }
 }
 ```
