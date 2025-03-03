@@ -1,0 +1,47 @@
+---
+title: 'Gallery picker dialog'
+sidebarTitle: 'Gallery picker'
+description: 'Open the native photos and videos picker on Android and iOS'
+---
+
+<Check>Supported on Android and iOS targets</Check>
+
+Android and iOS offer a native interface for users to browse and select photos and videos from their device. FileKit provides a unified API to open the gallery picker dialog on both platforms.
+
+- On Android, FileKit provides the [Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) API. 
+- On iOS, FileKit provides the [PHPickerViewController](https://developer.apple.com/documentation/photokit/selecting-photos-and-videos-in-ios) API.
+
+<div className="flex justify-center gap-6">
+  <a href="https://developer.android.com/training/data-storage/shared/photopicker" target="_blank" className="border-transparent">
+    <img height="200" width="200" noZoom src="https://developer.android.com/static/images/training/data-storage/kotlin-picker.gif" />
+  </a>
+  <a href="https://developer.apple.com/documentation/photokit/selecting-photos-and-videos-in-ios" target="_blank" className="border-transparent">
+    <img height="200" width="200" noZoom src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*TzEgvuo17bT95aOJj1IuRg.png" />
+  </a>
+</div>
+
+### Open the gallery picker
+
+To open the gallery picker dialog on Android and iOS, simply pass `Image`, `Video`, or `ImageAndVideo` to the `type` parameter:
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val image = FileKit.openFilePicker(type = FileKitType.Image)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher(
+    type = FileKitType.Image,
+) { image ->
+    // Handle the image
+}
+```
+</CodeGroup>
+
+### Maximum number of items
+
+On both Android and iOS, you can set a limit on the number of items a user can select by passing the `maxItems` parameter to `FileKitMode.Multiple()`:
+
+```kotlin
+val mode = FileKitMode.Multiple(maxItems = 5)
+```

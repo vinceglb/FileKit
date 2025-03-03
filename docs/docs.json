@@ -1,0 +1,73 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "background": {
+    "decoration": "windows"
+  },
+  "name": "FileKit",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart",
+          "installation",
+          "migrate-to-v0.10"
+        ]
+      },
+      {
+        "group": "FileKit Core",
+        "pages": [
+          "core/setup",
+          "core/platform-file",
+          "core/read-file",
+          "core/write-file",
+          "core/file-utils",
+          "core/image-utils"
+        ]
+      },
+      {
+        "group": "FileKit Dialogs",
+        "pages": [
+          "dialogs/setup",
+          "dialogs/file-picker",
+          "dialogs/gallery-picker",
+          "dialogs/directory-picker",
+          "dialogs/camera-picker",
+          "dialogs/file-saver",
+          "dialogs/dialog-settings"
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light-0.10.2.svg",
+    "dark": "/logo/dark-0.10.2.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/vinceglb/FileKit"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/vinceglb/FileKit"
+    }
+  },
+  "integrations": {
+    "mixpanel": {
+      "projectToken": "00fb70ba023ea0e3922aaa9047193b72"
+    },
+    "amplitude": {
+      "apiKey": "f4fd93ebc8fad4322b99fa1d99a6815"
+    }
+  }
+}

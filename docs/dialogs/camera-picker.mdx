@@ -1,0 +1,56 @@
+---
+title: 'Camera picker dialog'
+sidebarTitle: 'Camera picker'
+description: 'Open a camera picker dialog in a Kotlin Multiplatform project'
+---
+
+<Check>Supported on Android and iOS targets</Check>
+
+## Quick start
+
+The camera picker component provides a native interface for users to capture photos using their device's camera.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openCameraPicker()
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberCameraPickerLauncher { file ->
+    // Handle the captured photo
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Take a photo")
+}
+```
+</CodeGroup>
+
+## Camera type
+
+You can specify the type of media to capture using the `type` parameter:
+- `Photo` - Capture a photo (default)
+- `Video` - Capture a video (coming soon)
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openCameraPicker(type = FileKitCameraType.Photo)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberCameraPickerLauncher(
+    type = FileKitCameraType.Photo
+) { file ->
+    // Handle the captured photo
+}
+```
+</CodeGroup>
+
+<Warning>
+Video capture support is planned for a future release.
+</Warning>
+
+<Info>
+The captured media file is automatically saved to a temporary location. If you need to keep the file permanently, make sure to copy it to a permanent storage location.
+</Info>
+

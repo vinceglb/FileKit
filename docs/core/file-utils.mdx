@@ -1,0 +1,92 @@
+---
+title: 'File utilities'
+description: 'Utility functions for working with files in Kotlin Multiplatform'
+---
+
+import DownloadFilesWeb from '/snippets/download-files-web.mdx'
+
+## Standard Directories
+
+<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+
+FileKit provides access to standard platform-specific directories:
+
+```kotlin
+// Get the application's files directory
+val filesDir: PlatformFile = FileKit.filesDir
+
+// Get the application's cache directory
+val cacheDir: PlatformFile = FileKit.cacheDir
+
+// Get the application's databases directory
+val databasesDir: PlatformFile = FileKit.databasesDir
+```
+
+These directories are automatically created if they don't exist and are properly sandboxed on each platform.
+
+### Platform-specific Directory Behavior
+
+Each platform maps these standard directories to different locations according to platform conventions:
+
+**Android**
+- **filesDir**: Maps to `context.filesDir`, which is the app's private internal storage
+- **cacheDir**: Maps to `context.cacheDir`, which is the app's private cache directory
+- **databasesDir**: Maps to a `databases` subdirectory in the app's internal storage
+
+**iOS**
+- **filesDir**: Maps to the app's Documents directory, which is backed up with iCloud
+- **cacheDir**: Maps to the app's Caches directory, which isn't backed up and may be cleared by the system
+- **databasesDir**: Maps to a `databases` subdirectory in the app's Documents directory
+
+**macOS**
+- **filesDir**: Maps to `~/Library/Application Support/<app-id>/`, requiring FileKit initialization with an app ID
+- **cacheDir**: Maps to `~/Library/Caches/<app-id>/`
+- **databasesDir**: Maps to a `databases` subdirectory in the application support directory
+
+**JVM (Desktop)**
+- **filesDir**: Maps to platform-specific app data locations:
+  - Linux: `~/.local/share/<app-id>/`
+  - macOS: `~/Library/Application Support/<app-id>/`
+  - Windows: `%APPDATA%/<app-id>/`
+- **cacheDir**: Maps to platform-specific cache locations:
+  - Linux: `~/.cache/<app-id>/`
+  - macOS: `~/Library/Caches/<app-id>/`
+  - Windows: `%LOCALAPPDATA%/<app-id>/Cache/`
+- **databasesDir**: Maps to a `databases` subdirectory within filesDir
+
+<Note>
+On JVM and macOS platforms, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
+</Note>
+
+### Additional Directories
+
+On some platforms, FileKit provides additional standard directories:
+
+```kotlin
+// macOS and JVM only
+val picturesDir: PlatformFile = FileKit.picturesDir // Maps to user's Pictures directory
+
+// JVM only
+val downloadDir: PlatformFile = FileKit.downloadDir // Maps to user's Downloads directory
+```
+
+### Directory Usage Example
+
+```kotlin
+// Store app configuration
+val configFile = FileKit.filesDir / "config.json"
+configFile.writeString("{\"version\": 1}")
+
+// Store temporary processing data
+val tempFile = FileKit.cacheDir / "temp_data.bin"
+tempFile.write(processingData)
+
+```kotlin
+// Access a database file
+val dbFile = FileKit.databasesDir / "app.db" 
+// Use the database file with your preferred database library
+```
+
+## Downloading files from web
+
+<DownloadFilesWeb/>

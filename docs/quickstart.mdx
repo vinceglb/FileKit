@@ -1,0 +1,275 @@
+---
+title: 'Quickstart Guide'
+sidebarTitle: 'Quickstart'
+description: 'Get started with FileKit in minutes'
+---
+
+import VersionDialogs from '/snippets/version-dialogs.mdx'
+
+FileKit is a powerful Kotlin Multiplatform library for cross-platform file operations. This guide will quickly get you up and running with FileKit, demonstrating its key features.
+
+## File Dialogs
+
+<VersionDialogs/>
+
+### File picker
+
+FileKit provides a simple way to open a file picker dialog. Read more about [file picker](/dialogs/file-picker).
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+// Pick a single file
+val file = FileKit.openFilePicker()
+
+// Pick multiple files
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+
+// Pick only image files
+val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
+```
+
+```kotlin filekit-dialogs-compose
+// Pick a single file
+val launcher = rememberFilePickerLauncher { file ->
+    // Handle the selected file
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick a file")
+}
+```
+
+</CodeGroup>
+
+### Directory picker
+
+FileKit makes it easy to open a directory picker dialog. Read more about [directory picker](/dialogs/directory-picker).
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+// Pick a single directory
+val directory = FileKit.openDirectoryPicker()
+```
+
+```kotlin filekit-dialogs-compose
+// Pick a single directory
+val launcher = rememberDirectoryPickerLauncher { directory ->
+    // Handle the selected directory
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick a directory")
+}
+```
+
+</CodeGroup>
+
+### Camera picker
+
+FileKit makes it easy to open a camera picker dialog. Read more about [camera picker](/dialogs/camera-picker).
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+// Pick a single image
+val imageFile = FileKit.openCameraPicker()
+```
+
+```kotlin filekit-dialogs-compose
+// Pick a single image
+val launcher = rememberCameraPickerLauncher { imageFile ->
+    // Handle the selected image
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick an image")
+}
+```
+
+</CodeGroup>
+
+
+### File saver
+
+FileKit makes it easy to save a file. Read more about [file saver](/dialogs/file-saver).
+
+<CodeGroup>
+
+```kotlin filekit-dialogs
+val contentToSave = "Hello FileKit!"
+
+// Open save dialog to let user choose location
+val file = FileKit.openFileSaver(suggestedName = "document", extension = "txt")
+
+// Write content to the file
+file?.writeString(contentToSave)
+```
+
+```kotlin filekit-dialogs-compose
+// Create a file saver launcher
+val launcher = rememberFileSaverLauncher { file ->
+    // Handle the saved file
+    file?.let { saveFile(it) }
+}
+
+// Display a button to open the file saver dialog
+Button(onClick = { launcher.launch("document", "txt") }) {
+    Text("Save a file")
+}
+
+// Save the file
+val scope = rememberCoroutineScope()
+fun saveFile(file: PlatformFile) = scope.launch {
+  val contentToSave = "Hello FileKit!"
+  file.writeString(contentToSave)
+}
+```
+
+</CodeGroup>
+
+### Documentation
+
+<Card icon="window" title="FileKit Dialogs Documentation" href="/dialogs/setup">
+    Get started with FileKit Dialogs, installation and usage, here.
+</Card>
+
+## Working with files
+
+FileKit helps you work with files on your Kotlin Multiplatform project.
+
+### PlatformFile
+
+[PlatformFile](/core/platform-file) is a Kotlin Multiplatform abstraction for a file with [kotlinx-io](https://github.com/Kotlin/kotlinx-io) interoperability. It facilitates file operations across all platforms.
+
+```kotlin
+// Pick a file
+val file = FileKit.openFilePicker()
+
+// Get a file reference
+val file = FileKit.filesDir / "document.pdf"
+
+// Get the file properties
+val name: String = file.name
+val extension: String = file.extension
+val path: String = file.path
+val size: Long = file.size()
+val absolutePath: String = file.absolutePath()
+val parent: PlatformFile? = file.parent()
+val exists: Boolean = file.exists()
+val isFile: Boolean = file.isRegularFile()
+val isDirectory: Boolean = file.isDirectory()
+
+// And more...
+```
+
+### Reading Files
+
+For more details, see the [Reading Files](/core/read-file) documentation.
+
+```kotlin
+// Read as bytes
+val bytes: ByteArray = file.readBytes()
+
+// Read as text
+val text: String = file.readString()
+
+// Read large files with streaming API
+file.source().buffered().use { source ->
+    // Process chunks of data
+}
+```
+
+### Writing Files
+
+For more details, see the [Writing Files](/core/write-file) documentation.
+
+```kotlin
+// Write text to a file
+file.writeString("Hello, FileKit!")
+
+// Write binary data
+val data: ByteArray = getImageData()
+file.write(data)
+
+// Write with streaming API for large files
+file.sink(append = false).buffered().use { sink ->
+    sink.writeString("First line\n")
+    sink.writeString("Second line\n")
+    // Write more data as needed
+}
+```
+
+### File operations
+
+For more details, see the [File operations](/core/platform-file#file-operations) documentation.
+
+```kotlin
+// Create directories
+file.createDirectories()
+
+// Copy file
+file.copyTo(destinationFile)
+
+// Move file
+file.atomicMove(destinationFile)
+
+// Delete file
+file.delete()
+```
+
+## Image utilities
+
+FileKit provides utilities for **image compression** and **saving to the gallery**. Read more about [image utilities](/core/image-utils) documentation.
+
+```kotlin
+// Compress an image
+val originalImage = PlatformFile("/path/to/photo.jpg")
+val compressedBytes = FileKit.compressImage(
+    bytes = originalImage.readBytes(),
+    quality = 80,  // 0-100
+    maxWidth = 1024,
+    maxHeight = 1024,
+    compressFormat = CompressFormat.JPEG
+)
+
+// Save to device gallery
+FileKit.saveImageToGallery(
+    fileName = "My Photo",
+    bytes = compressedBytes,
+    format = CompressFormat.JPEG
+)
+```
+
+## File utilities
+
+FileKit provides access to standard platform-specific directories:
+
+```kotlin
+// Get the application's files directory
+val filesDir: PlatformFile = FileKit.filesDir
+
+// Get the application's cache directory
+val cacheDir: PlatformFile = FileKit.cacheDir
+
+// Get the application's databases directory
+val databasesDir: PlatformFile = FileKit.databasesDir
+```
+
+Read more about [File utilities](/core/file-utils) documentation.
+
+### Documentation
+
+<Card icon="window" title="FileKit Core Documentation" href="/core/setup">
+    Get started with FileKit Core, installation and usage, here.
+</Card>
+
+## Next Steps
+
+Now that you've seen the basics of FileKit, you can:
+
+- Read the detailed [Core documentation](/core/setup) to learn about platform-specific setup
+- Explore [Dialogs documentation](/dialogs/setup) to learn about dialogs
+
+FileKit makes file operations simple and consistent across all platforms. Start building your cross-platform app with a powerful file system abstraction today! 

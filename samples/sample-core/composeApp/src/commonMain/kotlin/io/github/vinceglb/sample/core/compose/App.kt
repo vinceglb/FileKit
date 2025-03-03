@@ -19,32 +19,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
+import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
-import org.koin.compose.KoinApplication
-import org.koin.compose.koinInject
-import org.koin.dsl.module
 
 @Composable
-fun App(platformSettings: FileKitPlatformSettings? = null) {
-    KoinApplication(
-        application = {
-            modules(module {
-                factory { MainViewModel(platformSettings) }
-            })
-        }
-    ) {
-        MaterialTheme {
-            SampleApp()
-        }
+fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
+    MaterialTheme {
+        SampleApp(viewModel = viewModel { MainViewModel(dialogSettings) })
     }
 }
 
 @Composable
-private fun SampleApp(
-    viewModel: MainViewModel = koinInject<MainViewModel>(),
-) {
+private fun SampleApp(viewModel: MainViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     Box(
@@ -61,28 +49,24 @@ private fun SampleApp(
             }
 
             Button(onClick = viewModel::pickFile) {
-                Text("Single file picker, only png")
+                Text("Single file picker, only jpg / png")
             }
 
             Button(onClick = viewModel::pickFiles) {
-                Text("Multiple files picker, only png")
+                Text("Multiple files picker, only jpg / png")
             }
 
-            Button(
-                onClick = viewModel::pickDirectory,
-                enabled = FileKit.isDirectoryPickerSupported(),
-            ) {
-                Text("Directory picker")
+            Button(onClick = viewModel::takePhoto) {
+                Text("Take photo")
             }
+
+            PickDirectoryButton(
+                directory = uiState.directory,
+                onClick = viewModel::pickDirectory
+            )
 
             if (uiState.loading) {
                 CircularProgressIndicator()
-            }
-
-            if (FileKit.isDirectoryPickerSupported()) {
-                Text("Selected directory: ${uiState.directory?.path ?: "None"}")
-            } else {
-                Text("Directory picker is not supported")
             }
 
             LazyVerticalGrid(
@@ -93,9 +77,15 @@ private fun SampleApp(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(uiState.files.toList()) {
-                    PhotoItem(it, viewModel::saveFile)
+                    PhotoItem(it, viewModel::compressImageAndSaveToGallery)
                 }
             }
         }
     }
 }
+
+@Composable
+expect fun PickDirectoryButton(
+    directory: PlatformFile?,
+    onClick: () -> Unit
+)

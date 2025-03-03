@@ -1,0 +1,74 @@
+---
+title: 'Migrate to v0.10'
+description: 'Guide to migrate from FileKit v0.8 to v0.10'
+---
+
+FileKit v0.10 is a full rewrite of the library. It introduces a new API that is more consistent and easier to use. Also, it introduces new concepts that make it easier to work with files and directories on different platforms.
+
+## Migration Steps
+
+<Steps>
+  <Step title="Package names changed">
+    The package names have been renamed to match the new API.
+
+    ```kotlin {3, 7}
+    // filekit-core renamed to filekit-dialogs
+    implementation("io.github.vinceglb:filekit-core:0.8.8")
+    implementation("io.github.vinceglb:filekit-dialogs:0.10.0-beta01")
+
+    // filekit-compose renamed to filekit-dialogs-compose
+    implementation("io.github.vinceglb:filekit-compose:0.8.8")
+    implementation("io.github.vinceglb:filekit-dialogs-compose:0.10.0-beta01")
+    ```
+
+    <Info>
+      The `filekit-core` package still exists but it only contains the core functionality of the library like [PlatformFile](/core/platform-file) without any dialogs capabilities.
+    </Info>
+
+    Check the [Installation](/installation) page to learn more about the different modules.
+  </Step>
+  <Step title="Renamed methods">
+    Some methods have been renamed to match the new API. Also, some arguments may have been changed but the behavior is the same.
+
+    ```kotlin
+    // Before
+    FileKit.pickFile()
+    FileKit.pickDirectory()
+    FileKit.saveFile()
+
+    // After
+    FileKit.openFilePicker()
+    FileKit.openDirectoryPicker()
+    FileKit.openFileSaver()
+    ```
+
+    Read more about the new API in the [FileKit Dialogs](/dialogs/setup) documentation.
+  </Step>
+  <Step title="Changes in the saving file feature">
+    `FileKit.openFileSaver()` does not accept taking `bytes` as parameter. Now, it only returns the path where the user has chosen to save the file.
+    We can now use the returned `PlatformFile` to save the bytes to the file.
+
+    ```kotlin
+    // Before
+    FileKit.saveFile(bytes)
+
+    // After
+    val file = FileKit.openFileSaver()
+    file?.write(bytes)
+    ```
+
+    On web targets, opening the file saver is not possible anymore due to browser limitations. Instead, FileKit provides a `download()` function that can be used to download a file from the web.
+
+    ```kotlin
+    FileKit.download(bytes, "file.txt")
+    ```
+
+    Take a look at the [Writing files](/core/write-file) documentation to learn more about the new API.
+  </Step>
+</Steps>
+
+## Feedback
+
+FileKit v0.10 is a major rewrite of the library. If you have any feedback, suggestions or questions, please let me know by opening a discussion on [GitHub](https://github.com/vinceglb/FileKit/discussions).
+
+Also, if you find any issues, please open an issue on [GitHub](https://github.com/vinceglb/FileKit/issues).

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SamplePickerKt
 
 @main
 struct iOSApp: App {

@@ -1,0 +1,12 @@
+<Check>Supported on JS and WASM targets</Check>
+
+FileKit provides a convenient way to download files in web environments (JS and WASM targets). This functionality allows users to save files from your web application to their local device:
+
+```kotlin
+// Download from bytes
+FileKit.download(bytes, "file.txt")
+
+// Download from file
+val file: PlatformFile = ...
+FileKit.download(file, "file.txt")
+```

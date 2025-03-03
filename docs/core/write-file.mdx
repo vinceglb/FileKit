@@ -1,0 +1,180 @@
+---
+title: 'Writing files'
+description: 'Write files with FileKit Core in Kotlin Multiplatform'
+---
+
+import DownloadFilesWeb from '/snippets/download-files-web.mdx'
+
+<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+
+FileKit Core provides a consistent API for writing files across all platforms. The `PlatformFile` class offers multiple methods to write data to files, from simple strings to binary data and streaming operations.
+
+## Writing from ByteArray
+
+The most common way to write data to a file is using the `write()` infix function with a `ByteArray`:
+
+```kotlin
+val file = PlatformFile(FileKit.filesDir, "image.jpg")
+
+// Write the bytes
+file.write(bytes)
+```
+
+## Writing from String
+
+You can also write a string to a file using the `writeString()` function:
+
+```kotlin
+val file = PlatformFile(FileKit.filesDir, "document.txt")
+
+// Write the string
+file.writeString("Hello, FileKit!")
+```
+
+## Using Sink
+
+For more advanced use cases or when working with large files, you can use the `sink()` method:
+
+```kotlin
+fun writeLargeFile() {
+    val file = PlatformFile("/path/to/large-file.dat")
+    
+    // Get a raw sink for the file (overwrites existing file)
+    val sink = file.sink(append = false).buffered()
+    
+    // Use the sink to write in chunks
+    sink.use { bufferedSink ->
+        // Write a string
+        bufferedSink.writeString("Line 1\n")
+        
+        // Write bytes
+        val bytes = ByteArray(1024) { it.toByte() }
+        bufferedSink.write(bytes)
+        
+        // Write from another source
+        val sourceFile = PlatformFile("/path/to/source.dat")
+        bufferedSink.write(sourceFile.source(), sourceFile.size())
+    }
+}
+```
+
+## Appending to Files
+
+To append data to an existing file instead of overwriting it, use the `append` parameter:
+
+```kotlin
+fun appendToFile() {
+    val file = PlatformFile("/path/to/log.txt")
+    
+    // Get a sink that appends to the file
+    val sink = file.sink(append = true).buffered()
+    
+    sink.use { bufferedSink ->
+        bufferedSink.writeUtf8("New log entry: ${Clock.System.now()}\n")
+    }
+}
+```
+
+## Copying Files
+
+You can easily copy the contents of one file to another using the `write` infix function with another `PlatformFile` or the `copyTo` function:
+
+```kotlin
+val sourceFile = PlatformFile("/path/to/source.txt")
+val destinationFile = PlatformFile("/path/to/destination.txt")
+
+// Method 1: Using write
+destinationFile.write(sourceFile)
+
+// Method 2: Using copyTo
+sourceFile.copyTo(destinationFile)
+```
+
+## Moving Files
+
+You can move a file from one location to another using the `atomicMove` function:
+
+```kotlin
+val sourceFile = PlatformFile("/path/to/source.txt")
+val destinationFile = PlatformFile("/path/to/destination.txt")
+
+// Move the file
+sourceFile.atomicMove(destinationFile)
+```
+
+## Deleting Files
+
+FileKit also provides a method to delete files:
+
+```kotlin
+val file = PlatformFile(FileKit.cacheDir, "temporary.txt")
+
+// Delete the file (throws if file doesn't exist)
+file.delete()
+
+// Or specify that the file doesn't need to exist
+file.delete(mustExist = false)
+```
+
+## Creating Directories
+
+Before writing to a file, you may need to ensure its parent directory exists:
+
+```kotlin
+val directory = PlatformFile(FileKit.filesDir, "reports/2023/q4")
+
+// Create the directory and all parent directories if they don't exist
+if (!directory.exists()) {
+    directory.createDirectories()
+}
+
+// Now we can write to a file in this directory
+val reportFile = directory / "summary.txt"
+reportFile.writeString("Quarterly Report")
+```
+
+## Error Handling
+
+When writing files, you should handle potential errors:
+
+```kotlin
+val file = PlatformFile(FileKit.filesDir, "document.txt")
+val content = "Hello, FileKit!"
+
+try {        
+    file.writeString(content)
+    println("File written successfully")
+} catch (e: Exception) {
+    println("Error writing file: ${e.message}")
+}
+```
+
+## Downloading files from web
+
+<DownloadFilesWeb/>
+
+## Example: Creating a Simple Logger
+
+```kotlin
+class SimpleLogger(private val logFile: PlatformFile) {
+    fun log(message: String) {
+        // Get current timestamp
+        val timestamp = Clock.System.now()
+        val logEntry = "[$timestamp] $message\n"
+
+        // Append to log file
+        val sink = logFile.sink(append = true).buffered()
+        sink.use { it.writeString(logEntry) }
+    }
+}
+
+// Usage
+fun main() {
+    val logger = SimpleLogger(PlatformFile(FileKit.filesDir, "app.log"))
+    logger.log("Application started")
+}
+```
+
+<Note>
+See also: [Reading Files](/core/read-file) for information on how to read files after writing them.
+</Note>

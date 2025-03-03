@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,43 +24,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import coil3.compose.AsyncImage
-import io.github.vinceglb.filekit.core.PlatformFile
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.coil.AsyncImage
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.size
 
 @Composable
 fun PhotoItem(
     file: PlatformFile,
     onSaveFile: (PlatformFile) -> Unit,
 ) {
-    var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
     var showName by remember { mutableStateOf(false) }
-
-    LaunchedEffect(file) {
-        bytes = if (file.supportsStreams()) {
-            val size = file.getSize()
-            if (size != null && size > 0L) {
-                val buffer = ByteArray(size.toInt())
-                val tmpBuffer = ByteArray(1000)
-                var totalBytesRead = 0
-                file.getStream().use {
-                    while (it.hasBytesAvailable()) {
-                        val numRead = it.readInto(tmpBuffer, 1000)
-                        tmpBuffer.copyInto(
-                            buffer,
-                            destinationOffset = totalBytesRead,
-                            endIndex = numRead,
-                        )
-                        totalBytesRead += numRead
-                    }
-                }
-                buffer
-            } else {
-                file.readBytes()
-            }
-        } else {
-            file.readBytes()
-        }
-    }
 
     Surface(
         onClick = { showName = !showName },
@@ -70,15 +43,12 @@ fun PhotoItem(
             .clip(shape = MaterialTheme.shapes.medium)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            bytes?.let {
-                AsyncImage(
-                    bytes,
-                    contentDescription = file.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
-            }
+            AsyncImage(
+                file,
+                contentDescription = file.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+            )
 
             Surface(
                 color = MaterialTheme.colorScheme.surfaceVariant,
@@ -107,7 +77,7 @@ fun PhotoItem(
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Text(
-                        file.name,
+                        "${file.name} - ${file.size()}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(4.dp)
                     )

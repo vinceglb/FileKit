@@ -1,34 +1,39 @@
 package io.github.vinceglb.sample.core
 
-import com.rickclephas.kmp.observableviewmodel.MutableStateFlow
-import com.rickclephas.kmp.observableviewmodel.ViewModel
-import com.rickclephas.kmp.observableviewmodel.coroutineScope
-import io.github.vinceglb.filekit.core.FileKit
-import io.github.vinceglb.filekit.core.FileKitPlatformSettings
-import io.github.vinceglb.filekit.core.PickerMode
-import io.github.vinceglb.filekit.core.PickerType
-import io.github.vinceglb.filekit.core.PlatformDirectory
-import io.github.vinceglb.filekit.core.PlatformFile
-import io.github.vinceglb.filekit.core.baseName
-import io.github.vinceglb.filekit.core.extension
-import io.github.vinceglb.filekit.core.pickFile
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
+import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.nameWithoutExtension
+import io.github.vinceglb.filekit.readBytes
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val platformSettings: FileKitPlatformSettings?
+    private val dialogSettings: FileKitDialogSettings
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(viewModelScope, MainUiState())
+    // Used for SwiftUI code
+    @Suppress("unused")
+    constructor() : this(FileKitDialogSettings.createDefault())
+
+    private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState
 
     fun pickImage() = executeWithLoading {
         // Pick a file
-        val file = FileKit.pickFile(
-            type = PickerType.Image,
+        val file = FileKit.openFilePicker(
+            type = FileKitType.Image,
             title = "Custom title here",
-            initialDirectory = downloadDirectoryPath(),
-            platformSettings = platformSettings,
+            directory = downloadDirectoryPath(),
+            dialogSettings = dialogSettings,
         )
 
         // Add file to the state
@@ -40,10 +45,10 @@ class MainViewModel(
 
     fun pickImages() = executeWithLoading {
         // Pick files
-        val files = FileKit.pickFile(
-            type = PickerType.Image,
-            mode = PickerMode.Multiple(),
-            platformSettings = platformSettings,
+        val files = FileKit.openFilePicker(
+            type = FileKitType.Image,
+            mode = FileKitMode.Multiple(),
+            dialogSettings = dialogSettings,
         )
 
         // Add files to the state
@@ -56,9 +61,9 @@ class MainViewModel(
 
     fun pickFile() = executeWithLoading {
         // Pick a file
-        val file = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
-            platformSettings = platformSettings,
+        val file = FileKit.openFilePicker(
+            type = FileKitType.File(extensions = listOf("png", "jpg")),
+            dialogSettings = dialogSettings,
         )
 
         // Add file to the state
@@ -70,10 +75,10 @@ class MainViewModel(
 
     fun pickFiles() = executeWithLoading {
         // Pick files
-        val files = FileKit.pickFile(
-            type = PickerType.File(extensions = listOf("png")),
-            mode = PickerMode.Multiple(),
-            platformSettings = platformSettings,
+        val files = FileKit.openFilePicker(
+            type = FileKitType.File(extensions = listOf("png", "jpg")),
+            mode = FileKitMode.Multiple(),
+            dialogSettings = dialogSettings,
         )
 
         // Add files to the state
@@ -85,9 +90,7 @@ class MainViewModel(
 
     fun pickDirectory() = executeWithLoading {
         // Pick a directory
-        val directory = FileKit.pickDirectory(
-            platformSettings = platformSettings,
-        )
+        val directory = pickDirectoryIfSupported(dialogSettings)
 
         // Update the state
         if (directory != null) {
@@ -97,11 +100,11 @@ class MainViewModel(
 
     fun saveFile(file: PlatformFile) = executeWithLoading {
         // Save a file
-        val newFile = FileKit.saveFile(
+        val newFile = FileKit.openFileSaver(
             bytes = file.readBytes(),
-            baseName = file.baseName,
+            suggestedName = file.nameWithoutExtension,
             extension = file.extension,
-            platformSettings = platformSettings
+            dialogSettings = dialogSettings
         )
 
         // Add file to the state
@@ -111,8 +114,24 @@ class MainViewModel(
         }
     }
 
+    fun takePhoto() = executeWithLoading {
+        val image = takePhotoIfSupported()
+
+        // Add image to the state
+        if (image != null) {
+            val newFiles = _uiState.value.files + image
+            _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
+    fun compressImageAndSaveToGallery(file: PlatformFile) = executeWithLoading {
+        file.readBytes()?.let {
+            compressImage(it)
+        }
+    }
+
     private fun executeWithLoading(block: suspend () -> Unit) {
-        viewModelScope.coroutineScope.launch {
+        viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
             block()
             _uiState.update { it.copy(loading = false) }
@@ -122,11 +141,19 @@ class MainViewModel(
 
 data class MainUiState(
     val files: Set<PlatformFile> = emptySet(),    // Set instead of List to avoid duplicates
-    val directory: PlatformDirectory? = null,
+    val directory: PlatformFile? = null,
     val loading: Boolean = false
 ) {
     // Used by SwiftUI code
     constructor() : this(emptySet(), null, false)
 }
 
-expect fun downloadDirectoryPath(): String?
+expect fun downloadDirectoryPath(): PlatformFile?
+
+expect suspend fun pickDirectoryIfSupported(
+    dialogSettings: FileKitDialogSettings
+): PlatformFile?
+
+expect suspend fun takePhotoIfSupported(): PlatformFile?
+
+expect suspend fun compressImage(bytes: ByteArray)

@@ -1,0 +1,118 @@
+---
+title: 'File saver dialog'
+sidebarTitle: 'File saver'
+description: 'Open a file saver dialog in a Kotlin Multiplatform project'
+---
+
+<Check>Supported on Android, iOS, macOS and JVM targets</Check>
+
+## Quick start
+
+The file saver component provides a native interface for users to choose where to save a file on their device.
+
+The file saver dialog returns a `PlatformFile` object representing where the user wants to save the file. Note that the file is not created automatically - it's the developer's responsibility to write the actual data to the file location using methods like `write()`.
+
+Here's a basic example:
+
+<CodeGroup>
+```kotlin filekit-dialogs
+// Open file saver dialog
+val file = FileKit.openFileSaver(
+    suggestedName = "document",
+    extension = "pdf"
+)
+
+// Write your data to the file
+if (file != null) {
+    file.write(bytes)
+}
+```
+
+```kotlin filekit-dialogs-compose
+val scope = rememberCoroutineScope()
+val launcher = rememberFileSaverLauncher { file ->
+    // Write your data to the file
+    if (file != null) {
+        scope.launch {
+            file.write(bytes)
+        }
+    }
+}
+
+Button(onClick = { launcher.launch("document", "pdf") }) {
+    Text("Save file")
+}
+```
+</CodeGroup>
+
+## Parameters
+
+The file saver can be customized with several parameters:
+
+- `suggestedName`: The default name for the file without extension
+- `extension`: The file extension without the dot (e.g., "pdf", "txt")
+- `directory`: The starting directory for the save dialog
+- `dialogSettings`: Platform-specific settings for customizing the dialog behavior
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openFileSaver(
+    suggestedName = "my-document",
+    extension = "pdf",
+    directory = PlatformFile("/custom/initial/path"),
+    dialogSettings = FileKitDialogSettings.createDefault()
+)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFileSaverLauncher(
+    directory = PlatformFile("/custom/initial/path"),
+    dialogSettings = FileKitDialogSettings.createDefault()
+) { file ->
+    // Handle the selected save location
+}
+
+launcher.launch("my-document", "pdf")
+```
+</CodeGroup>
+
+Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
+
+## Writing data
+
+The file saver returns a `PlatformFile` object representing the selected save location. You can write data to this file using the `write()` extension function:
+
+```kotlin
+val file = FileKit.openFileSaver(suggestedName = "document", extension = "pdf")
+
+if (file != null) {
+    // Write bytes to the file
+    file.write(bytes)
+}
+```
+
+For more information about writing files, see the [write file guide](/core/write-file).
+
+## Download file on the web
+
+On web targets (JS and WASM), instead of using a file saver dialog, you can directly download a file using `FileKit.download()`:
+
+```kotlin
+// Download bytes
+FileKit.download(
+    bytes = "Hello, World!".encodeToByteArray(),
+    fileName = "hello.txt"
+)
+
+// Download from a PlatformFile
+val file: PlatformFile = ...
+FileKit.download(file, fileName = "document.pdf")
+```
+
+This will trigger the browser's native download behavior, saving the file to the user's default downloads directory.
+
+<Info>
+On web targets, the file saver dialog is not supported due to browser security restrictions. Instead, use `FileKit.download()` to download files directly.
+</Info>
+
+For more information about writing files on different platforms, see the [write file guide](/core/write-file).

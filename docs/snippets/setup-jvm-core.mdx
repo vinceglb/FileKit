@@ -1,0 +1,15 @@
+FileKit needs to have your application id to handle the app directory. Your application id is generally the package name or the name of your application. FileKit will use this `appId` as app directory.
+
+We recommend you to initialize FileKit in your `main.kt` file:
+
+```kotlin main.kt
+fun main() = application {
+  // Initialize FileKit
+  FileKit.init(appId = "MyApplication")
+
+  // Start your application
+  Window(onCloseRequest = ::exitApplication) {
+    // ...
+  }
+}
+```

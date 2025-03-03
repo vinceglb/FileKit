@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidLibrary)
@@ -6,8 +7,15 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     // Android
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
 
     // JVM / Desktop
     jvm()
@@ -33,35 +41,39 @@ kotlin {
         it.binaries.framework {
             baseName = "SamplePickerKt"
             isStatic = true
+            export(libs.androidx.lifecycle.viewmodel)
+            export(projects.filekitCore)
         }
     }
 
     sourceSets {
         commonMain.dependencies {
             // FileKit Core
-            api(projects.filekitCore)
+            api(projects.filekitDialogs)
 
-            // Observable ViewModel
-            api(libs.observable.viewmodel)
+            // ViewModel
+            api(libs.androidx.lifecycle.viewmodel)
         }
 
-        // https://github.com/rickclephas/KMP-ObservableViewModel?tab=readme-ov-file#kotlin
-        all {
-            languageSettings.optIn("kotlinx.cinterop.ExperimentalForeignApi")
-        }
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating { dependsOn(commonMain.get()) }
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.core.shared"
-    compileSdk = 34
-
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
-        minSdk = 24
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }

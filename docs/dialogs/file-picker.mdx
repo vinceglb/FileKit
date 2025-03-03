@@ -1,0 +1,97 @@
+---
+title: 'File picker dialog'
+sidebarTitle: 'File picker'
+description: 'Open a file picker dialog in a Kotlin Multiplatform project'
+---
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+## Quick start
+
+The file picker component provides a native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openFilePicker()
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher { file ->
+    // Handle the file
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick a file")
+}
+```
+</CodeGroup>
+
+## Selection mode
+
+Select one or multiple files using the `mode` parameter.
+- `Single` - Allows the user to select a single file.
+- `Multiple()` - Allows the user to select multiple files.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher(
+    mode = FileKitMode.Multiple()
+) { files ->
+    // Handle the files
+}
+```
+</CodeGroup>
+
+## Filter by type
+
+Filter the files by their type using the `type` parameter. You can pick different types of files with `FileKitType`:
+- `Image`: Pick an image file.
+- `Video`: Pick a video file.
+- `ImageAndVideo`: Pick an image or a video file.
+- `File()`: Pick any file. It is the default type. It's possible to specify a list of extensions.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openFilePicker(type = FileKitType.File(listOf("pdf", "docx")))
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher(
+    type = FileKitType.File(extensions = listOf("pdf", "docx"))
+) { file ->
+    // Handle the pdf or docx file
+}
+```
+</CodeGroup>
+
+<Info>On Android and iOS, using Image, Video or ImageAndVideo FileKitType will open a gallery picker. [Read more here.](/dialogs/gallery-picker)</Info>
+
+## Customizing the dialog
+
+You can customize the dialog by setting the title, the initial directory and some settings relative to the platform.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.openFilePicker(
+    title = "Custom title",
+    directory = PlatformFile("/custom/initial/path"),
+    dialogSettings = FileKitDialogSettings.createDefault()
+)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberFilePickerLauncher(
+    title = "Custom title",
+    directory = PlatformFile("/custom/initial/path"),
+    dialogSettings = FileKitDialogSettings.createDefault()
+) { file ->
+    // Handle the file
+}
+```
+</CodeGroup>
+
+Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.

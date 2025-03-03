@@ -1,18 +1,8 @@
-rootProject.name = "FileKit"
-
-include(":filekit-core")
-include(":filekit-compose")
-include(":samples:sample-core:shared")
-include(":samples:sample-core:composeApp")
-include(":samples:sample-compose:composeApp")
-
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
-
 pluginManagement {
     repositories {
         google()
-        gradlePluginPortal()
         mavenCentral()
+        gradlePluginPortal()
     }
 }
 
@@ -22,3 +12,14 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
+
+rootProject.name = "FileKit"
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+include(":filekit-coil")
+include(":filekit-core")
+include(":filekit-dialogs")
+include(":filekit-dialogs-compose")
+include(":samples:sample-core:shared")
+include(":samples:sample-core:composeApp")
+include(":samples:sample-compose:composeApp")

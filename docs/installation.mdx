@@ -1,0 +1,96 @@
+---
+title: Installation
+description: 'Install FileKit in your Kotlin Multiplatform project'
+---
+
+FileKit is a Kotlin Multiplatform library for file operations. It provides a platform-agnostic file API and UI components for file operations.
+
+## Supported Platforms
+
+FileKit supports the following targets:
+- Android
+- iOS, macOS
+- JVM (Windows, macOS, Linux)
+- JS, WASM
+
+## FileKit Core
+
+FileKit Core provides the fundamental file operations with the `PlatformFile` abstraction. It allows you to work with files in a platform-agnostic way. You can create, read, write, and delete files using the `PlatformFile` API.
+
+<CodeGroup>
+
+```kotlin build.gradle.kts
+implementation("io.github.vinceglb:filekit-core:0.10.0-beta01")
+```
+
+```toml libs.versions.toml
+[versions]
+filekit = "0.10.0-beta01"
+
+[libraries]
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+```
+
+</CodeGroup>
+
+Once installed, you'll need to perform [platform-specific setup](/core/setup) for some targets.
+
+
+## FileKit Dialogs
+
+FileKit Dialogs helps you display file-related dialogs to users like file pickers, directory pickers, photo pickers, save dialogs, camera access, and more. FileKit Dialogs comes in two flavors:
+
+<CodeGroup>
+
+```kotlin build.gradle.kts
+// Enables FileKit dialogs without Compose dependencies
+implementation("io.github.vinceglb:filekit-dialogs:0.10.0-beta01")
+
+// Enables FileKit dialogs with Composable utilities
+implementation("io.github.vinceglb:filekit-dialogs-compose:0.10.0-beta01")
+```
+
+```toml libs.versions.toml
+[versions]
+filekit = "0.10.0-beta01"
+
+[libraries]
+filekit-dialogs = { module = "io.github.vinceglb:filekit-dialogs", version.ref = "filekit" }
+filekit-dialogs-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
+```
+
+</CodeGroup>
+
+FileKit Dialogs automatically integrates with FileKit Core and provides `PlatformFile` support. For platform-specific setup instructions, see the [Dialogs Setup Guide](/dialogs/setup).
+
+## FileKit Coil Integration
+
+FileKit provides a Coil extension to load images from a `PlatformFile` object. This makes it easy to display images from files in your Compose UI.
+
+<CodeGroup>
+
+```kotlin build.gradle.kts
+implementation("io.github.vinceglb:filekit-coil:0.10.0-beta01")
+```
+
+```toml libs.versions.toml
+[versions]
+filekit = "0.10.0-beta01"
+
+[libraries]
+filekit-coil = { module = "io.github.vinceglb:filekit-coil", version.ref = "filekit" }
+```
+
+</CodeGroup>
+
+## Next Steps
+
+Now that you've installed FileKit, you can learn more about:
+
+- [Core Setup and Usage](/core/setup)
+- [Working with PlatformFile](/core/platform-file)
+- [Reading Files](/core/read-file)
+- [Writing Files](/core/write-file)
+- [File Utilities](/core/file-utils)
+- [Image Utilities](/core/image-utils)
+- [Dialogs Setup](/dialogs/setup)

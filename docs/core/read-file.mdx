@@ -1,0 +1,101 @@
+---
+title: 'Reading files'
+description: 'Read files with FileKit Core in Kotlin Multiplatform'
+---
+
+## Introduction
+
+FileKit Core provides a consistent API for reading files across all platforms. The `PlatformFile` class offers multiple methods to read the contents of a file, from simple byte arrays to more complex streaming operations.
+
+## Reading as ByteArray
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+The most common way to read a file is to use the `readBytes()` suspend function, which returns the file contents as a `ByteArray`:
+
+```kotlin
+val file = PlatformFile("/path/to/file.pdf")
+
+// Read the file as bytes
+val bytes: ByteArray = file.readBytes()
+```
+
+## Reading as String
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+For text files, you can use the `readString()` suspend function, which returns the file contents as a `String`:
+
+```kotlin
+val file = PlatformFile("/path/to/file.txt")
+
+// Read the file as a string
+val text: String = file.readString()
+println(text)
+```
+
+## Using Source
+
+<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+
+For more advanced use cases or when working with large files, you can use the `source()` method from [kotlinx-io](https://github.com/Kotlin/kotlinx-io) to get a raw source:
+
+```kotlin
+val file = PlatformFile("/path/to/large-file.dat")
+
+// Get a raw source for the file
+val source = file.source().buffered()
+
+// Use the source to read in chunks
+source.use { bufferedSource ->
+    // Read a line
+    val line = bufferedSource.readLine()
+
+    // Read a specific number of bytes
+    val bytesRead = bufferedSource.readByteArray(1024)
+
+    // Read until EOF
+    while (!bufferedSource.exhausted()) {
+        // Process data...
+    }
+}
+```
+
+## Error Handling
+
+When reading files, you should handle potential errors:
+
+```kotlin
+try {
+    val file = PlatformFile("/path/to/file.txt")
+    val bytes = file.readBytes()
+} catch (e: FileNotFoundException) {
+    println("File not found: ${e.message}")
+} catch (e: IOException) {
+    println("Error reading file: ${e.message}")
+}
+```
+
+## Example: Reading Different File Types
+
+```kotlin
+suspend fun readDifferentFiles() {
+    // Read a text file
+    val textFile = PlatformFile(FileKit.filesDir, "document.txt")
+    val text = textFile.readString()
+    
+    // Read an image file
+    val imageFile = PlatformFile(FileKit.filesDir, "image.jpg")
+    val imageBytes = imageFile.readBytes()
+    // Process image bytes...
+    
+    // Read a JSON file
+    val jsonFile = PlatformFile(FileKit.filesDir, "config.json")
+    val jsonString = jsonFile.readString()
+    // Parse JSON...
+}
+```
+
+<Note>
+See also: [Writing Files](/core/write-file) for information on how to write to files after reading them.
+</Note>

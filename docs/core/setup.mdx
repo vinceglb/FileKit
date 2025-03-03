@@ -1,0 +1,45 @@
+---
+title: 'Setup'
+description: 'Setup FileKit Core in your Kotlin Multiplatform project'
+---
+
+import VersionCore from '/snippets/version-core.mdx'
+import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
+
+## Installation
+
+<VersionCore/>
+
+FileKit Core provides the fundamental file operations for your Kotlin Multiplatform project. It's designed to work across all supported platforms with a unified API.
+
+## Platform-specific setup
+
+FileKit Core is designed to work out of the box for most platforms, but some targets require additional setup.
+
+### Android setup
+
+When using FileKit Core on Android, you need to initialize it in your application class or main activity:
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Initialize FileKit
+        FileKit.init(this)
+    }
+}
+```
+
+### JVM setup
+
+<SetupJVMCore/>
+
+The application ID is used to create user-specific directories on different operating systems:
+- Windows: `%APPDATA%\your.application.id\`
+- macOS: `~/Library/Application Support/your.application.id/`
+- Linux: `~/.local/share/your.application.id/`
+
+### iOS, macOS, JS, WASM setup
+
+No additional setup is needed for iOS, macOS, JS, and WASM targets. FileKit Core works out of the box on these platforms.

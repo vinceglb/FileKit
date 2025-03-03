@@ -1,15 +1,18 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.jetbrainsCompose)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.composeMultiplatform)
+    alias(libs.plugins.composeCompiler)
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
 
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
@@ -33,7 +36,11 @@ kotlin {
         }
     }
 
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_11)
+        }
+    }
 
     jvm("desktop")
 
@@ -49,8 +56,6 @@ kotlin {
     }
 
     sourceSets {
-        val desktopMain by getting
-
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
@@ -61,38 +66,54 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
 
             // FileKit
-            implementation(projects.filekitCompose)
+            implementation(projects.filekitCoil)
+            implementation(projects.filekitDialogsCompose)
 
             // Coil3
             implementation(libs.coil.compose)
         }
 
-        androidMain.dependencies {
-            implementation(libs.androidx.activity.compose)
+        val nonWebMain by creating {
+            dependsOn(commonMain.get())
         }
 
-        desktopMain.dependencies {
-            // Compose
-            implementation(compose.desktop.currentOs)
-
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.swing)
+        androidMain {
+            dependsOn(nonWebMain)
+            dependencies {
+                implementation(libs.androidx.activity.compose)
+            }
         }
+
+        val desktopMain by getting {
+            dependsOn(nonWebMain)
+            dependencies {
+                // Compose
+                implementation(compose.desktop.currentOs)
+
+                // Coroutines
+                implementation(libs.kotlinx.coroutines.swing)
+            }
+        }
+
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val webMain by creating {
+            dependsOn(commonMain.get())
+        }
+
+        jsMain.get().dependsOn(webMain)
+        wasmJsMain.get().dependsOn(webMain)
     }
 }
 
 android {
     namespace = "io.github.vinceglb.sample.compose"
-    compileSdk = 34
-
-    sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    sourceSets["main"].res.srcDirs("src/androidMain/res")
-    sourceSets["main"].resources.srcDirs("src/commonMain/resources")
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "io.github.vinceglb.sample.compose"
-        minSdk = 24
-        targetSdk = 34
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
     }
@@ -107,8 +128,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 }
 
