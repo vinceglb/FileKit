@@ -16,7 +16,7 @@
       {
         "group": "Get Started",
         "pages": [
-          
+          "introduction",
           "quickstart",
           "installation"
         ]
@@ -66,7 +66,7 @@
       "projectToken": "00fb70ba023ea0e3922aaa9047193b72"
     },
     "amplitude": {
-      "apiKey": "9377c9a068fa6297115b69061b8561b4"
+      "apiKey": "f4fd93ebc8fad4322b99fa1d99a6815"
     }
   }
 }
