@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="https://mintlify.s3.us-west-1.amazonaws.com/filekit/images/hero-10.png" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
+  <img src="https://github.com/user-attachments/assets/78fbdb24-6210-4d41-afeb-57d199a743f8" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
 
   <br>
- 
+
   <h1>FileKit</h1>
   <p>🚀 A powerful cross-platform file operations library for Kotlin Multiplatform</p>
 
