@@ -1,10 +1,10 @@
 <div align="center">
-  <img src="https://github.com/vinceglb/FileKit/assets/24540801/5ad7fc2d-04fd-4ba7-b5de-b4a7ada753c9" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
+  <img src="https://mintlify.s3.us-west-1.amazonaws.com/filekit/images/hero-10.png" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
 
   <br>
  
   <h1>FileKit</h1>
-  <p>Files, Medias, Folder Picker and File saver library for Kotlin Multiplatform and Compose Multiplatform</p>
+  <p>🚀 A powerful cross-platform file operations library for Kotlin Multiplatform</p>
 
   <div>
     <img src="https://img.shields.io/maven-central/v/io.github.vinceglb/filekit-core" alt="FileKit Kotlin Maven Version" />
@@ -17,42 +17,87 @@
   <br>
 </div>
 
-FileKit is a library that allows you to pick and save files in a simple way. On each platform, it uses the native file picker API to provide a consistent experience.
+## ✨ Features
+
+- 📱 **Cross-Platform Support**: Works seamlessly on Android, iOS, macOS, JVM (Windows, Linux), JS, and WASM
+- 🎯 **Native Experience**: Uses platform-native file pickers for the best user experience
+- 🪶 **Lightweight**: Minimal dependencies to keep your app fast and lean
+- 🔌 **Rich Integrations**: Works with Compose Multiplatform, Coroutines, kotlinx-io, Coil, and more
+- 📂 **Comprehensive File Operations**: Pick files, save documents, access photos, manage directories
+- 🎨 **Image Utilities**: Built-in image compression and gallery integration
+
+## 🚀 Quick Start
+
+### Installation
+
+```kotlin
+// build.gradle.kts
+dependencies {
+    implementation("io.github.vinceglb:filekit-core:$version")
+    implementation("io.github.vinceglb:filekit-dialogs:$version")
+    implementation("io.github.vinceglb:filekit-dialogs-compose:$version")
+    implementation("io.github.vinceglb:filekit-coil:$version")
+}
+```
+
+### Usage Examples
+
+```kotlin
+// Pick a file
+val file = FileKit.openFilePicker()
+
+// Pick multiple files
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+
+// Pick only images
+val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
+
+// Pick a directory
+val directory = FileKit.openDirectoryPicker()
+
+// Save a file
+val contentToSave = "Hello FileKit!"
+val file = FileKit.openFileSaver(suggestedName = "document", extension = "txt")
+file?.writeString(contentToSave)
+
+// Work with files
+val myFile = FileKit.filesDir / "document.pdf"
+println(myFile.name)
+println(myFile.size())
+myFile.writeString("Hello, World!")
+
+// Image operations
+val compressedBytes = FileKit.compressImage(
+    bytes = imageFile.readBytes(),
+    quality = 80,
+    maxWidth = 1024,
+    maxHeight = 1024
+)
+```
+
+## 📦 Modular Structure
+
+FileKit is designed to be modular, allowing you to include only what you need:
+
+- **FileKit Core**: Basic file operations and the `PlatformFile` abstraction
+- **FileKit Dialogs**: File pickers and save dialogs
+- **FileKit Dialogs Compose**: Compose Multiplatform integration
+- **FileKit Coil**: Integration with Coil for image loading
+
+## 📚 Documentation
+
+Visit our [comprehensive documentation](https://filekit.mintlify.app) to learn more:
+
+- [Getting Started Guide](https://filekit.mintlify.app/quickstart)
+- [Core API Documentation](https://filekit.mintlify.app/core/setup)
+- [Dialogs Documentation](https://filekit.mintlify.app/dialogs/setup)
+- [Sample Projects](https://github.com/vinceglb/FileKit/tree/main/samples)
 
 ![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
 
-## 🌱 Sample projects
+## 🙏 Credits
 
-You can find 2 sample projects in the `samples` directory:
-- `sample-core`: A Kotlin Multiplatform project using FileKit in a shared viewModel targeting Android, JVM, WASM, JS, iOS Swift, macOS Swift and iOS Compose.
-- `sample-compose`: A Compose Multiplatform project using FileKit in a Composable targeting Android, iOS, JVM, WASM, 
-
-## ✨ Behind the scene
-
-FileKit uses the native file picker API on each platform:
-
-- On Android, it uses `PickVisualMedia`, `OpenDocument` and `OpenDocumentTree` contracts.
-- On iOS, it uses both `UIDocumentPickerViewController` and `PHPickerViewController` APIs.
-- On macOS, it uses the `NSOpenPanel` API.
-- On JVM, it uses JNA to access the file system on Windows and macOS and XDG Desktop Portal on Linux.
-- On WASM / JS, it uses the `input` element with the `file` type.
-
-Also, FileKit uses the bear minimum of dependencies to be as lightweight as possible. 
-
-FileKit Core uses the following libraries:
-- [KotlinX Coroutines](https://github.com/Kotlin/kotlinx.coroutines)
-- Only Android: [AndroidX Activity KTX](https://developer.android.com/jetpack/androidx/releases/activity)
-- Only JVM: [Java Native Access - JNA](https://github.com/java-native-access/jna/tree/master)
-- Only JVM: [XDG Desktop Portal](https://github.com/hypfvieh/dbus-java)
-
-FileKit Compose uses the following libraries:
-- [Jetbrains Compose Runtime](https://github.com/JetBrains/compose-multiplatform)
-- Only Android: [AndroidX Activity Compose](https://developer.android.com/jetpack/androidx/releases/activity)
-
-## 😎 Credits
-
-FileKit is inspired by the following libraries:
-
+FileKit stands on the shoulders of giants. Special thanks to:
 - [compose-multiplatform-file-picker](https://github.com/Wavesonics/compose-multiplatform-file-picker)
 - [peekaboo](https://github.com/onseok/peekaboo)
 - [Calf](https://github.com/MohamedRejeb/Calf)
@@ -65,4 +110,7 @@ FileKit is inspired by the following libraries:
 
 ---
 
-Made with ❤️ by Vince
+<div align="center">
+  <p>Made with ❤️ by <a href="https://github.com/vinceglb">Vince</a></p>
+  <!-- <p>If you find FileKit helpful, please consider giving it a ⭐️</p> -->
+</div>
