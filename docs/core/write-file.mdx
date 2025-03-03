@@ -14,13 +14,10 @@ FileKit Core provides a consistent API for writing files across all platforms. T
 The most common way to write data to a file is using the `write()` infix function with a `ByteArray`:
 
 ```kotlin
-val file = PlatformFile(FileKit.filesDir, "document.txt")
+val file = PlatformFile(FileKit.filesDir, "image.jpg")
 
-// Text content to write
-val content = "Hello, FileKit!"
-
-// Write the text as bytes
-file.writeString(content)
+// Write the bytes
+file.write(bytes)
 ```
 
 ## Writing from String

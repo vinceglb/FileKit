@@ -18,7 +18,8 @@
         "pages": [
           "introduction",
           "quickstart",
-          "installation"
+          "installation",
+          "migrate-to-v0.10"
         ]
       },
       {
