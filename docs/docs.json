@@ -64,6 +64,9 @@
   "integrations": {
     "mixpanel": {
       "projectToken": "00fb70ba023ea0e3922aaa9047193b72"
+    },
+    "amplitude": {
+      "apiKey": "9377c9a068fa6297115b69061b8561b4"
     }
   }
 }
