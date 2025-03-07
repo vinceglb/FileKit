@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.dialogs
 
+import android.content.ClipData
+import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
@@ -11,11 +13,14 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
+import androidx.core.content.FileProvider
+import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
+import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -197,6 +202,44 @@ public actual suspend fun FileKit.openCameraPicker(
         true -> cacheImage
         else -> null
     }
+}
+
+public actual suspend fun FileKit.shareImageFile(
+    file: PlatformFile,
+    fileKitShareOption: FileKitShareOption
+) {
+    val mimeType = getMimeType(file.extension)
+    if (!mimeType.startsWith("image/")) {
+        return
+    }
+    val uri = when (val androidFile = file.androidFile) {
+        is AndroidFile.UriWrapper -> androidFile.uri
+        is AndroidFile.FileWrapper -> {
+            FileProvider.getUriForFile(context, fileKitShareOption.authority, androidFile.file)
+        }
+    }
+    // make intent share
+    val intentShareImageSend = Intent(Intent.ACTION_SEND).apply {
+        type = mimeType
+        putExtra(Intent.EXTRA_STREAM, uri)
+    }
+    intentShareImageSend.clipData = ClipData.newUri(context.contentResolver, null, uri)
+    intentShareImageSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    val chooseIntent = Intent.createChooser(intentShareImageSend, null).apply {
+        setFlags(
+            Intent.FLAG_ACTIVITY_NEW_TASK
+        )
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    fileKitShareOption.addOptionChooseIntent(chooseIntent)
+
+    context.startActivity(chooseIntent)
+}
+
+public suspend fun FileKit.shareImageFile(
+    file: PlatformFile,
+) {
+    shareImageFile(file, FileKitAndroidDefaultShareOption())
 }
 
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
