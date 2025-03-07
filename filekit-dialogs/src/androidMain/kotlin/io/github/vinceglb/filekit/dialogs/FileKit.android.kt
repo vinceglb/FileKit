@@ -208,8 +208,7 @@ public actual suspend fun FileKit.shareImageFile(
     file: PlatformFile,
     fileKitShareOption: FileKitShareOption
 ) {
-    val mimeType = getMimeType(file.extension)
-    if (!mimeType.startsWith("image/")) {
+    if (!file.checkIsSupportImageFile()) {
         return
     }
     val uri = when (val androidFile = file.androidFile) {
@@ -218,6 +217,8 @@ public actual suspend fun FileKit.shareImageFile(
             FileProvider.getUriForFile(context, fileKitShareOption.authority, androidFile.file)
         }
     }
+    val mimeType = getMimeType(file.extension)
+
     // make intent share
     val intentShareImageSend = Intent(Intent.ACTION_SEND).apply {
         type = mimeType
