@@ -25,3 +25,8 @@ actual fun PickDirectory(
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
 }
+
+
+actual suspend fun shareImageIfSupported(file: PlatformFile) {
+
+}

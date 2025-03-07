@@ -9,7 +9,7 @@ import SwiftUI
 import SamplePickerKt
 
 struct ContentView: View {
-    @State var viewModel = MainViewModel(dialogSettings: Filekit_dialogFileKitDialogSettings(canCreateDirectories: true))
+    @State var viewModel = MainViewModel(dialogSettings: Filekit_dialogsFileKitDialogSettings(canCreateDirectories: true))
     @State var uiState: MainUiState = .init()
     
     var body: some View {
@@ -48,9 +48,24 @@ struct ContentView: View {
 
             Text("Directory: \(String(describing:  uiState.directory?.path))")
             
-            List(files, id: \.nsUrl) { file in
-                Text(file.name ?? "none")
-                    .onTapGesture { viewModel.saveFile(file: file) }
+            NavigationView {
+                List(files, id: \.nsUrl) { file in
+                    NavigationLink(file.name) {
+                        Form {
+                            Button {
+                                viewModel.saveFile(file: file)
+                            } label: {
+                                Label("Save",systemImage: "square.and.arrow.down")
+                            }
+                            Button {
+                                viewModel.shareFile(file: file)
+                            } label: {
+                                Label("Share",systemImage: "square.and.arrow.up")
+                            }
+                        }
+                        .navigationTitle(file.name)
+                    }
+                }
             }
         }
         .padding()
