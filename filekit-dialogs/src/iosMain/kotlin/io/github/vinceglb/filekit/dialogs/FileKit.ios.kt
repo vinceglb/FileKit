@@ -10,6 +10,7 @@ import io.github.vinceglb.filekit.dialogs.util.CameraControllerDelegate
 import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
+import io.github.vinceglb.filekit.dialogs.util.SingleImageProvider
 import io.github.vinceglb.filekit.path
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents

@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.dialogs
+package io.github.vinceglb.filekit.dialogs.util
 
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCSignatureOverride
@@ -13,8 +13,10 @@ import platform.darwin.NSObject
 /**
  * For UIActivityViewController
  */
-internal class SingleImageProvider(private val imageUrl: NSURL, private val metaTitle: String) :
-    NSObject(),
+internal class SingleImageProvider(
+    private val imageUrl: NSURL,
+    private val metaTitle: String
+) : NSObject(),
     UIActivityItemSourceProtocol {
 
     @ObjCSignatureOverride
