@@ -68,9 +68,6 @@ kotlin {
             // FileKit
             implementation(projects.filekitCoil)
             implementation(projects.filekitDialogsCompose)
-
-            // Coil3
-            implementation(libs.coil.compose)
         }
 
         val nonWebMain by creating {
