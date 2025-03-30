@@ -206,7 +206,7 @@ public actual suspend fun FileKit.openCameraPicker(
 
 public actual suspend fun FileKit.shareImageFile(
     file: PlatformFile,
-    fileKitShareOption: FileKitShareOption
+    fileKitShareSettings: FileKitShareSettings
 ) {
     if (!file.checkIsSupportImageFile()) {
         return
@@ -214,7 +214,7 @@ public actual suspend fun FileKit.shareImageFile(
     val uri = when (val androidFile = file.androidFile) {
         is AndroidFile.UriWrapper -> androidFile.uri
         is AndroidFile.FileWrapper -> {
-            FileProvider.getUriForFile(context, fileKitShareOption.authority, androidFile.file)
+            FileProvider.getUriForFile(context, fileKitShareSettings.authority, androidFile.file)
         }
     }
     val mimeType = getMimeType(file.extension)
@@ -232,7 +232,7 @@ public actual suspend fun FileKit.shareImageFile(
         )
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    fileKitShareOption.addOptionChooseIntent(chooseIntent)
+    fileKitShareSettings.addOptionChooseIntent(chooseIntent)
 
     context.startActivity(chooseIntent)
 }
@@ -240,7 +240,7 @@ public actual suspend fun FileKit.shareImageFile(
 public suspend fun FileKit.shareImageFile(
     file: PlatformFile,
 ) {
-    shareImageFile(file, FileKitAndroidDefaultShareOption())
+    shareImageFile(file, FileKitAndroidDefaultShareSettings())
 }
 
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {

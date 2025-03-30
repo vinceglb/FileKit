@@ -10,7 +10,7 @@ public expect suspend fun FileKit.openCameraPicker(
 
 public expect suspend fun FileKit.shareImageFile(
     file: PlatformFile,
-    fileKitShareOption: FileKitShareOption
+    fileKitShareSettings: FileKitShareSettings
 )
 
 public fun PlatformFile.checkIsSupportImageFile(): Boolean {

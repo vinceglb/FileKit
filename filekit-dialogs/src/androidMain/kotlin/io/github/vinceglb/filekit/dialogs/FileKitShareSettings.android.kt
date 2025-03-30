@@ -3,7 +3,7 @@ package io.github.vinceglb.filekit.dialogs
 import android.content.Intent
 import io.github.vinceglb.filekit.FileKit
 
-public actual open class FileKitShareOption(
+public actual open class FileKitShareSettings(
     public val authority: String,
     public val addOptionChooseIntent: (Intent) -> Unit
 ) {
@@ -18,4 +18,4 @@ public actual open class FileKitShareOption(
 
 }
 
-public class FileKitAndroidDefaultShareOption() : FileKitShareOption()
+public class FileKitAndroidDefaultShareSettings() : FileKitShareSettings()

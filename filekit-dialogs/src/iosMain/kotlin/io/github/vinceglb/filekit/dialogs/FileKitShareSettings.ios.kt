@@ -2,7 +2,7 @@ package io.github.vinceglb.filekit.dialogs
 
 import platform.UIKit.UIActivityViewController
 
-public actual open class FileKitShareOption(
+public actual open class FileKitShareSettings(
     public val metaTitle: String,
     public val addOptionUIActivityViewController: (UIActivityViewController) -> Unit
 ) {
@@ -12,4 +12,4 @@ public actual open class FileKitShareOption(
     )
 }
 
-public class FileKitIOSDefaultShareOption() : FileKitShareOption()
+public class FileKitIOSDefaultShareSettings() : FileKitShareSettings()

@@ -199,7 +199,7 @@ public actual suspend fun FileKit.openCameraPicker(
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareImageFile(
     file: PlatformFile,
-    fileKitShareOption: FileKitShareOption
+    fileKitShareSettings: FileKitShareSettings
 ) {
     if (!file.checkIsSupportImageFile()) {
         return
@@ -207,7 +207,7 @@ public actual suspend fun FileKit.shareImageFile(
     val topViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
     val fileUrl = NSURL.fileURLWithPath(file.path)
 
-    val item = SingleImageProvider(fileUrl, fileKitShareOption.metaTitle)
+    val item = SingleImageProvider(fileUrl, fileKitShareSettings.metaTitle)
 
     val shareVC = UIActivityViewController(
         activityItems = listOf(item),
@@ -225,7 +225,7 @@ public actual suspend fun FileKit.shareImageFile(
             height = 200.0
         )
     }
-    fileKitShareOption.addOptionUIActivityViewController(shareVC)
+    fileKitShareSettings.addOptionUIActivityViewController(shareVC)
 
     topViewController?.presentViewController(
         viewControllerToPresent = shareVC,
@@ -237,7 +237,7 @@ public actual suspend fun FileKit.shareImageFile(
 public suspend fun FileKit.shareImageFile(
     file : PlatformFile,
 ) {
-    shareImageFile(file,FileKitIOSDefaultShareOption())
+    shareImageFile(file,FileKitIOSDefaultShareSettings())
 }
 
 private suspend fun callPicker(
