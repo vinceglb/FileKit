@@ -90,6 +90,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
     directory = directory
 )?.firstOrNull()?.let { PlatformFile(it) }
 
+@OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
     extension: String,
@@ -100,7 +101,16 @@ public actual suspend fun FileKit.openFileSaver(
         // Create a picker delegate
         documentPickerDelegate = DocumentPickerDelegate(
             onFilesPicked = { urls ->
-                val file = urls.firstOrNull()?.let { PlatformFile(it) }
+                val file = urls.firstOrNull()?.let { nsUrl ->
+                    // UIDocumentPickerViewController(forExportingURLs) creates an empty file at the
+                    // specified URL. We remove it to keep consistency with the other platforms.
+                    nsUrl.startAccessingSecurityScopedResource()
+                    NSFileManager.defaultManager.removeItemAtURL(nsUrl, null)
+                    nsUrl.stopAccessingSecurityScopedResource()
+
+                    // Return the file as a PlatformFile
+                    PlatformFile(nsUrl)
+                }
                 continuation.resume(file)
             },
             onPickerCancelled = {
@@ -121,8 +131,11 @@ public actual suspend fun FileKit.openFileSaver(
         val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
             ?: throw IllegalStateException("Failed to create file URL")
 
-        // Write the bytes to the temp file
-        // writeBytesArrayToNsUrl(bytes, fileUrl)
+        // Write an empty string to the file to ensure it exists
+        val emptyData = NSData()
+        if (!emptyData.writeToURL(fileUrl, true)) {
+            throw IllegalStateException("Failed to write to file URL")
+        }
 
         // Create a picker controller
         val pickerController = UIDocumentPickerViewController(
