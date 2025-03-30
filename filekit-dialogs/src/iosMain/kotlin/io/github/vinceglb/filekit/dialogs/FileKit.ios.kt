@@ -10,7 +10,6 @@ import io.github.vinceglb.filekit.dialogs.util.CameraControllerDelegate
 import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
-import io.github.vinceglb.filekit.dialogs.util.SingleImageProvider
 import io.github.vinceglb.filekit.path
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
@@ -207,10 +206,8 @@ public actual suspend fun FileKit.shareImageFile(
     val topViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
     val fileUrl = NSURL.fileURLWithPath(file.path)
 
-    val item = SingleImageProvider(fileUrl, fileKitShareSettings.metaTitle)
-
     val shareVC = UIActivityViewController(
-        activityItems = listOf(item),
+        activityItems = listOf(fileUrl),
         applicationActivities = null
     )
 
