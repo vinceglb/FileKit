@@ -30,7 +30,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKit"
+        it.outputModuleName = "FileKit"
         it.browser()
     }
 

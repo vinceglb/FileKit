@@ -32,7 +32,7 @@ kotlin {
         js(),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKitDialogsCompose"
+        it.outputModuleName = "FileKitDialogsCompose"
         it.browser()
     }
 

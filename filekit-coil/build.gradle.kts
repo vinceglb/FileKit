@@ -32,7 +32,7 @@ kotlin {
         js(),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKitCoil"
+        it.outputModuleName = "FileKitCoil"
         it.browser()
     }
 

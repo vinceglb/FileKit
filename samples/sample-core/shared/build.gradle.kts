@@ -26,7 +26,7 @@ kotlin {
         js(IR),
         wasmJs()
     ).forEach {
-        it.moduleName = "SamplePickerKt"
+        it.outputModuleName = "SamplePickerKt"
         it.browser()
     }
 

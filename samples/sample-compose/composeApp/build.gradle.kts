@@ -20,7 +20,7 @@ kotlin {
         wasmJs(),
     ).forEach {
         it.apply {
-            moduleName = "composeApp"
+            outputModuleName = "composeApp"
             browser {
                 commonWebpackConfig {
                     outputFileName = "composeApp.js"

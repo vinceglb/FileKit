@@ -30,7 +30,7 @@ kotlin {
         js(IR),
         wasmJs(),
     ).forEach {
-        it.moduleName = "FileKitDialogs"
+        it.outputModuleName = "FileKitDialogs"
         it.browser()
     }
 
