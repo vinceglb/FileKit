@@ -62,5 +62,9 @@ public actual fun PlatformFile.source(): RawSource = try {
     nsUrl.stopAccessingSecurityScopedResource()
 }
 
-public actual fun PlatformFile.sink(append: Boolean): RawSink =
+public actual fun PlatformFile.sink(append: Boolean): RawSink = try {
+    nsUrl.startAccessingSecurityScopedResource()
     SystemFileSystem.sink(toKotlinxIoPath(), append)
+} finally {
+    nsUrl.stopAccessingSecurityScopedResource()
+}
