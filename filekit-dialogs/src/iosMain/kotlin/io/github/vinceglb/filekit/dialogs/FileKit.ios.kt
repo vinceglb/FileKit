@@ -200,9 +200,6 @@ public actual suspend fun FileKit.shareImageFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 ) {
-    if (!file.checkIsSupportImageFile()) {
-        return
-    }
     val topViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
     val fileUrl = NSURL.fileURLWithPath(file.path)
 

@@ -208,9 +208,6 @@ public actual suspend fun FileKit.shareImageFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 ) {
-    if (!file.checkIsSupportImageFile()) {
-        return
-    }
     val uri = when (val androidFile = file.androidFile) {
         is AndroidFile.UriWrapper -> androidFile.uri
         is AndroidFile.FileWrapper -> {

@@ -12,7 +12,3 @@ public expect suspend fun FileKit.shareImageFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 )
-
-public fun PlatformFile.checkIsSupportImageFile(): Boolean {
-    return this.extension == "jpg" || this.extension == "png" || this.extension == "jpeg"
-}
