@@ -204,7 +204,7 @@ public actual suspend fun FileKit.openCameraPicker(
     }
 }
 
-public actual suspend fun FileKit.shareImageFile(
+public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 ) {
@@ -217,13 +217,13 @@ public actual suspend fun FileKit.shareImageFile(
     val mimeType = getMimeType(file.extension)
 
     // make intent share
-    val intentShareImageSend = Intent(Intent.ACTION_SEND).apply {
+    val intentShareSend = Intent(Intent.ACTION_SEND).apply {
         type = mimeType
         putExtra(Intent.EXTRA_STREAM, uri)
     }
-    intentShareImageSend.clipData = ClipData.newUri(context.contentResolver, null, uri)
-    intentShareImageSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-    val chooseIntent = Intent.createChooser(intentShareImageSend, null).apply {
+    intentShareSend.clipData = ClipData.newUri(context.contentResolver, null, uri)
+    intentShareSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
         setFlags(
             Intent.FLAG_ACTIVITY_NEW_TASK
         )
@@ -234,10 +234,10 @@ public actual suspend fun FileKit.shareImageFile(
     context.startActivity(chooseIntent)
 }
 
-public suspend fun FileKit.shareImageFile(
+public suspend fun FileKit.shareFile(
     file: PlatformFile,
 ) {
-    shareImageFile(file, FileKitAndroidDefaultShareSettings())
+    shareFile(file, FileKitAndroidDefaultShareSettings())
 }
 
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {

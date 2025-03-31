@@ -2,13 +2,12 @@ package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.extension
 
 public expect suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType = FileKitCameraType.Photo,
 ): PlatformFile?
 
-public expect suspend fun FileKit.shareImageFile(
+public expect suspend fun FileKit.shareFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 )

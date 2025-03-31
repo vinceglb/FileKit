@@ -196,7 +196,7 @@ public actual suspend fun FileKit.openCameraPicker(
 }
 
 @OptIn(ExperimentalForeignApi::class)
-public actual suspend fun FileKit.shareImageFile(
+public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     fileKitShareSettings: FileKitShareSettings
 ) {
@@ -228,10 +228,10 @@ public actual suspend fun FileKit.shareImageFile(
     )
 }
 
-public suspend fun FileKit.shareImageFile(
+public suspend fun FileKit.shareFile(
     file : PlatformFile,
 ) {
-    shareImageFile(file,FileKitIOSDefaultShareSettings())
+    shareFile(file,FileKitIOSDefaultShareSettings())
 }
 
 private suspend fun callPicker(
