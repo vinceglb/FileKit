@@ -41,7 +41,7 @@ internal actual fun compress(
     quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
+    imageFormat: ImageFormat,
 ): NSData {
     val originalImage = NSImage(data = nsData)
     val (newWidth, newHeight) = calculateNewDimensions(
@@ -56,9 +56,9 @@ internal actual fun compress(
     val imageRep = NSBitmapImageRep.imageRepWithData(resizedImage.TIFFRepresentation!!)
         ?: throw FileKitException("Failed to compress image")
 
-    val storageType = when (compressFormat) {
-        CompressFormat.JPEG -> NSBitmapImageFileType.NSBitmapImageFileTypeJPEG
-        CompressFormat.PNG -> NSBitmapImageFileType.NSBitmapImageFileTypePNG
+    val storageType = when (imageFormat) {
+        ImageFormat.JPEG -> NSBitmapImageFileType.NSBitmapImageFileTypeJPEG
+        ImageFormat.PNG -> NSBitmapImageFileType.NSBitmapImageFileTypePNG
     }
 
     return imageRep.representationUsingType(

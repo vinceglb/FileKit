@@ -1,6 +1,6 @@
 package io.github.vinceglb.sample.core
 
-import io.github.vinceglb.filekit.CompressFormat
+import io.github.vinceglb.filekit.ImageFormat
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.compressImage
@@ -18,7 +18,7 @@ actual suspend fun compressImage(bytes: ByteArray) {
         maxWidth = 200,
         maxHeight = 200,
         quality = 80,
-        compressFormat = CompressFormat.JPEG
+        imageFormat = ImageFormat.JPEG
     )
 
     FileKit.saveImageToGallery(compressedImage, "compressed.jpg")

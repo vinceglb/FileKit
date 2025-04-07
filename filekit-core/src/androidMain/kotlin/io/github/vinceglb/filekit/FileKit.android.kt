@@ -67,10 +67,10 @@ public actual suspend fun FileKit.saveImageToGallery(
 
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
+    imageFormat: ImageFormat,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
 ): ByteArray = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to Bitmap
     val originalBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
@@ -94,9 +94,9 @@ public actual suspend fun FileKit.compressImage(
     val outputStream = ByteArrayOutputStream()
 
     // Step 6: Compress the resized Bitmap
-    val format = when (compressFormat) {
-        CompressFormat.JPEG -> Bitmap.CompressFormat.JPEG
-        CompressFormat.PNG -> Bitmap.CompressFormat.PNG
+    val format = when (imageFormat) {
+        ImageFormat.JPEG -> Bitmap.CompressFormat.JPEG
+        ImageFormat.PNG -> Bitmap.CompressFormat.PNG
     }
     resizedBitmap.compress(format, quality, outputStream)
 
