@@ -47,7 +47,7 @@ internal actual fun compress(
     quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
+    imageFormat: ImageFormat,
 ): NSData {
     val originalImage = UIImage(data = nsData)
     val originalWidth = originalImage.size.useContents { width }.toInt()
@@ -63,9 +63,9 @@ internal actual fun compress(
     val resizedImage = originalImage.scaleToSize(newWidth, newHeight)
         ?: throw FileKitException("Failed to resize image")
 
-    return when (compressFormat) {
-        CompressFormat.JPEG -> UIImageJPEGRepresentation(resizedImage, quality / 100.0)
-        CompressFormat.PNG -> UIImagePNGRepresentation(resizedImage)
+    return when (imageFormat) {
+        ImageFormat.JPEG -> UIImageJPEGRepresentation(resizedImage, quality / 100.0)
+        ImageFormat.PNG -> UIImagePNGRepresentation(resizedImage)
     } ?: throw FileKitException("Failed to compress image")
 }
 

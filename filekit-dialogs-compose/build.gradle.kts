@@ -52,9 +52,13 @@ kotlin {
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
+            implementation(compose.ui)
 
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
+
+            // Annotations
+            implementation(libs.androidx.annotation)
 
             // FileKit Dialog
             api(projects.filekitDialogs)
@@ -69,6 +73,9 @@ kotlin {
         val mobileMain by creating {
             dependsOn(nonWebMain)
         }
+        val nonAndroidMain by creating {
+            dependsOn(commonMain.get())
+        }
 
         androidMain {
             dependsOn(nonWebMain)
@@ -80,16 +87,30 @@ kotlin {
 
         jvmMain {
             dependsOn(nonWebMain)
+            dependsOn(nonAndroidMain)
             dependencies {
                 implementation(compose.ui)
             }
         }
 
-        nativeMain.get().dependsOn(nonWebMain)
-        iosMain.get().dependsOn(mobileMain)
+        nativeMain {
+            dependsOn(nonWebMain)
+            dependsOn(nonAndroidMain)
+        }
+        iosMain {
+            dependsOn(nonWebMain)
+            dependsOn(nonAndroidMain)
+            dependsOn(mobileMain)
+        }
 
-        jsMain.get().dependsOn(webMain)
-        wasmJsMain.get().dependsOn(webMain)
+        jsMain {
+            dependsOn(webMain)
+            dependsOn(nonAndroidMain)
+        }
+        wasmJsMain {
+            dependsOn(webMain)
+            dependsOn(nonAndroidMain)
+        }
     }
 }
 

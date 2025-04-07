@@ -81,10 +81,10 @@ private fun Path.assertExists() {
 
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
+    imageFormat: ImageFormat,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
 ): ByteArray = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to BufferedImage
     val inputStream = ByteArrayInputStream(bytes)
@@ -110,7 +110,7 @@ public actual suspend fun FileKit.compressImage(
 
     // Step 4: Compress the BufferedImage
     val outputStream = ByteArrayOutputStream()
-    val imageWriter = ImageIO.getImageWritersByFormatName(compressFormat.name.lowercase()).next()
+    val imageWriter = ImageIO.getImageWritersByFormatName(imageFormat.name.lowercase()).next()
     val imageWriteParam = imageWriter.defaultWriteParam
     imageWriteParam.compressionMode = ImageWriteParam.MODE_EXPLICIT
     imageWriteParam.compressionQuality = quality / 100.0f

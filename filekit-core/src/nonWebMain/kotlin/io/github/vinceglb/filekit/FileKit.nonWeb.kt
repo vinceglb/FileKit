@@ -25,27 +25,22 @@ public suspend fun FileKit.saveImageToGallery(
 
 public expect suspend fun FileKit.compressImage(
     bytes: ByteArray,
+    imageFormat: ImageFormat = ImageFormat.JPEG,
     @IntRange(from = 0, to = 100) quality: Int = 80,
     maxWidth: Int? = null,
     maxHeight: Int? = null,
-    compressFormat: CompressFormat = CompressFormat.JPEG,
 ): ByteArray
 
 public suspend fun FileKit.compressImage(
     file: PlatformFile,
+    imageFormat: ImageFormat = ImageFormat.JPEG,
     @IntRange(from = 0, to = 100) quality: Int = 80,
     maxWidth: Int? = null,
     maxHeight: Int? = null,
-    compressFormat: CompressFormat = CompressFormat.JPEG,
 ): ByteArray = compressImage(
     bytes = file.readBytes(),
     quality = quality,
     maxWidth = maxWidth,
     maxHeight = maxHeight,
-    compressFormat = compressFormat
+    imageFormat = imageFormat
 )
-
-public enum class CompressFormat {
-    JPEG,
-    PNG,
-}

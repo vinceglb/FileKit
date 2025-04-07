@@ -39,16 +39,16 @@ public actual val FileKit.databasesDir: PlatformFile
 
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
+    imageFormat: ImageFormat,
     @IntRange(from = 0, to = 100) quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
 ): ByteArray = withContext(Dispatchers.IO) {
     // Step 1: Decode the ByteArray to UIImage (iOS) or NSImage (macOS)
     val nsData = bytes.toNSData()
 
     // Step 2: Compress the UIImage
-    val compressedData = compress(nsData, quality, maxWidth, maxHeight, compressFormat)
+    val compressedData = compress(nsData, quality, maxWidth, maxHeight, imageFormat)
 
     // Step 3: Return the compressed image as ByteArray
     val res = compressedData.toByteArray()
@@ -61,5 +61,5 @@ internal expect fun compress(
     quality: Int,
     maxWidth: Int?,
     maxHeight: Int?,
-    compressFormat: CompressFormat,
+    imageFormat: ImageFormat,
 ): NSData
