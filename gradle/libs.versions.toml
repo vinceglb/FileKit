@@ -16,7 +16,7 @@ dbus-java = "5.1.1"
 jna = "5.17.0"
 kotlin = "2.1.20"
 kotlinx-browser = "0.3"
-kotlinx-coroutines = "1.10.1"
+kotlinx-coroutines = "1.10.2"
 kotlinx-io = "0.7.0"
 vanniktech-mavenPublish = "0.31.0"
 
