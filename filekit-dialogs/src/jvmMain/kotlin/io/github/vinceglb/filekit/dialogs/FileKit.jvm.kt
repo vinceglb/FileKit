@@ -60,7 +60,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {

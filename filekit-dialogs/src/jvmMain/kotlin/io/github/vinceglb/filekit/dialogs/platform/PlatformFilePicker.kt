@@ -36,7 +36,7 @@ internal interface PlatformFilePicker {
 
     suspend fun openFileSaver(
         suggestedName: String,
-        extension: String,
+        extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = AwtFileSaver.saveFile(

@@ -12,7 +12,7 @@ import io.github.vinceglb.filekit.download
 public actual suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings
 ): PlatformFile? {
@@ -20,7 +20,13 @@ public actual suspend fun FileKit.openFileSaver(
         throw IllegalArgumentException("bytes must not be null")
     }
 
-    FileKit.download(bytes = bytes, fileName = "$suggestedName.$extension")
+    FileKit.download(
+        bytes = bytes,
+        fileName = when {
+            extension != null -> "$suggestedName.$extension"
+            else -> suggestedName
+        }
+    )
 
     return null
 }

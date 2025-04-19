@@ -13,17 +13,13 @@ import kotlin.coroutines.resume
 internal object AwtFileSaver {
     suspend fun saveFile(
         suggestedName: String,
-        extension: String,
+        extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings?,
     ): File? = suspendCancellableCoroutine { continuation ->
         fun handleResult(value: Boolean, files: Array<File>?) {
             if (value) {
-                val file = files?.firstOrNull()?.let { file ->
-                    // Write bytes to file, or create a new file
-                    // bytes?.let { file.writeBytes(bytes) } ?: file.createNewFile()
-                    file
-                }
+                val file = files?.firstOrNull()
                 continuation.resume(file)
             }
         }
@@ -49,7 +45,10 @@ internal object AwtFileSaver {
         directory?.let { dialog.directory = directory.path }
 
         // Set file name
-        dialog.file = "$suggestedName.$extension"
+        dialog.file = when {
+            extension != null -> "$suggestedName.$extension"
+            else -> suggestedName
+        }
 
         // Show the dialog
         dialog.isVisible = true

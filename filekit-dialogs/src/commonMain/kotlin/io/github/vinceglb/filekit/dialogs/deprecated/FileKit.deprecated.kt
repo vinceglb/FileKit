@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 public expect suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     suggestedName: String = "file",
-    extension: String,
+    extension: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?

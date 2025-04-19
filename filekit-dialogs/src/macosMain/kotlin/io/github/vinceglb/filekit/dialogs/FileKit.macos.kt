@@ -45,7 +45,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
@@ -56,8 +56,15 @@ public actual suspend fun FileKit.openFileSaver(
     directory?.let { nsSavePanel.directoryURL = NSURL.fileURLWithPath(it.path) }
 
     // Set the file name
-    nsSavePanel.nameFieldStringValue = "$suggestedName.$extension"
-    nsSavePanel.allowedFileTypes = listOf(extension)
+    nsSavePanel.nameFieldStringValue = when {
+        extension != null -> "$suggestedName.$extension"
+        else -> suggestedName
+    }
+
+    // Set the file extension
+    extension?.let {
+        nsSavePanel.allowedFileTypes = listOf(extension)
+    }
 
     // Accept the creation of directories
     nsSavePanel.canCreateDirectories = dialogSettings.canCreateDirectories
@@ -72,9 +79,6 @@ public actual suspend fun FileKit.openFileSaver(
 
     // Return the result
     val platformFile = nsSavePanel.URL?.let { nsUrl ->
-        // Write the bytes to the file
-        // writeBytesArrayToNsUrl(bytes, nsUrl)
-
         // Create the PlatformFile
         PlatformFile(nsUrl)
     }
