@@ -121,7 +121,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     override suspend fun openFileSaver(
         suggestedName: String,
-        extension: String,
+        extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? {
@@ -129,7 +129,12 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             val handleToken = UUID.randomUUID().toString().replace("-", "")
             val options: MutableMap<String, Variant<*>> = HashMap()
             options["handle_token"] = Variant(handleToken)
-            options["current_name"] = Variant("$suggestedName.$extension")
+
+            options["current_name"] = when {
+                extension != null -> Variant("$suggestedName.$extension")
+                else -> Variant(suggestedName)
+            }
+
             directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
 
             val deferredResult = registerResponseHandler(connection, handleToken)
@@ -139,11 +144,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 options = options
             )
 
-            val file = deferredResult.await()?.first()?.let { File(it) }
-            // if (bytes != null && file != null) file.writeBytes(bytes)
-            // else file?.createNewFile()
-
-            return file
+            return deferredResult.await()?.first()?.let { File(it) }
         }
     }
 

@@ -122,7 +122,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
     override suspend fun openFileSaver(
         suggestedName: String,
-        extension: String,
+        extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Save) { fileSaveDialog ->
@@ -140,16 +140,11 @@ internal class WindowsFilePicker : PlatformFilePicker {
             .verify("SetDefaultExtension failed")
 
         // Set filters
-        fileSaveDialog.addFiltersToDialog(setOf(extension))
+        extension?.let { fileSaveDialog.addFiltersToDialog(setOf(extension)) }
 
         // Show the dialog to the user
         fileSaveDialog.show(dialogSettings.parentWindow) {
-            val file = it.getResult(SIGDN_FILESYSPATH)
-
-            // Write the bytes to the file
-            // bytes?.let { bytes -> file.writeBytes(bytes) }
-
-            file
+            it.getResult(SIGDN_FILESYSPATH)
         }
     }
 

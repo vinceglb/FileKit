@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
+import androidx.core.net.toUri
 import androidx.core.content.FileProvider
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
@@ -109,7 +110,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
 
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
@@ -120,33 +121,13 @@ public actual suspend fun FileKit.openFileSaver(
         // It doesn't really matter what the key is, just that it is unique
         val key = UUID.randomUUID().toString()
 
-        // Get context
-        // val context = FileKit.context
-
         // Get MIME type
         val mimeType = getMimeType(extension)
 
         // Create Launcher
         val contract = ActivityResultContracts.CreateDocument(mimeType)
         val launcher = registry.register(key, contract) { uri ->
-            val platformFile = uri?.let {
-                // Write the bytes to the file
-//                bytes?.let { bytes ->
-//                    context.contentResolver.openOutputStream(it)?.use { output ->
-//                        if(output is FileOutputStream) {
-//                            // If we are overriding a file we want to make sure that we remove
-//                            // any extra bytes. Eg. if file was originally 250kb and new file
-//                            // would only be 200kb we need to truncate the size, if not the file
-//                            // will contain 50kb of garbage which uses space unnecessarily and
-//                            // can cause other issues.
-//                            output.channel.truncate(bytes.size.toLong())
-//                        }
-//                        output.write(bytes)
-//                    }
-//                }
-
-                PlatformFile(it)
-            }
+            val platformFile = uri?.let { PlatformFile(it) }
             continuation.resume(platformFile)
         }
 
@@ -172,7 +153,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
             val platformDirectory = uri?.let { PlatformFile(it) }
             continuation.resume(platformDirectory)
         }
-        val initialUri = directory?.let { Uri.parse(it.path) }
+        val initialUri = directory?.path?.toUri()
         launcher.launch(initialUri)
     }
 }
@@ -250,7 +231,8 @@ private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
         ?: arrayOf("*/*")
 }
 
-private fun getMimeType(fileExtension: String): String {
+private fun getMimeType(fileExtension: String?): String {
+    if (fileExtension == null) { return "*/*" }
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return mimeTypeMap.getMimeTypeFromExtension(fileExtension) ?: "*/*"
 }

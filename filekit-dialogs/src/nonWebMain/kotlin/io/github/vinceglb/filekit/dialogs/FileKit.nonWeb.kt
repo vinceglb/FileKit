@@ -11,7 +11,7 @@ public expect suspend fun FileKit.openDirectoryPicker(
 
 public expect suspend fun FileKit.openFileSaver(
     suggestedName: String,
-    extension: String,
+    extension: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?

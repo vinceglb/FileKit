@@ -59,7 +59,7 @@ internal class LinuxFilePicker(
 
     override suspend fun openFileSaver(
         suggestedName: String,
-        extension: String,
+        extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.openFileSaver(

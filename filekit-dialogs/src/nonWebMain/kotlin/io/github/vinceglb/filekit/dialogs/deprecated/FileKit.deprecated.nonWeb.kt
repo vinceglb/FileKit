@@ -13,7 +13,7 @@ import io.github.vinceglb.filekit.write
 public actual suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings
 ): PlatformFile? {

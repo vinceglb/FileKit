@@ -18,12 +18,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
-import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
-import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
@@ -100,7 +98,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
-    extension: String,
+    extension: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.Main) {
@@ -125,7 +123,10 @@ public actual suspend fun FileKit.openFileSaver(
             }
         )
 
-        val fileName = "$suggestedName.$extension"
+        val fileName = when {
+            extension != null -> "$suggestedName.$extension"
+            else -> suggestedName
+        }
 
         // Get the fileManager
         val fileManager = NSFileManager.defaultManager
@@ -331,8 +332,6 @@ private suspend fun <Out> callPhPicker(
     }
 
     return@withContext withContext(Dispatchers.IO) {
-        val fileManager = NSFileManager.defaultManager
-
         pickerResults.mapNotNull { result ->
             suspendCoroutine<NSURL?> { continuation ->
                 result.itemProvider.loadFileRepresentationForTypeIdentifier(
@@ -342,30 +341,7 @@ private suspend fun <Out> callPhPicker(
                         is FileKitType.ImageAndVideo -> UTTypeContent.identifier
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
-                ) { url, _ ->
-                    val tmpUrl = url?.let {
-                        // Get the temporary directory
-                        val fileComponents =
-                            fileManager.temporaryDirectory.pathComponents?.plus(it.lastPathComponent)
-                                ?: throw IllegalStateException("Failed to get temporary directory")
-
-                        // Create a file URL
-                        val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
-                            ?: throw IllegalStateException("Failed to create file URL")
-
-                        // Read the data from the URL
-                        val data = NSData.dataWithContentsOfURL(it, NSDataReadingUncached, null)
-                            ?: throw IllegalStateException("Failed to read data from $it")
-
-                        // Write the data to the temp file
-                        data.writeToURL(fileUrl, true)
-
-                        // Return the temporary
-                        fileUrl
-                    }
-
-                    continuation.resume(tmpUrl)
-                }
+                ) { url, _ -> continuation.resume(url) }
             }
         }.takeIf { it.isNotEmpty() }
     }
