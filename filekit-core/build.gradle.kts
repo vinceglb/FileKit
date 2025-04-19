@@ -73,6 +73,8 @@ kotlin {
         val webMain by creating { dependsOn(commonMain.get()) }
         val webTest by creating { dependsOn(commonTest.get()) }
 
+        val jvmAndNativeMain by creating { dependsOn(nonWebMain) }
+
         androidMain {
             dependsOn(nonWebMain)
             dependencies {
@@ -82,9 +84,9 @@ kotlin {
             }
         }
         androidUnitTest.get().dependsOn(nonWebTest)
-        jvmMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(jvmAndNativeMain)
         jvmTest.get().dependsOn(nonWebTest)
-        nativeMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(jvmAndNativeMain)
         nativeTest.get().dependsOn(nonWebTest)
 
         jsMain.get().dependsOn(webMain)
