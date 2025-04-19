@@ -98,8 +98,6 @@ kotlin {
             dependsOn(nonAndroidMain)
         }
         iosMain {
-            dependsOn(nonWebMain)
-            dependsOn(nonAndroidMain)
             dependsOn(mobileMain)
         }
 
