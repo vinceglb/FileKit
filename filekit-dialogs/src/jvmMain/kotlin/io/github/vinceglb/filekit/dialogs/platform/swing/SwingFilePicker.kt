@@ -86,7 +86,7 @@ internal class SwingFilePicker : PlatformFilePicker {
 
         val returnValue = jFileChooser.showOpenDialog(dialogSettings.parentWindow)
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            continuation.resume(jFileChooser.selectedFiles.toList())
+            continuation.resume(jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: listOf(jFileChooser.selectedFile))
         }
 
         continuation.invokeOnCancellation { jFileChooser.cancelSelection() }

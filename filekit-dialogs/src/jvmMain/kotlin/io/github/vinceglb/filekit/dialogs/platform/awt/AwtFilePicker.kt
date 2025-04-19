@@ -67,14 +67,14 @@ internal class AwtFilePicker : PlatformFilePicker {
             is Dialog -> object : FileDialog(parentWindow, title, LOAD) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
-                    handleResult(value, files)
+                    handleResult(value, files.takeIf { it.isNotEmpty() } ?: arrayOf(File(file)))
                 }
             }
 
             else -> object : FileDialog(parentWindow as? Frame, title, LOAD) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
-                    handleResult(value, files)
+                    handleResult(value, files.takeIf { it.isNotEmpty() } ?: arrayOf(File(file)))
                 }
             }
         }
