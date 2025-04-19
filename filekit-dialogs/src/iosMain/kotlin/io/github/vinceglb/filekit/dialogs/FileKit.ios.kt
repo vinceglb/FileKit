@@ -12,9 +12,11 @@ import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
 import io.github.vinceglb.filekit.path
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
@@ -29,14 +31,19 @@ import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
+import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
+import platform.UIKit.UIDevice
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
+import platform.UIKit.UIScreen
+import platform.UIKit.UIUserInterfaceIdiomPad
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
+import platform.UIKit.popoverPresentationController
 import platform.UIKit.presentationController
 import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
@@ -199,6 +206,45 @@ public actual suspend fun FileKit.openCameraPicker(
             completion = null
         )
     }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+public actual suspend fun FileKit.shareFile(
+    file: PlatformFile,
+    fileKitShareSettings: FileKitShareSettings
+) {
+    val topViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
+    val fileUrl = NSURL.fileURLWithPath(file.path)
+
+    val shareVC = UIActivityViewController(
+        activityItems = listOf(fileUrl),
+        applicationActivities = null
+    )
+
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+        // ipad need sourceView for show
+        shareVC.popoverPresentationController?.sourceView = topViewController?.view
+        val size = UIScreen.mainScreen.bounds.useContents { size }
+        shareVC.popoverPresentationController?.sourceRect = CGRectMake(
+            x = size.width / 2.1,
+            y = size.height / 2.3,
+            width = 200.0,
+            height = 200.0
+        )
+    }
+    fileKitShareSettings.addOptionUIActivityViewController(shareVC)
+
+    topViewController?.presentViewController(
+        viewControllerToPresent = shareVC,
+        animated = true,
+        completion = null
+    )
+}
+
+public suspend fun FileKit.shareFile(
+    file : PlatformFile,
+) {
+    shareFile(file,FileKitIOSDefaultShareSettings())
 }
 
 private suspend fun callPicker(

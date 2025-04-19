@@ -130,6 +130,10 @@ class MainViewModel(
         }
     }
 
+    fun shareFile(file: PlatformFile) = executeWithLoading {
+        shareImageIfSupported(file)
+    }
+
     private fun executeWithLoading(block: suspend () -> Unit) {
         viewModelScope.launch {
             _uiState.update { it.copy(loading = true) }
@@ -157,3 +161,5 @@ expect suspend fun pickDirectoryIfSupported(
 expect suspend fun takePhotoIfSupported(): PlatformFile?
 
 expect suspend fun compressImage(bytes: ByteArray)
+
+expect suspend fun shareImageIfSupported(file: PlatformFile)

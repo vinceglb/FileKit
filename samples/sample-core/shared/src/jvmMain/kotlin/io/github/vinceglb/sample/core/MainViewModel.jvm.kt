@@ -7,3 +7,7 @@ import io.github.vinceglb.filekit.downloadDir
 actual fun downloadDirectoryPath(): PlatformFile? = FileKit.downloadDir
 
 actual suspend fun takePhotoIfSupported(): PlatformFile? = null
+
+actual suspend fun shareImageIfSupported(file: PlatformFile) {
+
+}

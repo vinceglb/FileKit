@@ -11,4 +11,8 @@ actual fun downloadDirectoryPath(): PlatformFile? = null
 
 actual suspend fun takePhotoIfSupported(): PlatformFile? = null
 
+actual suspend fun shareImageIfSupported(file: PlatformFile) {
+
+}
+
 actual suspend fun compressImage(bytes: ByteArray) {}
