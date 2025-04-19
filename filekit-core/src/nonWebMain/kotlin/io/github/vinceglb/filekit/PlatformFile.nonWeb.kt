@@ -92,13 +92,19 @@ public suspend fun PlatformFile.createDirectories(mustCreate: Boolean = false): 
         SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
     }
 
-public suspend fun PlatformFile.list(): List<PlatformFile> =
-    withContext(Dispatchers.IO) {
+public inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
+    withScopedAccess {
+        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+        block(directoryFiles)
+    }
+
+public fun PlatformFile.list(): List<PlatformFile> =
+    withScopedAccess {
         SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
     }
 
-public suspend fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
-    withContext(Dispatchers.IO) {
+public fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
+    withScopedAccess {
         SystemFileSystem.atomicMove(
             source = toKotlinxIoPath(),
             destination = destination.toKotlinxIoPath(),
@@ -115,3 +121,14 @@ public operator fun PlatformFile.div(child: String): PlatformFile =
 
 public fun PlatformFile.resolve(relative: String): PlatformFile =
     this / relative
+
+public expect fun PlatformFile.startAccessingSecurityScopedResource(): Boolean
+
+public expect fun PlatformFile.stopAccessingSecurityScopedResource()
+
+public inline fun <T> PlatformFile.withScopedAccess(block: (PlatformFile) -> T): T = try {
+    startAccessingSecurityScopedResource()
+    block(this)
+} finally {
+    stopAccessingSecurityScopedResource()
+}

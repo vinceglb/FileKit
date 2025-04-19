@@ -138,6 +138,10 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
         ?: throw FileKitException("Could not open output stream for Uri")
 }
 
+public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
+
+public actual fun PlatformFile.stopAccessingSecurityScopedResource() {}
+
 private fun getUriFileSize(uri: Uri): Long? {
     return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
         val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
