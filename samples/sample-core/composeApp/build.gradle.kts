@@ -69,8 +69,8 @@ kotlin {
             // ViewModel Compose
             implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-            // Coil3
-            implementation(libs.coil.compose)
+            // Human Readable
+            implementation(libs.human.readable)
         }
 
         androidMain.dependencies {
