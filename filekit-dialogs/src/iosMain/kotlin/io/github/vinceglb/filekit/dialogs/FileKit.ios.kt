@@ -242,12 +242,6 @@ public actual suspend fun FileKit.shareFile(
     )
 }
 
-public suspend fun FileKit.shareFile(
-    file : PlatformFile,
-) {
-    shareFile(file,FileKitIOSDefaultShareSettings())
-}
-
 private suspend fun callPicker(
     mode: Mode,
     contentTypes: List<UTType>,

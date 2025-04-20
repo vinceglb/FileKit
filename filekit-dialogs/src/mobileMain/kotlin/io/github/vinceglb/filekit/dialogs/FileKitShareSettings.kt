@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.dialogs
 
-public expect open class FileKitShareSettings {
-
+public expect class FileKitShareSettings {
+    public companion object {
+        public fun createDefault(): FileKitShareSettings
+    }
 }

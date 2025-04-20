@@ -2,7 +2,6 @@ package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
 import android.content.Intent
-import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -13,8 +12,8 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
-import androidx.core.net.toUri
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
@@ -205,20 +204,12 @@ public actual suspend fun FileKit.shareFile(
     intentShareSend.clipData = ClipData.newUri(context.contentResolver, null, uri)
     intentShareSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
-        setFlags(
-            Intent.FLAG_ACTIVITY_NEW_TASK
-        )
+        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
     fileKitShareSettings.addOptionChooseIntent(chooseIntent)
 
     context.startActivity(chooseIntent)
-}
-
-public suspend fun FileKit.shareFile(
-    file: PlatformFile,
-) {
-    shareFile(file, FileKitAndroidDefaultShareSettings())
 }
 
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
