@@ -4,6 +4,6 @@ import io.github.vinceglb.filekit.PlatformFile
 
 actual suspend fun takePhotoIfSupported(): PlatformFile? = null
 
-actual suspend fun shareImageIfSupported(file: PlatformFile) {
+actual suspend fun shareFileIfSupported(file: PlatformFile) {
 
 }

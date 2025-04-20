@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,14 +26,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.AsyncImage
+import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.size
+import nl.jacobras.humanreadable.HumanReadable
 
 @Composable
 fun PhotoItem(
     file: PlatformFile,
     onSaveFile: (PlatformFile) -> Unit,
-    onShareFile: (PlatformFile) -> Unit
 ) {
     var showName by remember { mutableStateOf(false) }
 
@@ -45,12 +45,14 @@ fun PhotoItem(
             .clip(shape = MaterialTheme.shapes.medium)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                file,
-                contentDescription = file.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
+                AsyncImage(
+                    file,
+                    contentDescription = file.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
 
             Surface(
                 color = MaterialTheme.colorScheme.surfaceVariant,
@@ -58,17 +60,7 @@ fun PhotoItem(
                 modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
             ) {
                 Row {
-                    IconButton(
-                        onClick = { onShareFile(file) },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Share,
-                            modifier = Modifier.size(22.dp),
-                            contentDescription = "share",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    ShareButton(file)
                     IconButton(
                         onClick = { onSaveFile(file) },
                         modifier = Modifier.size(36.dp),
@@ -92,7 +84,7 @@ fun PhotoItem(
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Text(
-                        "${file.name} - ${file.size()}",
+                        "${file.name} - ${HumanReadable.fileSize(file.size())}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(4.dp)
                     )

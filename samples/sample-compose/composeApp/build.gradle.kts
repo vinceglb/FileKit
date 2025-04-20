@@ -68,6 +68,9 @@ kotlin {
             // FileKit
             implementation(projects.filekitCoil)
             implementation(projects.filekitDialogsCompose)
+
+            // Human Readable
+            implementation(libs.human.readable)
         }
 
         val nonWebMain by creating {

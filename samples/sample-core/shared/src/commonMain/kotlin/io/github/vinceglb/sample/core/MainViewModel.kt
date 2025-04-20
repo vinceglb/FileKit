@@ -30,7 +30,7 @@ class MainViewModel(
     fun pickImage() = executeWithLoading {
         // Pick a file
         val file = FileKit.openFilePicker(
-            type = FileKitType.Image,
+            type = FileKitType.ImageAndVideo,
             title = "Custom title here",
             directory = downloadDirectoryPath(),
             dialogSettings = dialogSettings,
@@ -131,7 +131,7 @@ class MainViewModel(
     }
 
     fun shareFile(file: PlatformFile) = executeWithLoading {
-        shareImageIfSupported(file)
+        shareFileIfSupported(file)
     }
 
     private fun executeWithLoading(block: suspend () -> Unit) {
@@ -162,4 +162,4 @@ expect suspend fun takePhotoIfSupported(): PlatformFile?
 
 expect suspend fun compressImage(bytes: ByteArray)
 
-expect suspend fun shareImageIfSupported(file: PlatformFile)
+expect suspend fun shareFileIfSupported(file: PlatformFile)

@@ -1,3 +1,4 @@
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -94,11 +94,6 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
             )
         }
     }
-    fun shareFile(file: PlatformFile) {
-        scope.launch {
-            shareImageIfSupported(file)
-        }
-    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -142,7 +137,6 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
                     PhotoItem(
                         file = it,
                         onSaveFile = ::saveFile,
-                        onShareFile = ::shareFile
                     )
                 }
             }
@@ -160,4 +154,5 @@ expect fun PickDirectory(
 @Composable
 expect fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit)
 
-expect suspend fun shareImageIfSupported(file: PlatformFile)
+@Composable
+expect fun ShareButton(file: PlatformFile)

@@ -1,11 +1,18 @@
 
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import io.github.vinceglb.filekit.FileKit
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
-import io.github.vinceglb.filekit.dialogs.shareImageFile
+import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
@@ -18,7 +25,19 @@ actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     }
 }
 
+@Composable
+actual fun ShareButton(file: PlatformFile) {
+    val shareLauncher = rememberShareFileLauncher()
 
-actual suspend fun shareImageIfSupported(file: PlatformFile) {
-    FileKit.shareImageFile(file)
+    IconButton(
+        onClick = { shareLauncher.launch(file) },
+        modifier = Modifier.size(36.dp)
+    ) {
+        Icon(
+            Icons.Default.Share,
+            modifier = Modifier.size(22.dp),
+            contentDescription = "share",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }

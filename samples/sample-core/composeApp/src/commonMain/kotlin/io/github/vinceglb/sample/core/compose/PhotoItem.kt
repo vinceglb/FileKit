@@ -28,8 +28,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.AsyncImage
+import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.size
+import nl.jacobras.humanreadable.HumanReadable
 
 @Composable
 fun PhotoItem(
@@ -46,12 +48,14 @@ fun PhotoItem(
             .clip(shape = MaterialTheme.shapes.medium)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                file,
-                contentDescription = file.name,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
+                AsyncImage(
+                    file,
+                    contentDescription = file.name,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
 
             Surface(
                 color = MaterialTheme.colorScheme.surfaceVariant,
@@ -93,7 +97,7 @@ fun PhotoItem(
                     shape = MaterialTheme.shapes.small,
                 ) {
                     Text(
-                        "${file.name} - ${file.size()}",
+                        "${file.name} - ${HumanReadable.fileSize(file.size())}",
                         style = MaterialTheme.typography.labelMedium,
                         modifier = Modifier.padding(4.dp)
                     )

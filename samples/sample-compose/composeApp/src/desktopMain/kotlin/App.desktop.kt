@@ -1,3 +1,4 @@
+
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
 
@@ -5,6 +6,5 @@ import io.github.vinceglb.filekit.PlatformFile
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
 }
 
-actual suspend fun shareImageIfSupported(file: PlatformFile) {
-
-}
+@Composable
+actual fun ShareButton(file: PlatformFile) {}

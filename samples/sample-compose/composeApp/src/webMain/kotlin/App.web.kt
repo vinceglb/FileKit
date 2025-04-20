@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -26,7 +25,6 @@ actual fun PickDirectory(
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
 }
 
-
-actual suspend fun shareImageIfSupported(file: PlatformFile) {
-
+@Composable
+actual fun ShareButton(file: PlatformFile) {
 }
