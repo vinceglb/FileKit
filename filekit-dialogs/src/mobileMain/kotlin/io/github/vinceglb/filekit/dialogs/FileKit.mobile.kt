@@ -9,5 +9,5 @@ public expect suspend fun FileKit.openCameraPicker(
 
 public expect suspend fun FileKit.shareFile(
     file: PlatformFile,
-    fileKitShareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
+    shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
 )

@@ -13,6 +13,7 @@ import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
+import platform.Foundation.temporaryDirectory
 
 public actual object FileKit
 
@@ -33,6 +34,12 @@ public actual val FileKit.cacheDir: PlatformFile
         ?.let { it as NSURL? }
         ?.let(::PlatformFile)
         ?: throw FileKitException("Could not find cache directory")
+
+public val FileKit.tempDir: PlatformFile
+    get() = NSFileManager
+        .defaultManager
+        .temporaryDirectory
+        .let(::PlatformFile)
 
 public actual val FileKit.databasesDir: PlatformFile
     get() = FileKit.filesDir / "databases"

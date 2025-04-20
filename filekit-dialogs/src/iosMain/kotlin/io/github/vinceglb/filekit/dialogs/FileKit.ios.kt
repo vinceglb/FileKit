@@ -11,6 +11,8 @@ import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
 import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
+import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
@@ -18,10 +20,12 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
+import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
+import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
@@ -37,7 +41,6 @@ import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
-import platform.UIKit.UIScreen
 import platform.UIKit.UIUserInterfaceIdiomPad
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
@@ -198,7 +201,8 @@ public actual suspend fun FileKit.openCameraPicker(
         )
 
         val pickerController = UIImagePickerController()
-        pickerController.sourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+        pickerController.sourceType =
+            UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
 
         UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
@@ -212,34 +216,43 @@ public actual suspend fun FileKit.openCameraPicker(
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
-    fileKitShareSettings: FileKitShareSettings
+    shareSettings: FileKitShareSettings
 ) {
-    val topViewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
-    val fileUrl = NSURL.fileURLWithPath(file.path)
+    file.startAccessingSecurityScopedResource()
+
+    val viewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
+        ?: return
 
     val shareVC = UIActivityViewController(
-        activityItems = listOf(fileUrl),
+        activityItems = listOf(file.nsUrl),
         applicationActivities = null
     )
 
-    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+    if (isIpad()) {
         // ipad need sourceView for show
-        shareVC.popoverPresentationController?.sourceView = topViewController?.view
-        val size = UIScreen.mainScreen.bounds.useContents { size }
-        shareVC.popoverPresentationController?.sourceRect = CGRectMake(
-            x = size.width / 2.1,
-            y = size.height / 2.3,
-            width = 200.0,
-            height = 200.0
-        )
+        shareVC.popoverPresentationController?.apply {
+            sourceView = viewController.view
+            sourceRect = viewController.view.center.useContents { CGRectMake(x, y, 0.0, 0.0) }
+            permittedArrowDirections = 0uL
+        }
     }
-    fileKitShareSettings.addOptionUIActivityViewController(shareVC)
 
-    topViewController?.presentViewController(
+    shareVC.setCompletionHandler { _, _ ->
+        file.stopAccessingSecurityScopedResource()
+    }
+
+    shareSettings.addOptionUIActivityViewController(shareVC)
+
+    viewController.presentViewController(
         viewControllerToPresent = shareVC,
         animated = true,
         completion = null
     )
+}
+
+private fun isIpad(): Boolean {
+    val device = UIDevice.currentDevice
+    return device.userInterfaceIdiom == UIUserInterfaceIdiomPad
 }
 
 private suspend fun callPicker(
@@ -325,6 +338,8 @@ private suspend fun <Out> callPhPicker(
         )
     }
 
+    val fileManager = NSFileManager.defaultManager
+
     return@withContext withContext(Dispatchers.IO) {
         pickerResults.mapNotNull { result ->
             suspendCoroutine<NSURL?> { continuation ->
@@ -335,7 +350,30 @@ private suspend fun <Out> callPhPicker(
                         is FileKitType.ImageAndVideo -> UTTypeContent.identifier
                         else -> throw IllegalArgumentException("Unsupported type: $type")
                     }
-                ) { url, _ -> continuation.resume(url) }
+                ) { url, _ ->
+                    val tmpUrl = url?.let {
+                        // Get the temporary directory
+                        val fileComponents =
+                            fileManager.temporaryDirectory.pathComponents?.plus(it.lastPathComponent)
+                                ?: throw IllegalStateException("Failed to get temporary directory")
+
+                        // Create a file URL
+                        val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
+                            ?: throw IllegalStateException("Failed to create file URL")
+
+                        // Read the data from the URL
+                        val data = NSData.dataWithContentsOfURL(it, NSDataReadingUncached, null)
+                            ?: throw IllegalStateException("Failed to read data from $it")
+
+                        // Write the data to the temp file
+                        data.writeToURL(fileUrl, true)
+
+                        // Return the temporary
+                        fileUrl
+                    }
+
+                    continuation.resume(tmpUrl)
+                }
             }
         }.takeIf { it.isNotEmpty() }
     }
