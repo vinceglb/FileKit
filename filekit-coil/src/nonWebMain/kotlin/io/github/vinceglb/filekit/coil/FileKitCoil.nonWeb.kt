@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.coil
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -12,6 +13,8 @@ import coil3.SingletonImageLoader
 import coil3.compose.AsyncImagePainter.State
 import coil3.compose.LocalPlatformContext
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
+import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 
 public expect val PlatformFile.coilModel: Any
 
@@ -38,7 +41,7 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean,
 ) {
-    AsyncImagePlatformEffects(file)
+    DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
         model = file?.coilModel,
@@ -78,7 +81,7 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    AsyncImagePlatformEffects(file)
+    DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
         model = file?.coilModel,
@@ -115,7 +118,7 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    AsyncImagePlatformEffects(file)
+    DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
         model = file?.coilModel,
@@ -147,7 +150,7 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    AsyncImagePlatformEffects(file)
+    DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
         model = file?.coilModel,
@@ -166,4 +169,9 @@ public actual fun AsyncImage(
 }
 
 @Composable
-internal expect fun AsyncImagePlatformEffects(file: PlatformFile?)
+private fun DisposableFileSecurityEffect(file: PlatformFile?) {
+    DisposableEffect(file) {
+        file?.startAccessingSecurityScopedResource()
+        onDispose { file?.stopAccessingSecurityScopedResource() }
+    }
+}
