@@ -92,29 +92,13 @@ public suspend fun PlatformFile.createDirectories(mustCreate: Boolean = false): 
         SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
     }
 
-public inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
-    withScopedAccess {
-        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
-        block(directoryFiles)
-    }
+public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
 
-public fun PlatformFile.list(): List<PlatformFile> =
-    withScopedAccess {
-        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
-    }
+public expect fun PlatformFile.list(): List<PlatformFile>
 
-public fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
-    withScopedAccess {
-        SystemFileSystem.atomicMove(
-            source = toKotlinxIoPath(),
-            destination = destination.toKotlinxIoPath(),
-        )
-    }
+public expect suspend fun PlatformFile.atomicMove(destination: PlatformFile)
 
-public suspend fun PlatformFile.delete(mustExist: Boolean = true): Unit =
-    withContext(Dispatchers.IO) {
-        SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
-    }
+public expect suspend fun PlatformFile.delete(mustExist: Boolean = true)
 
 public operator fun PlatformFile.div(child: String): PlatformFile =
     PlatformFile(this, child)

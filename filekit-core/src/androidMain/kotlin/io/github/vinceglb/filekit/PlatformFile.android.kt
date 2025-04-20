@@ -6,6 +6,8 @@ import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
 import io.github.vinceglb.filekit.utils.toKotlinxPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.asSink
@@ -48,13 +50,19 @@ public actual val PlatformFile.name: String
 public actual val PlatformFile.extension: String
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.extension
-        is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri).substringAfterLast(".", "")
+        is AndroidFile.UriWrapper -> when {
+            isDirectory() -> ""
+            else -> getUriFileName(androidFile.uri).substringAfterLast(".", "")
+        }
     }
 
 public actual val PlatformFile.nameWithoutExtension: String
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.nameWithoutExtension
-        is AndroidFile.UriWrapper -> getUriFileName(androidFile.uri).substringBeforeLast(".", "")
+        is AndroidFile.UriWrapper -> when {
+            isDirectory() -> getUriFileName(androidFile.uri)
+            else -> getUriFileName(androidFile.uri).substringBeforeLast(".", "")
+        }
     }
 
 public actual val PlatformFile.path: String
@@ -104,10 +112,16 @@ public actual fun PlatformFile.size(): Long = when (androidFile) {
 
 public actual fun PlatformFile.parent(): PlatformFile? = when (androidFile) {
     is AndroidFile.FileWrapper -> toKotlinxIoPath().parent?.let(::PlatformFile)
-    is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
-        FileKit.context,
-        androidFile.uri
-    )?.parentFile?.let { PlatformFile(it.uri) }
+    is AndroidFile.UriWrapper -> {
+        val uri = androidFile.uri
+        val parentUri = uri.buildUpon()
+            .path(uri.path?.substringBeforeLast('/'))
+            .build()
+
+        DocumentFile.fromTreeUri(FileKit.context, parentUri)?.let {
+            PlatformFile(it.uri)
+        }
+    }
 }
 
 public actual fun PlatformFile.absolutePath(): String = when (androidFile) {
@@ -141,6 +155,76 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource() {}
+
+public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit) {
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+            block(directoryFiles)
+        }
+
+        is AndroidFile.UriWrapper -> {
+            val documentFile = DocumentFile.fromTreeUri(FileKit.context, androidFile.uri)
+                ?: throw FileKitException("Could not access Uri as DocumentFile")
+            val files = documentFile.listFiles().map { PlatformFile(it.uri) }
+            block(files)
+        }
+    }
+}
+
+public actual fun PlatformFile.list(): List<PlatformFile> = when (androidFile) {
+    is AndroidFile.FileWrapper -> SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+
+    is AndroidFile.UriWrapper -> {
+        val documentFile = DocumentFile.fromTreeUri(FileKit.context, androidFile.uri)
+            ?: throw FileKitException("Could not access Uri as DocumentFile")
+        documentFile.listFiles().map { PlatformFile(it.uri) }
+    }
+}
+
+public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
+    withContext(Dispatchers.IO) {
+        when {
+            androidFile is AndroidFile.FileWrapper && destination.androidFile is AndroidFile.FileWrapper -> {
+                SystemFileSystem.atomicMove(
+                    source = toKotlinxIoPath(),
+                    destination = destination.toKotlinxIoPath(),
+                )
+            }
+
+            else -> {
+                // TODO only rename the file / folder
+
+                if (isDirectory()) {
+                    throw FileKitException("atomicMove does not support moving directories with Uri for now")
+                }
+
+                copyTo(destination)
+                delete()
+            }
+        }
+    }
+
+public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
+    withContext(Dispatchers.IO) {
+        when (androidFile) {
+            is AndroidFile.FileWrapper -> SystemFileSystem.delete(
+                path = toKotlinxIoPath(),
+                mustExist = mustExist
+            )
+
+            is AndroidFile.UriWrapper -> {
+                val documentFile = DocumentFile.fromSingleUri(FileKit.context, androidFile.uri)
+                    ?: throw FileKitException("Could not access Uri as DocumentFile")
+
+                if (documentFile.exists()) {
+                    documentFile.delete()
+                } else if (mustExist) {
+                    throw FileKitException("Uri does not exist")
+                }
+            }
+        }
+    }
 
 private fun getUriFileSize(uri: Uri): Long? {
     return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->

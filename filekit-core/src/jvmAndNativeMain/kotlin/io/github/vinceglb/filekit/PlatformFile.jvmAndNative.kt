@@ -1,5 +1,8 @@
 package io.github.vinceglb.filekit
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.files.SystemFileSystem
@@ -42,3 +45,29 @@ public actual fun PlatformFile.source(): RawSource = withScopedAccess {
 public actual fun PlatformFile.sink(append: Boolean): RawSink = withScopedAccess {
     SystemFileSystem.sink(toKotlinxIoPath(), append)
 }
+
+public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
+    withContext(Dispatchers.IO) {
+        SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
+    }
+
+public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Unit =
+    withContext(Dispatchers.IO) {
+        withScopedAccess {
+            SystemFileSystem.atomicMove(
+                source = toKotlinxIoPath(),
+                destination = destination.toKotlinxIoPath(),
+            )
+        }
+    }
+
+public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
+    withScopedAccess {
+        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+        block(directoryFiles)
+    }
+
+public actual fun PlatformFile.list(): List<PlatformFile> =
+    withScopedAccess {
+        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+    }
