@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="SampleCore iOS Native" type="KmmRunConfiguration" factoryName="iOS Application" CONFIG_VERSION="1" EXEC_TARGET_ID="00008110-001A49E43CE9801E" XCODE_PROJECT="$PROJECT_DIR$/samples/sample-core/appleApps/FileKitSamples.xcodeproj" XCODE_CONFIGURATION="Debug" XCODE_SCHEME="iOSApp">
+  <configuration default="false" name="SampleCore iOS Native" type="KmmRunConfiguration" factoryName="iOS Application" CONFIG_VERSION="1" EXEC_TARGET_ID="72359280-FA9C-4681-B911-8A203B284411" XCODE_PROJECT="$PROJECT_DIR$/samples/sample-core/appleApps/FileKitSamples.xcodeproj" XCODE_CONFIGURATION="Debug" XCODE_SCHEME="iOSApp">
     <method v="2">
       <option name="com.jetbrains.kmm.ios.BuildIOSAppTask" enabled="true" />
     </method>

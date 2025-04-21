@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Sample File Explorer iOS" type="KmmRunConfiguration" factoryName="iOS Application" activateToolWindowBeforeRun="false" CONFIG_VERSION="1" EXEC_TARGET_ID="72359280-FA9C-4681-B911-8A203B284411" XCODE_PROJECT="$PROJECT_DIR$/samples/sample-file-explorer/iosApp/Sample File Explorer.xcodeproj" XCODE_CONFIGURATION="Debug" XCODE_SCHEME="Sample File Explorer">
+    <method v="2">
+      <option name="com.jetbrains.kmm.ios.BuildIOSAppTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
