@@ -42,6 +42,7 @@
           "dialogs/directory-picker",
           "dialogs/camera-picker",
           "dialogs/file-saver",
+          "dialogs/share-file",
           "dialogs/dialog-settings"
         ]
       }

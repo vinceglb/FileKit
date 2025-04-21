@@ -87,6 +87,33 @@ val dbFile = FileKit.databasesDir / "app.db"
 // Use the database file with your preferred database library
 ```
 
+## Scoped Resource Access (iOS/macOS)
+
+On iOS and macOS, some files may require security-scoped access to be read or written. FileKit provides utilities to manage this:
+
+```kotlin
+// Start accessing a security-scoped resource
+val success = platformFile.startAccessingSecurityScopedResource()
+if (success) {
+    try {
+        // Perform file operations
+    } finally {
+        // Stop accessing the resource
+        platformFile.stopAccessingSecurityScopedResource()
+    }
+}
+```
+
+To simplify this pattern, you can use the `withScopedAccess` method:
+
+```kotlin
+platformFile.withScopedAccess { file ->
+    // Perform file operations with scoped access
+}
+```
+
+These methods ensure that security-scoped resources are properly accessed and released, preventing potential resource leaks.
+
 ## Downloading files from web
 
 <DownloadFilesWeb/>

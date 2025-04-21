@@ -23,7 +23,7 @@ suspend fun compressAndSaveImage() {
         quality = 80, // 0-100, where 100 is highest quality
         maxWidth = 1024, // Optional maximum width
         maxHeight = 1024, // Optional maximum height
-        compressFormat = CompressFormat.JPEG // JPEG or PNG
+        imageFormat = ImageFormat.JPEG // JPEG or PNG
     )
     
     // Save the compressed image
@@ -61,6 +61,33 @@ The behavior of `saveImageToGallery` varies slightly by platform:
 | macOS/JVM | Saves to the user's Pictures directory |
 | JS/WASM | Not supported (no-op) |
 
+## Encoding and Converting Images
+
+FileKit provides utilities for encoding `ImageBitmap` objects into byte arrays and converting `PlatformFile` objects into `ImageBitmap` instances. These methods are useful for image manipulation and storage across platforms.
+
+### Encoding an ImageBitmap to ByteArray
+
+The `ImageBitmap.encodeToByteArray` method allows you to encode an `ImageBitmap` into a `ByteArray` using a specified format and quality.
+
+```kotlin
+suspend fun encodeImageToByteArray(imageBitmap: ImageBitmap): ByteArray {
+    return imageBitmap.encodeToByteArray(
+        format = ImageFormat.JPEG, // JPEG or PNG
+        quality = 90 // Compression quality (0-100)
+    )
+}
+```
+
+### Converting a PlatformFile to ImageBitmap
+
+The `PlatformFile.toImageBitmap` method converts a file into an `ImageBitmap` for use in Compose UI or other image operations.
+
+```kotlin
+suspend fun convertFileToImageBitmap(file: PlatformFile): ImageBitmap {
+    return file.toImageBitmap()
+}
+```
+
 ## Example: Creating a Thumbnail
 
 This function creates a thumbnail version of an image by resizing it to a maximum dimension while maintaining the aspect ratio.
@@ -76,7 +103,7 @@ suspend fun createThumbnail(originalImageFile: PlatformFile, maxSize: Int = 200)
         quality = 85,
         maxWidth = maxSize,
         maxHeight = maxSize,
-        compressFormat = CompressFormat.JPEG
+        imageFormat = ImageFormat.JPEG
     )
     
     // Save the thumbnail

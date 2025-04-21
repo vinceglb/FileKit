@@ -1,0 +1,35 @@
+---
+title: 'Share file dialog'
+sidebarTitle: 'Share file'
+description: 'Open a file sharing dialog in a Kotlin Multiplatform project'
+---
+
+<Check>Supported on Android and iOS targets</Check>
+
+<div className="flex justify-center gap-6">
+  <img height="200" width="200" noZoom src="/images/share-file-ios.png" />
+  <img height="200" width="200" noZoom src="/images/share-file-android.png" />
+</div>
+
+## Open the share file dialog
+
+The share file component provides a native interface for users to share files using their device's sharing options.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = PlatformFile("/path/to/file.txt")
+FileKit.shareFile(file)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberShareFileLauncher()
+
+Button(onClick = { launcher.launch(file) }) {
+    Text("Share file")
+}
+```
+</CodeGroup>
+
+<Warning>
+Ensure the file you are sharing exists and is accessible. Sharing a non-existent file will result in an error.
+</Warning>
