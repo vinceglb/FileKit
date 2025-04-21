@@ -107,7 +107,7 @@ private fun DirectorySelectedContent(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(),
 ) {
-    var currentDirectory by remember { mutableStateOf(rootDirectory) }
+    var currentDirectory by remember(rootDirectory) { mutableStateOf(rootDirectory) }
     var files by remember { mutableStateOf<List<PlatformFile>>(emptyList()) }
 
     var refreshKey by remember { mutableStateOf(0) }
