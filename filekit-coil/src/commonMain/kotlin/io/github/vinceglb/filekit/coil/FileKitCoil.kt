@@ -18,6 +18,9 @@ import io.github.vinceglb.filekit.PlatformFile
 public expect fun rememberPlatformFileCoilModel(file: PlatformFile?): Any?
 
 @Composable
+public expect fun rememberUnifiedCoilModel(model: Any?): Any?
+
+@Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
     contentDescription: String?,
@@ -37,6 +40,7 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
+
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -55,6 +59,7 @@ public expect fun AsyncImage(
     filterQuality: FilterQuality = DefaultFilterQuality,
     clipToBounds: Boolean = true,
 )
+
 
 @Composable
 public expect fun AsyncImage(
@@ -72,9 +77,83 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
+
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    transform: (State) -> State = DefaultTransform,
+    onState: ((State) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+
+@Composable
+public expect fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier,
+    placeholder: Painter? = null,
+    error: Painter? = null,
+    fallback: Painter? = error,
+    onLoading: ((State.Loading) -> Unit)? = null,
+    onSuccess: ((State.Success) -> Unit)? = null,
+    onError: ((State.Error) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+@Composable
+public expect fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    placeholder: Painter? = null,
+    error: Painter? = null,
+    fallback: Painter? = error,
+    onLoading: ((State.Loading) -> Unit)? = null,
+    onSuccess: ((State.Success) -> Unit)? = null,
+    onError: ((State.Error) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+
+@Composable
+public expect fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier,
+    transform: (State) -> State = DefaultTransform,
+    onState: ((State) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+
+@Composable
+public expect fun AsyncImage(
+    model: Any?,
     contentDescription: String?,
     modifier: Modifier = Modifier,
     transform: (State) -> State = DefaultTransform,

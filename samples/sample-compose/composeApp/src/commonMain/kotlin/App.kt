@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,6 +98,8 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
+
+
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = { singleFilePicker.launch() }) {
                 Text("Single file picker")
@@ -117,14 +118,12 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
             }
 
             TakePhoto(
-                onPhotoTaken = { file -> file?.let { files += it } }
-            )
+                onPhotoTaken = { file -> file?.let { files += it } })
 
             PickDirectory(
                 dialogSettings = dialogSettings,
                 directory = directory,
-                onDirectoryPicked = { directory = it }
-            )
+                onDirectoryPicked = { directory = it })
 
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 128.dp),

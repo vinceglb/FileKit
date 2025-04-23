@@ -1,4 +1,3 @@
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -40,10 +39,9 @@ fun PhotoItem(
 
     Surface(
         onClick = { showName = !showName },
-        modifier = Modifier
-            .aspectRatio(1f)
-            .clip(shape = MaterialTheme.shapes.medium)
+        modifier = Modifier.aspectRatio(1f).clip(shape = MaterialTheme.shapes.medium)
     ) {
+
         Box(modifier = Modifier.fillMaxSize()) {
             if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
                 AsyncImage(
@@ -76,8 +74,7 @@ fun PhotoItem(
             }
 
             AnimatedVisibility(
-                visible = showName,
-                modifier = Modifier.padding(4.dp).align(Alignment.BottomStart)
+                visible = showName, modifier = Modifier.padding(4.dp).align(Alignment.BottomStart)
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),

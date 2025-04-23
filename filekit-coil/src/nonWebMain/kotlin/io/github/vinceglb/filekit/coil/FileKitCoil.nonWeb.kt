@@ -19,8 +19,15 @@ import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 public expect val PlatformFile.coilModel: Any
 
 @Composable
-public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? =
-    file?.coilModel
+public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? = file?.coilModel
+
+
+@Composable
+public actual fun rememberUnifiedCoilModel(model: Any?): Any? = when (model) {
+    is PlatformFile -> rememberPlatformFileCoilModel(model)
+    else -> model
+}
+
 
 @Composable
 public actual fun AsyncImage(
@@ -63,6 +70,48 @@ public actual fun AsyncImage(
     )
 }
 
+
+@Composable
+public actual fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier,
+    placeholder: Painter?,
+    error: Painter?,
+    fallback: Painter?,
+    onLoading: ((State.Loading) -> Unit)?,
+    onSuccess: ((State.Success) -> Unit)?,
+    onError: ((State.Error) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean,
+) {
+    UnifiedDisposableFileSecurityEffect(model)
+
+    coil3.compose.AsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
+        onLoading = onLoading,
+        onSuccess = onSuccess,
+        onError = onError,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -85,6 +134,47 @@ public actual fun AsyncImage(
 
     coil3.compose.AsyncImage(
         model = file?.coilModel,
+        contentDescription = contentDescription,
+        imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
+        modifier = modifier,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
+        onLoading = onLoading,
+        onSuccess = onSuccess,
+        onError = onError,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+
+@Composable
+public actual fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    modifier: Modifier,
+    placeholder: Painter?,
+    error: Painter?,
+    fallback: Painter?,
+    onLoading: ((State.Loading) -> Unit)?,
+    onSuccess: ((State.Success) -> Unit)?,
+    onError: ((State.Error) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    UnifiedDisposableFileSecurityEffect(model)
+
+    coil3.compose.AsyncImage(
+        model = model,
         contentDescription = contentDescription,
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
         modifier = modifier,
@@ -136,6 +226,40 @@ public actual fun AsyncImage(
     )
 }
 
+
+@Composable
+public actual fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier,
+    transform: (State) -> State,
+    onState: ((State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    UnifiedDisposableFileSecurityEffect(model)
+
+    coil3.compose.AsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -168,10 +292,54 @@ public actual fun AsyncImage(
     )
 }
 
+
+@Composable
+public actual fun AsyncImage(
+    model: Any?,
+    contentDescription: String?,
+    modifier: Modifier,
+    transform: (State) -> State,
+    onState: ((State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    UnifiedDisposableFileSecurityEffect(model)
+
+    coil3.compose.AsyncImage(
+        model = model,
+        contentDescription = contentDescription,
+        imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+
 @Composable
 private fun DisposableFileSecurityEffect(file: PlatformFile?) {
     DisposableEffect(file) {
         file?.startAccessingSecurityScopedResource()
         onDispose { file?.stopAccessingSecurityScopedResource() }
+    }
+}
+
+@Composable
+private fun UnifiedDisposableFileSecurityEffect(model: Any?) {
+    if (model is PlatformFile) {
+        DisposableEffect(model) {
+            model.startAccessingSecurityScopedResource()
+            onDispose { model.stopAccessingSecurityScopedResource() }
+        }
     }
 }
