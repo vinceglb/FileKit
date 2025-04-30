@@ -6,6 +6,8 @@ import androidx.annotation.IntRange
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import io.github.vinceglb.filekit.AndroidFile
+import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.ImageFormat
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
@@ -43,6 +45,21 @@ public actual suspend fun ImageBitmap.encodeToByteArray(
  * @throws Exception if the conversion fails.
  */
 public actual suspend fun PlatformFile.toImageBitmap(): ImageBitmap =
-    BitmapFactory
-        .decodeFile(this.absolutePath())
-        .asImageBitmap()
+    withContext(Dispatchers.IO) {
+        androidFile.let { androidFile ->
+            when (androidFile) {
+                is AndroidFile.FileWrapper -> BitmapFactory
+                    .decodeFile(absolutePath())
+                    .asImageBitmap()
+
+                is AndroidFile.UriWrapper -> {
+                    val inputStream = FileKit.context
+                        .contentResolver
+                        .openInputStream(androidFile.uri)
+                    BitmapFactory
+                        .decodeStream(inputStream)
+                        .asImageBitmap()
+                }
+            }
+        }
+    }

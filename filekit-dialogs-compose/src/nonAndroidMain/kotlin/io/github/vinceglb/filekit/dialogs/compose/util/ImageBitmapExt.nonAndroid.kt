@@ -42,6 +42,8 @@ public actual suspend fun ImageBitmap.encodeToByteArray(
  * @throws Exception if the conversion fails.
  */
 public actual suspend fun PlatformFile.toImageBitmap(): ImageBitmap =
-    Image
-        .makeFromEncoded(readBytes())
-        .toComposeImageBitmap()
+    withContext(Dispatchers.Unconfined) {
+        Image
+            .makeFromEncoded(readBytes())
+            .toComposeImageBitmap()
+    }
