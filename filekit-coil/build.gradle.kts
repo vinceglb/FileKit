@@ -80,6 +80,10 @@ kotlin {
         jsMain.get().dependsOn(webMain)
         wasmJsMain.get().dependsOn(webMain)
     }
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 }
 
 android {
