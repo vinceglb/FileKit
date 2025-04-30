@@ -20,12 +20,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.sample.core.MainViewModel
 
 @Composable
 fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context = context)
+            .components { addPlatformFileSupport() }
+            .build()
+    }
+
     MaterialTheme {
         SampleApp(viewModel = viewModel { MainViewModel(dialogSettings) })
     }
