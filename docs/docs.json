@@ -45,6 +45,12 @@
           "dialogs/share-file",
           "dialogs/dialog-settings"
         ]
+      },
+      {
+        "group": "Integrations",
+        "pages": [
+          "integrations/coil"
+        ]
       }
     ]
   },
