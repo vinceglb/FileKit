@@ -12,14 +12,20 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.compose.AsyncImagePainter.State
 import coil3.compose.LocalPlatformContext
+import coil3.fetch.FetchResult
+import coil3.fetch.Fetcher
+import coil3.key.Keyer
+import coil3.map.Mapper
+import coil3.request.Options
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
 import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 
-public expect val PlatformFile.coilModel: Any
+internal expect val PlatformFile.underlyingFile: Any
 
 @Composable
-public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? = file?.coilModel
+public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? = file?.underlyingFile
 
 
 @Composable
@@ -50,7 +56,7 @@ public actual fun AsyncImage(
     DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
-        model = file?.coilModel,
+        model = file?.underlyingFile,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -92,7 +98,7 @@ public actual fun AsyncImage(
 
     coil3.compose.AsyncImage(
         model = when (model) {
-            is PlatformFile -> model.coilModel
+            is PlatformFile -> model.underlyingFile
             else -> model
         },
         contentDescription = contentDescription,
@@ -134,7 +140,7 @@ public actual fun AsyncImage(
     DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
-        model = file?.coilModel,
+        model = file?.underlyingFile,
         contentDescription = contentDescription,
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
         modifier = modifier,
@@ -175,7 +181,7 @@ public actual fun AsyncImage(
 
     coil3.compose.AsyncImage(
         model = when (model) {
-            is PlatformFile -> model.coilModel
+            is PlatformFile -> model.underlyingFile
             else -> model
         },
         contentDescription = contentDescription,
@@ -214,7 +220,7 @@ public actual fun AsyncImage(
     DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
-        model = file?.coilModel,
+        model = file?.underlyingFile,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -248,7 +254,7 @@ public actual fun AsyncImage(
 
     coil3.compose.AsyncImage(
         model = when (model) {
-            is PlatformFile -> model.coilModel
+            is PlatformFile -> model.underlyingFile
             else -> model
         },
         contentDescription = contentDescription,
@@ -282,7 +288,7 @@ public actual fun AsyncImage(
     DisposableFileSecurityEffect(file)
 
     coil3.compose.AsyncImage(
-        model = file?.coilModel,
+        model = file?.underlyingFile,
         contentDescription = contentDescription,
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
         modifier = modifier,
@@ -315,7 +321,7 @@ public actual fun AsyncImage(
 
     coil3.compose.AsyncImage(
         model = when (model) {
-            is PlatformFile -> model.coilModel
+            is PlatformFile -> model.underlyingFile
             else -> model
         },
         contentDescription = contentDescription,
@@ -347,5 +353,39 @@ private fun UnifiedDisposableFileSecurityEffect(model: Any?) {
             model.startAccessingSecurityScopedResource()
             onDispose { model.stopAccessingSecurityScopedResource() }
         }
+    }
+}
+
+public actual class PlatformFileFetcher(
+    private val file: PlatformFile,
+    private val imageLoader: ImageLoader,
+    private val options: Options
+) : Fetcher {
+    override suspend fun fetch(): FetchResult? {
+        val underlyingFile = file.underlyingFile
+        val data = imageLoader.components.map(underlyingFile, options)
+        val output = imageLoader.components.newFetcher(data, options, imageLoader)
+        val (fetcher) = checkNotNull(output) { "Fetcher not found for $underlyingFile" }
+        return fetcher.fetch()
+    }
+
+    public actual class Factory actual constructor() : Fetcher.Factory<PlatformFile> {
+        override fun create(
+            data: PlatformFile,
+            options: Options,
+            imageLoader: ImageLoader
+        ): Fetcher? {
+            return PlatformFileFetcher(data, imageLoader, options)
+        }
+    }
+}
+
+public actual class PlatformFileMapper : Mapper<PlatformFile, Any> {
+    override fun map(data: PlatformFile, options: Options): Any? = data.underlyingFile
+}
+
+public actual class PlatformFileKeyer : Keyer<PlatformFile> {
+    override fun key(data: PlatformFile, options: Options): String? {
+        return data.path
     }
 }

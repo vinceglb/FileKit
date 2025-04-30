@@ -14,7 +14,13 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import coil3.ImageLoader
 import coil3.compose.AsyncImagePainter
+import coil3.fetch.FetchResult
+import coil3.fetch.Fetcher
+import coil3.key.Keyer
+import coil3.map.Mapper
+import coil3.request.Options
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
 
 @Composable
@@ -328,3 +334,33 @@ public actual fun AsyncImage(
     )
 }
 
+public actual class PlatformFileMapper actual constructor() : Mapper<PlatformFile, Any> {
+    override fun map(data: PlatformFile, options: Options): Any? = data
+}
+
+public actual class PlatformFileFetcher(
+    private val file: PlatformFile,
+    private val imageLoader: ImageLoader,
+    private val options: Options
+) : Fetcher {
+    override suspend fun fetch(): FetchResult? {
+        val bytes = file.readBytes()
+        val data = imageLoader.components.map(bytes, options)
+        val output = imageLoader.components.newFetcher(data, options, imageLoader)
+        val (fetcher) = checkNotNull(output) { "Fetcher not found" }
+        return fetcher.fetch()
+    }
+
+    public actual class Factory actual constructor() : Fetcher.Factory<PlatformFile> {
+        override fun create(
+            data: PlatformFile,
+            options: Options,
+            imageLoader: ImageLoader
+        ): Fetcher? = PlatformFileFetcher(data, imageLoader, options)
+    }
+}
+
+public actual class PlatformFileKeyer actual constructor() : Keyer<PlatformFile> {
+    override fun key(data: PlatformFile, options: Options): String? =
+        "${data.hashCode()}-${data.extension}"
+}
