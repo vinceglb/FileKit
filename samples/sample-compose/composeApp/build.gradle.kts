@@ -44,7 +44,9 @@ kotlin {
     jvm("desktop")
 
     listOf(
-        iosX64(), iosArm64(), iosSimulatorArm64()
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -68,6 +70,9 @@ kotlin {
 
             // Human Readable
             implementation(libs.human.readable)
+
+            // Coil
+            implementation(libs.coil.compose)
         }
 
         val nonWebMain by creating {
