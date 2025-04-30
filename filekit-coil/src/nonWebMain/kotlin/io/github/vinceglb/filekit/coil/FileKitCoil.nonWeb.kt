@@ -356,6 +356,18 @@ private fun UnifiedDisposableFileSecurityEffect(model: Any?) {
     }
 }
 
+/**
+ * Maps a PlatformFile to a format that Coil can process.
+ * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
+ */
+public actual class PlatformFileMapper : Mapper<PlatformFile, Any> {
+    override fun map(data: PlatformFile, options: Options): Any? = data.underlyingFile
+}
+
+/**
+ * Fetches image data from a PlatformFile.
+ * This class is responsible for retrieving the actual image data from the platform-specific file.
+ */
 public actual class PlatformFileFetcher(
     private val file: PlatformFile,
     private val imageLoader: ImageLoader,
@@ -369,21 +381,23 @@ public actual class PlatformFileFetcher(
         return fetcher.fetch()
     }
 
+    /**
+     * Factory class for creating PlatformFileFetcher instances.
+     * This factory is used by Coil to create fetchers for PlatformFile objects.
+     */
     public actual class Factory actual constructor() : Fetcher.Factory<PlatformFile> {
         override fun create(
             data: PlatformFile,
             options: Options,
             imageLoader: ImageLoader
-        ): Fetcher? {
-            return PlatformFileFetcher(data, imageLoader, options)
-        }
+        ): Fetcher? = PlatformFileFetcher(data, imageLoader, options)
     }
 }
 
-public actual class PlatformFileMapper : Mapper<PlatformFile, Any> {
-    override fun map(data: PlatformFile, options: Options): Any? = data.underlyingFile
-}
-
+/**
+ * Generates unique keys for PlatformFile objects in Coil's cache.
+ * This ensures proper caching behavior for platform-specific files.
+ */
 public actual class PlatformFileKeyer : Keyer<PlatformFile> {
     override fun key(data: PlatformFile, options: Options): String? {
         return data.path

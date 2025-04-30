@@ -164,14 +164,37 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
+/**
+ * Maps a PlatformFile to a format that Coil can process.
+ * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
+ */
 public expect class PlatformFileMapper() : Mapper<PlatformFile, Any>
 
+/**
+ * Fetches image data from a PlatformFile.
+ * This class is responsible for retrieving the actual image data from the platform-specific file.
+ */
 public expect class PlatformFileFetcher : Fetcher {
+    /**
+     * Factory class for creating PlatformFileFetcher instances.
+     * This factory is used by Coil to create fetchers for PlatformFile objects.
+     */
     public class Factory() : Fetcher.Factory<PlatformFile>
 }
 
+/**
+ * Generates unique keys for PlatformFile objects in Coil's cache.
+ * This ensures proper caching behavior for platform-specific files.
+ */
 public expect class PlatformFileKeyer() : Keyer<PlatformFile>
 
+/**
+ * Adds support for PlatformFile to a Coil ComponentRegistry.
+ * This method registers all necessary components (Mapper, Fetcher, and Keyer) to enable
+ * Coil to work with PlatformFile objects.
+ *
+ * @receiver The ComponentRegistry.Builder to add the components to
+ */
 public fun ComponentRegistry.Builder.addPlatformFileSupport() {
     add(PlatformFileKeyer())
     add(PlatformFileMapper())

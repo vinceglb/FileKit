@@ -334,10 +334,18 @@ public actual fun AsyncImage(
     )
 }
 
+/**
+ * Maps a PlatformFile to a format that Coil can process.
+ * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
+ */
 public actual class PlatformFileMapper actual constructor() : Mapper<PlatformFile, Any> {
     override fun map(data: PlatformFile, options: Options): Any? = data
 }
 
+/**
+ * Fetches image data from a PlatformFile.
+ * This class is responsible for retrieving the actual image data from the platform-specific file.
+ */
 public actual class PlatformFileFetcher(
     private val file: PlatformFile,
     private val imageLoader: ImageLoader,
@@ -351,6 +359,10 @@ public actual class PlatformFileFetcher(
         return fetcher.fetch()
     }
 
+    /**
+     * Factory class for creating PlatformFileFetcher instances.
+     * This factory is used by Coil to create fetchers for PlatformFile objects.
+     */
     public actual class Factory actual constructor() : Fetcher.Factory<PlatformFile> {
         override fun create(
             data: PlatformFile,
@@ -360,6 +372,10 @@ public actual class PlatformFileFetcher(
     }
 }
 
+/**
+ * Generates unique keys for PlatformFile objects in Coil's cache.
+ * This ensures proper caching behavior for platform-specific files.
+ */
 public actual class PlatformFileKeyer actual constructor() : Keyer<PlatformFile> {
     override fun key(data: PlatformFile, options: Options): String? =
         "${data.hashCode()}-${data.extension}"
