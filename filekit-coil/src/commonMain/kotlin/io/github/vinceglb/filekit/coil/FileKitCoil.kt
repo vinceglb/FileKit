@@ -9,9 +9,13 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.drawscope.DrawScope.Companion.DefaultFilterQuality
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
+import coil3.ComponentRegistry
 import coil3.ImageLoader
 import coil3.compose.AsyncImagePainter.Companion.DefaultTransform
 import coil3.compose.AsyncImagePainter.State
+import coil3.fetch.Fetcher
+import coil3.key.Keyer
+import coil3.map.Mapper
 import io.github.vinceglb.filekit.PlatformFile
 
 @Composable
@@ -160,4 +164,16 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
+public expect class PlatformFileMapper() : Mapper<PlatformFile, Any>
 
+public expect class PlatformFileFetcher : Fetcher {
+    public class Factory() : Fetcher.Factory<PlatformFile>
+}
+
+public expect class PlatformFileKeyer() : Keyer<PlatformFile>
+
+public fun ComponentRegistry.Builder.addPlatformFileSupport() {
+    add(PlatformFileKeyer())
+    add(PlatformFileMapper())
+    add(PlatformFileFetcher.Factory())
+}
