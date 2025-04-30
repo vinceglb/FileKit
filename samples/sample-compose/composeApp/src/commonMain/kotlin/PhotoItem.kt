@@ -39,13 +39,14 @@ fun PhotoItem(
 
     Surface(
         onClick = { showName = !showName },
-        modifier = Modifier.aspectRatio(1f).clip(shape = MaterialTheme.shapes.medium)
+        modifier = Modifier
+            .aspectRatio(1f)
+            .clip(shape = MaterialTheme.shapes.medium)
     ) {
-
         Box(modifier = Modifier.fillMaxSize()) {
             if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
                 AsyncImage(
-                    file,
+                    model = file,
                     contentDescription = file.name,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -55,7 +56,9 @@ fun PhotoItem(
             Surface(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = CircleShape,
-                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
             ) {
                 Row {
                     ShareButton(file)

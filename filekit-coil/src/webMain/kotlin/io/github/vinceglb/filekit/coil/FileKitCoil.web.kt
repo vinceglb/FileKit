@@ -39,7 +39,6 @@ public actual fun rememberUnifiedCoilModel(model: Any?): Any? = when (model) {
     else -> model
 }
 
-
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -59,10 +58,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberPlatformFileCoilModel(file)
+    val coilModel = rememberPlatformFileCoilModel(file)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -100,10 +99,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberUnifiedCoilModel(model)
+    val coilModel = rememberUnifiedCoilModel(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -140,10 +139,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberPlatformFileCoilModel(file)
+    val coilModel = rememberPlatformFileCoilModel(file)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         modifier = modifier,
         placeholder = placeholder,
@@ -180,10 +179,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberUnifiedCoilModel(model)
+    val coilModel = rememberUnifiedCoilModel(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         modifier = modifier,
         placeholder = placeholder,
@@ -216,44 +215,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberPlatformFileCoilModel(file)
+    val coilModel = rememberPlatformFileCoilModel(file)
 
     coil3.compose.AsyncImage(
-        model = model,
-        contentDescription = contentDescription,
-        imageLoader = imageLoader,
-        modifier = modifier,
-        transform = transform,
-        onState = onState,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-
-@Composable
-public actual fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier,
-    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
-    onState: ((AsyncImagePainter.State) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val model = rememberUnifiedCoilModel(model)
-
-    coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -270,8 +235,9 @@ public actual fun AsyncImage(
 
 @Composable
 public actual fun AsyncImage(
-    file: PlatformFile?,
+    model: Any?,
     contentDescription: String?,
+    imageLoader: ImageLoader,
     modifier: Modifier,
     transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
     onState: ((AsyncImagePainter.State) -> Unit)?,
@@ -282,11 +248,12 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberPlatformFileCoilModel(file)
+    val coilModel = rememberUnifiedCoilModel(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
+        imageLoader = imageLoader,
         modifier = modifier,
         transform = transform,
         onState = onState,
@@ -299,6 +266,36 @@ public actual fun AsyncImage(
     )
 }
 
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier,
+    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
+    onState: ((AsyncImagePainter.State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val coilModel = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = coilModel,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
 
 @Composable
 public actual fun AsyncImage(
@@ -314,10 +311,10 @@ public actual fun AsyncImage(
     filterQuality: FilterQuality,
     clipToBounds: Boolean
 ) {
-    val model = rememberUnifiedCoilModel(model)
+    val coilModel = rememberUnifiedCoilModel(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = coilModel,
         contentDescription = contentDescription,
         modifier = modifier,
         transform = transform,

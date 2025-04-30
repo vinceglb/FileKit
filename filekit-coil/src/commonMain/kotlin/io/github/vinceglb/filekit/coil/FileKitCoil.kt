@@ -40,7 +40,6 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -60,7 +59,6 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -77,7 +75,6 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -92,7 +89,6 @@ public expect fun AsyncImage(
     filterQuality: FilterQuality = DefaultFilterQuality,
     clipToBounds: Boolean = true,
 )
-
 
 @Composable
 public expect fun AsyncImage(
@@ -133,7 +129,6 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-
 @Composable
 public expect fun AsyncImage(
     model: Any?,
@@ -149,7 +144,6 @@ public expect fun AsyncImage(
     filterQuality: FilterQuality = DefaultFilterQuality,
     clipToBounds: Boolean = true,
 )
-
 
 @Composable
 public expect fun AsyncImage(

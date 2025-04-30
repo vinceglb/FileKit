@@ -66,9 +66,6 @@ kotlin {
             implementation(projects.filekitCoil)
             implementation(projects.filekitDialogsCompose)
 
-            implementation(libs.coil.network.ktor3)
-
-
             // Human Readable
             implementation(libs.human.readable)
         }
@@ -81,8 +78,6 @@ kotlin {
             dependsOn(nonWebMain)
             dependencies {
                 implementation(libs.androidx.activity.compose)
-                implementation(libs.ktor.client.okhttp)
-
             }
         }
 
@@ -94,19 +89,10 @@ kotlin {
 
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.swing)
-
-                implementation(libs.ktor.client.cio)
             }
         }
 
-
-        nativeMain {
-            dependsOn(nonWebMain)
-            dependencies {
-
-                implementation(libs.ktor.client.darwin)
-            }
-        }
+        nativeMain.get().dependsOn(nonWebMain)
 
         val webMain by creating {
             dependsOn(commonMain.get())

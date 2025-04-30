@@ -27,7 +27,8 @@ kotlin {
     jvm()
 
     // JS / Web
-    @OptIn(ExperimentalWasmDsl::class) listOf(
+    @OptIn(ExperimentalWasmDsl::class)
+    listOf(
         js(),
         wasmJs(),
     ).forEach {

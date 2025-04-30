@@ -28,7 +28,6 @@ public actual fun rememberUnifiedCoilModel(model: Any?): Any? = when (model) {
     else -> model
 }
 
-
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -70,7 +69,6 @@ public actual fun AsyncImage(
     )
 }
 
-
 @Composable
 public actual fun AsyncImage(
     model: Any?,
@@ -93,7 +91,10 @@ public actual fun AsyncImage(
     UnifiedDisposableFileSecurityEffect(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = when (model) {
+            is PlatformFile -> model.coilModel
+            else -> model
+        },
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -152,7 +153,6 @@ public actual fun AsyncImage(
     )
 }
 
-
 @Composable
 public actual fun AsyncImage(
     model: Any?,
@@ -174,7 +174,10 @@ public actual fun AsyncImage(
     UnifiedDisposableFileSecurityEffect(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = when (model) {
+            is PlatformFile -> model.coilModel
+            else -> model
+        },
         contentDescription = contentDescription,
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
         modifier = modifier,
@@ -226,7 +229,6 @@ public actual fun AsyncImage(
     )
 }
 
-
 @Composable
 public actual fun AsyncImage(
     model: Any?,
@@ -245,7 +247,10 @@ public actual fun AsyncImage(
     UnifiedDisposableFileSecurityEffect(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = when (model) {
+            is PlatformFile -> model.coilModel
+            else -> model
+        },
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -292,7 +297,6 @@ public actual fun AsyncImage(
     )
 }
 
-
 @Composable
 public actual fun AsyncImage(
     model: Any?,
@@ -310,7 +314,10 @@ public actual fun AsyncImage(
     UnifiedDisposableFileSecurityEffect(model)
 
     coil3.compose.AsyncImage(
-        model = model,
+        model = when (model) {
+            is PlatformFile -> model.coilModel
+            else -> model
+        },
         contentDescription = contentDescription,
         imageLoader = SingletonImageLoader.get(LocalPlatformContext.current),
         modifier = modifier,
@@ -324,7 +331,6 @@ public actual fun AsyncImage(
         clipToBounds = clipToBounds,
     )
 }
-
 
 @Composable
 private fun DisposableFileSecurityEffect(file: PlatformFile?) {
