@@ -14,8 +14,7 @@ kotlin {
     // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
     applyDefaultHierarchyTemplate()
 
-    @OptIn(ExperimentalWasmDsl::class)
-    listOf(
+    @OptIn(ExperimentalWasmDsl::class) listOf(
         js(),
         wasmJs(),
     ).forEach {
@@ -45,9 +44,7 @@ kotlin {
     jvm("desktop")
 
     listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
+        iosX64(), iosArm64(), iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -69,6 +66,9 @@ kotlin {
             implementation(projects.filekitCoil)
             implementation(projects.filekitDialogsCompose)
 
+            implementation(libs.coil.network.ktor3)
+
+
             // Human Readable
             implementation(libs.human.readable)
         }
@@ -81,6 +81,8 @@ kotlin {
             dependsOn(nonWebMain)
             dependencies {
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.ktor.client.okhttp)
+
             }
         }
 
@@ -92,10 +94,19 @@ kotlin {
 
                 // Coroutines
                 implementation(libs.kotlinx.coroutines.swing)
+
+                implementation(libs.ktor.client.cio)
             }
         }
 
-        nativeMain.get().dependsOn(nonWebMain)
+
+        nativeMain {
+            dependsOn(nonWebMain)
+            dependencies {
+
+                implementation(libs.ktor.client.darwin)
+            }
+        }
 
         val webMain by creating {
             dependsOn(commonMain.get())
