@@ -17,6 +17,8 @@ import coil3.fetch.Fetcher
 import coil3.key.Keyer
 import coil3.map.Mapper
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
+import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
 
 /**
  * Maps a PlatformFile to a format that Coil can process.
@@ -53,6 +55,25 @@ public fun ComponentRegistry.Builder.addPlatformFileSupport() {
     add(PlatformFileKeyer())
     add(PlatformFileMapper())
     add(PlatformFileFetcher.Factory())
+}
+
+/**
+ * Extension function to handle security-scoped resource access for PlatformFile.
+ * This function is called when the state of the image loading changes.
+ *
+ * On iOS and macOS, it starts accessing the security-scoped resource when loading begins,
+ * and stops accessing it when the loading is successful or fails.
+ *
+ * @receiver The current state of the image loading process
+ * @param file The PlatformFile being accessed
+ */
+public fun State.securelyAccessFile(file: PlatformFile?) {
+    when (this) {
+        is State.Loading -> file?.startAccessingSecurityScopedResource()
+        is State.Success -> file?.stopAccessingSecurityScopedResource()
+        is State.Error -> file?.stopAccessingSecurityScopedResource()
+        is State.Empty -> {}
+    }
 }
 
 @Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")

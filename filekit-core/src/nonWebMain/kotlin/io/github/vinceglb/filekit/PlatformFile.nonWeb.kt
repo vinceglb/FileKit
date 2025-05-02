@@ -105,14 +105,3 @@ public operator fun PlatformFile.div(child: String): PlatformFile =
 
 public fun PlatformFile.resolve(relative: String): PlatformFile =
     this / relative
-
-public expect fun PlatformFile.startAccessingSecurityScopedResource(): Boolean
-
-public expect fun PlatformFile.stopAccessingSecurityScopedResource()
-
-public inline fun <T> PlatformFile.withScopedAccess(block: (PlatformFile) -> T): T = try {
-    startAccessingSecurityScopedResource()
-    block(this)
-} finally {
-    stopAccessingSecurityScopedResource()
-}
