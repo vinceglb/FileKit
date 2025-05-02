@@ -5,6 +5,7 @@ import androidx.core.content.FileProvider
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.context
 
 public val PlatformFile.uri: Uri
     get() = androidFile.let { androidFile ->

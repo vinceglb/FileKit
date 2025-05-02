@@ -16,21 +16,6 @@ FileKit Core provides the fundamental file operations for your Kotlin Multiplatf
 
 FileKit Core is designed to work out of the box for most platforms, but some targets require additional setup.
 
-### Android setup
-
-When using FileKit Core on Android, you need to initialize it in your application class or main activity:
-
-```kotlin
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        
-        // Initialize FileKit
-        FileKit.init(this)
-    }
-}
-```
-
 ### JVM setup
 
 <SetupJVMCore/>
@@ -39,6 +24,23 @@ The application ID is used to create user-specific directories on different oper
 - Windows: `%APPDATA%\your.application.id\`
 - macOS: `~/Library/Application Support/your.application.id/`
 - Linux: `~/.local/share/your.application.id/`
+
+### Android setup
+
+FileKit Core is **automatically initialized** in Android applications. It uses [App Startup](https://developer.android.com/topic/libraries/app-startup) to initialize the library, ensuring that it is ready to use when your app starts.
+
+If for some reason you want to disable App Startup in your app, you can initialize FileKit manually by calling `FileKit.manualFileKitCoreInitialization(context)` in your `MainActivity` or `Application` class.
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Initialize FileKit
+        FileKit.manualFileKitCoreInitialization(this)
+    }
+}
+```
 
 ### iOS, macOS, JS, WASM setup
 
