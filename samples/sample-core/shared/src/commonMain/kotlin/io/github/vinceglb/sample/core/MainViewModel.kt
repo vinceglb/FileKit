@@ -7,10 +7,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
-import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
 import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.extension
-import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -100,12 +97,7 @@ class MainViewModel(
 
     fun saveFile(file: PlatformFile) = executeWithLoading {
         // Save a file
-        val newFile = FileKit.openFileSaver(
-            bytes = file.readBytes(),
-            suggestedName = file.nameWithoutExtension,
-            extension = file.extension,
-            dialogSettings = dialogSettings
-        )
+        val newFile = saveFileOrDownload(file, dialogSettings)
 
         // Add file to the state
         if (newFile != null) {
@@ -125,9 +117,7 @@ class MainViewModel(
     }
 
     fun compressImageAndSaveToGallery(file: PlatformFile) = executeWithLoading {
-        file.readBytes()?.let {
-            compressImage(it)
-        }
+        compressImage(file.readBytes())
     }
 
     fun shareFile(file: PlatformFile) = executeWithLoading {
@@ -163,3 +153,8 @@ expect suspend fun takePhotoIfSupported(): PlatformFile?
 expect suspend fun compressImage(bytes: ByteArray)
 
 expect suspend fun shareFileIfSupported(file: PlatformFile)
+
+expect suspend fun saveFileOrDownload(
+    file: PlatformFile,
+    dialogSettings: FileKitDialogSettings
+): PlatformFile?

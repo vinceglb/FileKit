@@ -135,9 +135,11 @@ internal class WindowsFilePicker : PlatformFilePicker {
             .verify("SetFileName failed")
 
         // Set the default extension
-        fileSaveDialog
-            .SetDefaultExtension(WString(extension))
-            .verify("SetDefaultExtension failed")
+        extension?.let {
+            fileSaveDialog
+                .SetDefaultExtension(WString(extension))
+                .verify("SetDefaultExtension failed")
+        }
 
         // Set filters
         extension?.let { fileSaveDialog.addFiltersToDialog(setOf(extension)) }
