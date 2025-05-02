@@ -1,0 +1,141 @@
+---
+title: 'Coil Integration'
+description: 'Load and display images from PlatformFile using Coil'
+---
+
+import VersionCoil from '/snippets/version-coil.mdx';
+
+<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+
+## Introduction
+
+FileKit provides seamless integration with [Coil](https://coil-kt.github.io/coil/), a popular image loading library for Kotlin Multiplatform. This integration allows you to easily load and display images from `PlatformFile` objects using Coil's powerful image loading capabilities.
+
+## Configuration
+
+Add the FileKit Coil dependency to your project:
+
+<VersionCoil />
+
+Then, configure Coil in your app's root composable:
+
+```kotlin
+@Composable
+fun App() {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                addPlatformFileSupport()
+            }
+            .build()
+    }
+
+    MaterialTheme {
+        // Your app content
+    }
+}
+```
+
+This setup utilizes the `addPlatformFileSupport()` extension function to register the necessary components within Coil's pipeline, enabling it to handle `PlatformFile` objects:
+- **`PlatformFileMapper`**: Maps the `PlatformFile` object to a data type that Coil's fetchers can understand.
+- **`PlatformFileFetcher`**: Handles the actual loading of the image data from the `PlatformFile`.
+- **`PlatformFileKeyer`**: Generates stable cache keys for `PlatformFile` objects, allowing Coil to effectively cache the loaded images.
+
+## Usage
+
+Once configured, you can use Coil's standard `AsyncImage` composable with `PlatformFile` objects:
+
+```kotlin
+@Composable
+fun ImagePreview(file: PlatformFile) {
+    AsyncImage(
+        model = file,
+        contentDescription = "Image preview",
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+```
+
+For more information about using Coil's image loading capabilities, refer to the [official Coil documentation](https://coil-kt.github.io/coil/getting_started/).
+
+## Handling Security-Scoped Resources (iOS/macOS)
+
+On iOS and macOS, if you obtain a `PlatformFile` through mechanisms like the document picker, your app gets temporary, scoped access permission. To ensure Coil can load the image data while this permission is active, FileKit provides the `securelyAccessFile` extension function for `AsyncImagePainter.State`.
+
+Use this function within the `onState` callback of `AsyncImage`:
+
+```kotlin
+@Composable
+fun ImagePreviewScoped(file: PlatformFile) {
+    AsyncImage(
+        model = file,
+        contentDescription = "Image preview",
+        modifier = Modifier.fillMaxWidth(),
+        onState = { state ->
+            // Start/stop security-scoped access based on Coil's state
+            state.securelyAccessFile(file)
+        }
+    )
+}
+```
+
+This function automatically calls `startAccessingSecurityScopedResource()` when Coil starts loading (`State.Loading`) and `stopAccessingSecurityScopedResource()` when it finishes (`State.Success` or `State.Error`), ensuring the file remains accessible throughout the loading process.
+
+## Example
+
+Here's a complete example showing how to use the Coil integration in a gallery:
+
+```kotlin
+@Composable
+fun App() {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context)
+            .components {
+                addPlatformFileSupport()
+            }
+            .build()
+    }
+
+    MaterialTheme {
+        ImageGallery()
+    }
+}
+
+@Composable
+fun ImageGallery(files: List<PlatformFile>) {
+    LazyColumn {
+        items(files) { file ->
+            AsyncImage(
+                model = file,
+                contentDescription = "Gallery image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp),
+                contentScale = ContentScale.Crop
+            )
+        }
+    }
+}
+```
+
+## Next steps
+
+<CardGroup>
+
+<Card
+  title="PlatformFile"
+  icon="file"
+  href="/core/platform-file"
+>
+  Learn more about the core file representation used by FileKit.
+</Card>
+
+<Card
+  title="Image Utils"
+  icon="image"
+  href="/core/image-utils"
+>
+  Discover more image manipulation utilities provided by FileKit.
+</Card>
+
+</CardGroup> 

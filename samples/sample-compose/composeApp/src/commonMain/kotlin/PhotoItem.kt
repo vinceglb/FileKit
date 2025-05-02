@@ -1,3 +1,4 @@
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,8 +24,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.coil.AsyncImage
+import io.github.vinceglb.filekit.coil.securelyAccessFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.size
@@ -45,12 +47,15 @@ fun PhotoItem(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
-                AsyncImage(
-                    model = file,
-                    contentDescription = file.name,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                Row {
+                    AsyncImage(
+                        model = file,
+                        contentDescription = file.name,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.weight(1f),
+                        onState = { state -> state.securelyAccessFile(file) },
+                    )
+                }
             }
 
             Surface(

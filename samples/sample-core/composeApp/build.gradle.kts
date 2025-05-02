@@ -71,6 +71,9 @@ kotlin {
 
             // Human Readable
             implementation(libs.human.readable)
+
+            // Coil
+            implementation(libs.coil.compose)
         }
 
         androidMain.dependencies {

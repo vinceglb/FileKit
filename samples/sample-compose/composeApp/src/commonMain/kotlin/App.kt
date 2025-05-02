@@ -1,3 +1,4 @@
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,7 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import coil3.ImageLoader
+import coil3.compose.setSingletonImageLoaderFactory
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -34,6 +38,12 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 @Preview
 fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
+    setSingletonImageLoaderFactory { context ->
+        ImageLoader.Builder(context = context)
+            .components { addPlatformFileSupport() }
+            .build()
+    }
+
     MaterialTheme {
         SampleApp(dialogSettings)
     }
