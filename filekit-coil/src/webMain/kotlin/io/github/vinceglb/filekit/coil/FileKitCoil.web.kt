@@ -23,317 +23,6 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.readBytes
 
-@Composable
-public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? {
-    var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
-
-    LaunchedEffect(file) {
-        bytes = file?.readBytes()
-    }
-
-    return bytes
-}
-
-@Composable
-public actual fun rememberUnifiedCoilModel(model: Any?): Any? = when (model) {
-    is PlatformFile -> {
-        var bytes by remember(model) { mutableStateOf<ByteArray?>(null) }
-        LaunchedEffect(model) { bytes = model.readBytes() }
-        bytes
-    }
-
-    else -> model
-}
-
-@Composable
-public actual fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier,
-    placeholder: Painter?,
-    error: Painter?,
-    fallback: Painter?,
-    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
-    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
-    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberPlatformFileCoilModel(file)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        imageLoader = imageLoader,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = error,
-        fallback = fallback,
-        onLoading = onLoading,
-        onSuccess = onSuccess,
-        onError = onError,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier,
-    placeholder: Painter?,
-    error: Painter?,
-    fallback: Painter?,
-    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
-    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
-    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberUnifiedCoilModel(model)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        imageLoader = imageLoader,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = error,
-        fallback = fallback,
-        onLoading = onLoading,
-        onSuccess = onSuccess,
-        onError = onError,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    modifier: Modifier,
-    placeholder: Painter?,
-    error: Painter?,
-    fallback: Painter?,
-    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
-    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
-    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberPlatformFileCoilModel(file)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = error,
-        fallback = fallback,
-        onLoading = onLoading,
-        onSuccess = onSuccess,
-        onError = onError,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-
-@Composable
-public actual fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    modifier: Modifier,
-    placeholder: Painter?,
-    error: Painter?,
-    fallback: Painter?,
-    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
-    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
-    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberUnifiedCoilModel(model)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        placeholder = placeholder,
-        error = error,
-        fallback = fallback,
-        onLoading = onLoading,
-        onSuccess = onSuccess,
-        onError = onError,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier,
-    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
-    onState: ((AsyncImagePainter.State) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberPlatformFileCoilModel(file)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        imageLoader = imageLoader,
-        modifier = modifier,
-        transform = transform,
-        onState = onState,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier,
-    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
-    onState: ((AsyncImagePainter.State) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberUnifiedCoilModel(model)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        imageLoader = imageLoader,
-        modifier = modifier,
-        transform = transform,
-        onState = onState,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    modifier: Modifier,
-    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
-    onState: ((AsyncImagePainter.State) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberPlatformFileCoilModel(file)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        transform = transform,
-        onState = onState,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
-@Composable
-public actual fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    modifier: Modifier,
-    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
-    onState: ((AsyncImagePainter.State) -> Unit)?,
-    alignment: Alignment,
-    contentScale: ContentScale,
-    alpha: Float,
-    colorFilter: ColorFilter?,
-    filterQuality: FilterQuality,
-    clipToBounds: Boolean
-) {
-    val coilModel = rememberUnifiedCoilModel(model)
-
-    coil3.compose.AsyncImage(
-        model = coilModel,
-        contentDescription = contentDescription,
-        modifier = modifier,
-        transform = transform,
-        onState = onState,
-        alignment = alignment,
-        contentScale = contentScale,
-        alpha = alpha,
-        colorFilter = colorFilter,
-        filterQuality = filterQuality,
-        clipToBounds = clipToBounds,
-    )
-}
-
 /**
  * Maps a PlatformFile to a format that Coil can process.
  * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
@@ -379,4 +68,164 @@ public actual class PlatformFileFetcher(
 public actual class PlatformFileKeyer actual constructor() : Keyer<PlatformFile> {
     override fun key(data: PlatformFile, options: Options): String? =
         "${data.hashCode()}-${data.extension}"
+}
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? {
+    var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
+
+    LaunchedEffect(file) {
+        bytes = file?.readBytes()
+    }
+
+    return bytes
+}
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier,
+    placeholder: Painter?,
+    error: Painter?,
+    fallback: Painter?,
+    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
+    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
+    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val coilModel = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = coilModel,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
+        onLoading = onLoading,
+        onSuccess = onSuccess,
+        onError = onError,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier,
+    placeholder: Painter?,
+    error: Painter?,
+    fallback: Painter?,
+    onLoading: ((AsyncImagePainter.State.Loading) -> Unit)?,
+    onSuccess: ((AsyncImagePainter.State.Success) -> Unit)?,
+    onError: ((AsyncImagePainter.State.Error) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val coilModel = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = coilModel,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        placeholder = placeholder,
+        error = error,
+        fallback = fallback,
+        onLoading = onLoading,
+        onSuccess = onSuccess,
+        onError = onError,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier,
+    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
+    onState: ((AsyncImagePainter.State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val coilModel = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = coilModel,
+        contentDescription = contentDescription,
+        imageLoader = imageLoader,
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
+}
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public actual fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier,
+    transform: (AsyncImagePainter.State) -> AsyncImagePainter.State,
+    onState: ((AsyncImagePainter.State) -> Unit)?,
+    alignment: Alignment,
+    contentScale: ContentScale,
+    alpha: Float,
+    colorFilter: ColorFilter?,
+    filterQuality: FilterQuality,
+    clipToBounds: Boolean
+) {
+    val coilModel = rememberPlatformFileCoilModel(file)
+
+    coil3.compose.AsyncImage(
+        model = coilModel,
+        contentDescription = contentDescription,
+        modifier = modifier,
+        transform = transform,
+        onState = onState,
+        alignment = alignment,
+        contentScale = contentScale,
+        alpha = alpha,
+        colorFilter = colorFilter,
+        filterQuality = filterQuality,
+        clipToBounds = clipToBounds,
+    )
 }

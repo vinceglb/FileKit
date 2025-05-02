@@ -18,152 +18,6 @@ import coil3.key.Keyer
 import coil3.map.Mapper
 import io.github.vinceglb.filekit.PlatformFile
 
-@Composable
-public expect fun rememberPlatformFileCoilModel(file: PlatformFile?): Any?
-
-@Composable
-public expect fun rememberUnifiedCoilModel(model: Any?): Any?
-
-@Composable
-public expect fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-    placeholder: Painter? = null,
-    error: Painter? = null,
-    fallback: Painter? = error,
-    onLoading: ((State.Loading) -> Unit)? = null,
-    onSuccess: ((State.Success) -> Unit)? = null,
-    onError: ((State.Error) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    placeholder: Painter? = null,
-    error: Painter? = null,
-    fallback: Painter? = error,
-    onLoading: ((State.Loading) -> Unit)? = null,
-    onSuccess: ((State.Success) -> Unit)? = null,
-    onError: ((State.Error) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-    transform: (State) -> State = DefaultTransform,
-    onState: ((State) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    file: PlatformFile?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    transform: (State) -> State = DefaultTransform,
-    onState: ((State) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-    placeholder: Painter? = null,
-    error: Painter? = null,
-    fallback: Painter? = error,
-    onLoading: ((State.Loading) -> Unit)? = null,
-    onSuccess: ((State.Success) -> Unit)? = null,
-    onError: ((State.Error) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    placeholder: Painter? = null,
-    error: Painter? = null,
-    fallback: Painter? = error,
-    onLoading: ((State.Loading) -> Unit)? = null,
-    onSuccess: ((State.Success) -> Unit)? = null,
-    onError: ((State.Error) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    imageLoader: ImageLoader,
-    modifier: Modifier = Modifier,
-    transform: (State) -> State = DefaultTransform,
-    onState: ((State) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
-@Composable
-public expect fun AsyncImage(
-    model: Any?,
-    contentDescription: String?,
-    modifier: Modifier = Modifier,
-    transform: (State) -> State = DefaultTransform,
-    onState: ((State) -> Unit)? = null,
-    alignment: Alignment = Alignment.Center,
-    contentScale: ContentScale = ContentScale.Fit,
-    alpha: Float = DefaultAlpha,
-    colorFilter: ColorFilter? = null,
-    filterQuality: FilterQuality = DefaultFilterQuality,
-    clipToBounds: Boolean = true,
-)
-
 /**
  * Maps a PlatformFile to a format that Coil can process.
  * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
@@ -200,3 +54,81 @@ public fun ComponentRegistry.Builder.addPlatformFileSupport() {
     add(PlatformFileMapper())
     add(PlatformFileFetcher.Factory())
 }
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public expect fun rememberPlatformFileCoilModel(file: PlatformFile?): Any?
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public expect fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier,
+    placeholder: Painter? = null,
+    error: Painter? = null,
+    fallback: Painter? = error,
+    onLoading: ((State.Loading) -> Unit)? = null,
+    onSuccess: ((State.Success) -> Unit)? = null,
+    onError: ((State.Error) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public expect fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    placeholder: Painter? = null,
+    error: Painter? = null,
+    fallback: Painter? = error,
+    onLoading: ((State.Loading) -> Unit)? = null,
+    onSuccess: ((State.Success) -> Unit)? = null,
+    onError: ((State.Error) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public expect fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    imageLoader: ImageLoader,
+    modifier: Modifier = Modifier,
+    transform: (State) -> State = DefaultTransform,
+    onState: ((State) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
+
+@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Composable
+public expect fun AsyncImage(
+    file: PlatformFile?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    transform: (State) -> State = DefaultTransform,
+    onState: ((State) -> Unit)? = null,
+    alignment: Alignment = Alignment.Center,
+    contentScale: ContentScale = ContentScale.Fit,
+    alpha: Float = DefaultAlpha,
+    colorFilter: ColorFilter? = null,
+    filterQuality: FilterQuality = DefaultFilterQuality,
+    clipToBounds: Boolean = true,
+)
