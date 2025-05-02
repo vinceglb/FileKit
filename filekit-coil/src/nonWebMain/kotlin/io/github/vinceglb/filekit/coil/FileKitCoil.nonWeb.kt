@@ -27,7 +27,7 @@ import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
  * This is a platform-specific implementation that handles the conversion of PlatformFile to a Coil-compatible format.
  */
 public actual class PlatformFileMapper : Mapper<PlatformFile, Any> {
-    override fun map(data: PlatformFile, options: Options): Any? = data.underlyingFile
+    actual override fun map(data: PlatformFile, options: Options): Any? = data.underlyingFile
 }
 
 /**
@@ -39,7 +39,7 @@ public actual class PlatformFileFetcher(
     private val imageLoader: ImageLoader,
     private val options: Options
 ) : Fetcher {
-    override suspend fun fetch(): FetchResult? {
+    actual override suspend fun fetch(): FetchResult? {
         val underlyingFile = file.underlyingFile
         val data = imageLoader.components.map(underlyingFile, options)
         val output = imageLoader.components.newFetcher(data, options, imageLoader)
@@ -52,7 +52,7 @@ public actual class PlatformFileFetcher(
      * This factory is used by Coil to create fetchers for PlatformFile objects.
      */
     public actual class Factory actual constructor() : Fetcher.Factory<PlatformFile> {
-        override fun create(
+        actual override fun create(
             data: PlatformFile,
             options: Options,
             imageLoader: ImageLoader
@@ -65,7 +65,7 @@ public actual class PlatformFileFetcher(
  * This ensures proper caching behavior for platform-specific files.
  */
 public actual class PlatformFileKeyer : Keyer<PlatformFile> {
-    override fun key(data: PlatformFile, options: Options): String? {
+    actual override fun key(data: PlatformFile, options: Options): String? {
         return data.path
     }
 }
