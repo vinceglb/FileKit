@@ -9,8 +9,8 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
 import androidx.exifinterface.media.ExifInterface
+import io.github.vinceglb.filekit.exceptions.FileKitCoreNotInitializedException
 import io.github.vinceglb.filekit.exceptions.FileKitException
-import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,15 +20,26 @@ import java.lang.ref.WeakReference
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-public actual object FileKit {
-    private var _context: WeakReference<Context?> = WeakReference(null)
-    public val context: Context
-        get() = _context.get()
-            ?: throw FileKitNotInitializedException()
+public actual object FileKit
 
-    internal fun init(context: Context) {
+internal object FileKitCore {
+    private var _context: WeakReference<Context?> = WeakReference(null)
+    val context: Context
+        get() = _context.get()
+            ?: throw FileKitCoreNotInitializedException()
+
+    fun init(context: Context) {
         _context = WeakReference(context)
     }
+}
+
+@Suppress("UnusedReceiverParameter")
+public val FileKit.context: Context
+    get() = FileKitCore.context
+
+@Suppress("UnusedReceiverParameter")
+public fun FileKit.manualFileKitCoreInitialization(context: Context) {
+    FileKitCore.init(context)
 }
 
 public actual val FileKit.filesDir: PlatformFile

@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.dialogs
 
 import android.content.Intent
 import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.context
 
 public actual open class FileKitShareSettings(
     public val authority: String = "${FileKit.context.packageName}.fileprovider",
