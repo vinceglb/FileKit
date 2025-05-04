@@ -156,7 +156,7 @@ fun FileBottomSheet(
                     onClick = {
                         scope.launch {
                             val selectedFile = FileKit.openFileSaver(
-                                suggestedName = "${file.nameWithoutExtension} (copy)",
+                                suggestedName = "${file.nameWithoutExtension}/(copy)",
                                 extension = file.extension,
                                 directory = file.parent(),
                             )

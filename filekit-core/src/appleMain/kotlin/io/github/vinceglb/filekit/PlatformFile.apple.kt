@@ -18,7 +18,7 @@ public actual data class PlatformFile(
     }
 
     override fun hashCode(): Int {
-        return nsUrl.hashCode()
+        return nsUrl.path.hashCode()
     }
 }
 

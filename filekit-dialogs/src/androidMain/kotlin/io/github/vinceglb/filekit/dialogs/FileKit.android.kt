@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
 import android.content.Intent
+import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -149,8 +150,15 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
     suspendCoroutine { continuation ->
         val contract = ActivityResultContracts.OpenDocumentTree()
-        val launcher = registry.register(key, contract) { uri ->
-            val platformDirectory = uri?.let { PlatformFile(it) }
+        val launcher = registry.register(key, contract) { treeUri ->
+            val platformDirectory = treeUri?.let {
+                // Transform the treeUri to a documentUri
+                val documentUri = DocumentsContract.buildDocumentUriUsingTree(
+                    treeUri,
+                    DocumentsContract.getTreeDocumentId(treeUri)
+                )
+                PlatformFile(documentUri)
+            }
             continuation.resume(platformDirectory)
         }
         val initialUri = directory?.path?.toUri()
