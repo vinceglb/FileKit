@@ -126,9 +126,12 @@ public actual suspend fun FileKit.openFileSaver(
             }
         )
 
+        // suggestedName cannot include "/" because the OS interprets it as a directory separator.
+        // However, "Files" renders ":" as "/", so we can just use ":" and the user will see "/".
+        val sanitizedFileName = suggestedName.replace("/", ":")
         val fileName = when {
-            extension != null -> "$suggestedName.$extension"
-            else -> suggestedName
+            extension != null -> "$sanitizedFileName.$extension"
+            else -> sanitizedFileName
         }
 
         // Get the fileManager
