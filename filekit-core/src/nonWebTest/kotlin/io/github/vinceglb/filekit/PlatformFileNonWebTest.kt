@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
+import kotlinx.io.files.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -52,12 +53,12 @@ class PlatformFileNonWebTest {
         assertEquals(expected = -1L, actual = resourceDirectory.size())
     }
 
-//    @Test
-//    fun testPlatformFileToKotlinxIoPath() {
-//        val path = Path("my/file.txt")
-//        val file = PlatformFile(path)
-//        assertEquals(expected = path, actual = file.toKotlinxIoPath())
-//    }
+    @Test
+    fun testPlatformFileToKotlinxIoPath() {
+        val path = Path("my/file.txt")
+        val file = PlatformFile(path)
+        assertEquals(expected = path, actual = file.toKotlinxIoPath())
+    }
 
     @Test
     fun testPlatformFileParent() {

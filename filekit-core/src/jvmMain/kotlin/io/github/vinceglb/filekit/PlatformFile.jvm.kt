@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import java.io.File
 
 public actual data class PlatformFile(
@@ -25,6 +26,17 @@ public actual val PlatformFile.nameWithoutExtension: String
 
 public actual fun PlatformFile.absolutePath(): String =
     file.absolutePath
+
+public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
+    withScopedAccess {
+        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+        block(directoryFiles)
+    }
+
+public actual fun PlatformFile.list(): List<PlatformFile> =
+    withScopedAccess {
+        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+    }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 

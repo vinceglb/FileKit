@@ -60,14 +60,3 @@ public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Un
             )
         }
     }
-
-public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
-    withScopedAccess {
-        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
-        block(directoryFiles)
-    }
-
-public actual fun PlatformFile.list(): List<PlatformFile> =
-    withScopedAccess {
-        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
-    }
