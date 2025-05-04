@@ -8,6 +8,17 @@ public actual data class PlatformFile(
     val nsUrl: NSURL,
 ) {
     public actual override fun toString(): String = path
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PlatformFile) return false
+        if (nsUrl.path != other.nsUrl.path) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return nsUrl.hashCode()
+    }
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
