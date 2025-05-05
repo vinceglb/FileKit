@@ -82,6 +82,7 @@ kotlin {
             dependsOn(mobileMain)
             dependencies {
                 implementation(libs.androidx.activity.compose)
+                implementation(libs.androidx.exifinterface)
             }
         }
 
