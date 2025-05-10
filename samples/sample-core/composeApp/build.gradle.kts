@@ -74,6 +74,9 @@ kotlin {
 
             // Coil
             implementation(libs.coil.compose)
+
+            // Icons
+            implementation(libs.material.icons.core)
         }
 
         androidMain.dependencies {
