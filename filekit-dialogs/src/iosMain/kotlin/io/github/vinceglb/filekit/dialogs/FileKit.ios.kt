@@ -68,13 +68,15 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
+    onSelection: ((Int) -> Unit)?,
 ): Out? = when (type) {
     // Use PHPickerViewController for images and videos
     is FileKitType.Image,
     is FileKitType.Video,
     is FileKitType.ImageAndVideo -> callPhPicker(
         mode = mode,
-        type = type
+        type = type,
+        onSelection = onSelection,
     )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
 
     // Use UIDocumentPickerViewController for other types
@@ -295,6 +297,7 @@ private suspend fun callPicker(
 private suspend fun <Out> callPhPicker(
     mode: FileKitMode<Out>,
     type: FileKitType,
+    onSelection: ((Int) -> Unit)? = null, // <-- new optional callback
 ): List<NSURL>? = withContext(Dispatchers.Main) {
     val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
         // Create a picker delegate
@@ -324,7 +327,6 @@ private suspend fun <Out> callPhPicker(
                     PHPickerFilter.videosFilter,
                 )
             )
-
             else -> throw IllegalArgumentException("Unsupported type: $type")
         }
 
@@ -340,6 +342,9 @@ private suspend fun <Out> callPhPicker(
             completion = null
         )
     }
+
+    // NEW: Notify about the number of selected items as soon as the user picks
+    onSelection?.invoke(pickerResults.size)
 
     val fileManager = NSFileManager.defaultManager
 

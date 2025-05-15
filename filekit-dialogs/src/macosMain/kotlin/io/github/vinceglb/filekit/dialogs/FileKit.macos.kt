@@ -15,6 +15,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
     title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
+    onSelection: ((Int) -> Unit)?
 ): Out? = callPicker(
     mode = when (mode) {
         is FileKitMode.Single -> Mode.Single

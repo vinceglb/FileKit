@@ -9,6 +9,7 @@ public expect suspend fun <Out> FileKit.openFilePicker(
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onSelection: ((Int) -> Unit)? = null,
 ): Out?
 
 public suspend fun FileKit.openFilePicker(
@@ -16,6 +17,7 @@ public suspend fun FileKit.openFilePicker(
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onSelection: ((Int) -> Unit)? = null,
 ): PlatformFile? {
     return openFilePicker(
         type = type,
@@ -23,5 +25,6 @@ public suspend fun FileKit.openFilePicker(
         title = title,
         directory = directory,
         dialogSettings = dialogSettings,
+        onSelection = onSelection,
     )
 }
