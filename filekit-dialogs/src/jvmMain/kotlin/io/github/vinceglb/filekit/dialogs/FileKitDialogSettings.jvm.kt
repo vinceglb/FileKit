@@ -14,4 +14,11 @@ public actual data class FileKitDialogSettings(
 public class FileKitMacOSSettings(
     public val resolvesAliases: Boolean? = null,
     public val canCreateDirectories: Boolean = true,
+    public val appearance: MacOsAppearance = MacOsAppearance.Auto,
 )
+
+public enum class MacOsAppearance {
+    Aqua,
+    DarkAqua,
+    Auto
+}

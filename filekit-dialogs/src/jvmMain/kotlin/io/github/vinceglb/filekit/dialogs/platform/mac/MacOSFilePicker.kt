@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.dialogs.platform.mac
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
+import io.github.vinceglb.filekit.dialogs.MacOsAppearance
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
@@ -75,6 +76,16 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 // Setup single, multiple selection or directory mode
                 mode.setupPickerMode(openPanel, macOSSettings.canCreateDirectories)
 
+                // Set the appearance
+                if (macOSSettings.appearance != MacOsAppearance.Auto) {
+                    val themeName = if (macOSSettings.appearance == MacOsAppearance.DarkAqua)
+                        "NSAppearanceNameDarkAqua"
+                    else "NSAppearanceNameAqua"
+                    val appearance = Foundation.invoke(
+                        "NSAppearance", "appearanceNamed:", Foundation.nsString(themeName)
+                    )
+                    Foundation.invoke(openPanel, "setAppearance:", appearance)
+                }
                 // Set the title
                 title?.let {
                     Foundation.invoke(openPanel, "setMessage:", Foundation.nsString(it))
