@@ -1,6 +1,8 @@
 package io.github.vinceglb.filekit
 
+import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -20,6 +22,8 @@ public actual data class PlatformFile(
     val androidFile: AndroidFile
 ) {
     public actual override fun toString(): String = path
+
+    public actual companion object
 }
 
 public sealed class AndroidFile {
@@ -225,6 +229,50 @@ public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
             }
         }
     }
+
+private const val BOOKMARK_FILE_PREFIX = "<<file>>"
+private const val BOOKMARK_URI_PREFIX = "<<uri>>"
+
+public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val data = "$BOOKMARK_FILE_PREFIX${androidFile.file.path}"
+            BookmarkData(data.encodeToByteArray())
+        }
+
+        is AndroidFile.UriWrapper -> {
+            val uri = androidFile.uri
+            val authority = uri.authority ?: throw FileKitException("Uri authority is null")
+            val documentId = DocumentsContract.getTreeDocumentId(uri)
+            val treeUri = DocumentsContract.buildTreeDocumentUri(authority, documentId)
+
+            val flags =
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            FileKit.context.contentResolver.takePersistableUriPermission(treeUri, flags)
+            val data = "$BOOKMARK_URI_PREFIX${androidFile.uri}"
+            BookmarkData(data.encodeToByteArray())
+        }
+    }
+}
+
+public actual fun PlatformFile.Companion.fromBookmarkData(
+    bookmarkData: BookmarkData
+): PlatformFile {
+    val str = bookmarkData.bytes.decodeToString()
+    return when {
+        str.startsWith(BOOKMARK_FILE_PREFIX) -> {
+            val filePath = str.removePrefix(BOOKMARK_FILE_PREFIX)
+            PlatformFile(File(filePath))
+        }
+
+        str.startsWith(BOOKMARK_URI_PREFIX) -> {
+            val uriString = str.removePrefix(BOOKMARK_URI_PREFIX)
+            PlatformFile(Uri.parse(uriString))
+        }
+
+        else -> throw FileKitException("Invalid bookmark data format: $str")
+    }
+}
 
 private fun getUriFileSize(uri: Uri): Long? {
     return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
