@@ -42,7 +42,13 @@ public val FileKit.tempDir: PlatformFile
         .let(::PlatformFile)
 
 public actual val FileKit.databasesDir: PlatformFile
-    get() = FileKit.filesDir / "databases"
+    get() {
+        val dir = FileKit.filesDir / "databases"
+        if (!dir.exists()) {
+            dir.createDirectories()
+        }
+        return dir
+    }
 
 public actual suspend fun FileKit.compressImage(
     bytes: ByteArray,
