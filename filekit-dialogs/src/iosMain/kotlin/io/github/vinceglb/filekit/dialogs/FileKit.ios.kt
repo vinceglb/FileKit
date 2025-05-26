@@ -22,9 +22,7 @@ import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
 import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
-import platform.Foundation.NSUUID
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
@@ -172,7 +170,8 @@ public actual suspend fun FileKit.openFileSaver(
 }
 
 public actual suspend fun FileKit.openCameraPicker(
-    type: FileKitCameraType
+    type: FileKitCameraType,
+    destinationFile: PlatformFile
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         cameraControllerDelegate = CameraControllerDelegate(
@@ -181,18 +180,13 @@ public actual suspend fun FileKit.openCameraPicker(
                     // Convert UIImage to NSData (JPEG format with compression quality 1.0)
                     val imageData = UIImageJPEGRepresentation(image, 1.0)
 
-                    // Get the path for the temporary directory
-                    val tempDir = NSTemporaryDirectory()
-                    val fileName = "image_${NSUUID().UUIDString}.jpg"
-                    val filePath = tempDir + fileName
-
                     // Create an NSURL for the file path
-                    val fileUrl = NSURL.fileURLWithPath(filePath)
+                    val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
 
                     // Write the NSData to the file
                     if (imageData?.writeToURL(fileUrl, true) == true) {
                         // Return the NSURL of the saved image file
-                        continuation.resume(PlatformFile(fileUrl))
+                        continuation.resume(destinationFile)
                     } else {
                         // If saving fails, return null
                         continuation.resume(null)

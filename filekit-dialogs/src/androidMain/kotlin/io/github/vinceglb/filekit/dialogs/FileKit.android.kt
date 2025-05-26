@@ -18,9 +18,7 @@ import androidx.core.net.toUri
 import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.cacheDir
 import io.github.vinceglb.filekit.context
-import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.path
@@ -167,7 +165,8 @@ public actual suspend fun FileKit.openDirectoryPicker(
 }
 
 public actual suspend fun FileKit.openCameraPicker(
-    type: FileKitCameraType
+    type: FileKitCameraType,
+    destinationFile: PlatformFile
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -175,20 +174,16 @@ public actual suspend fun FileKit.openCameraPicker(
     // It doesn't really matter what the key is, just that it is unique
     val key = UUID.randomUUID().toString()
 
-    // Get URI
-    val cacheImage = FileKit.cacheDir / "$key.jpg"
-    val cacheImageUri = cacheImage.uri
-
     val isSaved = suspendCoroutine { continuation ->
         val contract = ActivityResultContracts.TakePicture()
         val launcher = registry.register(key, contract) { isSaved ->
             continuation.resume(isSaved)
         }
-        launcher.launch(cacheImageUri)
+        launcher.launch(destinationFile.uri)
     }
 
     when (isSaved) {
-        true -> cacheImage
+        true -> destinationFile
         else -> null
     }
 }

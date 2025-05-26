@@ -32,9 +32,9 @@ public fun rememberCameraPickerLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        PhotoResultLauncher {
+        PhotoResultLauncher { destinationFile ->
             coroutineScope.launch {
-                val result = fileKit.openCameraPicker(type)
+                val result = fileKit.openCameraPicker(type, destinationFile)
                 currentOnResult(result)
             }
         }
