@@ -17,12 +17,14 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
-import platform.Foundation.NSDataReadingUncached
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
+import platform.Foundation.NSUUID
 import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
@@ -335,44 +337,39 @@ private suspend fun <Out> callPhPicker(
         )
     }
 
+    val typeIdentifier = when (type) {
+        is FileKitType.Image -> UTTypeImage.identifier
+        is FileKitType.Video -> UTTypeMovie.identifier
+        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
+        else -> throw IllegalArgumentException("Unsupported type: $type")
+    }
+
     val fileManager = NSFileManager.defaultManager
 
-    return@withContext withContext(Dispatchers.IO) {
-        pickerResults.mapNotNull { result ->
-            suspendCoroutine<NSURL?> { continuation ->
-                result.itemProvider.loadFileRepresentationForTypeIdentifier(
-                    typeIdentifier = when (type) {
-                        is FileKitType.Image -> UTTypeImage.identifier
-                        is FileKitType.Video -> UTTypeMovie.identifier
-                        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
-                        else -> throw IllegalArgumentException("Unsupported type: $type")
+    // Create a unique identifier for the temporary file
+    val id = NSUUID().UUIDString
+    val tempDir = fileManager.temporaryDirectory.pathComponents?.plus(id)
+        ?: throw IllegalStateException("Failed to get temporary directory")
+    val fileUrl = NSURL.fileURLWithPathComponents(tempDir)
+        ?: throw IllegalStateException("Failed to create file URL")
+    fileManager.createDirectoryAtURL(
+        url = fileUrl,
+        withIntermediateDirectories = true,
+        attributes = null,
+        error = null
+    )
+
+    withContext(Dispatchers.IO) {
+        pickerResults.map { result ->
+            async {
+                suspendCoroutine { continuation ->
+                    result.itemProvider.loadFileRepresentationForTypeIdentifier(typeIdentifier = typeIdentifier) { url, _ ->
+                        val tempUrl = url?.let { copyToTempFile(fileManager, it, id) }
+                        continuation.resume(tempUrl)
                     }
-                ) { url, _ ->
-                    val tmpUrl = url?.let {
-                        // Get the temporary directory
-                        val fileComponents =
-                            fileManager.temporaryDirectory.pathComponents?.plus(it.lastPathComponent)
-                                ?: throw IllegalStateException("Failed to get temporary directory")
-
-                        // Create a file URL
-                        val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
-                            ?: throw IllegalStateException("Failed to create file URL")
-
-                        // Read the data from the URL
-                        val data = NSData.dataWithContentsOfURL(it, NSDataReadingUncached, null)
-                            ?: throw IllegalStateException("Failed to read data from $it")
-
-                        // Write the data to the temp file
-                        data.writeToURL(fileUrl, true)
-
-                        // Return the temporary
-                        fileUrl
-                    }
-
-                    continuation.resume(tmpUrl)
                 }
             }
-        }.takeIf { it.isNotEmpty() }
+        }.awaitAll().filterNotNull()
     }
 }
 
@@ -396,6 +393,32 @@ private val FileKitType.contentTypes: List<UTType>
 
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
+
+@OptIn(ExperimentalForeignApi::class)
+private fun copyToTempFile(
+    fileManager: NSFileManager,
+    url: NSURL,
+    id: String,
+): NSURL? {
+    // Get the temporary directory
+    val fileComponents = fileManager.temporaryDirectory.pathComponents
+        ?.plus(id)
+        ?.plus(url.lastPathComponent)
+        ?: throw IllegalStateException("Failed to get temporary directory")
+
+    // Create a file URL
+    val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
+        ?: throw IllegalStateException("Failed to create file URL")
+
+    // Write the data to the file URL
+    fileManager.copyItemAtURL(
+        srcURL = url,
+        toURL = fileUrl,
+        error = null,
+    )
+
+    return fileUrl
+}
 
 private enum class Mode {
     Single,
