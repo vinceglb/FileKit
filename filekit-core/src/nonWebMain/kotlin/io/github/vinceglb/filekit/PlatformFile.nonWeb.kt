@@ -87,10 +87,8 @@ public suspend fun PlatformFile.writeString(string: String): Unit =
 public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
     destination write this
 
-public suspend fun PlatformFile.createDirectories(mustCreate: Boolean = false): Unit =
-    withContext(Dispatchers.IO) {
-        SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
-    }
+public fun PlatformFile.createDirectories(mustCreate: Boolean = false): Unit =
+    SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
 
 public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
 
