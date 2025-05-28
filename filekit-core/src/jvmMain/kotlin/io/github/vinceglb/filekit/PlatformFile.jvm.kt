@@ -2,6 +2,8 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
@@ -10,6 +12,8 @@ public actual data class PlatformFile(
     val file: File,
 ) {
     public actual override fun toString(): String = path
+
+    public actual companion object
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
@@ -41,3 +45,14 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource() {}
+
+public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
+    BookmarkData(file.path.encodeToByteArray())
+}
+
+public actual fun PlatformFile.Companion.fromBookmarkData(
+    bookmarkData: BookmarkData
+): PlatformFile {
+    val path = bookmarkData.bytes.decodeToString()
+    return PlatformFile(Path(path))
+}

@@ -103,3 +103,10 @@ public operator fun PlatformFile.div(child: String): PlatformFile =
 
 public fun PlatformFile.resolve(relative: String): PlatformFile =
     this / relative
+
+public expect suspend fun PlatformFile.bookmarkData(): BookmarkData
+
+public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: BookmarkData): PlatformFile
+
+public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFile =
+    fromBookmarkData(BookmarkData(bytes))

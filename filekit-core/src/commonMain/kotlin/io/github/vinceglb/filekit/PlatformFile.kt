@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit
 
 public expect class PlatformFile {
     override fun toString(): String
+    public companion object
 }
 
 public expect val PlatformFile.name: String

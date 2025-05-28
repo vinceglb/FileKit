@@ -1,8 +1,24 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.FileKitException
+import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
+import io.github.vinceglb.filekit.utils.toNSData
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import platform.Foundation.NSError
 import platform.Foundation.NSURL
 
 public actual data class PlatformFile(
@@ -20,6 +36,8 @@ public actual data class PlatformFile(
     override fun hashCode(): Int {
         return nsUrl.path.hashCode()
     }
+
+    public actual companion object
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
@@ -57,3 +75,34 @@ public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource(): Unit =
     nsUrl.stopAccessingSecurityScopedResource()
+
+@OptIn(ExperimentalForeignApi::class)
+public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
+    withScopedAccess {
+        val bookmarkData = nsUrl.bookmarkDataWithOptions(
+            options = 0u,
+            includingResourceValuesForKeys = null,
+            relativeToURL = null,
+            error = null
+        ) ?: throw FileKitException("Failed to create bookmark data")
+        BookmarkData(bookmarkData.toByteArray())
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+public actual fun PlatformFile.Companion.fromBookmarkData(
+    bookmarkData: BookmarkData
+): PlatformFile = memScoped {
+    val nsData = bookmarkData.bytes.toNSData()
+    val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
+
+    val restoredUrl = NSURL.URLByResolvingBookmarkData(
+        bookmarkData = nsData,
+        options = 0u,
+        relativeToURL = null,
+        bookmarkDataIsStale = null,
+        error = error
+    ) ?: throw FileKitException("Failed to resolve bookmark data: ${error.pointed.value}")
+
+    PlatformFile(restoredUrl)
+}
