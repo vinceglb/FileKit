@@ -10,7 +10,10 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import io.github.vinceglb.filekit.dialogs.FilePickerResult
 import io.github.vinceglb.filekit.dialogs.openFilePicker
+import io.github.vinceglb.filekit.dialogs.openFilePickerWithProgressUpdate
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,6 +66,65 @@ public fun rememberFilePickerLauncher(
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     return rememberFilePickerLauncher(
+        type = type,
+        mode = FileKitMode.Single,
+        title = title,
+        directory = directory,
+        dialogSettings = dialogSettings,
+        onResult = onResult,
+    )
+}
+
+@Composable
+public fun <Out> rememberFilePickerLauncherWithProgress(
+    type: FileKitType = FileKitType.File(),
+    mode: FileKitMode<Out>,
+    title: String? = null,
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onResult: suspend (Flow<FilePickerResult>) -> Unit,
+): PickerResultLauncher {
+    // Init FileKit
+    InitFileKit()
+
+    // Coroutine
+    val coroutineScope = rememberCoroutineScope()
+
+    // Updated state
+    val currentType by rememberUpdatedState(type)
+    val currentMode by rememberUpdatedState(mode)
+    val currentTitle by rememberUpdatedState(title)
+    val currentDirectory by rememberUpdatedState(directory)
+    val currentOnResult by rememberUpdatedState(onResult)
+
+    // FileKit launcher
+    val returnedLauncher = remember {
+        PickerResultLauncher {
+            coroutineScope.launch {
+                val result = FileKit.openFilePickerWithProgressUpdate(
+                    type = currentType,
+                    mode = currentMode,
+                    title = currentTitle,
+                    directory = currentDirectory,
+                    dialogSettings = dialogSettings,
+                )
+                currentOnResult(result)
+            }
+        }
+    }
+
+    return returnedLauncher
+}
+
+@Composable
+public fun rememberFilePickerLauncherWithProgress(
+    type: FileKitType = FileKitType.File(),
+    title: String? = null,
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onResult: suspend (Flow<FilePickerResult>) -> Unit,
+): PickerResultLauncher {
+    return rememberFilePickerLauncherWithProgress(
         type = type,
         mode = FileKitMode.Single,
         title = title,
