@@ -34,14 +34,18 @@ public actual object FileKit {
 
 public actual val FileKit.filesDir: PlatformFile
     get() = when (PlatformUtil.current) {
-        Platform.Linux -> getEnv("HOME").toPath() / ".local" / "share" / appId
+        Platform.Linux -> System.getenv("XDG_DATA_HOME")?.let { it.toPath() / appId }
+            ?: (getEnv("HOME").toPath() / ".local" / "share" / appId)
+
         Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Application Support" / appId
         Platform.Windows -> getEnv("APPDATA").toPath() / appId
     }.also(Path::assertExists).let(::PlatformFile)
 
 public actual val FileKit.cacheDir: PlatformFile
     get() = when (PlatformUtil.current) {
-        Platform.Linux -> getEnv("HOME").toPath() / ".cache" / appId
+        Platform.Linux -> System.getenv("XDG_CACHE_HOME")?.let { it.toPath() / appId }
+            ?: (getEnv("HOME").toPath() / ".cache" / appId)
+
         Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Caches" / appId
         Platform.Windows -> getEnv("LOCALAPPDATA").toPath() / appId / "Cache"
     }.also(Path::assertExists).let(::PlatformFile)
@@ -55,7 +59,9 @@ public actual val FileKit.projectDir: PlatformFile
 @Suppress("UnusedReceiverParameter")
 public val FileKit.downloadDir: PlatformFile
     get() = when (PlatformUtil.current) {
-        Platform.Linux -> getEnv("HOME").toPath() / "Downloads"
+        Platform.Linux -> System.getenv("XDG_DOWNLOAD_DIR")?.toPath()
+            ?: (getEnv("HOME").toPath() / "Downloads")
+
         Platform.MacOS -> getEnv("HOME").toPath() / "Downloads"
         Platform.Windows -> getEnv("USERPROFILE").toPath() / "Downloads"
     }.also(Path::assertExists).let(::PlatformFile)
@@ -63,7 +69,9 @@ public val FileKit.downloadDir: PlatformFile
 @Suppress("UnusedReceiverParameter")
 public val FileKit.pictureDir: PlatformFile
     get() = when (PlatformUtil.current) {
-        Platform.Linux -> getEnv("HOME").toPath() / "Pictures"
+        Platform.Linux -> System.getenv("XDG_PICTURES_DIR")?.toPath()
+            ?: (getEnv("HOME").toPath() / "Pictures")
+
         Platform.MacOS -> getEnv("HOME").toPath() / "Pictures"
         Platform.Windows -> getEnv("USERPROFILE").toPath() / "Pictures"
     }.also(Path::assertExists).let(::PlatformFile)
