@@ -200,10 +200,14 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         FileChooserDbusInterface::class.java
     )
 
-    private fun createFilterOption(extensions: Set<String>) = Variant(
-        extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) },
-        "a(sa(us))"
-    )
+    private fun createFilterOption(extensions: Set<String>): Variant<*> {
+        val allExtensions = Pair("Supported files", extensions.map { extension -> Pair(0, "*.$extension") })
+        val individualExtensions = extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) }
+        return Variant(
+            listOf(allExtensions) + individualExtensions,
+            "a(sa(us))"
+        )
+    }
 
     private fun createCurrentFolderOption(currentFolder: PlatformFile): Variant<*> {
         val stringBytes = currentFolder.path.encodeToByteArray()
