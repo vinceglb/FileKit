@@ -19,43 +19,25 @@ import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.context
-import io.github.vinceglb.filekit.dialogs.FilePickerResult.FilePickerAborted
-import io.github.vinceglb.filekit.dialogs.FilePickerResult.FilePickerCompleted
 import io.github.vinceglb.filekit.exceptions.FileKitNotInitializedException
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
-public actual suspend fun <Out> FileKit.openFilePicker(
+internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
-    mode: FileKitMode<Out>,
+    mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): Out? {
-    val picked: List<PlatformFile>? = callFilePicker(type = type, mode = mode)
-    return mode.parseResult(picked)
-}
-
-public actual suspend fun <Out> FileKit.openFilePickerWithProgressUpdate(
-    type: FileKitType,
-    mode: FileKitMode<Out>,
-    title: String?,
-    directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
-): Flow<FilePickerResult> = flow {
-    val picked = callFilePicker(type = type, mode = mode)
-    if (picked == null) {
-        emit(FilePickerAborted)
-    } else {
-        emit(FilePickerCompleted(picked))
-    }
+): Flow<FileKitPickerState<List<PlatformFile>>> {
+    val files = callFilePicker(type = type, mode = mode)
+    return files.toPickerStateFlow()
 }
 
 public actual suspend fun FileKit.openFileSaver(
@@ -167,9 +149,9 @@ public actual suspend fun FileKit.shareFile(
     context.startActivity(chooseIntent)
 }
 
-private suspend fun <Out> callFilePicker(
+private suspend fun callFilePicker(
     type: FileKitType,
-    mode: FileKitMode<Out>
+    mode: PickerMode
 ): List<PlatformFile>? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -190,7 +172,7 @@ private suspend fun <Out> callFilePicker(
                 }
 
                 val launcher = when {
-                    mode is FileKitMode.Single || mode is FileKitMode.Multiple && mode.maxItems == 1 -> {
+                    mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
                         val contract = PickVisualMedia()
                         registry.register(key, contract) { uri ->
                             val result = uri?.let { listOf(PlatformFile(it)) }
@@ -198,7 +180,7 @@ private suspend fun <Out> callFilePicker(
                         }
                     }
 
-                    mode is FileKitMode.Multiple -> {
+                    mode is PickerMode.Multiple -> {
                         val contract = when {
                             mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
                             else -> PickMultipleVisualMedia()
@@ -216,7 +198,7 @@ private suspend fun <Out> callFilePicker(
 
             is FileKitType.File -> {
                 when (mode) {
-                    is FileKitMode.Single -> {
+                    is PickerMode.Single -> {
                         val contract = ActivityResultContracts.OpenDocument()
                         val launcher = registry.register(key, contract) { uri ->
                             val result = uri?.let { listOf(PlatformFile(it)) }
@@ -225,7 +207,7 @@ private suspend fun <Out> callFilePicker(
                         launcher.launch(getMimeTypes(type.extensions))
                     }
 
-                    is FileKitMode.Multiple -> {
+                    is PickerMode.Multiple -> {
                         // TODO there might be a way to limit the amount of documents, but
                         //  I haven't found it yet.
                         val contract = ActivityResultContracts.OpenMultipleDocuments()
@@ -248,14 +230,14 @@ private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
         ?.takeIf { it.isNotEmpty() }
         ?.mapNotNull { mimeTypeMap.getMimeTypeFromExtension(it) }
         ?.toTypedArray()
-        ?.ifEmpty { arrayOf("*/*") }
         ?: arrayOf("*/*")
 }
 
 private fun getMimeType(fileExtension: String?): String {
-    if (fileExtension == null) { return "*/*" }
     val mimeTypeMap = MimeTypeMap.getSingleton()
-    return mimeTypeMap.getMimeTypeFromExtension(fileExtension) ?: "*/*"
+    return fileExtension
+        ?.let { mimeTypeMap.getMimeTypeFromExtension(it) }
+        ?: "*/*"
 }
 
 internal object FileKitDialog {
