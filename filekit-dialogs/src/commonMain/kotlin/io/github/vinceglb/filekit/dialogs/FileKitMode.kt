@@ -4,6 +4,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.transform
 
 public sealed class FileKitMode<PickerResult, ConsumedResult> {
     internal abstract fun getPickerMode(): PickerMode
@@ -59,25 +60,28 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         override fun getPickerMode(): PickerMode = PickerMode.Single
 
         override suspend fun parseResult(flow: Flow<FileKitPickerState<List<PlatformFile>>>): Flow<FileKitPickerState<PlatformFile>> {
-            return flow.mapNotNull {
-                when (it) {
-                    is FileKitPickerState.Cancelled -> FileKitPickerState.Cancelled
-                    is FileKitPickerState.Started -> FileKitPickerState.Started(
-                        total = it.total
-                    )
+            return flow.transform { pickerState ->
+                when (pickerState) {
+                    is FileKitPickerState.Cancelled -> emit(FileKitPickerState.Cancelled)
+                    is FileKitPickerState.Started -> emit(FileKitPickerState.Started(total = pickerState.total))
 
                     is FileKitPickerState.Progress -> {
-                        it.processed.firstOrNull()?.let { file ->
-                            FileKitPickerState.Progress(
-                                processed = file,
-                                total = it.total
+                        val file = pickerState.processed.firstOrNull()
+                        if (file != null) {
+                            emit(
+                                FileKitPickerState.Progress(
+                                    processed = file,
+                                    total = pickerState.total
+                                )
                             )
                         }
                     }
 
                     is FileKitPickerState.Completed -> {
-                        it.result.firstOrNull()?.let { file ->
-                            FileKitPickerState.Completed(result = file)
+                        val file = pickerState.result.firstOrNull()
+                        when {
+                            file != null -> emit(FileKitPickerState.Completed(result = file))
+                            else -> emit(FileKitPickerState.Cancelled) // Treat empty result as cancellation
                         }
                     }
                 }
