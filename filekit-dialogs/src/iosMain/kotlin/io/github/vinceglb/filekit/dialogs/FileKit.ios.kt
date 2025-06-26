@@ -222,8 +222,12 @@ public actual suspend fun FileKit.shareFile(
     val viewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
         ?: return
 
+    // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
+    // provided value as plain text and share the path string instead of the actual file.
+    val shareItem = platform.Foundation.NSURL.fileURLWithPath(file.path)
+
     val shareVC = UIActivityViewController(
-        activityItems = listOf(file.nsUrl),
+        activityItems = listOf(shareItem),
         applicationActivities = null
     )
 
