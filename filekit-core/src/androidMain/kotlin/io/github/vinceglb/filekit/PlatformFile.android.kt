@@ -31,8 +31,22 @@ public sealed class AndroidFile {
     public data class UriWrapper(val uri: Uri) : AndroidFile()
 }
 
-public actual fun PlatformFile(path: Path): PlatformFile =
-    PlatformFile(AndroidFile.FileWrapper(File(path.toString())))
+public actual fun PlatformFile(path: Path): PlatformFile {
+    // Convert the Path back to a String to inspect its prefix. On Android, if the
+    // string represents a `content://` (or other URI based) path we should treat
+    // it as a real URI instead of a File system path.
+    val rawPath = path.toString()
+
+    // Heuristic: when the path contains a scheme (e.g. "content://", "file://")
+    // that Android recognises as an URI, build an UriWrapper, otherwise fallback
+    // to a classic FileWrapper.
+    return if (rawPath.startsWith("content://", ignoreCase = true) ||
+        rawPath.startsWith("file://", ignoreCase = true)) {
+        PlatformFile(AndroidFile.UriWrapper(Uri.parse(rawPath)))
+    } else {
+        PlatformFile(AndroidFile.FileWrapper(File(rawPath)))
+    }
+}
 
 public fun PlatformFile(uri: Uri): PlatformFile =
     PlatformFile(AndroidFile.UriWrapper(uri))
