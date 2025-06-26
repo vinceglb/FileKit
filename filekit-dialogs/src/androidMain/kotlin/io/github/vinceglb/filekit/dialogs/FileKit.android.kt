@@ -227,8 +227,8 @@ private suspend fun callFilePicker(
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return fileExtensions
-        ?.takeIf { it.isNotEmpty() }
         ?.mapNotNull { mimeTypeMap.getMimeTypeFromExtension(it) }
+        ?.takeIf { it.isNotEmpty() }
         ?.toTypedArray()
         ?: arrayOf("*/*")
 }
