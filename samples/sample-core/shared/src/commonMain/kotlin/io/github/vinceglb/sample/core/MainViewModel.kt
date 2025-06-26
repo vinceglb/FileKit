@@ -101,12 +101,12 @@ class MainViewModel(
                     is FileKitPickerState.Started -> println("Started picking ${result.total} files")
                     is FileKitPickerState.Progress -> {
                         println("New files processed: ${result.processed.size} / ${result.total}")
-                        _uiState.update { it.copy(it.files + result.processed) }
+                        _uiState.update { it.copy(files = it.files + result.processed) }
                     }
 
                     is FileKitPickerState.Completed -> {
                         println("File picker completed with ${result.result.size} files")
-                        _uiState.update { it.copy(it.files + result.result) }
+                        _uiState.update { it.copy(files = it.files + result.result) }
                     }
                 }
             }
