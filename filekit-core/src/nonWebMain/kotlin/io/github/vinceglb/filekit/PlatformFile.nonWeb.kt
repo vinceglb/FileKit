@@ -15,7 +15,7 @@ import kotlinx.io.writeString
 
 public expect fun PlatformFile(path: Path): PlatformFile
 
-public fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
+public expect fun PlatformFile(path: String): PlatformFile
 
 public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
     PlatformFile(base.toKotlinxIoPath() / child)

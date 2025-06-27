@@ -5,6 +5,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
+import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 
 public actual val PlatformFile.name: String
@@ -12,6 +13,9 @@ public actual val PlatformFile.name: String
 
 public actual val PlatformFile.path: String
     get() = toKotlinxIoPath().toString()
+
+public actual fun PlatformFile(path: String): PlatformFile =
+    PlatformFile(Path(path))
 
 public actual fun PlatformFile.isRegularFile(): Boolean = withScopedAccess {
     SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isRegularFile ?: false
