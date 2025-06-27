@@ -54,6 +54,17 @@ public fun PlatformFile(uri: Uri): PlatformFile =
 public fun PlatformFile(file: File): PlatformFile =
     PlatformFile(AndroidFile.FileWrapper(file))
 
+public actual fun PlatformFile(path: String): PlatformFile {
+    // If the path looks like an Android Uri ("content://" or "file://" scheme),
+    // parse it accordingly, otherwise treat it as a regular filesystem path.
+    return if (path.startsWith("content://", ignoreCase = true) ||
+        path.startsWith("file://", ignoreCase = true)) {
+        PlatformFile(AndroidFile.UriWrapper(Uri.parse(path)))
+    } else {
+        PlatformFile(AndroidFile.FileWrapper(File(path)))
+    }
+}
+
 public actual fun PlatformFile.toKotlinxIoPath(): Path = when (androidFile) {
     is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
     is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()

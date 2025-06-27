@@ -6,6 +6,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.Path
 
 public actual val PlatformFile.name: String
     get() = toKotlinxIoPath().name
@@ -60,3 +61,5 @@ public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Un
             )
         }
     }
+
+public actual fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
