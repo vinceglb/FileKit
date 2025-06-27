@@ -6,6 +6,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import io.github.vinceglb.filekit.readBytes
@@ -82,6 +83,33 @@ class MainViewModel(
         if (files != null) {
             val newFiles = _uiState.value.files + files
             _uiState.update { it.copy(files = newFiles) }
+        }
+    }
+
+    fun pickFilesWithState() = executeWithLoading {
+        // Pick files with state
+        val files = FileKit.openFilePicker(
+            type = FileKitType.Image,
+            mode = FileKitMode.MultipleWithState(),
+            dialogSettings = dialogSettings,
+        )
+
+        viewModelScope.launch {
+            files.collect { result ->
+                when (result) {
+                    FileKitPickerState.Cancelled -> println("File picker cancelled")
+                    is FileKitPickerState.Started -> println("Started picking ${result.total} files")
+                    is FileKitPickerState.Progress -> {
+                        println("New files processed: ${result.processed.size} / ${result.total}")
+                        _uiState.update { it.copy(files = it.files + result.processed) }
+                    }
+
+                    is FileKitPickerState.Completed -> {
+                        println("File picker completed with ${result.result.size} files")
+                        _uiState.update { it.copy(files = it.files + result.result) }
+                    }
+                }
+            }
         }
     }
 

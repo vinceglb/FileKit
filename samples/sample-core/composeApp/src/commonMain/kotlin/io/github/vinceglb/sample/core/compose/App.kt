@@ -65,6 +65,10 @@ private fun SampleApp(viewModel: MainViewModel) {
                 Text("Multiple files picker, only jpg / png")
             }
 
+            Button(onClick = viewModel::pickFilesWithState) {
+                Text("Multiple files picker with state")
+            }
+
             Button(onClick = viewModel::takePhoto) {
                 Text("Take photo")
             }

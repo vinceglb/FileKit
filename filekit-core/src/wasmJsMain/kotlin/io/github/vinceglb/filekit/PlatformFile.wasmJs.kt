@@ -14,7 +14,11 @@ import kotlin.coroutines.suspendCoroutine
 
 public actual data class PlatformFile(
     val file: File,
-)
+) {
+    public actual override fun toString(): String = name
+
+    public actual companion object
+}
 
 public actual val PlatformFile.name: String
     get() = file.name

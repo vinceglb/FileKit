@@ -3,33 +3,38 @@ package io.github.vinceglb.filekit.dialogs
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.path
+import kotlinx.coroutines.flow.Flow
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
 import platform.AppKit.allowedFileTypes
 import platform.Foundation.NSURL
 
-public actual suspend fun <Out> FileKit.openFilePicker(
+internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
-    mode: FileKitMode<Out>,
+    mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings,
-): Out? = callPicker(
-    mode = when (mode) {
-        is FileKitMode.Single -> Mode.Single
-        is FileKitMode.Multiple -> Mode.Multiple
-    },
-    title = title,
-    directory = directory,
-    fileExtensions = when (type) {
-        FileKitType.Image -> imageExtensions
-        FileKitType.Video -> videoExtensions
-        FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
-        is FileKitType.File -> type.extensions
-    },
-    dialogSettings = dialogSettings,
-)?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
+    dialogSettings: FileKitDialogSettings
+): Flow<FileKitPickerState<List<PlatformFile>>> {
+    val files = callPicker(
+        mode = when (mode) {
+            is PickerMode.Single -> Mode.Single
+            is PickerMode.Multiple -> Mode.Multiple
+        },
+        title = title,
+        directory = directory,
+        fileExtensions = when (type) {
+            FileKitType.Image -> imageExtensions
+            FileKitType.Video -> videoExtensions
+            FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
+            is FileKitType.File -> type.extensions
+        },
+        dialogSettings = dialogSettings,
+    )?.map { PlatformFile(it) }
+
+    return files.toPickerStateFlow()
+}
 
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,

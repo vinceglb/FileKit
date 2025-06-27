@@ -14,13 +14,13 @@ import io.github.vinceglb.filekit.dialogs.openFilePicker
 import kotlinx.coroutines.launch
 
 @Composable
-public fun <Out> rememberFilePickerLauncher(
+public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
-    mode: FileKitMode<Out>,
+    mode: FileKitMode<PickerResult, ConsumedResult>,
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
-    onResult: (Out?) -> Unit,
+    onResult: (ConsumedResult) -> Unit,
 ): PickerResultLauncher {
     // Init FileKit
     InitFileKit()
@@ -33,7 +33,7 @@ public fun <Out> rememberFilePickerLauncher(
     val currentMode by rememberUpdatedState(mode)
     val currentTitle by rememberUpdatedState(title)
     val currentDirectory by rememberUpdatedState(directory)
-    val currentOnResult by rememberUpdatedState(onResult)
+    val currentOnConsumed by rememberUpdatedState(onResult)
 
     // FileKit launcher
     val returnedLauncher = remember {
@@ -46,7 +46,7 @@ public fun <Out> rememberFilePickerLauncher(
                     directory = currentDirectory,
                     dialogSettings = dialogSettings,
                 )
-                currentOnResult(result)
+                mode.consumeResult(result, currentOnConsumed)
             }
         }
     }

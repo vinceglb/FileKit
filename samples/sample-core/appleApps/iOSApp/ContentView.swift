@@ -37,6 +37,10 @@ struct ContentView: View {
             Button("Multiple file picker, only png") {
                 viewModel.pickFiles()
             }
+            
+            Button("Multiple file picker with state") {
+                viewModel.pickFilesWithState()
+            }
 
             Button("Directory picker") {
                 viewModel.pickDirectory()
