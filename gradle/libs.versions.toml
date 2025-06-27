@@ -19,7 +19,7 @@ kotlin = "2.1.21"
 kotlinx-browser = "0.3"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
-kotlinx-io = "0.7.0"
+kotlinx-io = "0.8.0"
 material-icons-core = "1.7.3"
 vanniktech-mavenPublish = "0.33.0"
 
