@@ -25,7 +25,6 @@ import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
-import platform.Foundation.dataWithContentsOfURL
 import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
@@ -222,8 +221,12 @@ public actual suspend fun FileKit.shareFile(
     val viewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
         ?: return
 
+    // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
+    // provided value as plain text and share the path string instead of the actual file.
+    val shareItem = NSURL.fileURLWithPath(file.path)
+
     val shareVC = UIActivityViewController(
-        activityItems = listOf(file.nsUrl),
+        activityItems = listOf(shareItem),
         applicationActivities = null
     )
 
