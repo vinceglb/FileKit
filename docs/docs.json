@@ -30,7 +30,8 @@
           "core/read-file",
           "core/write-file",
           "core/file-utils",
-          "core/image-utils"
+          "core/image-utils",
+          "core/bookmark-data"
         ]
       },
       {
