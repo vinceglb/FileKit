@@ -17,8 +17,14 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
@@ -51,6 +57,7 @@ import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
 import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 private object FileKitDialog {
@@ -61,30 +68,40 @@ private object FileKitDialog {
     lateinit var cameraControllerDelegate: CameraControllerDelegate
 }
 
-public actual suspend fun <Out> FileKit.openFilePicker(
+internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
-    mode: FileKitMode<Out>,
+    mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): Out? = when (type) {
-    // Use PHPickerViewController for images and videos
-    is FileKitType.Image,
-    is FileKitType.Video,
-    is FileKitType.ImageAndVideo -> callPhPicker(
-        mode = mode,
-        type = type
-    )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
+): Flow<FileKitPickerState<List<PlatformFile>>> {
+    return when (type) {
+        // Use PHPickerViewController for images and videos
+        is FileKitType.Image,
+        is FileKitType.Video,
+        is FileKitType.ImageAndVideo -> callPhPicker(
+            mode = mode,
+            type = type
+        )
 
-    // Use UIDocumentPickerViewController for other types
-    else -> callPicker(
-        mode = when (mode) {
-            is FileKitMode.Single -> Mode.Single
-            is FileKitMode.Multiple -> Mode.Multiple
-        },
-        contentTypes = type.contentTypes,
-        directory = directory
-    )?.map { PlatformFile(it) }?.let { mode.parseResult(it) }
+        // Use UIDocumentPickerViewController for other types
+        else -> flow {
+            val picked = callPicker(
+                mode = when (mode) {
+                    is PickerMode.Single -> Mode.Single
+                    is PickerMode.Multiple -> Mode.Multiple
+                },
+                contentTypes = type.contentTypes,
+                directory = directory
+            )?.map { PlatformFile(it) }
+
+            if (picked.isNullOrEmpty()) {
+                emit(FileKitPickerState.Cancelled)
+            } else {
+                emit(FileKitPickerState.Completed(picked))
+            }
+        }
+    }
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(
@@ -290,90 +307,116 @@ private suspend fun callPicker(
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
-private suspend fun <Out> callPhPicker(
-    mode: FileKitMode<Out>,
+private suspend fun getPhPickerResults(
+    mode: PickerMode,
     type: FileKitType,
-): List<NSURL>? = withContext(Dispatchers.Main) {
-    val pickerResults: List<PHPickerResult> = suspendCoroutine { continuation ->
-        // Create a picker delegate
-        phPickerDelegate = PhPickerDelegate(
-            onFilesPicked = continuation::resume
-        )
-        phPickerDismissDelegate = PhPickerDismissDelegate(
-            onFilesPicked = continuation::resume
-        )
+): List<PHPickerResult> = suspendCoroutine { continuation ->
+    // Create a picker delegate
+    phPickerDelegate = PhPickerDelegate(onFilesPicked = continuation::resume)
+    phPickerDismissDelegate = PhPickerDismissDelegate(onFilesPicked = continuation::resume)
 
-        // Define configuration
-        val configuration = PHPickerConfiguration(sharedPhotoLibrary())
+    // Define configuration
+    val configuration = PHPickerConfiguration(sharedPhotoLibrary())
 
-        // Number of medias to select
-        configuration.selectionLimit = when (mode) {
-            is FileKitMode.Multiple -> mode.maxItems?.toLong() ?: 0
-            FileKitMode.Single -> 1
-        }
-
-        // Filter configuration
-        configuration.filter = when (type) {
-            is FileKitType.Image -> PHPickerFilter.imagesFilter
-            is FileKitType.Video -> PHPickerFilter.videosFilter
-            is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
-                listOf(
-                    PHPickerFilter.imagesFilter,
-                    PHPickerFilter.videosFilter,
-                )
-            )
-
-            else -> throw IllegalArgumentException("Unsupported type: $type")
-        }
-
-        // Create a picker controller
-        val controller = PHPickerViewController(configuration = configuration)
-        controller.delegate = phPickerDelegate
-        controller.presentationController?.delegate = phPickerDismissDelegate
-
-        // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
-            controller,
-            animated = true,
-            completion = null
-        )
+    // Number of medias to select
+    configuration.selectionLimit = when (mode) {
+        is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
+        PickerMode.Single -> 1
     }
 
-    val typeIdentifier = when (type) {
-        is FileKitType.Image -> UTTypeImage.identifier
-        is FileKitType.Video -> UTTypeMovie.identifier
-        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
+    // Filter configuration
+    configuration.filter = when (type) {
+        is FileKitType.Image -> PHPickerFilter.imagesFilter
+        is FileKitType.Video -> PHPickerFilter.videosFilter
+        is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
+            listOf(
+                PHPickerFilter.imagesFilter,
+                PHPickerFilter.videosFilter,
+            )
+        )
+
         else -> throw IllegalArgumentException("Unsupported type: $type")
     }
 
-    val fileManager = NSFileManager.defaultManager
+    // Create a picker controller
+    val controller = PHPickerViewController(configuration = configuration)
+    controller.delegate = phPickerDelegate
+    controller.presentationController?.delegate = phPickerDismissDelegate
 
-    // Create a unique identifier for the temporary file
-    val id = NSUUID().UUIDString
-    val tempDir = fileManager.temporaryDirectory.pathComponents?.plus(id)
-        ?: throw IllegalStateException("Failed to get temporary directory")
-    val fileUrl = NSURL.fileURLWithPathComponents(tempDir)
-        ?: throw IllegalStateException("Failed to create file URL")
+    // Present the picker controller
+    UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        controller,
+        animated = true,
+        completion = null
+    )
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun callPhPicker(
+    mode: PickerMode,
+    type: FileKitType,
+): Flow<FileKitPickerState<List<PlatformFile>>> = channelFlow {
+    // Fetch picker results on Main
+    val pickerResults = withContext(Dispatchers.Main) {
+        getPhPickerResults(mode, type)
+    }
+
+    if (pickerResults.isEmpty()) {
+        send(FileKitPickerState.Cancelled)
+        return@channelFlow
+    }
+
+    send(FileKitPickerState.Started(pickerResults.size))
+
+    val fileManager = NSFileManager.defaultManager
+    val tempRoot = fileManager.temporaryDirectory
+        .URLByAppendingPathComponent(NSUUID().UUIDString)
+    ?: throw IllegalStateException("Failed to create temporary directory")
     fileManager.createDirectoryAtURL(
-        url = fileUrl,
+        url = tempRoot,
         withIntermediateDirectories = true,
         attributes = null,
         error = null
     )
 
-    withContext(Dispatchers.IO) {
-        pickerResults.map { result ->
-            async {
-                suspendCoroutine { continuation ->
-                    result.itemProvider.loadFileRepresentationForTypeIdentifier(typeIdentifier = typeIdentifier) { url, _ ->
-                        val tempUrl = url?.let { copyToTempFile(fileManager, it, id) }
-                        continuation.resume(tempUrl)
+    // Thread-safe accumulator
+    val imported = mutableListOf<PlatformFile>()
+    val lock = Mutex()
+
+    // Launch a child coroutine for every copy
+    pickerResults.map { result ->
+        launch(Dispatchers.IO) {
+            val src = suspendCancellableCoroutine<NSURL?> { cont ->
+                result.itemProvider.loadFileRepresentationForTypeIdentifier(
+                    when (type) {
+                        is FileKitType.Image -> UTTypeImage.identifier
+                        is FileKitType.Video -> UTTypeMovie.identifier
+                        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
+                        else -> error("Unsupported type $type")
+                    }
+                ) { url, error ->
+                    when {
+                        error != null -> cont.resumeWithException(IllegalStateException(error.localizedFailureReason()))
+                        else -> {
+                            // Must copy the URL here because it becomes invalid outside of the loadFileRepresentationForTypeIdentifier callback scope
+                            val tempUrl = url?.let {
+                                copyToTempFile(fileManager, it, tempRoot.lastPathComponent!!)
+                            }
+                            cont.resume(tempUrl)
+                        }
                     }
                 }
+            } ?: return@launch // skip nulls
+
+            lock.withLock {
+                // TODO: Sort to match picking order?
+                imported += PlatformFile(src)
+                send(FileKitPickerState.Progress(imported.toList(), pickerResults.size))
             }
-        }.awaitAll().filterNotNull()
-    }
+        }
+    }.joinAll()
+
+    send(FileKitPickerState.Completed(imported.toList()))
 }
 
 // How to get Root view controller in Swift
@@ -402,7 +445,7 @@ private fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
     id: String,
-): NSURL? {
+): NSURL {
     // Get the temporary directory
     val fileComponents = fileManager.temporaryDirectory.pathComponents
         ?.plus(id)

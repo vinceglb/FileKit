@@ -37,6 +37,10 @@ struct ContentView: View {
             Button("Multiple file picker, only png") {
                 viewModel.pickFiles()
             }
+            
+            Button("Multiple file picker with state") {
+                viewModel.pickFilesWithState()
+            }
 
             Button("Directory picker") {
                 viewModel.pickDirectory()
@@ -49,7 +53,7 @@ struct ContentView: View {
             Text("Directory: \(String(describing:  uiState.directory?.path))")
             
             List(files, id: \.nsUrl) { file in
-                Text(file.name ?? "??")
+                Text(file.name)
                     .onTapGesture { viewModel.saveFile(file: file) }
             }
         }

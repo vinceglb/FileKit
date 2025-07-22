@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
@@ -71,6 +71,28 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         dialogSettings = dialogSettings
     )
 
+    val multipleFilesPickerWithState = rememberFilePickerLauncher(
+        type = FileKitType.Image,
+        mode = FileKitMode.MultipleWithState(),
+        title = "Multiple files picker with progress",
+        directory = directory,
+        dialogSettings = dialogSettings
+    ) { result ->
+        when (result) {
+            FileKitPickerState.Cancelled -> println("File picker cancelled")
+            is FileKitPickerState.Started -> println("Started picking ${result.total} files")
+            is FileKitPickerState.Progress -> {
+                println("New files processed: ${result.processed.size} / ${result.total}")
+                files += result.processed
+            }
+
+            is FileKitPickerState.Completed -> {
+                println("File picker completed with ${result.result.size} files")
+                files += result.result
+            }
+        }
+    }
+
     val filePicker = rememberFilePickerLauncher(
         type = FileKitType.File(listOf("jpg", "png")),
         title = "Single file picker, only jpg / png",
@@ -115,6 +137,10 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
 
             Button(onClick = { multipleFilesPicker.launch() }) {
                 Text("Multiple files picker")
+            }
+
+            Button(onClick = { multipleFilesPickerWithState.launch() }) {
+                Text("Multiple files picker with progress")
             }
 
             Button(onClick = { filePicker.launch() }) {
