@@ -5,7 +5,7 @@ import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
 
 val dateFormat = LocalDateTime.Format {
-    dayOfMonth()
+    day()
     char(' ')
     monthName(MonthNames.ENGLISH_ABBREVIATED)
     char(' ')
