@@ -95,3 +95,15 @@ val launcher = rememberFilePickerLauncher(
 </CodeGroup>
 
 Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
+
+<Note>
+  **macOS System Appearance**
+
+  On macOS, to ensure the file picker dialog uses the system's theme (light or dark), you may need to set a system property at the start of your application:
+
+  ```kotlin
+  System.setProperty("apple.awt.application.appearance", "system")
+  ```
+
+  This is typically done in your `main` function, before the application window is created.
+</Note>
