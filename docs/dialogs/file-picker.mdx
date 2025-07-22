@@ -28,23 +28,92 @@ Button(onClick = { launcher.launch() }) {
 
 ## Selection mode
 
-Select one or multiple files using the `mode` parameter.
-- `Single` - Allows the user to select a single file.
+Select one or multiple files using the `mode` parameter. FileKit provides four different selection modes:
+
+### Basic modes
+- `Single` - Allows the user to select a single file (default).
 - `Multiple()` - Allows the user to select multiple files.
 
 <CodeGroup>
 ```kotlin filekit-dialogs
+// Single file selection
+val file = FileKit.openFilePicker(mode = FileKitMode.Single)
+
+// Multiple file selection
 val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+
+// Multiple with max limit
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple(maxItems = 5))
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberFilePickerLauncher(
-    mode = FileKitMode.Multiple()
+// Single file selection
+val singleLauncher = rememberFilePickerLauncher(
+    mode = FileKitMode.Single
+) { file ->
+    // Handle single file: PlatformFile?
+}
+
+// Multiple file selection
+val multipleLauncher = rememberFilePickerLauncher(
+    mode = FileKitMode.Multiple(maxItems = 10)
 ) { files ->
-    // Handle the files
+    // Handle multiple files: List<PlatformFile>?
 }
 ```
 </CodeGroup>
+
+### State-tracking modes
+
+For advanced use cases where you need to track the selection progress:
+
+- `SingleWithState` - Single file selection with state tracking.
+- `MultipleWithState()` - Multiple file selection with state tracking.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+// Single file with state tracking
+val stateFlow = FileKit.openFilePicker(mode = FileKitMode.MultipleWithState())
+stateFlow.collect { state ->
+    when (state) {
+        is FileKitPickerState.Started -> println("Selection started with ${state.total} files")
+        is FileKitPickerState.Progress -> println("Processing: ${state.processed.size} / ${state.total}")
+        is FileKitPickerState.Completed -> println("Completed: ${state.result.size} files selected")
+        is FileKitPickerState.Cancelled -> println("Selection cancelled")
+    }
+}
+```
+
+```kotlin filekit-dialogs-compose
+// Single file with state tracking
+val stateLauncher = rememberFilePickerLauncher(
+    mode = FileKitMode.MultipleWithState()
+) { state ->
+    when (state) {
+        is FileKitPickerState.Started -> {
+            // Show loading indicator
+            println("Selection started with ${state.total} files")
+        }
+        is FileKitPickerState.Progress -> {
+            // Update progress for: state.processed
+            println("Processing: ${state.processed.size} / ${state.total}")
+        }
+        is FileKitPickerState.Completed -> {
+            // Handle selected file: state.result
+            println("Completed: ${state.result.size} files selected")
+        }
+        is FileKitPickerState.Cancelled -> {
+            // Handle cancellation
+            println("Selection cancelled")
+        }
+    }
+}
+```
+</CodeGroup>
+
+<Info>
+The `Multiple` and `MultipleWithState` modes support a `maxItems` parameter to limit the number of files a user can select (1-50 files). If not specified, there's no limit.
+</Info>
 
 ## Filter by type
 
