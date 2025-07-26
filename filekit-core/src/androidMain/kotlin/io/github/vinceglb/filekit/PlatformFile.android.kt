@@ -1,10 +1,12 @@
 package io.github.vinceglb.filekit
 
 import android.annotation.SuppressLint
+import android.app.Notification.Action
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
@@ -18,6 +20,7 @@ import kotlinx.io.asSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
+import java.net.URI
 
 public actual data class PlatformFile(
     val androidFile: AndroidFile
@@ -308,5 +311,26 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
 }
 
 public actual fun PlatformFile.open() {
-    TODO("Not implemented yet, to do it")
+    when(androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val context = FileKit.context
+            val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", androidFile.file)
+            uri.open()
+        }
+        is AndroidFile.UriWrapper -> {
+            androidFile.uri.open()
+        }
+    }
+}
+
+private fun Uri.open() {
+    val context = FileKit.context
+    val mimeType = context.contentResolver.getType(this)
+    println(mimeType)
+    println(this)
+    val intent = Intent(Intent.ACTION_VIEW)
+    intent.setDataAndType(this, mimeType)
+    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
 }

@@ -81,6 +81,7 @@ kotlin {
                 implementation(libs.androidx.documentfile)
                 implementation(libs.androidx.startup)
                 implementation(libs.androidx.exifinterface)
+                implementation("androidx.core:core:1.9.0")
             }
         }
         androidUnitTest.get().dependsOn(nonWebTest)
