@@ -106,3 +106,7 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
 
     PlatformFile(restoredUrl)
 }
+
+public actual fun PlatformFile.open() {
+    TODO("Not implemented yet, to do it")
+}

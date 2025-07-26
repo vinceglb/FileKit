@@ -306,3 +306,7 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
     return DocumentFile.fromSingleUri(FileKit.context, uri)
         ?: DocumentFile.fromTreeUri(FileKit.context, uri)
 }
+
+public actual fun PlatformFile.open() {
+    TODO("Not implemented yet, to do it")
+}

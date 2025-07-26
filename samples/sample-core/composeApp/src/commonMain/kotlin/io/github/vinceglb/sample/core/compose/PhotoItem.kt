@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,7 +37,9 @@ import nl.jacobras.humanreadable.HumanReadable
 fun PhotoItem(
     file: PlatformFile,
     onSaveFile: (PlatformFile) -> Unit,
-    onShareFile: (PlatformFile) -> Unit
+    onShareFile: (PlatformFile) -> Unit,
+    // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
+    onOpenFile: (PlatformFile) -> Unit
 ) {
     var showName by remember { mutableStateOf(false) }
 
@@ -84,6 +85,18 @@ fun PhotoItem(
                             Icons.Default.Check,
                             modifier = Modifier.size(22.dp),
                             contentDescription = "Save",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
+                    IconButton(
+                        onClick = { onOpenFile(file) },
+                        modifier = Modifier.size(36.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.FileOpen,
+                            modifier = Modifier.size(22.dp),
+                            contentDescription = "Open",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
