@@ -581,10 +581,10 @@ internal object Foundation {
 //		var y: CoreGraphics.CGFloat = CGFloat(y)
 //	}
 //
-//	@Structure.FieldOrder("width", "height")
-//	class NSSize @JvmOverloads constructor(width: Double = 0.0, height: Double = 0.0) :
-//		Structure(), Structure.ByValue {
-//		var width: CoreGraphics.CGFloat = CGFloat(width)
-//		var height: CoreGraphics.CGFloat = CGFloat(height)
-//	}
+	@com.sun.jna.Structure.FieldOrder("width", "height")
+	class NSSize @JvmOverloads constructor(width: Double = 0.0, height: Double = 0.0) :
+		com.sun.jna.Structure(), com.sun.jna.Structure.ByValue {
+		@JvmField var width: Double = width
+		@JvmField var height: Double = height
+	}
 }
