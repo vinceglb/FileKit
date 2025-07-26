@@ -102,7 +102,6 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 }
 
                 // Set window size
-                println("Setting window size: ${macOSSettings.windowSize}")
                 macOSSettings.windowSize?.let { (width, height) ->
                     // Create NSSize structure and set content size
                     val nsSize = Foundation.NSSize(width.toDouble(), height.toDouble())
