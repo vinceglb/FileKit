@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import android.annotation.SuppressLint
 import android.app.Notification.Action
 import android.content.Intent
+import android.content.Intent.*
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
@@ -263,7 +264,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             val treeUri = DocumentsContract.buildTreeDocumentUri(authority, documentId)
 
             val flags =
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                FLAG_GRANT_READ_URI_PERMISSION or FLAG_GRANT_WRITE_URI_PERMISSION
             FileKit.context.contentResolver.takePersistableUriPermission(treeUri, flags)
             val data = "$BOOKMARK_URI_PREFIX${androidFile.uri}"
             BookmarkData(data.encodeToByteArray())
@@ -311,26 +312,21 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
 }
 
 public actual fun PlatformFile.open() {
-    when(androidFile) {
+    val uri = when(androidFile) {
         is AndroidFile.FileWrapper -> {
             val context = FileKit.context
-            val uri = FileProvider.getUriForFile(context, context.packageName + ".provider", androidFile.file)
-            uri.open()
+            FileProvider.getUriForFile(context, context.packageName + ".provider", androidFile.file)
         }
-        is AndroidFile.UriWrapper -> {
-            androidFile.uri.open()
-        }
+        is AndroidFile.UriWrapper -> androidFile.uri
     }
+    uri.open()
 }
 
 private fun Uri.open() {
     val context = FileKit.context
     val mimeType = context.contentResolver.getType(this)
-    println(mimeType)
-    println(this)
-    val intent = Intent(Intent.ACTION_VIEW)
+    val intent = Intent(ACTION_VIEW)
     intent.setDataAndType(this, mimeType)
-    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    intent.flags = FLAG_GRANT_READ_URI_PERMISSION or FLAG_ACTIVITY_NEW_TASK
     context.startActivity(intent)
 }
