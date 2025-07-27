@@ -48,7 +48,6 @@ import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIUserInterfaceIdiomPad
 import platform.UIKit.UIViewController
-import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
 import platform.UIKit.popoverPresentationController
 import platform.UIKit.presentationController
@@ -419,14 +418,6 @@ private fun callPhPicker(
 
     send(FileKitPickerState.Completed(imported.toList()))
 }
-
-// How to get Root view controller in Swift
-// https://sarunw.com/posts/how-to-get-root-view-controller/
-private val UIApplication.firstKeyWindow: UIWindow?
-    get() = this.connectedScenes
-        .filterIsInstance<UIWindowScene>()
-        .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
-        ?.keyWindow
 
 private val FileKitType.contentTypes: List<UTType>
     get() = when (this) {
