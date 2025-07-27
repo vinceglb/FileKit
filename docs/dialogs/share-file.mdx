@@ -18,21 +18,29 @@ The share file component provides a native interface for users to share files us
 <CodeGroup>
 ```kotlin filekit-dialogs
 val file = PlatformFile("/path/to/file.txt")
+// share a single file
 FileKit.shareFile(file)
+// share multiple files
+FileKit.shareFiles(listOf(file1, file2))
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberShareFileLauncher()
 
-Button(onClick = { launcher.launch(file) }) {
+Button(onClick = { 
+    // share a single file
+    launcher.launch(file)
+    // share multiple files
+    launcher.launch(listOf(file1, file2))
+}) {
     Text("Share file")
 }
 ```
 </CodeGroup>
 
-<Warning>
+<Info>
 Ensure the file you are sharing exists and is accessible. Sharing a non-existent file will result in an error.
-</Warning>
+</Info>
 
 ## Android setup
 
