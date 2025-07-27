@@ -16,8 +16,10 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.filesDir
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     val takePhotoLauncher = rememberCameraPickerLauncher {

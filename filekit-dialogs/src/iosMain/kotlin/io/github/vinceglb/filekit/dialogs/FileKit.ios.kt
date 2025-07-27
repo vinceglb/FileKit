@@ -47,6 +47,7 @@ import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIUserInterfaceIdiomPad
+import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowScene
 import platform.UIKit.popoverPresentationController
@@ -179,7 +180,7 @@ public actual suspend fun FileKit.openFileSaver(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -220,7 +221,7 @@ public actual suspend fun FileKit.openCameraPicker(
             UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
 
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -235,7 +236,7 @@ public actual suspend fun FileKit.shareFile(
 ) {
     file.startAccessingSecurityScopedResource()
 
-    val viewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
+    val viewController = UIApplication.sharedApplication.topMostViewController()
         ?: return
 
     // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
@@ -299,7 +300,7 @@ private suspend fun callPicker(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -344,7 +345,7 @@ private suspend fun getPhPickerResults(
     controller.presentationController?.delegate = phPickerDismissDelegate
 
     // Present the picker controller
-    UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+    UIApplication.sharedApplication.topMostViewController()?.presentViewController(
         controller,
         animated = true,
         completion = null
@@ -464,6 +465,20 @@ private fun copyToTempFile(
     )
 
     return fileUrl
+}
+
+private fun UIApplication.topMostViewController(): UIViewController? {
+    val keyWindow = this.connectedScenes
+        .filterIsInstance<UIWindowScene>()
+        .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
+        ?.keyWindow
+
+    var topController = keyWindow?.rootViewController
+    while (topController?.presentedViewController != null) {
+        topController = topController.presentedViewController
+    }
+
+    return topController
 }
 
 private enum class Mode {
