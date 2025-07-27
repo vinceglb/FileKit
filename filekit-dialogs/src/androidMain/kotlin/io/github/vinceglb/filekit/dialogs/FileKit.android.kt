@@ -163,7 +163,17 @@ public actual suspend fun FileKit.shareFile(
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
         }
     }
-    intentShareSend.clipData = ClipData.newUri(context.contentResolver, null, uris.first())
+    
+    // Create ClipData with all URIs to ensure proper permissions
+    intentShareSend.clipData = if (uris.size == 1) {
+        ClipData.newUri(context.contentResolver, null, uris.first())
+    } else {
+        ClipData.newUri(context.contentResolver, null, uris.first()).apply {
+            uris.drop(1).forEach { uri ->
+                addItem(ClipData.Item(uri))
+            }
+        }
+    }
     intentShareSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
         setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
