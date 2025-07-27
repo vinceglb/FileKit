@@ -17,3 +17,8 @@ public expect suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
 )
+
+public expect suspend fun FileKit.shareFile(
+    files: List<PlatformFile>,
+    shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
+)

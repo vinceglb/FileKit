@@ -58,9 +58,9 @@ public fun rememberShareFileLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        ShareResultLauncher { file ->
+        ShareResultLauncher { files ->
             coroutineScope.launch {
-                fileKit.shareFile(file, shareSettings)
+                fileKit.shareFile(files, shareSettings)
             }
         }
     }

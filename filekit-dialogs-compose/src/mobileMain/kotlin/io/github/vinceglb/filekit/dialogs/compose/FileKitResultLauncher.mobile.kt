@@ -19,9 +19,13 @@ public class PhotoResultLauncher(
 }
 
 public class ShareResultLauncher(
-    private val onLaunch: (file: PlatformFile) -> Unit,
+    private val onLaunch: (files: List<PlatformFile>) -> Unit,
 ) {
     public fun launch(file: PlatformFile) {
-        onLaunch(file)
+        onLaunch(listOf(file))
+    }
+
+    public fun launch(files: List<PlatformFile>) {
+        onLaunch(files)
     }
 }
