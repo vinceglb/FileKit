@@ -233,19 +233,27 @@ public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings
 ) {
-    file.startAccessingSecurityScopedResource()
+    shareFile(
+        files = listOf(file),
+        shareSettings = shareSettings
+    )
+}
 
-    val viewController = UIApplication.sharedApplication.topMostViewController()
-        ?: return
+@OptIn(ExperimentalForeignApi::class)
+public actual suspend fun FileKit.shareFile(
+    files: List<PlatformFile>,
+    shareSettings: FileKitShareSettings
+) {
+    if (files.isEmpty()) return
 
+    val viewController = UIApplication.sharedApplication.topMostViewController() ?: return
+
+    files.forEach { it.startAccessingSecurityScopedResource() }
     // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
     // provided value as plain text and share the path string instead of the actual file.
-    val shareItem = NSURL.fileURLWithPath(file.path)
+    val activityItems = files.map { NSURL.fileURLWithPath(it.path) }
 
-    val shareVC = UIActivityViewController(
-        activityItems = listOf(shareItem),
-        applicationActivities = null
-    )
+    val shareVC = UIActivityViewController(activityItems, null)
 
     if (isIpad()) {
         // ipad need sourceView for show
@@ -256,11 +264,11 @@ public actual suspend fun FileKit.shareFile(
         }
     }
 
-    shareVC.setCompletionHandler { _, _ ->
-        file.stopAccessingSecurityScopedResource()
-    }
-
     shareSettings.addOptionUIActivityViewController(shareVC)
+
+    shareVC.setCompletionWithItemsHandler { _, _, _, _ ->
+        files.forEach { it.stopAccessingSecurityScopedResource() }
+    }
 
     viewController.presentViewController(
         viewControllerToPresent = shareVC,

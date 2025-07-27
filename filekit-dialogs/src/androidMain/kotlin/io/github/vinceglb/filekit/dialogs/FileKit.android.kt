@@ -125,20 +125,45 @@ public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings
 ) {
-    val uri = when (val androidFile = file.androidFile) {
-        is AndroidFile.UriWrapper -> androidFile.uri
-        is AndroidFile.FileWrapper -> {
-            FileProvider.getUriForFile(context, shareSettings.authority, androidFile.file)
+    shareFile(
+        files = listOf(file),
+        shareSettings = shareSettings
+    )
+}
+
+
+public actual suspend fun FileKit.shareFile(
+    files: List<PlatformFile>,
+    shareSettings: FileKitShareSettings
+) {
+    if (files.isEmpty()) return
+
+    val uris = files.map { platformFile ->
+        when (val androidFile = platformFile.androidFile) {
+            is AndroidFile.UriWrapper -> androidFile.uri
+            is AndroidFile.FileWrapper -> {
+                FileProvider.getUriForFile(context, shareSettings.authority, androidFile.file)
+            }
         }
     }
-    val mimeType = getMimeType(file.extension)
+
+    val mimeTypes = files.map { platformFile ->
+        getMimeType(platformFile.extension)
+    }.distinct().let { types ->
+        if (types.size == 1) types.first() else "*/*"
+    }
 
     // make intent share
-    val intentShareSend = Intent(Intent.ACTION_SEND).apply {
-        type = mimeType
-        putExtra(Intent.EXTRA_STREAM, uri)
+    val intentShareSend = Intent().apply {
+        action = if (uris.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE
+        type = mimeTypes
+        if (uris.size == 1) {
+            putExtra(Intent.EXTRA_STREAM, uris.first())
+        } else {
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        }
     }
-    intentShareSend.clipData = ClipData.newUri(context.contentResolver, null, uri)
+    intentShareSend.clipData = ClipData.newUri(context.contentResolver, null, uris.first())
     intentShareSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
         setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
