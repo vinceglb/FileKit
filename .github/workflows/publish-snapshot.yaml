@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - next
   workflow_dispatch:
 
 jobs:
@@ -42,7 +41,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Upload Artifacts
         run: ./gradlew publishAllPublicationsToMavenCentralRepository
