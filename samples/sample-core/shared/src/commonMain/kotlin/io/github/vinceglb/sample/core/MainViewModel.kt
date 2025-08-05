@@ -9,7 +9,6 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
-import io.github.vinceglb.filekit.open
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -159,12 +158,6 @@ class MainViewModel(
             block()
             _uiState.update { it.copy(loading = false) }
         }
-    }
-
-    // Open a PlatformFile
-    // TODO: TO ARRANGE CORRETLY
-    fun openFile(file: PlatformFile) {
-        file.open()
     }
 
 }

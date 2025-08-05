@@ -57,10 +57,3 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
     val path = bookmarkData.bytes.decodeToString()
     return PlatformFile(Path(path))
 }
-
-public actual fun PlatformFile.open() {
-    val desktop = Desktop.getDesktop()
-    desktop?.let {
-        desktop.open(file)
-    }
-}

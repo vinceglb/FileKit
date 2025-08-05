@@ -310,23 +310,3 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
     return DocumentFile.fromSingleUri(FileKit.context, uri)
         ?: DocumentFile.fromTreeUri(FileKit.context, uri)
 }
-
-public actual fun PlatformFile.open() {
-    val uri = when(androidFile) {
-        is AndroidFile.FileWrapper -> {
-            val context = FileKit.context
-            FileProvider.getUriForFile(context, context.packageName + ".provider", androidFile.file)
-        }
-        is AndroidFile.UriWrapper -> androidFile.uri
-    }
-    uri.open()
-}
-
-private fun Uri.open() {
-    val context = FileKit.context
-    val mimeType = context.contentResolver.getType(this)
-    val intent = Intent(ACTION_VIEW)
-    intent.setDataAndType(this, mimeType)
-    intent.flags = FLAG_GRANT_READ_URI_PERMISSION or FLAG_ACTIVITY_NEW_TASK
-    context.startActivity(intent)
-}

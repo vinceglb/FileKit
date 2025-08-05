@@ -90,8 +90,7 @@ private fun SampleApp(viewModel: MainViewModel) {
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(uiState.files.toList()) {
-                    // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
-                    PhotoItem(it, viewModel::saveFile, viewModel::shareFile, viewModel::openFile)
+                    PhotoItem(it, viewModel::saveFile, viewModel::shareFile)
                 }
             }
 

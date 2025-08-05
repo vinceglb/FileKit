@@ -17,8 +17,6 @@ public expect suspend fun PlatformFile.readBytes(): ByteArray
 
 public expect suspend fun PlatformFile.readString(): String
 
-public expect fun PlatformFile.open()
-
 public expect fun PlatformFile.startAccessingSecurityScopedResource(): Boolean
 
 public expect fun PlatformFile.stopAccessingSecurityScopedResource()

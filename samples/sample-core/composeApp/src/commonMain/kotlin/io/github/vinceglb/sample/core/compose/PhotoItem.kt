@@ -37,9 +37,7 @@ import nl.jacobras.humanreadable.HumanReadable
 fun PhotoItem(
     file: PlatformFile,
     onSaveFile: (PlatformFile) -> Unit,
-    onShareFile: (PlatformFile) -> Unit,
-    // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
-    onOpenFile: (PlatformFile) -> Unit
+    onShareFile: (PlatformFile) -> Unit
 ) {
     var showName by remember { mutableStateOf(false) }
 
@@ -85,18 +83,6 @@ fun PhotoItem(
                             Icons.Default.Check,
                             modifier = Modifier.size(22.dp),
                             contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
-                    IconButton(
-                        onClick = { onOpenFile(file) },
-                        modifier = Modifier.size(36.dp),
-                    ) {
-                        Icon(
-                            Icons.Default.FileOpen,
-                            modifier = Modifier.size(22.dp),
-                            contentDescription = "Open",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

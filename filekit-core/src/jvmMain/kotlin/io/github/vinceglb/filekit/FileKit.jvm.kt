@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import java.awt.Desktop
 import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.image.BufferedImage
@@ -137,4 +138,13 @@ public actual suspend fun FileKit.saveImageToGallery(
     filename: String
 ) {
     FileKit.pictureDir / filename write bytes
+}
+
+public actual fun FileKit.openFile(
+    file: PlatformFile
+) {
+    val desktop = Desktop.getDesktop()
+    desktop?.let {
+        desktop.open(file.file)
+    }
 }

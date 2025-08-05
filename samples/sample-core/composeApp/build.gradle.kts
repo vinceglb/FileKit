@@ -59,8 +59,6 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
-            // TODO: TO NOTIFY ABOUT open METHOD INTEGRATION
-            implementation(compose.materialIconsExtended)
 
             // Shared
             implementation(projects.samples.sampleCore.shared)
