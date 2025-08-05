@@ -4,11 +4,7 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
-import platform.AppKit.NSBitmapImageFileType
-import platform.AppKit.NSBitmapImageRep
-import platform.AppKit.NSImage
-import platform.AppKit.NSImageCompressionFactor
-import platform.AppKit.representationUsingType
+import platform.AppKit.*
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSMakeRect
@@ -84,4 +80,21 @@ private fun NSImage.resizeTo(newWidth: Int, newHeight: Int): NSImage {
     newImage.unlockFocus()
 
     return newImage
+}
+
+public actual fun FileKit.openFile(
+    file: PlatformFile
+) {
+    val fileManager = NSFileManager.defaultManager
+    val workspace = NSWorkspace.sharedWorkspace
+    val absolutePath = file.absolutePath()
+    if(fileManager.fileExistsAtPath(absolutePath)) {
+        workspace.openFile(
+            fullPath = absolutePath
+        )
+    } else {
+        workspace.openURL(
+            url = file.nsUrl
+        )
+    }
 }

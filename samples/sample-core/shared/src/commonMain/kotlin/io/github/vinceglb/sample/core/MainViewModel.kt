@@ -159,6 +159,7 @@ class MainViewModel(
             _uiState.update { it.copy(loading = false) }
         }
     }
+
 }
 
 data class MainUiState(

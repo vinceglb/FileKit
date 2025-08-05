@@ -93,6 +93,7 @@ private fun SampleApp(viewModel: MainViewModel) {
                     PhotoItem(it, viewModel::saveFile, viewModel::shareFile)
                 }
             }
+
         }
     }
 }

@@ -2,12 +2,16 @@ package io.github.vinceglb.filekit
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.*
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import androidx.annotation.IntRange
+import androidx.core.content.FileProvider
 import androidx.exifinterface.media.ExifInterface
 import io.github.vinceglb.filekit.exceptions.FileKitCoreNotInitializedException
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -144,4 +148,27 @@ private fun correctBitmapOrientation(imageData: ByteArray, bitmap: Bitmap): Bitm
     return Bitmap
         .createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         .also { tempFile.delete() }
+}
+
+public actual fun FileKit.openFile(
+    file: PlatformFile
+) {
+    val androidFile = file.androidFile
+    val uri = when(androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val context = FileKit.context
+            FileProvider.getUriForFile(context, context.packageName + ".provider", androidFile.file)
+        }
+        is AndroidFile.UriWrapper -> androidFile.uri
+    }
+    uri.open()
+}
+
+private fun Uri.open() {
+    val context = FileKit.context
+    val mimeType = context.contentResolver.getType(this)
+    val intent = Intent(ACTION_VIEW)
+    intent.setDataAndType(this, mimeType)
+    intent.flags = FLAG_GRANT_READ_URI_PERMISSION or FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
 }
