@@ -1,8 +1,11 @@
 package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -181,7 +184,7 @@ public actual suspend fun FileKit.openCameraPicker(
     val cacheImageUri = cacheImage.uri
 
     val isSaved = suspendCoroutine { continuation ->
-        val contract = ActivityResultContracts.TakePicture()
+        val contract = CustomTakePicture(cameraFacing)
         val launcher = registry.register(key, contract) { isSaved ->
             continuation.resume(isSaved)
         }
@@ -191,6 +194,17 @@ public actual suspend fun FileKit.openCameraPicker(
     when (isSaved) {
         true -> cacheImage
         else -> null
+    }
+}
+
+public class CustomTakePicture(
+    private val cameraFacing: FileKitCameraFacing
+) : ActivityResultContracts.TakePicture() {
+    override fun createIntent(context: Context, input: Uri): Intent {
+        return Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, input)
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", cameraFacing == FileKitCameraFacing.Front)
+        }
     }
 }
 
