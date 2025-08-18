@@ -102,8 +102,8 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
-    cameraFacing: FileKitCameraFacing,
-    destinationFile: PlatformFile
+    destinationFile: PlatformFile,
+    cameraFacing: FileKitCameraFacing
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
