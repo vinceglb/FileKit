@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
-import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -28,7 +27,7 @@ import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.util.UUID
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -129,8 +128,7 @@ public class CustomTakePicture(
     private val cameraFacing: FileKitCameraFacing
 ) : ActivityResultContracts.TakePicture() {
     override fun createIntent(context: Context, input: Uri): Intent {
-        return Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, input)
+        return super.createIntent(context, input).apply {
             putExtra("android.intent.extra.USE_FRONT_CAMERA", cameraFacing == FileKitCameraFacing.Front)
 
             // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
