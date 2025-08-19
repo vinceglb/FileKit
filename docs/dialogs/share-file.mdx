@@ -18,18 +18,83 @@ The share file component provides a native interface for users to share files us
 <CodeGroup>
 ```kotlin filekit-dialogs
 val file = PlatformFile("/path/to/file.txt")
+// share a single file
 FileKit.shareFile(file)
+// share multiple files
+FileKit.shareFiles(listOf(file1, file2))
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberShareFileLauncher()
 
-Button(onClick = { launcher.launch(file) }) {
+Button(onClick = { 
+    // share a single file
+    launcher.launch(file)
+    // share multiple files
+    launcher.launch(listOf(file1, file2))
+}) {
     Text("Share file")
 }
 ```
 </CodeGroup>
 
-<Warning>
+<Info>
 Ensure the file you are sharing exists and is accessible. Sharing a non-existent file will result in an error.
+</Info>
+
+## Android setup
+
+Using the share file dialog on Android requires additional FileProvider configuration to securely share files with other applications. Starting from Android 7.0 (API level 24), Android restricts the sharing of file URIs between apps for security reasons. FileProvider generates secure content URIs that allow temporary access to specific files.
+
+<Info>
+For detailed information about FileProvider, see the [official Android documentation](https://developer.android.com/reference/androidx/core/content/FileProvider).
+</Info>
+
+### Why FileProvider is required
+
+Android uses FileProvider to:
+- **Enhance security**: Prevents exposing your app's internal file structure to other apps
+- **Control access**: Grants temporary, limited access to specific files only
+- **Maintain compatibility**: Required for sharing files on Android 7.0+ due to `FileUriExposedException`
+
+### Step 1: Declare FileProvider in AndroidManifest.xml
+
+Add the following FileProvider declaration inside the `<application>` tag in your Android manifest:
+
+```xml AndroidManifest.xml
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="${applicationId}.fileprovider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+
+### Step 2: Create file_paths.xml
+
+Create or update `res/xml/file_paths.xml` to match the FileKit directory you use in your code:
+
+```xml res/xml/file_paths.xml
+<paths>
+    <!-- For FileKit.filesDir -->
+    <files-path name="filekit_files" path="." />
+    
+    <!-- For FileKit.cacheDir -->
+    <cache-path name="filekit_cache" path="." />
+</paths>
+```
+
+<Warning>
+**Important**: Include only the path type that matches your FileKit usage:
+- Use `<files-path>` if you use `FileKit.filesDir`
+- Use `<cache-path>` if you use `FileKit.cacheDir`
+- Include both if you use both directories
 </Warning>
+
+<Info>
+**Recommendation**: Use `FileKit.cacheDir` for temporary files that can be cleared by the system, and `FileKit.filesDir` for files that should persist until explicitly deleted.
+</Info>

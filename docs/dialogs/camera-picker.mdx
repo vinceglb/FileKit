@@ -50,6 +50,38 @@ val launcher = rememberCameraPickerLauncher(
 Video capture support is planned for a future release.
 </Warning>
 
+## Destination file
+
+You can specify where the captured photo should be saved using the `destinationFile` parameter. By default, the photo is saved to the cache directory with a randomly generated filename.
+
+<CodeGroup>
+```kotlin filekit-dialogs
+// Using default destination (cache directory with random filename)
+val file = FileKit.openCameraPicker()
+
+// Specifying a custom destination
+val customFile = FileKit.filesDir / "my_photo.jpg"
+val file = FileKit.openCameraPicker(destinationFile = customFile)
+```
+
+```kotlin filekit-dialogs-compose
+val launcher = rememberCameraPickerLauncher { file ->
+    // Handle the captured photo
+}
+
+// Using default destination
+Button(onClick = { launcher.launch() }) {
+    Text("Take a photo")
+}
+
+// Specifying a custom destination
+val customFile = FileKit.filesDir / "my_photo.jpg"
+Button(onClick = { launcher.launch(destinationFile = customFile) }) {
+    Text("Take a photo to custom location")
+}
+```
+</CodeGroup>
+
 <Info>
 The captured media file is automatically saved to a temporary location. If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 </Info>

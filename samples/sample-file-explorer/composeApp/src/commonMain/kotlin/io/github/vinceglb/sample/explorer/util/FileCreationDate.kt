@@ -1,7 +1,7 @@
 package io.github.vinceglb.sample.explorer.util
 
 import io.github.vinceglb.filekit.PlatformFile
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 expect fun PlatformFile.createdAt(): Instant?
 

@@ -32,9 +32,9 @@ public fun rememberCameraPickerLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        PhotoResultLauncher {
+        PhotoResultLauncher { destinationFile ->
             coroutineScope.launch {
-                val result = fileKit.openCameraPicker(type)
+                val result = fileKit.openCameraPicker(type, destinationFile)
                 currentOnResult(result)
             }
         }
@@ -58,9 +58,9 @@ public fun rememberShareFileLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        ShareResultLauncher { file ->
+        ShareResultLauncher { files ->
             coroutineScope.launch {
-                fileKit.shareFile(file, shareSettings)
+                fileKit.shareFile(files, shareSettings)
             }
         }
     }

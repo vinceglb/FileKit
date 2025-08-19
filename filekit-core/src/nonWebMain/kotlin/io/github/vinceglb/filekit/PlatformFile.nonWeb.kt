@@ -15,7 +15,7 @@ import kotlinx.io.writeString
 
 public expect fun PlatformFile(path: Path): PlatformFile
 
-public fun PlatformFile(path: String): PlatformFile = PlatformFile(Path(path))
+public expect fun PlatformFile(path: String): PlatformFile
 
 public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
     PlatformFile(base.toKotlinxIoPath() / child)
@@ -47,7 +47,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
         this@readBytes
             .source()
             .buffered()
-            .readByteArray()
+            .use { it.readByteArray() }
     }
 
 public actual suspend fun PlatformFile.readString(): String =
@@ -55,7 +55,7 @@ public actual suspend fun PlatformFile.readString(): String =
         this@readString
             .source()
             .buffered()
-            .readString()
+            .use { it.readString() }
     }
 
 public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
@@ -103,3 +103,10 @@ public operator fun PlatformFile.div(child: String): PlatformFile =
 
 public fun PlatformFile.resolve(relative: String): PlatformFile =
     this / relative
+
+public expect suspend fun PlatformFile.bookmarkData(): BookmarkData
+
+public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: BookmarkData): PlatformFile
+
+public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFile =
+    fromBookmarkData(BookmarkData(bytes))

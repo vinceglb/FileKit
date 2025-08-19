@@ -4,15 +4,16 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
-public actual suspend fun <Out> FileKit.openFilePicker(
+internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
-    mode: FileKitMode<Out>,
+    mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings,
-): Out? = withContext(Dispatchers.IO) {
+    dialogSettings: FileKitDialogSettings
+): Flow<FileKitPickerState<List<PlatformFile>>> {
     // Filter by extension
     val extensions = when (type) {
         FileKitType.Image -> imageExtensions
@@ -21,16 +22,15 @@ public actual suspend fun <Out> FileKit.openFilePicker(
         is FileKitType.File -> type.extensions
     }
 
-    // Open native file picker
-    val result = when (mode) {
-        is FileKitMode.Single -> PlatformFilePicker.current.openFilePicker(
+    val files = when (mode) {
+        PickerMode.Single -> PlatformFilePicker.current.openFilePicker(
             title = title,
             directory = directory,
             fileExtensions = extensions,
             dialogSettings = dialogSettings,
         )?.let { listOf(PlatformFile(it)) }
 
-        is FileKitMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
+        is PickerMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
             title = title,
             directory = directory,
             fileExtensions = extensions,
@@ -38,8 +38,7 @@ public actual suspend fun <Out> FileKit.openFilePicker(
         )?.map { PlatformFile(it) }
     }
 
-    // Return result
-    mode.parseResult(result)
+    return files.toPickerStateFlow()
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(

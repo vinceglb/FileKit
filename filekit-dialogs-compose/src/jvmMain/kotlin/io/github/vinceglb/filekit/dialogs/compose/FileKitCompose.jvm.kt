@@ -9,13 +9,13 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import java.awt.Window
 
 @Composable
-public fun <Out> WindowScope.rememberFilePickerLauncher(
+public fun <PickerResult, ConsumedResult> WindowScope.rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
-    mode: FileKitMode<Out>,
+    mode: FileKitMode<PickerResult, ConsumedResult>,
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
-    onResult: (Out?) -> Unit,
+    onResult: (ConsumedResult?) -> Unit,
 ): PickerResultLauncher {
     return io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
         type = type,

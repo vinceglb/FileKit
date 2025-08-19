@@ -1,0 +1,174 @@
+---
+title: 'Bookmark Data'
+description: 'Maintain persistent access to files across app restarts'
+---
+
+<Check>Available on Android, iOS, macOS, and JVM targets</Check>
+
+## The Problem: Losing File Access
+
+Modern operating systems use security measures like sandboxing, which means your app can lose access to files selected by the user once it restarts. A standard file path might become invalid. This is especially true on Android (for files outside your app's private storage) and on sandboxed apps on macOS and iOS.
+
+## The Solution: Bookmark Data
+
+`BookmarkData` is a feature that creates a persistent, secure reference to a file. You can save this reference and use it later to reliably regain access to the file, even after your app has been closed and reopened. FileKit handles the complex platform-specific implementations for you.
+
+## The Basic Workflow
+
+The process involves two main steps: creating and saving a bookmark, and later loading and resolving it.
+
+```kotlin
+// 1. User picks a file
+val userPickedFile: PlatformFile = // ...from a file picker
+
+// 2. Create and save its bookmark data
+val bookmark = userPickedFile.bookmarkData()
+MyPreferences.save("last_file_bookmark", bookmark.bytes)
+
+// --- App restarts ---
+
+// 3. Load the saved bookmark data
+val savedBytes = MyPreferences.load("last_file_bookmark")
+
+// 4. Restore the PlatformFile from the bookmark
+if (savedBytes != null) {
+    val restoredFile = PlatformFile.fromBookmarkData(savedBytes)
+    // Now you can work with the restoredFile
+}
+```
+
+## Complete Example
+
+Here’s a more complete, practical example using a simple object to manage the bookmark.
+
+<CodeGroup>
+```kotlin Storage
+// A simple manager for a single bookmarked file
+object BookmarkManager {
+    private val bookmarkFile = FileKit.filesDir / "bookmark.bin"
+
+    suspend fun save(file: PlatformFile) {
+        try {
+            val bookmark = file.bookmarkData()
+            bookmarkFile.write(bookmark.bytes)
+        } catch (e: Exception) {
+            // Handle exceptions, e.g., log the error
+            println("Error saving bookmark: ${e.message}")
+        }
+    }
+
+    suspend fun load(): PlatformFile? {
+        if (!bookmarkFile.exists()) return null
+        
+        return try {
+            val bytes = bookmarkFile.readBytes()
+            val file = PlatformFile.fromBookmarkData(bytes)
+            
+            // Best practice: verify the file still exists
+            if (file.exists()) {
+                file
+            } else {
+                // The file was moved or deleted, so clean up the stale bookmark
+                clear()
+                null
+            }
+        } catch (e: Exception) {
+            // Bookmark is invalid or corrupted, clean it up
+            clear()
+            null
+        }
+    }
+    
+    suspend fun clear() {
+        try {
+            if (bookmarkFile.exists()) {
+                bookmarkFile.delete()
+            }
+        } catch (e: Exception) {
+            println("Error clearing bookmark: ${e.message}")
+        }
+    }
+}
+```
+```kotlin Compose UI
+// Example usage in a Composable screen
+@Composable
+fun MyScreen() {
+    var file by remember { mutableStateOf<PlatformFile?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Load the file when the screen is first composed
+    LaunchedEffect(Unit) {
+        file = BookmarkManager.load()
+    }
+    
+    val picker = rememberFilePickerLauncher { pickedFile ->
+        file = pickedFile
+        // Save the bookmark in a coroutine
+        pickedFile?.let {
+            coroutineScope.launch {
+                BookmarkManager.save(it)
+            }
+        }
+    }
+    
+    // UI to show file details and a button to launch the picker
+    Column {
+        if (file != null) {
+            Text("Current file: ${file?.name}")
+        }
+        Button(onClick = { picker.launch() }) {
+            Text("Pick a File")
+        }
+    }
+}
+```
+</CodeGroup>
+
+## Platform-Specific Behavior
+
+FileKit abstracts away the details, but here's what happens on each platform:
+
+- **Android**: For standard file paths, the path itself is stored. For `content://` URIs from the system picker, FileKit requests persistent URI permissions and stores the URI string. This ensures long-term access.
+
+- **iOS & macOS**: Uses the native security-scoped bookmark system. This is crucial for sandboxed apps. FileKit automatically starts and stops access to the security-scoped resource when you use the restored `PlatformFile`.
+
+- **JVM**: Stores the file's absolute path. This is usually sufficient for desktop apps which are not typically sandboxed.
+
+## Handling Invalid Bookmarks
+
+A bookmark is not a guarantee. It can become invalid if the original file is deleted, moved, or if permissions change.
+
+<Warning>
+**Always handle restoration failures gracefully.** A bookmark can become invalid if:
+- The user moves or deletes the file.
+- The user revokes file permissions for your app.
+- System security policies change.
+- The app is uninstalled and reinstalled (on some platforms).
+</Warning>
+
+Your code should anticipate that restoring from a bookmark might fail.
+
+```kotlin
+suspend fun loadFileSafely(): PlatformFile? {
+    return try {
+        val bytes = MyStorage.getBookmarkBytes() ?: return null
+        val file = PlatformFile.fromBookmarkData(bytes)
+
+        // The most important check: does the file still exist?
+        if (file.exists()) {
+            file
+        } else {
+            // The file is gone. Clean up the invalid bookmark.
+            MyStorage.deleteBookmark()
+            null
+        }
+    } catch (e: Exception) {
+        // The bookmark data is corrupted or invalid for other reasons.
+        // Clean it up to prevent future errors.
+        MyStorage.deleteBookmark()
+        null
+    }
+}
+```
+This defensive approach ensures your app doesn't crash from a stale bookmark and can self-heal by clearing invalid data.

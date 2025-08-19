@@ -21,9 +21,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,27 +42,29 @@ import io.github.vinceglb.sample.explorer.icon.ExplorerIcons
 import io.github.vinceglb.sample.explorer.icon.FolderUp
 import io.github.vinceglb.sample.explorer.util.dateFormat
 import io.github.vinceglb.sample.explorer.util.lastModified
+import io.github.vinceglb.sample.explorer.util.rememberStorage
+import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun AppContent() {
     var directory by remember { mutableStateOf<PlatformFile?>(null) }
+    val storage = rememberStorage()
+    val coroutineScope = rememberCoroutineScope()
 
-// == Some tests on Android
-//
-//    LaunchedEffect(Unit) {
-//        val testFile = FileKit.cacheDir / "test.txt"
-//        testFile.writeString("Hello world!")
-//
-//        val subDirectory = FileKit.cacheDir / "sub directory"
-//        subDirectory.createDirectories()
-//
-//        directory = FileKit.cacheDir
-//    }
+    // Try to restore the last selected directory
+    LaunchedEffect(Unit) {
+        directory = storage.retrieveFromBookmark()
+    }
 
-    val directoryPickerLauncher = rememberDirectoryPickerLauncher { file ->
-        directory = file
+    val directoryPickerLauncher = rememberDirectoryPickerLauncher { dir ->
+        directory = dir
+
+        // Save the directory data for persistence
+        coroutineScope.launch {
+            storage.saveBookmark(dir)
+        }
     }
 
     Scaffold { contentPadding ->

@@ -68,6 +68,10 @@ kotlin {
         androidMain.get().dependsOn(mobileMain)
         iosMain.get().dependsOn(mobileMain)
     }
+
+    compilerOptions {
+        freeCompilerArgs.addAll("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }
 
 android {

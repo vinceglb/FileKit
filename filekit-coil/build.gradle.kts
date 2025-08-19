@@ -54,7 +54,7 @@ kotlin {
             implementation(compose.runtime)
 
             // Coil
-            implementation(libs.coil.compose)
+            api(libs.coil.compose)
 
             // FileKit
             api(projects.filekitCore)
