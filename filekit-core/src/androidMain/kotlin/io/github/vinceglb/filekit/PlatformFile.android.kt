@@ -163,10 +163,13 @@ public actual fun PlatformFile.source(): RawSource = when (androidFile) {
 public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFile) {
     is AndroidFile.FileWrapper -> SystemFileSystem.sink(toKotlinxIoPath(), append)
 
-    is AndroidFile.UriWrapper -> FileKit.context.contentResolver
-        .openOutputStream(androidFile.uri)
-        ?.asSink()
-        ?: throw FileKitException("Could not open output stream for Uri")
+    is AndroidFile.UriWrapper -> {
+        val mode = if (append) "wa" else "wt"
+        FileKit.context.contentResolver
+            .openOutputStream(androidFile.uri, mode)
+            ?.asSink()
+            ?: throw FileKitException("Could not open output stream for Uri")
+    }
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
