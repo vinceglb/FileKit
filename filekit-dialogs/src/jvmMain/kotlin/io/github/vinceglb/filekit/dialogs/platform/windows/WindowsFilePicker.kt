@@ -255,7 +255,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
         val filterString = fileExtensions.joinToString(";") { "*.$it" }
 
         val filterSpec = COMDLG_FILTERSPEC()
-        filterSpec.pszName = WString("Files ($filterString)")
+        filterSpec.pszName = WString(filterString)
         filterSpec.pszSpec = WString(filterString)
 
         // Set the filter
