@@ -5,19 +5,34 @@ import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFStringCreateWithCString
+import platform.CoreFoundation.CFStringGetCString
+import platform.CoreFoundation.CFStringGetLength
+import platform.CoreFoundation.CFStringGetMaximumSizeForEncoding
+import platform.CoreFoundation.CFStringRef
+import platform.CoreFoundation.kCFAllocatorDefault
+import platform.CoreFoundation.kCFStringEncodingUTF8
+import platform.CoreServices.UTTypeCopyPreferredTagWithClass
+import platform.CoreServices.UTTypeCreatePreferredIdentifierForTag
+import platform.CoreServices.kUTTagClassFilenameExtension
+import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 
@@ -69,6 +84,83 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
             .list(toKotlinxIoPath())
             .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
     }
+
+@OptIn(ExperimentalForeignApi::class)
+public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess {
+    if (extension.isBlank()) {
+        return null
+    }
+
+    memScoped {
+        val cfExtension: CFStringRef? = CFStringCreateWithCString(
+            alloc = kCFAllocatorDefault,
+            cStr = extension.lowercase(),
+            encoding = kCFStringEncodingUTF8
+        )
+
+        if (cfExtension == null) {
+            return null
+        }
+
+        val utiRef: CFStringRef? = UTTypeCreatePreferredIdentifierForTag(
+            inTagClass = kUTTagClassFilenameExtension,
+            inTag = cfExtension,
+            inConformingToUTI = null
+        )
+
+        CFRelease(cfExtension)
+
+        if (utiRef == null) {
+            return null
+        }
+
+        val mimeRef: CFStringRef? = UTTypeCopyPreferredTagWithClass(
+            inUTI = utiRef,
+            inTagClass = kUTTagClassMIMEType
+        )
+
+        CFRelease(utiRef)
+
+        if (mimeRef == null) {
+            return null
+        }
+
+        val mime = cfStringToKString(mimeRef)
+
+        CFRelease(mimeRef)
+
+        return mime?.let(MimeType::parse)
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfStringToKString(cfString: CFStringRef?): String? {
+    if (cfString == null) {
+        return null
+    }
+
+    val length = CFStringGetLength(cfString)
+
+    val maxSize = CFStringGetMaximumSizeForEncoding(
+        length = length,
+        encoding = kCFStringEncodingUTF8
+    ) + 1
+
+    return memScoped {
+        val buffer = allocArray<ByteVar>(maxSize.toInt())
+
+        if (
+            CFStringGetCString(
+                theString = cfString,
+                buffer = buffer,
+                bufferSize = maxSize,
+                encoding = kCFStringEncodingUTF8
+            )
+        ) {
+            buffer.toKString()
+        } else null
+    }
+}
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
     nsUrl.startAccessingSecurityScopedResource()
