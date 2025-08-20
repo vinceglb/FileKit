@@ -164,6 +164,8 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
     is AndroidFile.FileWrapper -> SystemFileSystem.sink(toKotlinxIoPath(), append)
 
     is AndroidFile.UriWrapper -> {
+        // Use "wt" (write+truncate) for overwrite, "wa" (write+append) for append
+        // This ensures existing file content is properly truncated when overwriting
         val mode = if (append) "wa" else "wt"
         FileKit.context.contentResolver
             .openOutputStream(androidFile.uri, mode)
