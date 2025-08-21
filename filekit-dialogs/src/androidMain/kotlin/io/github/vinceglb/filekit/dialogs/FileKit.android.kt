@@ -1,7 +1,9 @@
 package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
@@ -25,7 +27,7 @@ import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.util.UUID
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -99,7 +101,8 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
-    destinationFile: PlatformFile
+    destinationFile: PlatformFile,
+    cameraFacing: FileKitCameraFacing
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -108,7 +111,7 @@ public actual suspend fun FileKit.openCameraPicker(
     val key = UUID.randomUUID().toString()
 
     val isSaved = suspendCoroutine { continuation ->
-        val contract = ActivityResultContracts.TakePicture()
+        val contract = CustomTakePicture(cameraFacing)
         val launcher = registry.register(key, contract) { isSaved ->
             continuation.resume(isSaved)
         }
@@ -118,6 +121,24 @@ public actual suspend fun FileKit.openCameraPicker(
     when (isSaved) {
         true -> destinationFile
         else -> null
+    }
+}
+
+public class CustomTakePicture(
+    private val cameraFacing: FileKitCameraFacing
+) : ActivityResultContracts.TakePicture() {
+    override fun createIntent(context: Context, input: Uri): Intent {
+        return super.createIntent(context, input).apply {
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", cameraFacing == FileKitCameraFacing.Front)
+
+            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+            val facing = when(cameraFacing) {
+                FileKitCameraFacing.Front -> "front"
+                FileKitCameraFacing.Back -> "rear"
+            }
+            putExtra("camerafacing", facing)
+            putExtra("previous_mode", facing)
+        }
     }
 }
 
@@ -163,7 +184,7 @@ public actual suspend fun FileKit.shareFile(
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
         }
     }
-    
+
     // Create ClipData with all URIs to ensure proper permissions
     intentShareSend.clipData = if (uris.size == 1) {
         ClipData.newUri(context.contentResolver, null, uris.first())

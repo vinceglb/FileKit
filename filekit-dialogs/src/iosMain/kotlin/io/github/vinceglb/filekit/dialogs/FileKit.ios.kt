@@ -44,6 +44,7 @@ import platform.UIKit.UIDevice
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
+import platform.UIKit.UIImagePickerControllerCameraDevice
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIUserInterfaceIdiomPad
@@ -189,7 +190,8 @@ public actual suspend fun FileKit.openFileSaver(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
-    destinationFile: PlatformFile
+    destinationFile: PlatformFile,
+    cameraFacing: FileKitCameraFacing
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         cameraControllerDelegate = CameraControllerDelegate(
@@ -219,6 +221,11 @@ public actual suspend fun FileKit.openCameraPicker(
         pickerController.sourceType =
             UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
+
+        pickerController.cameraDevice = when (cameraFacing) {
+            FileKitCameraFacing.Front -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
+            FileKitCameraFacing.Back -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
+        }
 
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
