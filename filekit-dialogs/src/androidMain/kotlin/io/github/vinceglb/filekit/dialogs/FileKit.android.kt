@@ -3,7 +3,9 @@ package io.github.vinceglb.filekit.dialogs
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.hardware.camera2.CameraCharacteristics
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
@@ -129,15 +131,24 @@ public class CustomTakePicture(
 ) : ActivityResultContracts.TakePicture() {
     override fun createIntent(context: Context, input: Uri): Intent {
         return super.createIntent(context, input).apply {
-            putExtra("android.intent.extra.USE_FRONT_CAMERA", cameraFacing == FileKitCameraFacing.Front)
-
-            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
-            val facing = when(cameraFacing) {
-                FileKitCameraFacing.Front -> "front"
-                FileKitCameraFacing.Back -> "rear"
+            val cameraCharacteristic = when (cameraFacing) {
+                FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
+                FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
             }
-            putExtra("camerafacing", facing)
-            putExtra("previous_mode", facing)
+
+            // intent names taken from the flutter codebase because they are known to work and battle-tested
+            // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    putExtra("android.intent.extras.USE_FRONT_CAMERA", cameraFacing == FileKitCameraFacing.Front)
+                }
+            } else {
+                if(cameraFacing == FileKitCameraFacing.Front) {
+                    // We don't know what the back camera is - is it 0? 2?
+                    putExtra("android.intent.extras.CAMERA_FACING", 1)
+                }
+            }
         }
     }
 }
