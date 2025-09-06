@@ -38,17 +38,19 @@ val file = FileKit.openCameraPicker(type = FileKitCameraType.Photo)
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher(
-    type = FileKitCameraType.Photo
-) { file ->
+val launcher = rememberCameraPickerLauncher { file ->
     // Handle the captured photo
+}
+
+Button(onClick = { launcher.launch(type = FileKitCameraType.Photo) }) {
+    Text("Take a photo")
 }
 ```
 </CodeGroup>
 
-<Warning>
-    Video capture support is planned for a future release.
-</Warning>
+<Info>
+Video capture support is planned for a future release.
+</Info>
 
 ## Camera facing
 
@@ -59,23 +61,25 @@ You can specify whether the front or rear facing camera is used, using the `came
 By default, the rear facing camera is used.
 
 <CodeGroup>
-    ```kotlin filekit-dialogs
-    val file = FileKit.openCameraPicker(cameraFacing = FileKitCameraFacing.Front)
-    ```
+```kotlin filekit-dialogs
+val file = FileKit.openCameraPicker(cameraFacing = FileKitCameraFacing.Front)
+```
 
-    ```kotlin filekit-dialogs-compose
-    val launcher = rememberCameraPickerLauncher(
-    cameraFacing = FileKitCameraFacing.Front
-    ) { file ->
+```kotlin filekit-dialogs-compose
+val launcher = rememberCameraPickerLauncher { file ->
     // Handle the captured photo
 }
-    ```
+
+Button(onClick = { launcher.launch(cameraFacing = FileKitCameraFacing.Front) }) {
+    Text("Take a selfie")
+}
+```
 </CodeGroup>
 
 <Warning>
-    Android has no documented parameter for an intent to specify which camera is supposed to be used by the Camera App.
-    Since Android implementations differ, we can not guarantee that this feature will work for every device/Android version.
-    If you encounter issues please file an issue.
+Android has no documented parameter for an intent to specify which camera is supposed to be used by the Camera App.
+Since Android implementations differ, we can not guarantee that this feature will work for every device/Android version.
+If you encounter issues please file an issue.
 </Warning>
 
 ## Destination file
