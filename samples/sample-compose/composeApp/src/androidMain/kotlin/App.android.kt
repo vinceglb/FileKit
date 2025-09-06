@@ -9,9 +9,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
+import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 import io.github.vinceglb.filekit.div
@@ -19,14 +22,22 @@ import io.github.vinceglb.filekit.filesDir
 
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
-    val takePhotoLauncher = rememberCameraPickerLauncher {
+    val context = LocalContext.current
+    val takePhotoLauncher = rememberCameraPickerLauncher(
+        openCameraSettings = FileKitOpenCameraSettings(
+            authority = "${context.packageName}.fileprovider"
+        )
+    ) {
         onPhotoTaken(it)
     }
 
     Button(
         onClick = {
             val destinationFile = FileKit.filesDir / "photo_${System.currentTimeMillis()}.jpg"
-            takePhotoLauncher.launch(destinationFile = destinationFile)
+            takePhotoLauncher.launch(
+                destinationFile = destinationFile,
+                cameraFacing = FileKitCameraFacing.Front
+            )
         }
     ) {
         Text("Take photo")

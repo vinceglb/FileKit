@@ -7,7 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitCameraType
+import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
 import io.github.vinceglb.filekit.dialogs.FileKitShareSettings
 import io.github.vinceglb.filekit.dialogs.openCameraPicker
 import io.github.vinceglb.filekit.dialogs.shareFile
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 public fun rememberCameraPickerLauncher(
-    type: FileKitCameraType = FileKitCameraType.Photo,
+    openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PhotoResultLauncher {
     // Init FileKit
@@ -32,9 +32,14 @@ public fun rememberCameraPickerLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        PhotoResultLauncher { destinationFile ->
+        PhotoResultLauncher { type, cameraFacing, destinationFile ->
             coroutineScope.launch {
-                val result = fileKit.openCameraPicker(type, destinationFile)
+                val result = fileKit.openCameraPicker(
+                    type = type,
+                    cameraFacing = cameraFacing,
+                    destinationFile = destinationFile,
+                    openCameraSettings = openCameraSettings,
+                )
                 currentOnResult(result)
             }
         }
