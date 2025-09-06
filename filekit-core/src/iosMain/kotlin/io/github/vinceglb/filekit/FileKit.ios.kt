@@ -14,6 +14,10 @@ import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
+import platform.Foundation.NSDocumentDirectory
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSURL
+import platform.Foundation.NSUserDomainMask
 import platform.Foundation.create
 import platform.UIKit.UIGraphicsBeginImageContextWithOptions
 import platform.UIKit.UIGraphicsEndImageContext
@@ -22,6 +26,15 @@ import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePNGRepresentation
 import platform.UIKit.UIImageWriteToSavedPhotosAlbum
+
+public actual val FileKit.filesDir: PlatformFile
+    get() = NSFileManager
+        .defaultManager
+        .URLsForDirectory(NSDocumentDirectory, NSUserDomainMask)
+        .firstOrNull()
+        ?.let { it as NSURL? }
+        ?.let(::PlatformFile)
+        ?: throw FileKitException("Could not find files directory")
 
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(nsUrl = NSBundle.mainBundle.bundleURL)

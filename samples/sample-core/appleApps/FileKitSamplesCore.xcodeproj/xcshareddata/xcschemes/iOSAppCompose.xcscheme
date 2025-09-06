@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "BF8748D72BBF44E4003493D5"
-               BuildableName = "macOSApp.app"
-               BlueprintName = "macOSApp"
-               ReferencedContainer = "container:FileKitSamples.xcodeproj">
+               BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
+               BuildableName = "iOSAppCompose.app"
+               BlueprintName = "iOSAppCompose"
+               ReferencedContainer = "container:FileKitSamplesCore.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,10 +44,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "BF8748D72BBF44E4003493D5"
-            BuildableName = "macOSApp.app"
-            BlueprintName = "macOSApp"
-            ReferencedContainer = "container:FileKitSamples.xcodeproj">
+            BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
+            BuildableName = "iOSAppCompose.app"
+            BlueprintName = "iOSAppCompose"
+            ReferencedContainer = "container:FileKitSamplesCore.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -61,10 +61,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "BF8748D72BBF44E4003493D5"
-            BuildableName = "macOSApp.app"
-            BlueprintName = "macOSApp"
-            ReferencedContainer = "container:FileKitSamples.xcodeproj">
+            BlueprintIdentifier = "BF8748EB2BBF45B9003493D5"
+            BuildableName = "iOSAppCompose.app"
+            BlueprintName = "iOSAppCompose"
+            ReferencedContainer = "container:FileKitSamplesCore.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -163,10 +163,15 @@ public actual fun PlatformFile.source(): RawSource = when (androidFile) {
 public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFile) {
     is AndroidFile.FileWrapper -> SystemFileSystem.sink(toKotlinxIoPath(), append)
 
-    is AndroidFile.UriWrapper -> FileKit.context.contentResolver
-        .openOutputStream(androidFile.uri)
-        ?.asSink()
-        ?: throw FileKitException("Could not open output stream for Uri")
+    is AndroidFile.UriWrapper -> {
+        // Use "wt" (write+truncate) for overwrite, "wa" (write+append) for append
+        // This ensures existing file content is properly truncated when overwriting
+        val mode = if (append) "wa" else "wt"
+        FileKit.context.contentResolver
+            .openOutputStream(androidFile.uri, mode)
+            ?.asSink()
+            ?: throw FileKitException("Could not open output stream for Uri")
+    }
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
@@ -256,12 +261,20 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
         is AndroidFile.UriWrapper -> {
             val uri = androidFile.uri
             val authority = uri.authority ?: throw FileKitException("Uri authority is null")
-            val documentId = DocumentsContract.getTreeDocumentId(uri)
-            val treeUri = DocumentsContract.buildTreeDocumentUri(authority, documentId)
 
-            val flags =
-                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            FileKit.context.contentResolver.takePersistableUriPermission(treeUri, flags)
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+
+            // Check if this is a tree URI (directory) or document URI (file)
+            val uriToPermission = if (isDirectory()) {
+                // For directories, we need to get the tree URI
+                val documentId = DocumentsContract.getTreeDocumentId(uri)
+                DocumentsContract.buildTreeDocumentUri(authority, documentId)
+            } else {
+                // For files, use the URI directly
+                uri
+            }
+
+            FileKit.context.contentResolver.takePersistableUriPermission(uriToPermission, flags)
             val data = "$BOOKMARK_URI_PREFIX${androidFile.uri}"
             BookmarkData(data.encodeToByteArray())
         }

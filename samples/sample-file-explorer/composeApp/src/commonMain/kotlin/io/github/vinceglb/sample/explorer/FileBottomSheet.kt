@@ -138,7 +138,7 @@ fun FileBottomSheet(
 
                 FileInfo(
                     label = "Parent Directory",
-                    value = file.parent()?.name ?: "-",
+                    value = runCatching { file.parent()?.name }.getOrNull() ?: "-",
                 )
 
                 FileInfo(

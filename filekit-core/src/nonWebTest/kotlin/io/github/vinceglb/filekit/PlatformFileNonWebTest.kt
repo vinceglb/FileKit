@@ -129,6 +129,36 @@ class PlatformFileNonWebTest {
     }
 
     @Test
+    fun testPlatformFileWriteTruncation() = runTest {
+        val newFile = resourceDirectory / "truncation-test.txt"
+        val longContent = "This is a very long content that should be truncated when shorter content is written."
+        val shortContent = "Short!"
+
+        try {
+            // Write long content first
+            newFile.writeString(longContent)
+            assertEquals(expected = longContent, actual = newFile.readString())
+            assertEquals(expected = longContent.length.toLong(), actual = newFile.size())
+
+            // Write shorter content - should truncate, not append
+            newFile.writeString(shortContent)
+            val actualContent = newFile.readString()
+            assertEquals(expected = shortContent, actual = actualContent)
+            assertEquals(expected = shortContent.length.toLong(), actual = newFile.size())
+
+            // Verify no leftover bytes from previous content
+            assertTrue("File should contain exactly the short content, no leftover bytes") {
+                actualContent == shortContent
+            }
+        } finally {
+            // Clean up
+            if (newFile.exists()) {
+                newFile.delete()
+            }
+        }
+    }
+
+    @Test
     fun testPlatformFileEquality() {
         val textFile2 = resourceDirectory / "hello.txt"
         val textFile3 = resourceDirectory / "hello.txt"
