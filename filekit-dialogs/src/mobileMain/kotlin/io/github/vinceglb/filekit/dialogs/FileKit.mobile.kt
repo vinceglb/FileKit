@@ -14,8 +14,9 @@ public enum class FileKitCameraFacing {
 @OptIn(ExperimentalUuidApi::class)
 public expect suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType = FileKitCameraType.Photo,
-    destinationFile: PlatformFile = FileKit.cacheDir / "${Uuid.random()}.jpg",
     cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
+    destinationFile: PlatformFile = FileKit.cacheDir / "${Uuid.random()}.jpg",
+    openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
 ): PlatformFile?
 
 public expect suspend fun FileKit.shareFile(

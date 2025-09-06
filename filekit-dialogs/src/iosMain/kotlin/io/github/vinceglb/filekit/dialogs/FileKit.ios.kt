@@ -191,8 +191,9 @@ public actual suspend fun FileKit.openFileSaver(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
+    cameraFacing: FileKitCameraFacing,
     destinationFile: PlatformFile,
-    cameraFacing: FileKitCameraFacing
+    openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         cameraControllerDelegate = CameraControllerDelegate(
