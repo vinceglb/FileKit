@@ -1,13 +1,10 @@
 package io.github.vinceglb.filekit
 
 import android.annotation.SuppressLint
-import android.app.Notification.Action
 import android.content.Intent
-import android.content.Intent.*
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
-import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
@@ -21,7 +18,6 @@ import kotlinx.io.asSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
-import java.net.URI
 
 public actual data class PlatformFile(
     val androidFile: AndroidFile
