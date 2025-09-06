@@ -44,7 +44,3 @@ public suspend fun FileKit.compressImage(
     maxHeight = maxHeight,
     imageFormat = imageFormat
 )
-
-public expect fun FileKit.openFile(
-    file: PlatformFile
-)

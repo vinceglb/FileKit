@@ -6,6 +6,7 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
+import java.awt.Desktop
 
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
@@ -70,4 +71,11 @@ public actual suspend fun FileKit.openFileSaver(
         dialogSettings = dialogSettings,
     )
     result?.let { PlatformFile(result) }
+}
+
+public actual fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings
+) {
+    Desktop.getDesktop()?.open(file.file)
 }

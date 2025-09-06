@@ -81,20 +81,3 @@ private fun NSImage.resizeTo(newWidth: Int, newHeight: Int): NSImage {
 
     return newImage
 }
-
-public actual fun FileKit.openFile(
-    file: PlatformFile
-) {
-    val fileManager = NSFileManager.defaultManager
-    val workspace = NSWorkspace.sharedWorkspace
-    val absolutePath = file.absolutePath()
-    if(fileManager.fileExistsAtPath(absolutePath)) {
-        workspace.openFile(
-            fullPath = absolutePath
-        )
-    } else {
-        workspace.openURL(
-            url = file.nsUrl
-        )
-    }
-}

@@ -72,14 +72,3 @@ private fun UIImage.scaleToSize(newWidth: Int, newHeight: Int): UIImage? {
     UIGraphicsEndImageContext()
     return resizedImage
 }
-
-public actual fun FileKit.openFile(
-    file: PlatformFile
-) {
-    val documentController = UIDocumentInteractionController()
-    documentController.URL = file.nsUrl
-    documentController.delegate()
-    documentController.presentPreviewAnimated(
-        animated = true
-    )
-}
