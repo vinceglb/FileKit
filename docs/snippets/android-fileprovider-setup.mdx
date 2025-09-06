@@ -1,0 +1,35 @@
+When using custom file locations on Android, you need to configure a FileProvider in your app:
+
+<Info>
+For detailed information about FileProvider, see the [official Android documentation](https://developer.android.com/reference/androidx/core/content/FileProvider).
+</Info>
+
+1. Add the FileProvider to your `AndroidManifest.xml`:
+
+```xml
+<provider
+    android:name="androidx.core.content.FileProvider"
+    android:authorities="${applicationId}.fileprovider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/file_paths" />
+</provider>
+```
+
+2. Create `androidMain/res/xml/file_paths.xml`:
+
+```xml
+<paths>
+    <cache-path name="filekit_cache" path="." />
+    <files-path name="filekit_files" path="." />
+</paths>
+```
+
+<Info>
+**Important**: Include only the path type that matches your FileKit usage:
+- Use `<files-path>` if you use `FileKit.filesDir`
+- Use `<cache-path>` if you use `FileKit.cacheDir`
+- Include both if you use both directories
+</Info>
