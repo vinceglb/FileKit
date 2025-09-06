@@ -4,6 +4,8 @@ sidebarTitle: 'Camera picker'
 description: 'Open a camera picker dialog in a Kotlin Multiplatform project'
 ---
 
+import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
+
 <Check>Supported on Android and iOS targets</Check>
 
 ## Quick start
@@ -25,6 +27,8 @@ Button(onClick = { launcher.launch() }) {
 }
 ```
 </CodeGroup>
+
+The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 
 ## Camera type
 
@@ -114,7 +118,38 @@ Button(onClick = { launcher.launch(destinationFile = customFile) }) {
 ```
 </CodeGroup>
 
-<Info>
-The captured media file is automatically saved to a temporary location. If you need to keep the file permanently, make sure to copy it to a permanent storage location.
-</Info>
+<Warning>
+On Android, when using a custom `destinationFile`, you must provide the `openCameraSettings` parameter with your app's FileProvider authority. This ensures the camera app has permission to write to your specified location.
+</Warning>
 
+## Destination file Android Setup
+
+<AndroidFileProviderSetup />
+
+3. When using a custom `destinationFile`, provide the `openCameraSettings` parameter with your app's FileProvider authority:
+
+<CodeGroup>
+```kotlin filekit-dialogs
+val customFile = FileKit.filesDir / "my_photo.jpg"
+val file = FileKit.openCameraPicker(
+    destinationFile = customFile,
+    openCameraSettings = FileKitOpenCameraSettings(
+        authority = "${context.packageName}.fileprovider"
+    )
+)
+```
+
+```kotlin filekit-dialogs-compose
+val customFile = FileKit.filesDir / "my_photo.jpg"
+Button(onClick = { 
+    launcher.launch(
+        destinationFile = customFile,
+        openCameraSettings = FileKitOpenCameraSettings(
+            authority = "${context.packageName}.fileprovider"
+        )
+    )
+}) {
+    Text("Take a photo to custom location")
+}
+```
+</CodeGroup>
