@@ -16,15 +16,6 @@ FileKit Core provides the fundamental file operations for your Kotlin Multiplatf
 
 FileKit Core is designed to work out of the box for most platforms, but some targets require additional setup.
 
-### JVM setup
-
-<SetupJVMCore/>
-
-The application ID is used to create user-specific directories on different operating systems:
-- Windows: `%APPDATA%\your.application.id\`
-- macOS: `~/Library/Application Support/your.application.id/`
-- Linux: `~/.local/share/your.application.id/`
-
 ### Android setup
 
 FileKit Core is **automatically initialized** in Android applications. It uses [App Startup](https://developer.android.com/topic/libraries/app-startup) to initialize the library, ensuring that it is ready to use when your app starts.
@@ -41,6 +32,10 @@ class MainActivity : ComponentActivity() {
     }
 }
 ```
+
+### JVM setup
+
+<SetupJVMCore/>
 
 ### iOS, macOS, JS, WASM setup
 
