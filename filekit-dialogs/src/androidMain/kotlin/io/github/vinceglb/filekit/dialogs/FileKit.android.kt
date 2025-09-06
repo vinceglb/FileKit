@@ -152,6 +152,14 @@ public class CustomTakePicture(
                     putExtra("android.intent.extras.CAMERA_FACING", 1)
                 }
             }
+
+            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+            val facing = when (cameraFacing) {
+                FileKitCameraFacing.Front -> "front"
+                FileKitCameraFacing.Back -> "rear"
+            }
+            putExtra("camerafacing", facing)
+            putExtra("previous_mode", facing)
         }
     }
 }
