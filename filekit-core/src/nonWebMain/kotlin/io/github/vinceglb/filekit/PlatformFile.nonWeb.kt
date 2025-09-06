@@ -47,7 +47,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray =
         this@readBytes
             .source()
             .buffered()
-            .readByteArray()
+            .use { it.readByteArray() }
     }
 
 public actual suspend fun PlatformFile.readString(): String =
@@ -55,7 +55,7 @@ public actual suspend fun PlatformFile.readString(): String =
         this@readString
             .source()
             .buffered()
-            .readString()
+            .use { it.readString() }
     }
 
 public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =

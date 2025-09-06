@@ -48,7 +48,7 @@ import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIUserInterfaceIdiomPad
-import platform.UIKit.UIWindow
+import platform.UIKit.UIViewController
 import platform.UIKit.UIWindowScene
 import platform.UIKit.popoverPresentationController
 import platform.UIKit.presentationController
@@ -180,7 +180,7 @@ public actual suspend fun FileKit.openFileSaver(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -221,7 +221,7 @@ public actual suspend fun FileKit.openCameraPicker(
             UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
 
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -234,19 +234,27 @@ public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings
 ) {
-    file.startAccessingSecurityScopedResource()
+    shareFile(
+        files = listOf(file),
+        shareSettings = shareSettings
+    )
+}
 
-    val viewController = UIApplication.sharedApplication.firstKeyWindow?.rootViewController
-        ?: return
+@OptIn(ExperimentalForeignApi::class)
+public actual suspend fun FileKit.shareFile(
+    files: List<PlatformFile>,
+    shareSettings: FileKitShareSettings
+) {
+    if (files.isEmpty()) return
 
+    val viewController = UIApplication.sharedApplication.topMostViewController() ?: return
+
+    files.forEach { it.startAccessingSecurityScopedResource() }
     // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
     // provided value as plain text and share the path string instead of the actual file.
-    val shareItem = NSURL.fileURLWithPath(file.path)
+    val activityItems = files.map { NSURL.fileURLWithPath(it.path) }
 
-    val shareVC = UIActivityViewController(
-        activityItems = listOf(shareItem),
-        applicationActivities = null
-    )
+    val shareVC = UIActivityViewController(activityItems, null)
 
     if (isIpad()) {
         // ipad need sourceView for show
@@ -257,11 +265,11 @@ public actual suspend fun FileKit.shareFile(
         }
     }
 
-    shareVC.setCompletionHandler { _, _ ->
-        file.stopAccessingSecurityScopedResource()
-    }
-
     shareSettings.addOptionUIActivityViewController(shareVC)
+
+    shareVC.setCompletionWithItemsHandler { _, _, _, _ ->
+        files.forEach { it.stopAccessingSecurityScopedResource() }
+    }
 
     viewController.presentViewController(
         viewControllerToPresent = shareVC,
@@ -327,7 +335,7 @@ private suspend fun callPicker(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+        UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
             completion = null
@@ -372,7 +380,7 @@ private suspend fun getPhPickerResults(
     controller.presentationController?.delegate = phPickerDismissDelegate
 
     // Present the picker controller
-    UIApplication.sharedApplication.firstKeyWindow?.rootViewController?.presentViewController(
+    UIApplication.sharedApplication.topMostViewController()?.presentViewController(
         controller,
         animated = true,
         completion = null
@@ -447,14 +455,6 @@ private fun callPhPicker(
     send(FileKitPickerState.Completed(imported.toList()))
 }
 
-// How to get Root view controller in Swift
-// https://sarunw.com/posts/how-to-get-root-view-controller/
-private val UIApplication.firstKeyWindow: UIWindow?
-    get() = this.connectedScenes
-        .filterIsInstance<UIWindowScene>()
-        .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
-        ?.keyWindow
-
 private val FileKitType.contentTypes: List<UTType>
     get() = when (this) {
         is FileKitType.Image -> listOf(UTTypeImage)
@@ -492,6 +492,20 @@ private fun copyToTempFile(
     )
 
     return fileUrl
+}
+
+private fun UIApplication.topMostViewController(): UIViewController? {
+    val keyWindow = this.connectedScenes
+        .filterIsInstance<UIWindowScene>()
+        .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
+        ?.keyWindow
+
+    var topController = keyWindow?.rootViewController
+    while (topController?.presentedViewController != null) {
+        topController = topController.presentedViewController
+    }
+
+    return topController
 }
 
 private enum class Mode {
