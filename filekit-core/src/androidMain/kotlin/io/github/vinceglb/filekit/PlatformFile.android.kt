@@ -1,10 +1,13 @@
 package io.github.vinceglb.filekit
 
 import android.annotation.SuppressLint
+import android.app.Notification.Action
 import android.content.Intent
+import android.content.Intent.*
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
@@ -18,6 +21,7 @@ import kotlinx.io.asSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
+import java.net.URI
 
 public actual data class PlatformFile(
     val androidFile: AndroidFile
@@ -261,9 +265,9 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
         is AndroidFile.UriWrapper -> {
             val uri = androidFile.uri
             val authority = uri.authority ?: throw FileKitException("Uri authority is null")
-            
+
             val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-            
+
             // Check if this is a tree URI (directory) or document URI (file)
             val uriToPermission = if (isDirectory()) {
                 // For directories, we need to get the tree URI
@@ -273,7 +277,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
                 // For files, use the URI directly
                 uri
             }
-            
+
             FileKit.context.contentResolver.takePersistableUriPermission(uriToPermission, flags)
             val data = "$BOOKMARK_URI_PREFIX${androidFile.uri}"
             BookmarkData(data.encodeToByteArray())

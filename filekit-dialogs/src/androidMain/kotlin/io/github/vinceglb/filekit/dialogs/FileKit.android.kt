@@ -2,6 +2,9 @@ package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
 import android.content.Intent
+import android.content.Intent.ACTION_VIEW
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
@@ -141,9 +144,11 @@ public actual suspend fun FileKit.shareFile(
     val uris = files.map { platformFile ->
         when (val androidFile = platformFile.androidFile) {
             is AndroidFile.UriWrapper -> androidFile.uri
-            is AndroidFile.FileWrapper -> {
-                FileProvider.getUriForFile(context, shareSettings.authority, androidFile.file)
-            }
+            is AndroidFile.FileWrapper -> FileProvider.getUriForFile(
+                context,
+                shareSettings.authority,
+                androidFile.file
+            )
         }
     }
 
@@ -163,7 +168,7 @@ public actual suspend fun FileKit.shareFile(
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
         }
     }
-    
+
     // Create ClipData with all URIs to ensure proper permissions
     intentShareSend.clipData = if (uris.size == 1) {
         ClipData.newUri(context.contentResolver, null, uris.first())
@@ -182,6 +187,26 @@ public actual suspend fun FileKit.shareFile(
     shareSettings.addOptionChooseIntent(chooseIntent)
 
     context.startActivity(chooseIntent)
+}
+
+public actual fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings
+) {
+    val uri = when (val androidFile = file.androidFile) {
+        is AndroidFile.UriWrapper -> androidFile.uri
+        is AndroidFile.FileWrapper -> FileProvider.getUriForFile(
+            context,
+            openFileSettings.authority,
+            androidFile.file
+        )
+    }
+
+    val mimeType = getMimeType(file.extension)
+    val intent = Intent(ACTION_VIEW)
+    intent.setDataAndType(uri, mimeType)
+    intent.flags = FLAG_GRANT_READ_URI_PERMISSION or FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
 }
 
 private suspend fun callFilePicker(

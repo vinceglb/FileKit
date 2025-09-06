@@ -15,13 +15,7 @@ import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.create
-import platform.UIKit.UIGraphicsBeginImageContextWithOptions
-import platform.UIKit.UIGraphicsEndImageContext
-import platform.UIKit.UIGraphicsGetImageFromCurrentImageContext
-import platform.UIKit.UIImage
-import platform.UIKit.UIImageJPEGRepresentation
-import platform.UIKit.UIImagePNGRepresentation
-import platform.UIKit.UIImageWriteToSavedPhotosAlbum
+import platform.UIKit.*
 
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(nsUrl = NSBundle.mainBundle.bundleURL)

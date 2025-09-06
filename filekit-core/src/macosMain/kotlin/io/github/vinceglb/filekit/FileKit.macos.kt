@@ -4,11 +4,7 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
-import platform.AppKit.NSBitmapImageFileType
-import platform.AppKit.NSBitmapImageRep
-import platform.AppKit.NSImage
-import platform.AppKit.NSImageCompressionFactor
-import platform.AppKit.representationUsingType
+import platform.AppKit.*
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSMakeRect
