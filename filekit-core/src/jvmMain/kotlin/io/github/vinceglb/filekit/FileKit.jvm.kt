@@ -39,13 +39,12 @@ public actual object FileKit {
     }
 
     public fun init(
-        appId: String,
-        filesDir: Path? = null,
-        cacheDir: Path? = null,
+        filesDir: File,
+        cacheDir: File,
     ) {
-        _appId = appId
-        _customFilesDir = filesDir
-        _customCacheDir = cacheDir
+        _appId = null
+        _customCacheDir = cacheDir.toKotlinxIoPath()
+        _customFilesDir = filesDir.toKotlinxIoPath()
     }
 
     public fun init(
