@@ -1,3 +1,12 @@
+Opening files on Android requires additional FileProvider configuration to securely share files with other applications. Starting from Android 7.0 (API level 24), Android restricts the sharing of file URIs between apps for security reasons. FileProvider generates secure content URIs that allow temporary access to specific files.
+
+**Why FileProvider is required?**
+
+Android uses FileProvider to:
+- **Enhance security**: Prevents exposing your app's internal file structure to other apps
+- **Control access**: Grants temporary, limited access to specific files only
+- **Maintain compatibility**: Required for opening files on Android 7.0+ due to `FileUriExposedException`
+
 When using custom file locations on Android, you need to configure a FileProvider in your app:
 
 <Info>

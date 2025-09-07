@@ -1,0 +1,44 @@
+---
+title: 'Open file dialog'
+sidebarTitle: 'Open file'
+description: 'Open a file with the default application in a Kotlin Multiplatform project'
+---
+
+import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
+
+<Check>Supported on Android, iOS, macOS and JVM targets</Check>
+
+## Quick start
+
+The open file function allows you to open any file with the default application associated with that file type on the user's device. This is useful for viewing documents, images, or any other file type without handling the content within your app.
+
+```kotlin filekit-dialogs
+val file = PlatformFile("/path/to/document.pdf")
+FileKit.openFileWithDefaultApplication(file)
+```
+
+This will open the file using the system's default application for that file type - for example, a PDF viewer for `.pdf` files, an image viewer for `.jpg` files, or a text editor for `.txt` files.
+
+<Info>
+Ensure the file you are trying to open exists and is accessible. Attempting to open a non-existent file will result in an error.
+</Info>
+
+## Android setup
+
+<AndroidFileProviderSetup />
+
+3. When opening files from custom locations, provide the `openFileSettings` parameter with your app's FileProvider authority:
+
+```kotlin filekit-dialogs
+val file = FileKit.filesDir / "document.pdf"
+FileKit.openFileWithDefaultApplication(
+    file = file,
+    openFileSettings = FileKitOpenFileSettings(
+        authority = "${context.packageName}.fileprovider"
+    )
+)
+```
+
+<Warning>
+If you don't provide the correct FileProvider authority when opening files from custom locations on Android, the operation will fail with a `FileUriExposedException` on Android 7.0 and above.
+</Warning>
