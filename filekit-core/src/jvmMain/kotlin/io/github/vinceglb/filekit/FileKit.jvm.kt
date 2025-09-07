@@ -8,6 +8,7 @@ import io.github.vinceglb.filekit.utils.PlatformUtil
 import io.github.vinceglb.filekit.utils.calculateNewDimensions
 import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toFile
+import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import io.github.vinceglb.filekit.utils.toPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,37 +19,76 @@ import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.File
 import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 
 public actual object FileKit {
     private var _appId: String? = null
+    internal var _customCacheDir: Path? = null
+    internal var _customFilesDir: Path? = null
+
     public val appId: String
         get() = _appId ?: throw FileKitNotInitializedException()
 
     public fun init(appId: String) {
         _appId = appId
+        _customCacheDir = null
+        _customFilesDir = null
+    }
+
+    public fun init(
+        filesDir: File,
+        cacheDir: File,
+    ) {
+        _appId = null
+        _customCacheDir = cacheDir.toKotlinxIoPath()
+        _customFilesDir = filesDir.toKotlinxIoPath()
+    }
+
+    public fun init(
+        appId: String,
+        filesDir: File? = null,
+        cacheDir: File? = null,
+    ) {
+        _appId = appId
+        _customCacheDir = cacheDir?.toKotlinxIoPath()
+        _customFilesDir = filesDir?.toKotlinxIoPath()
     }
 }
 
 public actual val FileKit.filesDir: PlatformFile
-    get() = when (PlatformUtil.current) {
-        Platform.Linux -> System.getenv("XDG_DATA_HOME")?.let { it.toPath() / appId }
-            ?: (getEnv("HOME").toPath() / ".local" / "share" / appId)
+    get() {
+        val folder = FileKit._customFilesDir ?: when (PlatformUtil.current) {
+            Platform.Linux ->
+                System.getenv("XDG_DATA_HOME")
+                    ?.let { it.toPath() / appId }
+                    ?: (getEnv("HOME").toPath() / ".local" / "share" / appId)
 
-        Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Application Support" / appId
-        Platform.Windows -> getEnv("APPDATA").toPath() / appId
-    }.also(Path::assertExists).let(::PlatformFile)
+            Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Application Support" / appId
+            Platform.Windows -> getEnv("APPDATA").toPath() / appId
+        }
+
+        return folder
+            .also(Path::assertExists)
+            .let(::PlatformFile)
+    }
 
 public actual val FileKit.cacheDir: PlatformFile
-    get() = when (PlatformUtil.current) {
-        Platform.Linux -> System.getenv("XDG_CACHE_HOME")?.let { it.toPath() / appId }
-            ?: (getEnv("HOME").toPath() / ".cache" / appId)
+    get() {
+        val folder = FileKit._customCacheDir ?: when (PlatformUtil.current) {
+            Platform.Linux -> System.getenv("XDG_CACHE_HOME")?.let { it.toPath() / appId }
+                ?: (getEnv("HOME").toPath() / ".cache" / appId)
 
-        Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Caches" / appId
-        Platform.Windows -> getEnv("LOCALAPPDATA").toPath() / appId / "Cache"
-    }.also(Path::assertExists).let(::PlatformFile)
+            Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Caches" / appId
+            Platform.Windows -> getEnv("LOCALAPPDATA").toPath() / appId / "Cache"
+        }
+
+        return folder
+            .also(Path::assertExists)
+            .let(::PlatformFile)
+    }
 
 public actual val FileKit.databasesDir: PlatformFile
     get() = FileKit.filesDir / "databases"

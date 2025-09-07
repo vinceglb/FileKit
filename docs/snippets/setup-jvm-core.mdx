@@ -21,6 +21,23 @@ The application ID is used to create user-specific directories on different oper
 - macOS: `~/Library/Application Support/your.application.id/`
 - Linux: `~/.local/share/your.application.id/`
 
+#### Custom Cache and Data Directories
+
+For applications that need custom directory paths (e.g., portable applications or specific deployment scenarios), you can specify custom cache and data directories:
+
+```kotlin main.kt
+fun main() {
+  val appDir = File(System.getProperty("user.home"), ".myapp")
+  FileKit.init(
+      appId = "MyApplication",
+      filesDir = File(appDir, "data"),
+      cacheDir = File(appDir, "cache")
+  )
+
+  // ...
+}
+```
+
 #### ProGuard Configuration
 
 If you're using ProGuard or code obfuscation on JVM platforms, add these rules to your `proguard-rules.pro`:
