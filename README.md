@@ -26,6 +26,24 @@
 - 📂 **Comprehensive File Operations**: Pick files, save documents, access photos, manage directories
 - 🎨 **Image Utilities**: Built-in image compression and gallery integration
 
+## 🚀 Who's Using FileKit
+
+FileKit is trusted by developers building amazing cross-platform applications:
+
+- **[Heron](https://github.com/tunjid/heron)** - KMP Bluesky client using FileKit for image preview when uploading images or videos
+- **[Rush](https://github.com/shub39/Rush)** - Lyrics search app like Spotify
+- **[Composables SVG to Compose](https://composables.com/svg-to-compose)** - Web tool to convert SVG to Compose code in seconds
+- **[Twine](https://github.com/msasikanth/twine)** - A multiplatform RSS reader built using Kotlin and Compose
+- **[Butler](https://github.com/HLCaptain/butler)** - AI Chat App supporting image uploads across iOS, Android, Desktop, and WasmJS
+- **[PixelSafe](https://github.com/StefanOltmann/pixelsafe)** - Free steganography tool for PNG images
+- **[AndroidToolKit](https://github.com/LazyIonEs/AndroidToolKit)** - Desktop tools applicable to Android development, supporting Windows, Mac and Linux
+- **[Splital](https://splital.com/)** - Easily track and manage your shared expenses, quickly, simply, and hassle-free on [Android](https://play.google.com/store/apps/details?id=com.splital.project) and [iOS](https://apps.apple.com/us/app/splital-settle-up-easily/id6501984581)
+- **[Tracker - Manager for Bluesky](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer)** - Track and manage your Bluesky followers, unfollowers, blockers, and post analytics — all in real time! On [Android](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) and [iOS](https://apps.apple.com/us/app/tracker-manager-for-bluesky/id6740998282).
+- **[Parrot Workout Tracker](https://parrotworkouttracker.com/)** - The ultimate fitness log and exercise tracker to crush your goals on [Android](https://play.google.com/store/apps/details?id=de.kreiniker.parrotworkouttracker) and [iOS](https://apps.apple.com/us/app/workout-tracker-log-parrot/id6741729053).
+- **[Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer)** - Photo management software for organizing and searching large photo collections
+
+*Using FileKit in your project? [Let us know!](https://github.com/vinceglb/FileKit/discussions/343)*
+
 ## 📚 Documentation
 
 Visit our [documentation](https://filekit.mintlify.app) to learn more: https://filekit.mintlify.app
