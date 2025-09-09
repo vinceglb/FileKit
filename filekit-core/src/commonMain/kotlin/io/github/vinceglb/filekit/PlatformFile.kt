@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.mimeType.MimeType
+
 public expect class PlatformFile {
     override fun toString(): String
     public companion object
@@ -16,6 +18,8 @@ public expect fun PlatformFile.size(): Long
 public expect suspend fun PlatformFile.readBytes(): ByteArray
 
 public expect suspend fun PlatformFile.readString(): String
+
+public expect fun PlatformFile.mimeType(): MimeType?
 
 public expect fun PlatformFile.startAccessingSecurityScopedResource(): Boolean
 

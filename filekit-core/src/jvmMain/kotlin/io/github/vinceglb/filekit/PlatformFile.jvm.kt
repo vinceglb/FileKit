@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
@@ -7,6 +8,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
+import java.nio.file.Files
 
 public actual data class PlatformFile(
     val file: File,
@@ -41,6 +43,16 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     withScopedAccess {
         SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
     }
+
+public actual fun PlatformFile.mimeType(): MimeType? {
+    val mimeTypeValue = try {
+        Files.probeContentType(file.toPath())
+    } catch (_: Exception) {
+        null
+    }
+
+    return mimeTypeValue?.let(MimeType::parse)
+}
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 

@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.createTestFile
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -62,6 +63,14 @@ class PlatformFileWebTest {
         assertEquals(
             expected = "Hello, World!",
             actual = bytes.decodeToString(),
+        )
+    }
+
+    @Test
+    fun testPlatformMimeType() {
+        assertEquals(
+            expected = MimeType.parse("text/plain"),
+            actual = platformFile.mimeType(),
         )
     }
 }
