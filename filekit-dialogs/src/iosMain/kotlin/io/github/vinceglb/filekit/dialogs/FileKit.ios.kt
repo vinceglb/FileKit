@@ -470,8 +470,11 @@ private val FileKitType.contentTypes: List<UTType>
         is FileKitType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
         is FileKitType.File -> extensions
             ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
-            .ifNullOrEmpty { listOf(UTTypeContent) }
+            .ifNullOrEmpty { listOf(UTTypePublicItem) }
     }
+
+private val UTTypePublicItem: UTType
+    get() = UTType.typeWithIdentifier("public.item") ?: UTTypeContent
 
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
