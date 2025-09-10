@@ -57,6 +57,7 @@ import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
+import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -470,11 +471,8 @@ private val FileKitType.contentTypes: List<UTType>
         is FileKitType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
         is FileKitType.File -> extensions
             ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
-            .ifNullOrEmpty { listOf(UTTypePublicItem) }
+            .ifNullOrEmpty { listOf(UTTypeItem) }
     }
-
-private val UTTypePublicItem: UTType
-    get() = UTType.typeWithIdentifier("public.item") ?: UTTypeContent
 
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
