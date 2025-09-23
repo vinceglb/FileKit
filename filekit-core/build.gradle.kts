@@ -70,9 +70,6 @@ kotlin {
         }
         val nonWebTest by creating { dependsOn(commonTest.get()) }
 
-        val webMain by creating { dependsOn(commonMain.get()) }
-        val webTest by creating { dependsOn(commonTest.get()) }
-
         val jvmAndNativeMain by creating { dependsOn(nonWebMain) }
 
         androidMain {
@@ -89,15 +86,9 @@ kotlin {
         nativeMain.get().dependsOn(jvmAndNativeMain)
         nativeTest.get().dependsOn(nonWebTest)
 
-        jsMain.get().dependsOn(webMain)
-        jsTest.get().dependsOn(webTest)
-        wasmJsMain {
-            dependsOn(webMain)
-            dependencies {
-                implementation(libs.kotlinx.browser)
-            }
+        wasmJsMain.dependencies {
+            implementation(libs.kotlinx.browser)
         }
-        wasmJsTest.get().dependsOn(webTest)
     }
 
     compilerOptions {
