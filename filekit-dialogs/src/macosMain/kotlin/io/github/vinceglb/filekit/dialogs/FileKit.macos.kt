@@ -2,12 +2,16 @@ package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.flow.Flow
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
+import platform.AppKit.NSWorkspace
 import platform.AppKit.allowedFileTypes
+import platform.AppKit.openFile
+import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 
 internal actual suspend fun FileKit.platformOpenFilePicker(
@@ -89,6 +93,21 @@ public actual suspend fun FileKit.openFileSaver(
     }
 
     return platformFile
+}
+
+public actual fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings
+) {
+    val fileManager = NSFileManager.defaultManager
+    val workspace = NSWorkspace.sharedWorkspace
+    val absolutePath = file.absolutePath()
+
+    if (fileManager.fileExistsAtPath(absolutePath)) {
+        workspace.openFile(fullPath = absolutePath)
+    } else {
+        workspace.openURL(url = file.nsUrl)
+    }
 }
 
 private fun callPicker(

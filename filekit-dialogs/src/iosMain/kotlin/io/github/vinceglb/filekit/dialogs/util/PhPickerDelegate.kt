@@ -9,7 +9,12 @@ internal class PhPickerDelegate(
     private val onFilesPicked: (List<PHPickerResult>) -> Unit
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
+    private var hasFinished = false
+
     override fun picker(picker: PHPickerViewController, didFinishPicking: List<*>) {
+        if (hasFinished) return
+        hasFinished = true
+
         // Dismiss the picker
         picker.dismissViewControllerAnimated(true, null)
 

@@ -41,9 +41,11 @@ import platform.PhotosUI.PHPickerViewController
 import platform.UIKit.UIActivityViewController
 import platform.UIKit.UIApplication
 import platform.UIKit.UIDevice
+import platform.UIKit.UIDocumentInteractionController
 import platform.UIKit.UIDocumentPickerViewController
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
+import platform.UIKit.UIImagePickerControllerCameraDevice
 import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIUserInterfaceIdiomPad
@@ -55,6 +57,7 @@ import platform.UniformTypeIdentifiers.UTType
 import platform.UniformTypeIdentifiers.UTTypeContent
 import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
+import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -189,7 +192,9 @@ public actual suspend fun FileKit.openFileSaver(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
-    destinationFile: PlatformFile
+    cameraFacing: FileKitCameraFacing,
+    destinationFile: PlatformFile,
+    openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? = withContext(Dispatchers.Main) {
     suspendCoroutine { continuation ->
         cameraControllerDelegate = CameraControllerDelegate(
@@ -219,6 +224,11 @@ public actual suspend fun FileKit.openCameraPicker(
         pickerController.sourceType =
             UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
+
+        pickerController.cameraDevice = when (cameraFacing) {
+            FileKitCameraFacing.Front -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
+            FileKitCameraFacing.Back -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
+        }
 
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
@@ -275,6 +285,33 @@ public actual suspend fun FileKit.shareFile(
         animated = true,
         completion = null
     )
+}
+
+@OptIn(ExperimentalForeignApi::class)
+public actual fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings
+) {
+    // Try to open with the system's default app first
+    val opened = UIApplication.sharedApplication.openURL(file.nsUrl)
+
+    // If that fails, fall back to document interaction controller
+    if (!opened) {
+        val documentController = UIDocumentInteractionController()
+        documentController.URL = file.nsUrl
+
+        // Get the root view controller from the key window
+        val rootViewController = UIApplication.sharedApplication.keyWindow?.rootViewController
+
+        if (rootViewController != null) {
+            // Present the options menu to let user choose how to open
+            documentController.presentOptionsMenuFromRect(
+                rect = rootViewController.view.bounds,
+                inView = rootViewController.view,
+                animated = true
+            )
+        }
+    }
 }
 
 private fun isIpad(): Boolean {
@@ -434,7 +471,7 @@ private val FileKitType.contentTypes: List<UTType>
         is FileKitType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
         is FileKitType.File -> extensions
             ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
-            .ifNullOrEmpty { listOf(UTTypeContent) }
+            .ifNullOrEmpty { listOf(UTTypeItem) }
     }
 
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =

@@ -1,7 +1,14 @@
 package io.github.vinceglb.filekit.dialogs
 
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
+import android.content.Intent.ACTION_VIEW
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+import android.hardware.camera2.CameraCharacteristics
+import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
@@ -13,9 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageAndVideo
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.VideoOnly
-import androidx.core.content.FileProvider
 import androidx.core.net.toUri
-import io.github.vinceglb.filekit.AndroidFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.context
@@ -99,7 +104,9 @@ public actual suspend fun FileKit.openDirectoryPicker(
 
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
-    destinationFile: PlatformFile
+    cameraFacing: FileKitCameraFacing,
+    destinationFile: PlatformFile,
+    openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -108,16 +115,55 @@ public actual suspend fun FileKit.openCameraPicker(
     val key = UUID.randomUUID().toString()
 
     val isSaved = suspendCoroutine { continuation ->
-        val contract = ActivityResultContracts.TakePicture()
+        val contract = CustomTakePicture(cameraFacing)
         val launcher = registry.register(key, contract) { isSaved ->
             continuation.resume(isSaved)
         }
-        launcher.launch(destinationFile.uri)
+        val uri = destinationFile.toAndroidUri(openCameraSettings.authority)
+        launcher.launch(uri)
     }
 
     when (isSaved) {
         true -> destinationFile
         else -> null
+    }
+}
+
+public class CustomTakePicture(
+    private val cameraFacing: FileKitCameraFacing
+) : ActivityResultContracts.TakePicture() {
+    override fun createIntent(context: Context, input: Uri): Intent {
+        return super.createIntent(context, input).apply {
+            // intent names taken from the flutter codebase because they are known to work and battle-tested
+            // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                val cameraCharacteristic = when (cameraFacing) {
+                    FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
+                    FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
+                }
+                putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    putExtra(
+                        "android.intent.extras.USE_FRONT_CAMERA",
+                        cameraFacing == FileKitCameraFacing.Front
+                    )
+                }
+            } else {
+                if (cameraFacing == FileKitCameraFacing.Front) {
+                    // We don't know what the back camera is - is it 0? 2?
+                    putExtra("android.intent.extras.CAMERA_FACING", 1)
+                }
+            }
+
+            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+            val facing = when (cameraFacing) {
+                FileKitCameraFacing.Front -> "front"
+                FileKitCameraFacing.Back -> "rear"
+            }
+            putExtra("camerafacing", facing)
+            putExtra("previous_mode", facing)
+        }
     }
 }
 
@@ -131,7 +177,6 @@ public actual suspend fun FileKit.shareFile(
     )
 }
 
-
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
     shareSettings: FileKitShareSettings
@@ -139,12 +184,7 @@ public actual suspend fun FileKit.shareFile(
     if (files.isEmpty()) return
 
     val uris = files.map { platformFile ->
-        when (val androidFile = platformFile.androidFile) {
-            is AndroidFile.UriWrapper -> androidFile.uri
-            is AndroidFile.FileWrapper -> {
-                FileProvider.getUriForFile(context, shareSettings.authority, androidFile.file)
-            }
-        }
+        platformFile.toAndroidUri(shareSettings.authority)
     }
 
     val mimeTypes = files.map { platformFile ->
@@ -163,7 +203,7 @@ public actual suspend fun FileKit.shareFile(
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
         }
     }
-    
+
     // Create ClipData with all URIs to ensure proper permissions
     intentShareSend.clipData = if (uris.size == 1) {
         ClipData.newUri(context.contentResolver, null, uris.first())
@@ -174,14 +214,26 @@ public actual suspend fun FileKit.shareFile(
             }
         }
     }
-    intentShareSend.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    intentShareSend.flags = FLAG_GRANT_READ_URI_PERMISSION
     val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
-        setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        flags = FLAG_ACTIVITY_NEW_TASK
+        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
     }
     shareSettings.addOptionChooseIntent(chooseIntent)
 
     context.startActivity(chooseIntent)
+}
+
+public actual fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings
+) {
+    val uri = file.toAndroidUri(openFileSettings.authority)
+    val mimeType = getMimeType(file.extension)
+    val intent = Intent(ACTION_VIEW)
+    intent.setDataAndType(uri, mimeType)
+    intent.flags = FLAG_GRANT_READ_URI_PERMISSION or FLAG_ACTIVITY_NEW_TASK
+    context.startActivity(intent)
 }
 
 private suspend fun callFilePicker(

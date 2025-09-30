@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
@@ -12,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 import io.github.vinceglb.filekit.div
@@ -29,7 +29,10 @@ actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     Button(
         onClick = {
             val destinationFile = FileKit.filesDir / "photo_${Clock.System.now().toEpochMilliseconds()}.jpg"
-            takePhotoLauncher.launch(destinationFile = destinationFile)
+            takePhotoLauncher.launch(
+                cameraFacing = FileKitCameraFacing.Front,
+                destinationFile = destinationFile,
+            )
         }
     ) {
         Text("Take photo")

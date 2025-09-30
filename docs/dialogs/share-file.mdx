@@ -4,6 +4,8 @@ sidebarTitle: 'Share file'
 description: 'Open a file sharing dialog in a Kotlin Multiplatform project'
 ---
 
+import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
+
 <Check>Supported on Android and iOS targets</Check>
 
 <div className="flex justify-center gap-6">
@@ -44,57 +46,34 @@ Ensure the file you are sharing exists and is accessible. Sharing a non-existent
 
 ## Android setup
 
-Using the share file dialog on Android requires additional FileProvider configuration to securely share files with other applications. Starting from Android 7.0 (API level 24), Android restricts the sharing of file URIs between apps for security reasons. FileProvider generates secure content URIs that allow temporary access to specific files.
+<AndroidFileProviderSetup />
 
-<Info>
-For detailed information about FileProvider, see the [official Android documentation](https://developer.android.com/reference/androidx/core/content/FileProvider).
-</Info>
+3. When sharing files from custom locations, provide the `shareSettings` parameter with your app's FileProvider authority:
 
-### Why FileProvider is required
-
-Android uses FileProvider to:
-- **Enhance security**: Prevents exposing your app's internal file structure to other apps
-- **Control access**: Grants temporary, limited access to specific files only
-- **Maintain compatibility**: Required for sharing files on Android 7.0+ due to `FileUriExposedException`
-
-### Step 1: Declare FileProvider in AndroidManifest.xml
-
-Add the following FileProvider declaration inside the `<application>` tag in your Android manifest:
-
-```xml AndroidManifest.xml
-<provider
-    android:name="androidx.core.content.FileProvider"
-    android:authorities="${applicationId}.fileprovider"
-    android:exported="false"
-    android:grantUriPermissions="true">
-    <meta-data
-        android:name="android.support.FILE_PROVIDER_PATHS"
-        android:resource="@xml/file_paths" />
-</provider>
+<CodeGroup>
+```kotlin filekit-dialogs
+val file = FileKit.filesDir / "my_file.txt"
+FileKit.shareFile(
+    file = file,
+    shareSettings = FileKitShareSettings(
+        authority = "${context.packageName}.fileprovider"
+    )
+)
 ```
 
+```kotlin filekit-dialogs-compose
+val launcher = rememberShareFileLauncher()
 
-### Step 2: Create file_paths.xml
-
-Create or update `res/xml/file_paths.xml` to match the FileKit directory you use in your code:
-
-```xml res/xml/file_paths.xml
-<paths>
-    <!-- For FileKit.filesDir -->
-    <files-path name="filekit_files" path="." />
-    
-    <!-- For FileKit.cacheDir -->
-    <cache-path name="filekit_cache" path="." />
-</paths>
+val file = FileKit.filesDir / "my_file.txt"
+Button(onClick = { 
+    launcher.launch(
+        file = file,
+        shareSettings = FileKitShareSettings(
+            authority = "${context.packageName}.fileprovider"
+        )
+    )
+}) {
+    Text("Share file")
+}
 ```
-
-<Warning>
-**Important**: Include only the path type that matches your FileKit usage:
-- Use `<files-path>` if you use `FileKit.filesDir`
-- Use `<cache-path>` if you use `FileKit.cacheDir`
-- Include both if you use both directories
-</Warning>
-
-<Info>
-**Recommendation**: Use `FileKit.cacheDir` for temporary files that can be cleared by the system, and `FileKit.filesDir` for files that should persist until explicitly deleted.
-</Info>
+</CodeGroup>

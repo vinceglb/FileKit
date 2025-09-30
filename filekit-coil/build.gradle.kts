@@ -64,21 +64,14 @@ kotlin {
             dependsOn(commonMain.get())
         }
 
-        val webMain by creating {
-            dependsOn(commonMain.get())
-
-            dependencies {
-                // Coroutines
-                implementation(libs.kotlinx.coroutines.core)
-            }
+        webMain.dependencies {
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         androidMain.get().dependsOn(nonWebMain)
         jvmMain.get().dependsOn(nonWebMain)
         nativeMain.get().dependsOn(nonWebMain)
-
-        jsMain.get().dependsOn(webMain)
-        wasmJsMain.get().dependsOn(webMain)
     }
 
     compilerOptions {

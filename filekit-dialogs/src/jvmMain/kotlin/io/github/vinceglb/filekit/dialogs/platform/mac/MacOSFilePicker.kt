@@ -7,6 +7,8 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
 import io.github.vinceglb.filekit.path
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 internal class MacOSFilePicker : PlatformFilePicker {
@@ -54,15 +56,15 @@ internal class MacOSFilePicker : PlatformFilePicker {
         )
     }
 
-    private fun <T> callNativeMacOSPicker(
+    private suspend fun <T> callNativeMacOSPicker(
         mode: MacOSFilePickerMode<T>,
         directory: PlatformFile?,
         fileExtensions: Set<String>?,
         title: String?,
         macOSSettings: FileKitMacOSSettings,
-    ): T? {
+    ): T? = withContext(Dispatchers.IO) {
         val pool = Foundation.NSAutoreleasePool()
-        return try {
+        try {
             var response: T? = null
 
             Foundation.executeOnMainThread(

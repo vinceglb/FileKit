@@ -7,10 +7,16 @@ import io.github.vinceglb.filekit.div
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+public enum class FileKitCameraFacing {
+    Front, Back
+}
+
 @OptIn(ExperimentalUuidApi::class)
 public expect suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType = FileKitCameraType.Photo,
+    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
     destinationFile: PlatformFile = FileKit.cacheDir / "${Uuid.random()}.jpg",
+    openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
 ): PlatformFile?
 
 public expect suspend fun FileKit.shareFile(

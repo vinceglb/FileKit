@@ -9,22 +9,12 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSData
-import platform.Foundation.NSDocumentDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 import platform.Foundation.temporaryDirectory
 
 public actual object FileKit
-
-public actual val FileKit.filesDir: PlatformFile
-    get() = NSFileManager
-        .defaultManager
-        .URLsForDirectory(NSDocumentDirectory, NSUserDomainMask)
-        .firstOrNull()
-        ?.let { it as NSURL? }
-        ?.let(::PlatformFile)
-        ?: throw FileKitException("Could not find files directory")
 
 public actual val FileKit.cacheDir: PlatformFile
     get() = NSFileManager

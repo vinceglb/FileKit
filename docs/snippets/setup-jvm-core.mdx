@@ -3,13 +3,46 @@ FileKit needs to have your application id to handle the app directory. Your appl
 We recommend you to initialize FileKit in your `main.kt` file:
 
 ```kotlin main.kt
-fun main() = application {
+fun main() {
   // Initialize FileKit
   FileKit.init(appId = "MyApplication")
 
   // Start your application
-  Window(onCloseRequest = ::exitApplication) {
-    // ...
+  application {
+      Window(onCloseRequest = ::exitApplication) {
+          // ...
+      }
   }
 }
+```
+
+The application ID is used to create user-specific directories on different operating systems:
+- Windows: `%APPDATA%\your.application.id\`
+- macOS: `~/Library/Application Support/your.application.id/`
+- Linux: `~/.local/share/your.application.id/`
+
+#### Custom Cache and Data Directories
+
+For applications that need custom directory paths (e.g., portable applications or specific deployment scenarios), you can specify custom cache and data directories:
+
+```kotlin main.kt
+fun main() {
+  val appDir = File(System.getProperty("user.home"), ".myapp")
+  FileKit.init(
+      appId = "MyApplication",
+      filesDir = File(appDir, "data"),
+      cacheDir = File(appDir, "cache")
+  )
+
+  // ...
+}
+```
+
+#### ProGuard Configuration
+
+If you're using ProGuard or code obfuscation on JVM platforms, add these rules to your `proguard-rules.pro`:
+
+```proguard
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
 ```

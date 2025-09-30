@@ -15,3 +15,8 @@ public expect suspend fun FileKit.openFileSaver(
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?
+
+public expect fun FileKit.openFileWithDefaultApplication(
+    file: PlatformFile,
+    openFileSettings: FileKitOpenFileSettings = FileKitOpenFileSettings.createDefault()
+)

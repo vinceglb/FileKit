@@ -56,7 +56,11 @@ public actual data class PlatformFile(
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
-    PlatformFile(NSURL(string = path.toString()))
+    if (path.isAbsolute) {
+        PlatformFile(NSURL.fileURLWithPath(path = path.toString()))
+    } else {
+        PlatformFile(NSURL(string = path.toString()))
+    }
 
 public actual fun PlatformFile.toKotlinxIoPath(): Path =
     nsUrl.toKotlinxPath()

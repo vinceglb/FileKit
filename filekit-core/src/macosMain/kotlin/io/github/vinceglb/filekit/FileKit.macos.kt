@@ -9,6 +9,8 @@ import platform.AppKit.NSBitmapImageRep
 import platform.AppKit.NSImage
 import platform.AppKit.NSImageCompressionFactor
 import platform.AppKit.representationUsingType
+import platform.Foundation.NSApplicationSupportDirectory
+import platform.Foundation.NSBundle
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSMakeRect
@@ -17,10 +19,29 @@ import platform.Foundation.NSPicturesDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUserDomainMask
 
-public actual suspend fun FileKit.saveImageToGallery(
-    bytes: ByteArray,
-    filename: String
-): Unit = FileKit.pictureDir / filename write bytes
+public actual val FileKit.filesDir: PlatformFile
+    get() {
+        val appSupportDir = NSFileManager
+            .defaultManager
+            .URLsForDirectory(NSApplicationSupportDirectory, NSUserDomainMask)
+            .firstOrNull()
+            ?.let { it as NSURL? }
+            ?: throw FileKitException("Could not find Application Support directory")
+        
+        val bundleId = NSBundle.mainBundle.bundleIdentifier
+            ?: throw FileKitException("Could not find bundle identifier")
+        
+        val appDir = appSupportDir.URLByAppendingPathComponent(bundleId, true)
+            ?: throw FileKitException("Could not create app directory path")
+        
+        val filesDir = PlatformFile(nsUrl = appDir)
+
+        if (!filesDir.exists()) {
+            filesDir.createDirectories()
+        }
+
+        return filesDir
+    }
 
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
@@ -34,6 +55,11 @@ public val FileKit.pictureDir: PlatformFile
         ?.let { it as NSURL? }
         ?.let(::PlatformFile)
         ?: throw IllegalStateException("Could not find pictures directory")
+
+public actual suspend fun FileKit.saveImageToGallery(
+    bytes: ByteArray,
+    filename: String
+): Unit = FileKit.pictureDir / filename write bytes
 
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun compress(

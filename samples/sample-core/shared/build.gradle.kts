@@ -59,10 +59,6 @@ kotlin {
         androidMain.get().dependsOn(nonWebMain)
         jvmMain.get().dependsOn(nonWebMain)
         nativeMain.get().dependsOn(nonWebMain)
-
-        val webMain by creating { dependsOn(commonMain.get()) }
-        jsMain.get().dependsOn(webMain)
-        wasmJsMain.get().dependsOn(webMain)
     }
 }
 
