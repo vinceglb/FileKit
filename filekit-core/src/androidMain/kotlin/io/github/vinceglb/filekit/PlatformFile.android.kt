@@ -109,7 +109,7 @@ public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
             FileKit.context,
             androidFile.uri
         )?.isDirectory == true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         false
     }
 }
@@ -283,13 +283,15 @@ public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
         }
     }
 
+@Deprecated("Please do not use this anymore. Keep it for backward compatibility only.")
 private const val BOOKMARK_FILE_PREFIX = "<<file>>"
+@Deprecated("Please do not use this anymore. Keep it for backward compatibility only.")
 private const val BOOKMARK_URI_PREFIX = "<<uri>>"
 
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
     when (androidFile) {
         is AndroidFile.FileWrapper -> {
-            val data = "$BOOKMARK_FILE_PREFIX${androidFile.file.path}"
+            val data = androidFile.file.path
             BookmarkData(data.encodeToByteArray())
         }
 
@@ -310,7 +312,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             }
 
             FileKit.context.contentResolver.takePersistableUriPermission(uriToPermission, flags)
-            val data = "$BOOKMARK_URI_PREFIX${androidFile.uri}"
+            val data = androidFile.uri.toString()
             BookmarkData(data.encodeToByteArray())
         }
     }
@@ -321,18 +323,35 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
 ): PlatformFile {
     val str = bookmarkData.bytes.decodeToString()
     return when {
-        str.startsWith(BOOKMARK_FILE_PREFIX) -> {
-            val filePath = str.removePrefix(BOOKMARK_FILE_PREFIX)
+        // Content Uri always starts with "content://"
+        str.startsWith("content://") -> {
+            val uriString = str
+            @SuppressLint("UseKtx")
+            PlatformFile(Uri.parse(uriString))
+        }
+
+        // Very rarely used Uri, discouraged and deprecated, may starts with "file://"
+        str.startsWith("file://") -> {
+            val filePath = str.removePrefix("file://")
             PlatformFile(File(filePath))
         }
 
+        // TODO remove this in future
         str.startsWith(BOOKMARK_URI_PREFIX) -> {
             val uriString = str.removePrefix(BOOKMARK_URI_PREFIX)
             @SuppressLint("UseKtx")
             PlatformFile(Uri.parse(uriString))
         }
+        str.startsWith(BOOKMARK_FILE_PREFIX) -> {
+            val filePath = str.removePrefix(BOOKMARK_FILE_PREFIX)
+            PlatformFile(File(filePath))
+        }
 
-        else -> throw FileKitException("Invalid bookmark data format: $str")
+        // Removes a chance of exception throwing
+        else -> {
+            val filePath = str
+            PlatformFile(File(filePath))
+        }
     }
 }
 
