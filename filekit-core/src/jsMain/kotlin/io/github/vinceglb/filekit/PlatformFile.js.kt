@@ -67,4 +67,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
     }
 }
 
-public actual fun PlatformFile.mimeType(): MimeType? = MimeType.parse(file.type)
+public actual fun PlatformFile.mimeType(): MimeType? =
+    takeIf { file.type.isNotBlank() }
+        ?.let { MimeType.parse(file.type) }
+
