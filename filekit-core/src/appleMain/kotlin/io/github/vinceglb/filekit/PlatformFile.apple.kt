@@ -1,25 +1,43 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
+import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFStringCreateWithCString
+import platform.CoreFoundation.CFStringGetCString
+import platform.CoreFoundation.CFStringGetLength
+import platform.CoreFoundation.CFStringGetMaximumSizeForEncoding
+import platform.CoreFoundation.CFStringRef
+import platform.CoreFoundation.kCFAllocatorDefault
+import platform.CoreFoundation.kCFStringEncodingUTF8
+import platform.CoreServices.UTTypeCopyPreferredTagWithClass
+import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLContentTypeKey
+import platform.Foundation.NSURLResourceKey
+import platform.Foundation.NSURLTypeIdentifierKey
+import platform.UniformTypeIdentifiers.UTType
 
 public actual data class PlatformFile(
     val nsUrl: NSURL,
@@ -73,6 +91,94 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
             .list(toKotlinxIoPath())
             .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
     }
+
+public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess { file ->
+    file.nsUrl.mimeTypeFromMetadata()
+        ?: file.nsUrl.mimeTypeFromExtension()
+}?.takeIf { it.isNotBlank() }?.let(MimeType::parse)
+
+private fun NSURL.mimeTypeFromMetadata(): String? {
+    val contentType = resourceValue(NSURLContentTypeKey) as? UTType
+
+    val fromContentType = contentType?.preferredMIMEType
+    if (!fromContentType.isNullOrBlank()) {
+        return fromContentType
+    }
+
+    val identifier = contentType?.identifier
+        ?: resourceValue(NSURLTypeIdentifierKey) as? String
+
+    return identifier?.let(::mimeTypeFromUti)
+}
+
+private fun NSURL.mimeTypeFromExtension(): String? =
+    pathExtension
+        ?.takeIf { it.isNotBlank() }
+        ?.let { ext -> UTType.typeWithFilenameExtension(ext)?.preferredMIMEType }
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+private fun NSURL.resourceValue(key: NSURLResourceKey?): Any? = memScoped {
+    val valuePtr = alloc<ObjCObjectVar<Any?>>()
+    val success = getResourceValue(value = valuePtr.ptr, forKey = key, error = null)
+    if (success) valuePtr.value else null
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun mimeTypeFromUti(uti: String): String? {
+    if (uti.isBlank()) {
+        return null
+    }
+
+    return memScoped {
+        val cfUti = CFStringCreateWithCString(
+            alloc = kCFAllocatorDefault,
+            cStr = uti,
+            encoding = kCFStringEncodingUTF8
+        ) ?: return@memScoped null
+
+        val mimeRef = UTTypeCopyPreferredTagWithClass(
+            inUTI = cfUti,
+            inTagClass = kUTTagClassMIMEType
+        )
+
+        CFRelease(cfUti)
+
+        val mimeValue = cfStringToKString(mimeRef)
+
+        mimeRef?.let { CFRelease(it) }
+
+        mimeValue
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+private fun cfStringToKString(cfString: CFStringRef?): String? {
+    if (cfString == null) {
+        return null
+    }
+
+    val length = CFStringGetLength(cfString)
+
+    val maxSize = CFStringGetMaximumSizeForEncoding(
+        length = length,
+        encoding = kCFStringEncodingUTF8
+    ) + 1
+
+    return memScoped {
+        val buffer = allocArray<ByteVar>(maxSize.toInt())
+
+        if (
+            CFStringGetCString(
+                theString = cfString,
+                buffer = buffer,
+                bufferSize = maxSize,
+                encoding = kCFStringEncodingUTF8
+            )
+        ) {
+            buffer.toKString()
+        } else null
+    }
+}
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
     nsUrl.startAccessingSecurityScopedResource()

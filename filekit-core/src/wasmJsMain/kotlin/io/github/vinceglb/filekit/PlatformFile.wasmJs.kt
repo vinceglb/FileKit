@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
+import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.khronos.webgl.ArrayBuffer
@@ -65,3 +66,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
         reader.readAsArrayBuffer(file)
     }
 }
+
+public actual fun PlatformFile.mimeType(): MimeType? =
+    takeIf { file.type.isNotBlank() }
+        ?.let { MimeType.parse(file.type) }

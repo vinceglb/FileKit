@@ -92,6 +92,9 @@ val absolutePath: String = file.absolutePath()
 
 // Get the absolute file
 val absoluteFile: PlatformFile = file.absoluteFile()
+
+// Check the MIME type (null for directories or unknown types)
+val mimeType: MimeType? = file.mimeType()
 ```
 
 ## File operations
@@ -144,6 +147,16 @@ file.write(bytes)
 // Write string to the file
 file.writeString(content)
 ```
+
+### Determining MIME types
+
+Use `mimeType()` to ask the underlying platform for the best-known media type. It returns `null` when the value is unknown (for example, directories or proprietary containers).
+
+- **Apple platforms**: FileKit first queries provider metadata (e.g., from the Files app or iCloud Drive) and falls back to the filename extension when needed, so even extension-less documents can resolve to a MIME type.
+- **Android**: The resolver consults the `ContentResolver` for `content://` URIs and then falls back to `MimeTypeMap` if necessary.
+- **Desktop & Web**: The lookup is derived from the file extension.
+
+This utility is helpful when you need to validate file types, populate upload headers, or customise previews based on content.
 
 ## Working with directories
 

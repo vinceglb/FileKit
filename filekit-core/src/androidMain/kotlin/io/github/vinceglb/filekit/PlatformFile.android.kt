@@ -5,9 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
+import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -149,6 +151,39 @@ public actual fun PlatformFile.absolutePath(): String = when (androidFile) {
 public actual fun PlatformFile.absoluteFile(): PlatformFile = when (androidFile) {
     is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
     is AndroidFile.UriWrapper -> this
+}
+
+public actual fun PlatformFile.mimeType(): MimeType? {
+    if (isDirectory()) {
+        return null
+    }
+
+    return when (androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val mimeTypeValue = getMimeTypeValueFromExtension(extension)
+            mimeTypeValue?.let(MimeType::parse)
+        }
+
+        is AndroidFile.UriWrapper -> {
+            val mimeTypeValueFromContentResolver =
+                FileKit.context.contentResolver.getType(androidFile.uri)
+            val mimeTypeValue =
+                mimeTypeValueFromContentResolver ?: getMimeTypeValueFromExtension(extension)
+            mimeTypeValue?.let(MimeType::parse)
+        }
+    }
+}
+
+private fun getMimeTypeValueFromExtension(extension: String): String? {
+    val safeExtension = extension.trim().lowercase()
+
+    if (safeExtension.isEmpty()) return null
+
+    return MimeTypeMap
+        .getSingleton()
+        .getMimeTypeFromExtension(safeExtension)
+        ?.trim()
+        ?.lowercase()
 }
 
 public actual fun PlatformFile.source(): RawSource = when (androidFile) {
