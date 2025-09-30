@@ -150,8 +150,13 @@ public actual suspend fun FileKit.compressImage(
     // Step 3: Resize the BufferedImage
     val imageType = when (imageFormat) {
         ImageFormat.JPEG -> BufferedImage.TYPE_INT_RGB
-        ImageFormat.PNG if originalImage.colorModel.hasAlpha() -> BufferedImage.TYPE_INT_ARGB
-        ImageFormat.PNG -> BufferedImage.TYPE_INT_RGB
+        ImageFormat.PNG -> {
+            if (originalImage.colorModel.hasAlpha()) {
+                BufferedImage.TYPE_INT_ARGB
+            } else {
+                BufferedImage.TYPE_INT_RGB
+            }
+        }
     }
     val resizedImage = BufferedImage(newWidth, newHeight, imageType)
     val graphics: Graphics2D = resizedImage.createGraphics()

@@ -89,10 +89,6 @@ kotlin {
         wasmJsMain.dependencies {
             implementation(libs.kotlinx.browser)
         }
-
-        all {
-            languageSettings.enableLanguageFeature("WhenGuards")
-        }
     }
 
     compilerOptions {
