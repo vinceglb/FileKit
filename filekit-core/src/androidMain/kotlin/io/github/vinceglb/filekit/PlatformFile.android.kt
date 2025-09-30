@@ -47,7 +47,8 @@ public actual fun PlatformFile(path: String): PlatformFile {
     // If the path looks like an Android Uri ("content://" or "file://" scheme),
     // parse it accordingly, otherwise treat it as a regular filesystem path.
     return if (path.startsWith("content://", ignoreCase = true) ||
-        path.startsWith("file://", ignoreCase = true)) {
+        path.startsWith("file://", ignoreCase = true)
+    ) {
         @SuppressLint("UseKtx")
         PlatformFile(AndroidFile.UriWrapper(Uri.parse(path)))
     } else {
@@ -285,6 +286,7 @@ public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
 
 @Deprecated("Please do not use this anymore. Keep it for backward compatibility only.")
 private const val BOOKMARK_FILE_PREFIX = "<<file>>"
+
 @Deprecated("Please do not use this anymore. Keep it for backward compatibility only.")
 private const val BOOKMARK_URI_PREFIX = "<<uri>>"
 
@@ -297,14 +299,15 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
 
         is AndroidFile.UriWrapper -> {
             val uri = androidFile.uri
-            val authority = uri.authority ?: throw FileKitException("Uri authority is null")
 
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            val flags =
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
             // Check if this is a tree URI (directory) or document URI (file)
             val uriToPermission = if (isDirectory()) {
                 // For directories, we need to get the tree URI
                 val documentId = DocumentsContract.getTreeDocumentId(uri)
+                val authority = uri.authority ?: throw FileKitException("Uri authority is null")
                 DocumentsContract.buildTreeDocumentUri(authority, documentId)
             } else {
                 // For files, use the URI directly
@@ -316,6 +319,26 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             BookmarkData(data.encodeToByteArray())
         }
     }
+}
+
+public actual fun PlatformFile.releaseBookmark() {
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> {} // No action needed for regular files
+        is AndroidFile.UriWrapper -> {
+            val uriToRelease = androidFile.uri.getUriToRelease(isDirectory())
+            val flags =
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            FileKit.context.contentResolver.releasePersistableUriPermission(uriToRelease, flags)
+        }
+    }
+}
+
+private fun Uri.getUriToRelease(isDirectory: Boolean): Uri = if (isDirectory) {
+    val authority = this.authority ?: throw FileKitException("Uri authority is null")
+    val documentId = DocumentsContract.getTreeDocumentId(this)
+    DocumentsContract.buildTreeDocumentUri(authority, documentId)
+} else {
+    this
 }
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
@@ -342,6 +365,7 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
             @SuppressLint("UseKtx")
             PlatformFile(Uri.parse(uriString))
         }
+
         str.startsWith(BOOKMARK_FILE_PREFIX) -> {
             val filePath = str.removePrefix(BOOKMARK_FILE_PREFIX)
             PlatformFile(File(filePath))
