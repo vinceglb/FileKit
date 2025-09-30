@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
+import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
@@ -30,11 +31,13 @@ import platform.CoreFoundation.CFStringRef
 import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFStringEncodingUTF8
 import platform.CoreServices.UTTypeCopyPreferredTagWithClass
-import platform.CoreServices.UTTypeCreatePreferredIdentifierForTag
-import platform.CoreServices.kUTTagClassFilenameExtension
 import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLContentTypeKey
+import platform.Foundation.NSURLResourceKey
+import platform.Foundation.NSURLTypeIdentifierKey
+import platform.UniformTypeIdentifiers.UTType
 
 public actual data class PlatformFile(
     val nsUrl: NSURL,
@@ -89,51 +92,62 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
             .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
     }
 
+public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess { file ->
+    file.nsUrl.mimeTypeFromMetadata()
+        ?: file.nsUrl.mimeTypeFromExtension()
+}?.takeIf { it.isNotBlank() }?.let(MimeType::parse)
+
+private fun NSURL.mimeTypeFromMetadata(): String? {
+    val contentType = resourceValue(NSURLContentTypeKey) as? UTType
+
+    val fromContentType = contentType?.preferredMIMEType
+    if (!fromContentType.isNullOrBlank()) {
+        return fromContentType
+    }
+
+    val identifier = contentType?.identifier
+        ?: resourceValue(NSURLTypeIdentifierKey) as? String
+
+    return identifier?.let(::mimeTypeFromUti)
+}
+
+private fun NSURL.mimeTypeFromExtension(): String? =
+    pathExtension
+        ?.takeIf { it.isNotBlank() }
+        ?.let { ext -> UTType.typeWithFilenameExtension(ext)?.preferredMIMEType }
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+private fun NSURL.resourceValue(key: NSURLResourceKey?): Any? = memScoped {
+    val valuePtr = alloc<ObjCObjectVar<Any?>>()
+    val success = getResourceValue(value = valuePtr.ptr, forKey = key, error = null)
+    if (success) valuePtr.value else null
+}
+
 @OptIn(ExperimentalForeignApi::class)
-public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess {
-    if (extension.isBlank()) {
+private fun mimeTypeFromUti(uti: String): String? {
+    if (uti.isBlank()) {
         return null
     }
 
-    memScoped {
-        val cfExtension: CFStringRef? = CFStringCreateWithCString(
+    return memScoped {
+        val cfUti = CFStringCreateWithCString(
             alloc = kCFAllocatorDefault,
-            cStr = extension.lowercase(),
+            cStr = uti,
             encoding = kCFStringEncodingUTF8
-        )
+        ) ?: return@memScoped null
 
-        if (cfExtension == null) {
-            return null
-        }
-
-        val utiRef: CFStringRef? = UTTypeCreatePreferredIdentifierForTag(
-            inTagClass = kUTTagClassFilenameExtension,
-            inTag = cfExtension,
-            inConformingToUTI = null
-        )
-
-        CFRelease(cfExtension)
-
-        if (utiRef == null) {
-            return null
-        }
-
-        val mimeRef: CFStringRef? = UTTypeCopyPreferredTagWithClass(
-            inUTI = utiRef,
+        val mimeRef = UTTypeCopyPreferredTagWithClass(
+            inUTI = cfUti,
             inTagClass = kUTTagClassMIMEType
         )
 
-        CFRelease(utiRef)
+        CFRelease(cfUti)
 
-        if (mimeRef == null) {
-            return null
-        }
+        val mimeValue = cfStringToKString(mimeRef)
 
-        val mime = cfStringToKString(mimeRef)
+        mimeRef?.let { CFRelease(it) }
 
-        CFRelease(mimeRef)
-
-        return mime?.let(MimeType::parse)
+        mimeValue
     }
 }
 
