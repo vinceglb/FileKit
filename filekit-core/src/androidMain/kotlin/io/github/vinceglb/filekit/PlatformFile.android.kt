@@ -345,7 +345,8 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData
 ): PlatformFile {
     val str = bookmarkData.bytes.decodeToString()
-    return when {
+
+    val platformFile = when {
         // Content Uri always starts with "content://"
         str.startsWith("content://") -> {
             val uriString = str
@@ -377,6 +378,12 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
             PlatformFile(File(filePath))
         }
     }
+
+    if (!platformFile.exists()) {
+        throw FileKitException("Bookmark target is no longer accessible")
+    }
+
+    return platformFile
 }
 
 private fun getUriFileSize(uri: Uri): Long? {
