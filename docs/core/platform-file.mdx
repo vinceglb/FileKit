@@ -87,6 +87,12 @@ val size: Long = file.size()
 // Get the parent directory
 val parent: PlatformFile? = file.parent()
 
+@OptIn(ExperimentalTime::class)
+val createdAt: Instant? = file.createdAt()
+
+@OptIn(ExperimentalTime::class)
+val lastModified: Instant = file.lastModified()
+
 // Get the absolute path string
 val absolutePath: String = file.absolutePath()
 
