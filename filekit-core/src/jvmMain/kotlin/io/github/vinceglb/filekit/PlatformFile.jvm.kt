@@ -9,6 +9,9 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 public actual data class PlatformFile(
     val file: File,
@@ -43,6 +46,19 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     withScopedAccess {
         SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
     }
+
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.createdAt(): Instant? {
+    val attributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+    val timestamp = attributes.creationTime().toMillis()
+    return Instant.fromEpochMilliseconds(timestamp)
+}
+
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.lastModified(): Instant {
+    val timestamp = this.file.lastModified()
+    return Instant.fromEpochMilliseconds(timestamp)
+}
 
 public actual fun PlatformFile.mimeType(): MimeType? {
     val mimeTypeValue = try {

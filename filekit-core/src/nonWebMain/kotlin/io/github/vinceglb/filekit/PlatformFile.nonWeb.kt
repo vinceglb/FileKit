@@ -12,6 +12,8 @@ import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlinx.io.writeString
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 public expect fun PlatformFile(path: Path): PlatformFile
 
@@ -41,6 +43,12 @@ public expect fun PlatformFile.isDirectory(): Boolean
 public expect fun PlatformFile.isAbsolute(): Boolean
 
 public expect fun PlatformFile.exists(): Boolean
+
+@OptIn(ExperimentalTime::class)
+public expect fun PlatformFile.createdAt(): Instant?
+
+@OptIn(ExperimentalTime::class)
+public expect fun PlatformFile.lastModified(): Instant
 
 public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) {

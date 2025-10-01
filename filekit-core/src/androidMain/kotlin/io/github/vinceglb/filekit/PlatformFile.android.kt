@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
@@ -20,6 +21,10 @@ import kotlinx.io.asSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.attribute.BasicFileAttributes
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 public actual data class PlatformFile(
     val androidFile: AndroidFile
@@ -152,6 +157,44 @@ public actual fun PlatformFile.absolutePath(): String = when (androidFile) {
 public actual fun PlatformFile.absoluteFile(): PlatformFile = when (androidFile) {
     is AndroidFile.FileWrapper -> PlatformFile(SystemFileSystem.resolve(toKotlinxIoPath()))
     is AndroidFile.UriWrapper -> this
+}
+
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.createdAt(): Instant? {
+    return this.androidFile.let { androidFile ->
+        when (androidFile) {
+            is AndroidFile.FileWrapper -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val attributes = Files.readAttributes(
+                        androidFile.file.toPath(),
+                        BasicFileAttributes::class.java
+                    )
+                    val timestamp = attributes.creationTime().toMillis()
+                    Instant.fromEpochMilliseconds(timestamp)
+                } else {
+                    // Fallback for older Android versions
+                    null
+                }
+            }
+
+            is AndroidFile.UriWrapper -> null
+        }
+    }
+}
+
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.lastModified(): Instant {
+    val timestamp = this.androidFile.let { androidFile ->
+        when (androidFile) {
+            is AndroidFile.FileWrapper -> androidFile.file.lastModified()
+            is AndroidFile.UriWrapper -> DocumentFile
+                .fromSingleUri(FileKit.context, androidFile.uri)
+                ?.lastModified()
+                ?: throw IllegalStateException("Unable to get last modified date for URI")
+        }
+    }
+
+    return Instant.fromEpochMilliseconds(timestamp)
 }
 
 public actual fun PlatformFile.mimeType(): MimeType? {

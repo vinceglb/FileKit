@@ -32,12 +32,18 @@ import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFStringEncodingUTF8
 import platform.CoreServices.UTTypeCopyPreferredTagWithClass
 import platform.CoreServices.kUTTagClassMIMEType
+import platform.Foundation.NSDate
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
+import platform.Foundation.NSURLContentModificationDateKey
 import platform.Foundation.NSURLContentTypeKey
+import platform.Foundation.NSURLCreationDateKey
 import platform.Foundation.NSURLResourceKey
 import platform.Foundation.NSURLTypeIdentifierKey
+import platform.Foundation.timeIntervalSince1970
 import platform.UniformTypeIdentifiers.UTType
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 public actual data class PlatformFile(
     val nsUrl: NSURL,
@@ -91,6 +97,20 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
             .list(toKotlinxIoPath())
             .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
     }
+
+@OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
+public actual fun PlatformFile.createdAt(): Instant? {
+    val values = this.nsUrl.resourceValuesForKeys(listOf(NSURLCreationDateKey), null)
+    val date = values?.get(NSURLCreationDateKey) as? NSDate
+    return Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
+}
+
+@OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
+public actual fun PlatformFile.lastModified(): Instant {
+    val values = this.nsUrl.resourceValuesForKeys(listOf(NSURLContentModificationDateKey), null)
+    val date = values?.get(NSURLContentModificationDateKey) as? NSDate
+    return Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
+}
 
 public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess { file ->
     file.nsUrl.mimeTypeFromMetadata()
