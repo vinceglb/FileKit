@@ -18,7 +18,7 @@ class Storage {
 
     suspend fun saveBookmark(platformFile: PlatformFile?) {
         when (platformFile) {
-            null -> previousFolder.delete()
+            null -> previousFolder.delete(mustExist = false)
             else -> {
                 val bookmark = platformFile.bookmarkData()
                 previousFolder.write(bookmark.bytes)
