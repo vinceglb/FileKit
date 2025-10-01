@@ -68,12 +68,13 @@ public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
 
 public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Unit =
     withContext(Dispatchers.IO) {
-        val source = platformFile.source()
-        val size = platformFile.size()
-        this@write
-            .sink()
-            .buffered()
-            .use { it.write(source, size) }
+        platformFile.source().use { source ->
+            val size = platformFile.size()
+            this@write
+                .sink()
+                .buffered()
+                .use { it.write(source, size) }
+        }
     }
 
 public suspend fun PlatformFile.writeString(string: String): Unit =
