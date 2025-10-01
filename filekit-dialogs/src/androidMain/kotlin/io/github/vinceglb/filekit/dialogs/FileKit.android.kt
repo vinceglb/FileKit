@@ -314,7 +314,13 @@ private suspend fun callFilePicker(
 private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return fileExtensions
-        ?.mapNotNull { mimeTypeMap.getMimeTypeFromExtension(it) }
+        ?.map {
+            when(it) {
+                "csv" -> listOf("text/csv", "application/csv", "application/x-csv", "text/comma-separated-values", "text/x-comma-separated-values", "text/x-csv")
+                else -> listOf(mimeTypeMap.getMimeTypeFromExtension(it))
+            }
+        }
+        ?.let { res -> res.flatten().mapNotNull { it } }
         ?.takeIf { it.isNotEmpty() }
         ?.toTypedArray()
         ?: arrayOf("*/*")
