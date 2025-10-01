@@ -175,7 +175,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/../../..\"\n./gradlew :samples:sample-file-explorer:composeApp:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/../../..\"\n\nexport JAVA_HOME=$(/usr/libexec/java_home -v 21)\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\n\n./gradlew :samples:sample-file-explorer:composeApp:embedAndSignAppleFrameworkForXcode --info\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
