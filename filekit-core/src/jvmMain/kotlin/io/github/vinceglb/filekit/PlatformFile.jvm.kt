@@ -62,6 +62,8 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
     BookmarkData(file.path.encodeToByteArray())
 }
 
+public actual fun PlatformFile.releaseBookmark() {}
+
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData
 ): PlatformFile {

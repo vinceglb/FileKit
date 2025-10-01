@@ -106,6 +106,8 @@ public fun PlatformFile.resolve(relative: String): PlatformFile =
 
 public expect suspend fun PlatformFile.bookmarkData(): BookmarkData
 
+public expect fun PlatformFile.releaseBookmark()
+
 public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: BookmarkData): PlatformFile
 
 public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFile =

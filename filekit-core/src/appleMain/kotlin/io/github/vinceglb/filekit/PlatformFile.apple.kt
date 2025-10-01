@@ -199,6 +199,8 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
     }
 }
 
+public actual fun PlatformFile.releaseBookmark() {}
+
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData
