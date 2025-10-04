@@ -10,6 +10,7 @@ import org.w3c.files.File
 
 public actual object FileKit
 
+@OptIn(ExperimentalWasmJsInterop::class)
 public actual suspend fun FileKit.download(
     bytes: ByteArray,
     fileName: String,

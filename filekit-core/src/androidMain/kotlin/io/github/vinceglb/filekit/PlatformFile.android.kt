@@ -21,12 +21,14 @@ import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+@Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val androidFile: AndroidFile
 ) {

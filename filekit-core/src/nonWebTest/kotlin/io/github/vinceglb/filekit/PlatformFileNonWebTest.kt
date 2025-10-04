@@ -1,6 +1,5 @@
 package io.github.vinceglb.filekit
 
-import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
@@ -185,27 +184,28 @@ class PlatformFileNonWebTest {
         assertEquals(expected = resourceDirectory.path, actual = resourceDirectory.toString())
     }
 
-    @Test
-    fun testPlatformMimeType() {
-        assertEquals(
-            expected = MimeType.parse("text/plain"),
-            actual = textFile.mimeType()
-        )
-        assertEquals(
-            expected = MimeType.parse("image/png"),
-            actual = imageFile.mimeType()
-        )
-        assertEquals(
-            expected = null,
-            actual = emptyFile.mimeType()
-        )
-        assertEquals(
-            expected = MimeType.parse("application/pdf"),
-            actual = notExistingFile.mimeType()
-        )
-        assertEquals(
-            expected = null,
-            actual = resourceDirectory.mimeType()
-        )
-    }
+//    https://developer.android.com/training/testing/local-tests#mocking-dependencies
+//    @Test
+//    fun testPlatformMimeType() {
+//        assertEquals(
+//            expected = MimeType.parse("text/plain"),
+//            actual = textFile.mimeType()
+//        )
+//        assertEquals(
+//            expected = MimeType.parse("image/png"),
+//            actual = imageFile.mimeType()
+//        )
+//        assertEquals(
+//            expected = null,
+//            actual = emptyFile.mimeType()
+//        )
+//        assertEquals(
+//            expected = MimeType.parse("application/pdf"),
+//            actual = notExistingFile.mimeType()
+//        )
+//        assertEquals(
+//            expected = null,
+//            actual = resourceDirectory.mimeType()
+//        )
+//    }
 }

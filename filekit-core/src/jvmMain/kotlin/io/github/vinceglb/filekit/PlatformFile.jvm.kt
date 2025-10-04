@@ -5,14 +5,16 @@ import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.Path
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import kotlinx.serialization.Serializable
 
+@Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val file: File,
 ) {

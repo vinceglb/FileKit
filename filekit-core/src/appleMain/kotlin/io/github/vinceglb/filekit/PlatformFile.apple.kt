@@ -23,6 +23,7 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.Serializable
 import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFStringCreateWithCString
 import platform.CoreFoundation.CFStringGetCString
@@ -46,6 +47,7 @@ import platform.UniformTypeIdentifiers.UTType
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+@Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val nsUrl: NSURL,
 ) {
@@ -217,16 +219,6 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             error = null
         ) ?: throw FileKitException("Failed to create bookmark data")
         BookmarkData(bookmarkData.toByteArray())
-    }
-}
-
-internal actual suspend fun PlatformFile.prepareDestinationForWrite(
-    source: PlatformFile
-): PlatformFile = withScopedAccess {
-    if (isDirectory()) {
-        PlatformFile(toKotlinxIoPath() / source.name)
-    } else {
-        this
     }
 }
 
