@@ -87,7 +87,12 @@ kotlin {
                 implementation(libs.androidx.exifinterface)
             }
         }
-        androidUnitTest.get().dependsOn(nonWebTest)
+        androidUnitTest {
+            dependsOn(nonWebTest)
+            dependencies {
+                implementation(libs.test.android.robolectric)
+            }
+        }
         jvmMain.get().dependsOn(jvmAndNativeMain)
         jvmTest.get().dependsOn(nonWebTest)
         nativeMain.get().dependsOn(jvmAndNativeMain)

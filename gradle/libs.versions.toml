@@ -22,6 +22,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.8.0"
 material-icons-core = "1.7.3"
+test-android-robolectric = "4.16"
 vanniktech-mavenPublish = "0.34.0"
 
 [libraries]
@@ -50,6 +51,7 @@ kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material-icons-core" }
+test-android-robolectric = { module = "org.robolectric:robolectric", version.ref = "test-android-robolectric" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
