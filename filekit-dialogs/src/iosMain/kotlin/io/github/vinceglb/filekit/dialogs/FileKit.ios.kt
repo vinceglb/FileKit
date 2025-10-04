@@ -424,12 +424,12 @@ private fun callPhPicker(
         error = null
     )
 
-    // Thread-safe accumulator
-    val imported = mutableListOf<PlatformFile>()
+    // Pre-allocated array to preserve selection order
+    val orderedFiles = arrayOfNulls<PlatformFile>(pickerResults.size)
     val lock = Mutex()
 
-    // Launch a child coroutine for every copy
-    pickerResults.map { result ->
+    // Launch a child coroutine for every copy, preserving index
+    pickerResults.mapIndexed { index, result ->
         launch(Dispatchers.IO) {
             val src = suspendCancellableCoroutine<NSURL?> { cont ->
                 result.itemProvider.loadFileRepresentationForTypeIdentifier(
@@ -454,14 +454,14 @@ private fun callPhPicker(
             } ?: return@launch // skip nulls
 
             lock.withLock {
-                // TODO: Sort to match picking order?
-                imported += PlatformFile(src)
-                send(FileKitPickerState.Progress(imported.toList(), pickerResults.size))
+                // Insert at original index to preserve selection order
+                orderedFiles[index] = PlatformFile(src)
+                send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
             }
         }
     }.joinAll()
 
-    send(FileKitPickerState.Completed(imported.toList()))
+    send(FileKitPickerState.Completed(orderedFiles.filterNotNull()))
 }
 
 private val FileKitType.contentTypes: List<UTType>
