@@ -4,6 +4,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
@@ -55,6 +56,9 @@ kotlin {
 
             // Kotlinx IO
             api(libs.kotlinx.io)
+
+            // Kotlinx Serialization
+            implementation(libs.kotlinx.serialization.core)
         }
 
         commonTest.dependencies {
@@ -69,6 +73,9 @@ kotlin {
             }
         }
         val nonWebTest by creating { dependsOn(commonTest.get()) }
+        nonWebTest.dependencies {
+            implementation(libs.kotlinx.serialization.json)
+        }
 
         val jvmAndNativeMain by creating { dependsOn(nonWebMain) }
 
