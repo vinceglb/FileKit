@@ -11,6 +11,7 @@ import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
 import io.github.vinceglb.filekit.mimeType.MimeType
+import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -228,6 +229,51 @@ private fun getMimeTypeValueFromExtension(extension: String): String? {
         .getMimeTypeFromExtension(safeExtension)
         ?.trim()
         ?.lowercase()
+}
+
+private const val DEFAULT_STREAM_MIME_TYPE = "application/octet-stream"
+
+internal actual suspend fun PlatformFile.prepareDestinationForWrite(
+    source: PlatformFile
+): PlatformFile = withContext(Dispatchers.IO) {
+    if (!isDirectory()) {
+        return@withContext this@prepareDestinationForWrite
+    }
+
+    when (val target = androidFile) {
+        is AndroidFile.FileWrapper -> {
+            val path = toKotlinxIoPath() / source.name
+            PlatformFile(path)
+        }
+
+        is AndroidFile.UriWrapper -> {
+            val context = FileKit.context
+
+            val directoryDocument = DocumentFile.fromTreeUri(context, target.uri)
+                ?: DocumentFile.fromSingleUri(context, target.uri)
+                ?: throw FileKitException("Could not access Uri as DocumentFile")
+
+            directoryDocument.findFile(source.name)?.let { existing ->
+                if (existing.isDirectory) {
+                    throw FileKitException("Destination already contains a directory named ${source.name}")
+                }
+
+                return@withContext PlatformFile(existing.uri)
+            }
+
+            val mimeType = resolveMimeTypeForCopy(source)
+            val created = directoryDocument.createFile(mimeType, source.name)
+                ?: throw FileKitException("Could not create destination file in bookmarked directory")
+
+            PlatformFile(created.uri)
+        }
+    }
+}
+
+private fun resolveMimeTypeForCopy(source: PlatformFile): String {
+    return source.mimeType()?.toString()
+        ?: getMimeTypeValueFromExtension(source.extension)
+        ?: DEFAULT_STREAM_MIME_TYPE
 }
 
 public actual fun PlatformFile.source(): RawSource = when (androidFile) {

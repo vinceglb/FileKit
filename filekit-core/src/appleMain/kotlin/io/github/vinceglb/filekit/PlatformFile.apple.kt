@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
+import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
@@ -216,6 +217,16 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             error = null
         ) ?: throw FileKitException("Failed to create bookmark data")
         BookmarkData(bookmarkData.toByteArray())
+    }
+}
+
+internal actual suspend fun PlatformFile.prepareDestinationForWrite(
+    source: PlatformFile
+): PlatformFile = withScopedAccess {
+    if (isDirectory()) {
+        PlatformFile(toKotlinxIoPath() / source.name)
+    } else {
+        this
     }
 }
 
