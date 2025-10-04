@@ -29,6 +29,7 @@ import io.github.vinceglb.filekit.atomicMove
 import io.github.vinceglb.filekit.copyTo
 import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.dialogs.openFileSaver
+import io.github.vinceglb.filekit.dialogs.openFileWithDefaultApplication
 import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.isRegularFile
@@ -40,6 +41,7 @@ import io.github.vinceglb.filekit.size
 import io.github.vinceglb.sample.explorer.icon.Copy
 import io.github.vinceglb.sample.explorer.icon.ExplorerIcons
 import io.github.vinceglb.sample.explorer.icon.Folder
+import io.github.vinceglb.sample.explorer.icon.SquareArrowOutUpRight
 import io.github.vinceglb.sample.explorer.icon.Trash
 import io.github.vinceglb.sample.explorer.icon.Truck
 import io.github.vinceglb.sample.explorer.util.createdAt
@@ -150,6 +152,12 @@ fun FileBottomSheet(
             HorizontalDivider()
 
             if (file.isRegularFile()) {
+                FileAction(
+                    text = "Open file",
+                    icon = ExplorerIcons.SquareArrowOutUpRight,
+                    onClick = { FileKit.openFileWithDefaultApplication(file) }
+                )
+
                 FileAction(
                     text = "Duplicate file",
                     icon = ExplorerIcons.Copy,
