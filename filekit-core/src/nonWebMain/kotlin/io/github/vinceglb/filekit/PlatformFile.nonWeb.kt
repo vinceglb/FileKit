@@ -93,8 +93,12 @@ public suspend fun PlatformFile.writeString(string: String): Unit =
             .use { it.writeString(string) }
     }
 
-public suspend infix fun PlatformFile.copyTo(destination: PlatformFile): Unit =
-    destination write this
+public suspend infix fun PlatformFile.copyTo(destination: PlatformFile) {
+    val resolvedDestination = destination.prepareDestinationForWrite(source = this)
+    resolvedDestination write this
+}
+
+internal expect suspend fun PlatformFile.prepareDestinationForWrite(source: PlatformFile): PlatformFile
 
 public fun PlatformFile.createDirectories(mustCreate: Boolean = false): Unit =
     SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
