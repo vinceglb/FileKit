@@ -5,11 +5,9 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialog.cameraControllerDelegate
 import io.github.vinceglb.filekit.dialogs.FileKitDialog.documentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.FileKitDialog.phPickerDelegate
-import io.github.vinceglb.filekit.dialogs.FileKitDialog.phPickerDismissDelegate
 import io.github.vinceglb.filekit.dialogs.util.CameraControllerDelegate
 import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
-import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
 import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
@@ -67,7 +65,6 @@ private object FileKitDialog {
     // Create a reference to the picker delegate to prevent it from being garbage collected
     lateinit var documentPickerDelegate: DocumentPickerDelegate
     lateinit var phPickerDelegate: PhPickerDelegate
-    lateinit var phPickerDismissDelegate: PhPickerDismissDelegate
     lateinit var cameraControllerDelegate: CameraControllerDelegate
 }
 
@@ -180,6 +177,7 @@ public actual suspend fun FileKit.openFileSaver(
 
         // Assign the delegate to the picker controller
         pickerController.delegate = documentPickerDelegate
+        pickerController.presentationController?.delegate = documentPickerDelegate
 
         // Present the picker controller
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
@@ -342,6 +340,7 @@ private suspend fun callPicker(
 
         // Assign the delegate to the picker controller
         pickerController.delegate = documentPickerDelegate
+        pickerController.presentationController?.delegate = documentPickerDelegate
 
         // Present the picker controller
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
@@ -358,7 +357,6 @@ private suspend fun getPhPickerResults(
 ): List<PHPickerResult> = suspendCoroutine { continuation ->
     // Create a picker delegate
     phPickerDelegate = PhPickerDelegate(onFilesPicked = continuation::resume)
-    phPickerDismissDelegate = PhPickerDismissDelegate(onFilesPicked = continuation::resume)
 
     // Define configuration
     val configuration = PHPickerConfiguration(sharedPhotoLibrary())
@@ -386,7 +384,7 @@ private suspend fun getPhPickerResults(
     // Create a picker controller
     val controller = PHPickerViewController(configuration = configuration)
     controller.delegate = phPickerDelegate
-    controller.presentationController?.delegate = phPickerDismissDelegate
+    controller.presentationController?.delegate = phPickerDelegate
 
     // Present the picker controller
     UIApplication.sharedApplication.topMostViewController()?.presentViewController(
