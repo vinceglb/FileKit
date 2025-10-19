@@ -492,6 +492,11 @@ private fun getUriFileName(uri: Uri): String {
 }
 
 private fun getDocumentFile(uri: Uri): DocumentFile? {
-    return DocumentFile.fromSingleUri(FileKit.context, uri)
-        ?: DocumentFile.fromTreeUri(FileKit.context, uri)
+    val tree = DocumentFile.fromTreeUri(FileKit.context, uri)
+
+    return if (tree?.isDirectory == true) {
+        tree
+    } else {
+        DocumentFile.fromSingleUri(FileKit.context, uri)
+    }
 }
