@@ -6,6 +6,7 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
+import java.awt.EventQueue
 import java.awt.FileDialog
 import java.awt.FileDialog.LOAD
 import java.awt.Frame
@@ -62,7 +63,7 @@ internal class AwtFilePicker : PlatformFilePicker {
             else -> FileDialog(parentWindow as? Frame, title, LOAD)
         }
 
-        java.awt.EventQueue.invokeLater {
+        EventQueue.invokeLater {
             // Set multiple mode
             dialog.isMultipleMode = isMultipleMode
 
