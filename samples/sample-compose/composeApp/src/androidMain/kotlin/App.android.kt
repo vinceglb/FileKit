@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
@@ -24,6 +23,7 @@ import io.github.vinceglb.filekit.filesDir
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     val context = LocalContext.current
     val takePhotoLauncher = rememberCameraPickerLauncher(
+        cameraFacing = FileKitCameraFacing.Back,
         openCameraSettings = FileKitOpenCameraSettings(
             authority = "${context.packageName}.fileprovider"
         )
@@ -34,10 +34,7 @@ actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     Button(
         onClick = {
             val destinationFile = FileKit.filesDir / "photo_${System.currentTimeMillis()}.jpg"
-            takePhotoLauncher.launch(
-                destinationFile = destinationFile,
-                cameraFacing = FileKitCameraFacing.Front
-            )
+            takePhotoLauncher.launch(destinationFile = destinationFile)
         }
     ) {
         Text("Take photo")
