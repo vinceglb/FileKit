@@ -35,6 +35,7 @@ import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
 import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeCurrent
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
@@ -368,6 +369,9 @@ private suspend fun getPhPickerResults(
         is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
         PickerMode.Single -> 1
     }
+
+    // Use current mode per Apple documentation for faster file provider 
+    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent
 
     // Filter configuration
     configuration.filter = when (type) {
