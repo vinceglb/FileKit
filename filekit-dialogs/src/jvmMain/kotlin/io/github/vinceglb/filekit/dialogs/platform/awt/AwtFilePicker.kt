@@ -6,7 +6,9 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
+import java.awt.EventQueue
 import java.awt.FileDialog
+import java.awt.FileDialog.LOAD
 import java.awt.Frame
 import java.awt.Window
 import java.io.File
@@ -55,47 +57,33 @@ internal class AwtFilePicker : PlatformFilePicker {
         fileExtensions: Set<String>?,
         parentWindow: Window?
     ): List<File>? = suspendCancellableCoroutine { continuation ->
-        fun handleResult(value: Boolean, files: Array<File>?) {
-            if (value) {
-                val result = files?.toList()
-                continuation.resume(result)
-            }
-        }
-
         // Handle parentWindow: Dialog, Frame, or null
         val dialog = when (parentWindow) {
-            is Dialog -> object : FileDialog(parentWindow, title, LOAD) {
-                override fun setVisible(value: Boolean) {
-                    super.setVisible(value)
-                    handleResult(value, files.takeIf { it.isNotEmpty() } ?: file?.let { arrayOf(File(it)) })
-                }
-            }
-
-            else -> object : FileDialog(parentWindow as? Frame, title, LOAD) {
-                override fun setVisible(value: Boolean) {
-                    super.setVisible(value)
-                    handleResult(value, files.takeIf { it.isNotEmpty() } ?: file?.let { arrayOf(File(it)) })
-                }
-            }
+            is Dialog -> FileDialog(parentWindow, title, LOAD)
+            else -> FileDialog(parentWindow as? Frame, title, LOAD)
         }
 
-        // Set multiple mode
-        dialog.isMultipleMode = isMultipleMode
+        EventQueue.invokeLater {
+            // Set multiple mode
+            dialog.isMultipleMode = isMultipleMode
 
-        // MaxItems is not supported by FileDialog
+            // Set mime types
+            dialog.filenameFilter = FilenameFilter { _, name ->
+                fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+            }
 
-        // Set mime types
-        dialog.filenameFilter = FilenameFilter { _, name ->
-            fileExtensions?.any { name.endsWith(it) } ?: true
+            // Set initial directory
+            directory?.let { dialog.directory = directory.path }
+
+            // Show the dialog
+            dialog.isVisible = true
+
+            val files = dialog.files.takeIf { it.isNotEmpty() }
+            val result = files ?: dialog.file?.let { arrayOf(File(it)) }
+
+            continuation.resume(value = result?.toList())
         }
 
-        // Set initial directory
-        directory?.let { dialog.directory = directory.path }
-
-        // Show the dialog
-        dialog.isVisible = true
-
-        // Dispose the dialog when the continuation is cancelled
         continuation.invokeOnCancellation { dialog.dispose() }
     }
 }
