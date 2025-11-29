@@ -22,17 +22,15 @@ import kotlin.time.ExperimentalTime
 @OptIn(ExperimentalTime::class)
 @Composable
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
-    val takePhotoLauncher = rememberCameraPickerLauncher {
-        onPhotoTaken(it)
-    }
+    val takePhotoLauncher = rememberCameraPickerLauncher(
+        cameraFacing = FileKitCameraFacing.Back,
+        onResult = onPhotoTaken,
+    )
 
     Button(
         onClick = {
             val destinationFile = FileKit.filesDir / "photo_${Clock.System.now().toEpochMilliseconds()}.jpg"
-            takePhotoLauncher.launch(
-                cameraFacing = FileKitCameraFacing.Front,
-                destinationFile = destinationFile,
-            )
+            takePhotoLauncher.launch(destinationFile = destinationFile)
         }
     ) {
         Text("Take photo")
