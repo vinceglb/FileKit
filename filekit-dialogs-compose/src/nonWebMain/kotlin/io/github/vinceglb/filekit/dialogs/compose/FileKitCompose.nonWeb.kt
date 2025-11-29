@@ -9,43 +9,15 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
-import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
 
 @Composable
-public fun rememberDirectoryPickerLauncher(
+public expect fun rememberDirectoryPickerLauncher(
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
-): PickerResultLauncher {
-    // Init FileKit
-    InitFileKit()
-
-    // Coroutine
-    val coroutineScope = rememberCoroutineScope()
-
-    // Updated state
-    val currentTitle by rememberUpdatedState(title)
-    val currentDirectory by rememberUpdatedState(directory)
-    val currentOnResult by rememberUpdatedState(onResult)
-
-    // FileKit launcher
-    val returnedLauncher = remember {
-        PickerResultLauncher {
-            coroutineScope.launch {
-                val result = FileKit.openDirectoryPicker(
-                    title = currentTitle,
-                    directory = currentDirectory,
-                    dialogSettings = dialogSettings,
-                )
-                currentOnResult(result)
-            }
-        }
-    }
-
-    return returnedLauncher
-}
+): PickerResultLauncher
 
 @Composable
 public actual fun rememberFileSaverLauncher(

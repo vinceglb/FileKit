@@ -7,18 +7,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
-import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
-import io.github.vinceglb.filekit.dialogs.openCameraPicker
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
 
 @Composable
-internal actual fun InitFileKit() {}
-
-@Composable
-public actual fun rememberCameraPickerLauncher(
-    openCameraSettings: FileKitOpenCameraSettings,
+public actual fun rememberDirectoryPickerLauncher(
+    title: String?,
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
-): PhotoResultLauncher {
+): PickerResultLauncher {
     // Init FileKit
     InitFileKit()
 
@@ -26,20 +25,18 @@ public actual fun rememberCameraPickerLauncher(
     val coroutineScope = rememberCoroutineScope()
 
     // Updated state
+    val currentTitle by rememberUpdatedState(title)
+    val currentDirectory by rememberUpdatedState(directory)
     val currentOnResult by rememberUpdatedState(onResult)
-
-    // FileKit
-    val fileKit = remember { FileKit }
 
     // FileKit launcher
     val returnedLauncher = remember {
-        PhotoResultLauncher { type, cameraFacing, destinationFile ->
+        PickerResultLauncher {
             coroutineScope.launch {
-                val result = fileKit.openCameraPicker(
-                    type = type,
-                    cameraFacing = cameraFacing,
-                    destinationFile = destinationFile,
-                    openCameraSettings = openCameraSettings,
+                val result = FileKit.openDirectoryPicker(
+                    title = currentTitle,
+                    directory = currentDirectory,
+                    dialogSettings = dialogSettings,
                 )
                 currentOnResult(result)
             }

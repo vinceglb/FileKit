@@ -70,6 +70,9 @@ kotlin {
         val mobileMain by creating {
             dependsOn(nonWebMain)
         }
+        val nativeAndJvm by creating {
+            dependsOn(nonWebMain)
+        }
         val nonAndroidMain by creating {
             dependsOn(commonMain.get())
         }
@@ -86,6 +89,7 @@ kotlin {
         jvmMain {
             dependsOn(nonWebMain)
             dependsOn(nonAndroidMain)
+            dependsOn(nativeAndJvm)
             dependencies {
                 implementation(compose.ui)
             }
@@ -94,6 +98,7 @@ kotlin {
         nativeMain {
             dependsOn(nonWebMain)
             dependsOn(nonAndroidMain)
+            dependsOn(nativeAndJvm)
         }
         iosMain {
             dependsOn(mobileMain)

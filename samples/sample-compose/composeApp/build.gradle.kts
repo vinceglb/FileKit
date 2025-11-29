@@ -46,7 +46,7 @@ kotlin {
     listOf(
         iosX64(),
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
@@ -110,7 +110,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.vinceglb.sample.compose"
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = 23
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"

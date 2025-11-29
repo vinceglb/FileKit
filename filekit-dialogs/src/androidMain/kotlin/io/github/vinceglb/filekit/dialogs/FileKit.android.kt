@@ -115,7 +115,7 @@ public actual suspend fun FileKit.openCameraPicker(
     val key = UUID.randomUUID().toString()
 
     val isSaved = suspendCoroutine { continuation ->
-        val contract = CustomTakePicture(cameraFacing)
+        val contract = TakePictureWithCameraFacing(cameraFacing)
         val launcher = registry.register(key, contract) { isSaved ->
             continuation.resume(isSaved)
         }
@@ -129,41 +129,55 @@ public actual suspend fun FileKit.openCameraPicker(
     }
 }
 
-public class CustomTakePicture(
-    private val cameraFacing: FileKitCameraFacing
+/**
+ * Contract for taking a picture with camera facing support.
+ *
+ * Can be used in two ways:
+ * 1. With constructor parameter for one-time use (e.g., with suspendCoroutine)
+ * 2. With [setCameraFacing] for reusable contracts (e.g., with rememberLauncherForActivityResult)
+ */
+public class TakePictureWithCameraFacing(
+    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
 ) : ActivityResultContracts.TakePicture() {
-    override fun createIntent(context: Context, input: Uri): Intent {
-        return super.createIntent(context, input).apply {
-            // intent names taken from the flutter codebase because they are known to work and battle-tested
-            // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                val cameraCharacteristic = when (cameraFacing) {
-                    FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
-                    FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
-                }
-                putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+    private var currentCameraFacing: FileKitCameraFacing = cameraFacing
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    putExtra(
-                        "android.intent.extras.USE_FRONT_CAMERA",
-                        cameraFacing == FileKitCameraFacing.Front
-                    )
-                }
-            } else {
-                if (cameraFacing == FileKitCameraFacing.Front) {
-                    // We don't know what the back camera is - is it 0? 2?
-                    putExtra("android.intent.extras.CAMERA_FACING", 1)
-                }
-            }
+    /**
+     * Updates the camera facing for the next launch.
+     * Useful when reusing the contract with rememberLauncherForActivityResult.
+     */
+    public fun setCameraFacing(cameraFacing: FileKitCameraFacing) {
+        currentCameraFacing = cameraFacing
+    }
 
-            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
-            val facing = when (cameraFacing) {
-                FileKitCameraFacing.Front -> "front"
-                FileKitCameraFacing.Back -> "rear"
+    override fun createIntent(context: Context, input: Uri): Intent = super.createIntent(context, input).apply {
+        // Intent extras taken from the flutter codebase because they are known to work and battle-tested:
+        // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            val cameraCharacteristic = when (currentCameraFacing) {
+                FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
+                FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
             }
-            putExtra("camerafacing", facing)
-            putExtra("previous_mode", facing)
+            putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                putExtra(
+                    "android.intent.extras.USE_FRONT_CAMERA",
+                    currentCameraFacing == FileKitCameraFacing.Front,
+                )
+            }
+        } else {
+            if (currentCameraFacing == FileKitCameraFacing.Front) {
+                putExtra("android.intent.extras.CAMERA_FACING", 1)
+            }
         }
+
+        // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+        val facing = when (currentCameraFacing) {
+            FileKitCameraFacing.Front -> "front"
+            FileKitCameraFacing.Back -> "rear"
+        }
+        putExtra("camerafacing", facing)
+        putExtra("previous_mode", facing)
     }
 }
 
