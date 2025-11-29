@@ -1,7 +1,9 @@
 package io.github.vinceglb.filekit.dialogs.compose
 
+import android.provider.DocumentsContract
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -14,10 +16,12 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.core.net.toUri
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
 import io.github.vinceglb.filekit.dialogs.TakePictureWithCameraFacing
 import io.github.vinceglb.filekit.dialogs.init
 import io.github.vinceglb.filekit.dialogs.toAndroidUri
+import io.github.vinceglb.filekit.path
 
 @Composable
 internal actual fun InitFileKit() {
@@ -31,6 +35,38 @@ internal actual fun InitFileKit() {
             if (registry != null) {
                 FileKit.init(registry)
             }
+        }
+    }
+}
+
+@Composable
+public actual fun rememberDirectoryPickerLauncher(
+    title: String?,
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher {
+    // Init FileKit
+    InitFileKit()
+
+    val currentOnResult by rememberUpdatedState(onResult)
+    val currentDirectory by rememberUpdatedState(directory)
+
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { treeUri ->
+        val platformDirectory = treeUri?.let { uri ->
+            val documentUri = DocumentsContract.buildDocumentUriUsingTree(
+                uri,
+                DocumentsContract.getTreeDocumentId(uri),
+            )
+            PlatformFile(documentUri)
+        }
+        currentOnResult(platformDirectory)
+    }
+
+    return remember(launcher) {
+        PickerResultLauncher {
+            val initialUri = currentDirectory?.path?.toUri()
+            launcher.launch(initialUri)
         }
     }
 }
