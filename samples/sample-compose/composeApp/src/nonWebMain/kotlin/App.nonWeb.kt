@@ -7,7 +7,7 @@ import androidx.compose.ui.Alignment
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
-import io.github.vinceglb.filekit.toKotlinxIoPath
+import io.github.vinceglb.filekit.path
 
 @Composable
 actual fun PickDirectory(
@@ -27,6 +27,6 @@ actual fun PickDirectory(
             Text("Directory picker")
         }
 
-        Text("Selected directory: ${directory?.toKotlinxIoPath() ?: "None"}")
+        Text("Selected directory: ${directory?.path ?: "None"}")
     }
 }
