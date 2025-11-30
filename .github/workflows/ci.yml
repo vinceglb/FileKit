@@ -91,3 +91,23 @@ jobs:
 
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
+
+  test-macos:
+    name: 🍏 Test macOS
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v6
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: 🧪 Run macOS Tests
+        run: ./gradlew macosArm64Test
