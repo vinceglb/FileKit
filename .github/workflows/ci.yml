@@ -29,6 +29,17 @@ jobs:
       - name: 🔨 Build project
         run: ./gradlew assemble
 
+      - name: 🍹 Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-outputs
+          path: |
+            **/build/classes
+            **/build/libs
+            **/build/generated
+            **/build/kotlin
+          retention-days: 1
+
   test-desktop:
     name: 🖥️ Test Desktop
     needs: build
@@ -48,6 +59,11 @@ jobs:
 
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+
+      - name: 🦊 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
 
       - name: 🧪 Run JVM Tests
         run: ./gradlew jvmTest
@@ -69,6 +85,11 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: 🦊 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+
       - name: 🧪 Run Android Unit Tests
         run: ./gradlew testAndroidHostTest
 
@@ -89,6 +110,11 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      - name: 🦊 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
+
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
 
@@ -108,6 +134,11 @@ jobs:
 
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+
+      - name: 🦊 Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-outputs
 
       - name: 🧪 Run macOS Tests
         run: ./gradlew macosArm64Test
