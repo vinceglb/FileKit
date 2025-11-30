@@ -1,0 +1,38 @@
+---
+title: 'Compose Media Player'
+description: 'Video player library with FileKit support'
+---
+
+<Frame>
+  <img
+    src="https://github.com/kdroidFilter/ComposeMediaPlayer/blob/master/assets/banner.jpg?raw=true"
+    alt="Compose Media Player Banner"
+  />
+</Frame>
+
+<Card title="Compose Media Player Documentation" icon="book" href="https://github.com/kdroidFilter/ComposeMediaPlayer">
+  View setup instructions and usage examples on GitHub
+</Card>
+
+**Compose Media Player** is a feature-rich video player library designed for Compose Multiplatform. It offers comprehensive media playback capabilities:
+
+- **Multi-platform support** - Android, iOS, macOS, Windows, Linux, and WASM
+- **Playback controls** - Play, pause, seek, volume, and playback speed
+- **Subtitle support** - SRT and VTT formats with customizable styling
+- **Fullscreen mode** - Native fullscreen support across platforms
+- **Metadata extraction** - Access video title, duration, resolution, and more
+- **Audio visualization** - Left/right channel level monitoring
+
+## Platforms
+
+Compose Media Player supports Android, iOS, macOS, Windows, Linux, JS, and WASM targets.
+
+## FileKit Integration
+
+Compose Media Player has native support for FileKit's `PlatformFile` through the `openFile()` method:
+
+- Pick video files with FileKit's file picker
+- Play them directly using `playerState.openFile(platformFile)`
+
+For setup instructions and usage examples, visit the [Compose Media Player documentation](https://github.com/kdroidFilter/ComposeMediaPlayer).
+
