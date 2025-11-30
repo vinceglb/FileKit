@@ -1,0 +1,89 @@
+---
+title: 'Test Resources'
+description: 'Access test resources easily in Kotlin Multiplatform'
+---
+
+Accessing test resources in Kotlin Multiplatform can be tricky. FileKit provides a simple solution with `FileKit.projectDir`.
+
+## The Problem
+
+In KMP, there's no built-in way to access files in your test resources folder across all platforms. Traditional approaches like `ClassLoader.getResource()` don't work consistently.
+
+## The Solution
+
+FileKit provides `FileKit.projectDir` which returns the root directory of your project. From there, you can easily navigate to your test resources:
+
+```kotlin
+val resourceDirectory = FileKit.projectDir / "src/commonTest/resources"
+val testFile = resourceDirectory / "test-data.txt"
+```
+
+## Example
+
+Here's a complete example of a multiplatform test that reads a file from test resources:
+
+```kotlin
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.readString
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+class MyTest {
+    private val resourceDirectory = FileKit.projectDir / "src/commonTest/resources"
+    private val textFile = resourceDirectory / "hello.txt"
+    private val imageFile = resourceDirectory / "image.png"
+
+    @Test
+    fun readTestFile() = runTest {
+        val content = textFile.readString()
+        assertEquals(expected = "Hello, World!", actual = content)
+    }
+
+    @Test
+    fun checkFileExists() {
+        assertTrue { textFile.exists() }
+        assertTrue { imageFile.exists() }
+    }
+}
+```
+
+## Project Structure
+
+Your test resources should be placed in the appropriate source set:
+
+```
+my-project/
+├── src/
+│   ├── commonMain/
+│   ├── commonTest/
+│   │   ├── kotlin/
+│   │   │   └── MyTest.kt
+│   │   └── resources/
+│   │       ├── hello.txt
+│   │       └── image.png
+│   └── ...
+```
+
+<Tip>
+Use the `/` operator (via `div`) to build paths in a readable way:
+
+```kotlin
+val file = FileKit.projectDir / "src" / "commonTest" / "resources" / "data.json"
+```
+</Tip>
+
+## Supported Platforms
+
+`FileKit.projectDir` is available on all non-web platforms:
+
+| Platform | Supported |
+|----------|-----------|
+| Android  | ✅        |
+| iOS      | ✅        |
+| macOS    | ✅        |
+| JVM      | ✅        |
+| JS       | ❌        |
+| WASM     | ❌        |
+

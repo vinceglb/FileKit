@@ -54,6 +54,12 @@
           "integrations/krop",
           "integrations/compose-media-player"
         ]
+      },
+      {
+        "group": "Cookbook",
+        "pages": [
+          "cookbook/test-resources"
+        ]
       }
     ]
   },
