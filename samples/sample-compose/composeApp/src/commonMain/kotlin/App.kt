@@ -37,7 +37,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context = context)
+        ImageLoader
+            .Builder(context = context)
             .components { addPlatformFileSupport() }
             .build()
     }
@@ -57,7 +58,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         title = "Single file picker",
         directory = directory,
         onResult = { file -> file?.let { files += it } },
-        dialogSettings = dialogSettings
+        dialogSettings = dialogSettings,
     )
 
     val multipleFilesPicker = rememberFilePickerLauncher(
@@ -66,7 +67,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         title = "Multiple files picker",
         directory = directory,
         onResult = { file -> file?.let { files += it } },
-        dialogSettings = dialogSettings
+        dialogSettings = dialogSettings,
     )
 
     val multipleFilesPickerWithState = rememberFilePickerLauncher(
@@ -74,11 +75,17 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         mode = FileKitMode.MultipleWithState(),
         title = "Multiple files picker with progress",
         directory = directory,
-        dialogSettings = dialogSettings
+        dialogSettings = dialogSettings,
     ) { result ->
         when (result) {
-            FileKitPickerState.Cancelled -> println("File picker cancelled")
-            is FileKitPickerState.Started -> println("Started picking ${result.total} files")
+            FileKitPickerState.Cancelled -> {
+                println("File picker cancelled")
+            }
+
+            is FileKitPickerState.Started -> {
+                println("Started picking ${result.total} files")
+            }
+
             is FileKitPickerState.Progress -> {
                 println("New files processed: ${result.processed.size} / ${result.total}")
                 files += result.processed
@@ -96,7 +103,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         title = "Single file picker, only jpg / png",
         directory = directory,
         onResult = { file -> file?.let { files += it } },
-        dialogSettings = dialogSettings
+        dialogSettings = dialogSettings,
     )
 
     val filesPicker = rememberFilePickerLauncher(
@@ -105,7 +112,7 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
         title = "Multiple files picker, only jpg / png",
         directory = directory,
         onResult = { file -> file?.let { files += it } },
-        dialogSettings = dialogSettings
+        dialogSettings = dialogSettings,
     )
 
     val saver = rememberFileSaverLauncher { file ->
@@ -113,13 +120,14 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
     }
 
     val scope = rememberCoroutineScope()
+
     fun saveFile(file: PlatformFile) {
         scope.launch {
             saver.launch(
                 bytes = file.readBytes(),
                 baseName = file.nameWithoutExtension,
                 extension = file.extension,
-                directory = directory
+                directory = directory,
             )
         }
     }
@@ -150,13 +158,13 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
             }
 
             TakePhoto(
-                onPhotoTaken = { file -> file?.let { files += it } }
+                onTakePhoto = { file -> file?.let { files += it } },
             )
 
             PickDirectory(
                 dialogSettings = dialogSettings,
                 directory = directory,
-                onDirectoryPicked = { directory = it }
+                onPickDirectory = { directory = it },
             )
 
             LazyVerticalGrid(
@@ -181,11 +189,12 @@ private fun SampleApp(dialogSettings: FileKitDialogSettings) {
 expect fun PickDirectory(
     dialogSettings: FileKitDialogSettings,
     directory: PlatformFile?,
-    onDirectoryPicked: (PlatformFile?) -> Unit,
+    onPickDirectory: (PlatformFile?) -> Unit,
+    modifier: Modifier = Modifier,
 )
 
 @Composable
-expect fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit)
+expect fun TakePhoto(onTakePhoto: (PlatformFile?) -> Unit)
 
 @Composable
 expect fun ShareButton(file: PlatformFile)

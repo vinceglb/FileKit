@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:compose:param-order-check")
+
 package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
@@ -61,22 +63,23 @@ public fun rememberFilePickerLauncher(
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
-): PickerResultLauncher {
-    return rememberFilePickerLauncher(
-        type = type,
-        mode = FileKitMode.Single,
-        title = title,
-        directory = directory,
-        dialogSettings = dialogSettings,
-        onResult = onResult,
-    )
-}
+): PickerResultLauncher = rememberFilePickerLauncher(
+    type = type,
+    mode = FileKitMode.Single,
+    title = title,
+    directory = directory,
+    dialogSettings = dialogSettings,
+    onResult = onResult,
+)
 
-@Deprecated(message = "Opening file saver dialog is not supported on web targets. Please use expect/actual to provide web and non-web implementations.")
+@Deprecated(
+    message = "Opening file saver dialog is not supported on web targets. " +
+        "Please use expect/actual to provide web and non-web implementations.",
+)
 @Composable
 public expect fun rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
-    onResult: (PlatformFile?) -> Unit
+    onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher
 
 @Composable

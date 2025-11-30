@@ -42,5 +42,5 @@ public suspend fun FileKit.compressImage(
     quality = quality,
     maxWidth = maxWidth,
     maxHeight = maxHeight,
-    imageFormat = imageFormat
+    imageFormat = imageFormat,
 )

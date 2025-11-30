@@ -7,20 +7,20 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
-private const val unsupportedMessage =
+private const val UNSUPPORTED_MESSAGE =
     "PlatformFile serialization is not supported on Wasm JS targets"
 
 public actual object PlatformFileSerializer : KSerializer<PlatformFile> {
     actual override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
         serialName = "io.github.vinceglb.filekit.PlatformFile",
-        kind = PrimitiveKind.STRING
+        kind = PrimitiveKind.STRING,
     )
 
     actual override fun deserialize(decoder: Decoder): PlatformFile {
-        error(unsupportedMessage)
+        error(UNSUPPORTED_MESSAGE)
     }
 
     actual override fun serialize(encoder: Encoder, value: PlatformFile) {
-        error(unsupportedMessage)
+        error(UNSUPPORTED_MESSAGE)
     }
 }

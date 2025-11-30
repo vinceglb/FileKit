@@ -19,7 +19,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
     val files = callPicker(
         mode = when (mode) {
@@ -97,7 +97,7 @@ public actual suspend fun FileKit.openFileSaver(
 
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
-    openFileSettings: FileKitOpenFileSettings
+    openFileSettings: FileKitOpenFileSettings,
 ) {
     val fileManager = NSFileManager.defaultManager
     val workspace = NSWorkspace.sharedWorkspace
@@ -126,7 +126,7 @@ private fun callPicker(
         title = title,
         extensions = fileExtensions,
         directory = directory,
-        canCreateDirectories = dialogSettings.canCreateDirectories
+        canCreateDirectories = dialogSettings.canCreateDirectories,
     )
 
     // Run the NSOpenPanel
@@ -187,5 +187,5 @@ private fun NSOpenPanel.configure(
 private enum class Mode {
     Single,
     Multiple,
-    Directory
+    Directory,
 }

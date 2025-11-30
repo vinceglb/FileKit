@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:compose:param-order-check")
+
 package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
@@ -16,16 +18,14 @@ public fun <PickerResult, ConsumedResult> WindowScope.rememberFilePickerLauncher
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (ConsumedResult?) -> Unit,
-): PickerResultLauncher {
-    return io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
-        type = type,
-        mode = mode,
-        title = title,
-        directory = directory,
-        dialogSettings = injectDialogSettings(dialogSettings, this.window),
-        onResult = onResult,
-    )
-}
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
+    type = type,
+    mode = mode,
+    title = title,
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onResult = onResult,
+)
 
 @Composable
 public fun WindowScope.rememberFilePickerLauncher(
@@ -34,15 +34,13 @@ public fun WindowScope.rememberFilePickerLauncher(
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
-): PickerResultLauncher {
-    return io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
-        type = type,
-        title = title,
-        directory = directory,
-        dialogSettings = injectDialogSettings(dialogSettings, this.window),
-        onResult = onResult,
-    )
-}
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
+    type = type,
+    title = title,
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onResult = onResult,
+)
 
 @Composable
 public fun WindowScope.rememberDirectoryPickerLauncher(
@@ -50,25 +48,21 @@ public fun WindowScope.rememberDirectoryPickerLauncher(
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
-): PickerResultLauncher {
-    return io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher(
-        title = title,
-        directory = directory,
-        dialogSettings = injectDialogSettings(dialogSettings, this.window),
-        onResult = onResult,
-    )
-}
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher(
+    title = title,
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onResult = onResult,
+)
 
 @Composable
 public fun WindowScope.rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings? = null,
     onResult: (PlatformFile?) -> Unit,
-): SaverResultLauncher {
-    return io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher(
-        dialogSettings = injectDialogSettings(dialogSettings, this.window),
-        onResult = onResult,
-    )
-}
+): SaverResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher(
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onResult = onResult,
+)
 
 @Composable
 internal actual fun InitFileKit() {}
@@ -76,8 +70,6 @@ internal actual fun InitFileKit() {}
 private fun injectDialogSettings(
     dialogSettings: FileKitDialogSettings?,
     window: Window,
-): FileKitDialogSettings {
-    return dialogSettings
-        ?.copy(parentWindow = window)
-        ?: FileKitDialogSettings(parentWindow = window)
-}
+): FileKitDialogSettings = dialogSettings
+    ?.copy(parentWindow = window)
+    ?: FileKitDialogSettings(parentWindow = window)

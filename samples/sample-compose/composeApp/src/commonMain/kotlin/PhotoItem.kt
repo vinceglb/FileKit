@@ -43,7 +43,7 @@ fun PhotoItem(
         onClick = { showName = !showName },
         modifier = Modifier
             .aspectRatio(1f)
-            .clip(shape = MaterialTheme.shapes.medium)
+            .clip(shape = MaterialTheme.shapes.medium),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
@@ -63,7 +63,7 @@ fun PhotoItem(
                 shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(4.dp)
+                    .padding(4.dp),
             ) {
                 Row {
                     ShareButton(file)
@@ -75,14 +75,15 @@ fun PhotoItem(
                             Icons.Default.Check,
                             modifier = Modifier.size(22.dp),
                             contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
             }
 
             AnimatedVisibility(
-                visible = showName, modifier = Modifier.padding(4.dp).align(Alignment.BottomStart)
+                visible = showName,
+                modifier = Modifier.padding(4.dp).align(Alignment.BottomStart),
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
@@ -91,7 +92,7 @@ fun PhotoItem(
                     Text(
                         "${file.name} - ${HumanReadable.fileSize(file.size())}",
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(4.dp),
                     )
                 }
             }

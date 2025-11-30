@@ -8,33 +8,33 @@ import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
-
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IShellItem : IUnknown {
     fun BindToHandler(
         pbc: Pointer?,
         bhid: Guid.GUID.ByReference?,
         riid: Guid.REFIID?,
-        ppv: PointerByReference?
+        ppv: PointerByReference?,
     ): WinNT.HRESULT? // IBindCtx
 
     fun GetParent(
-        ppsi: PointerByReference?
+        ppsi: PointerByReference?,
     ): WinNT.HRESULT? // IShellItem
 
     fun GetDisplayName(
         sigdnName: Long,
-        ppszName: PointerByReference?
+        ppszName: PointerByReference?,
     ): WinNT.HRESULT? // SIGDN, WString
 
     fun GetAttributes(
         sfgaoMask: Int,
-        psfgaoAttribs: IntByReference?
+        psfgaoAttribs: IntByReference?,
     ): WinNT.HRESULT? // SFGAOF, SFGAOF
 
     fun Compare(
         psi: Pointer?,
         hint: Int,
-        piOrder: IntByReference?
+        piOrder: IntByReference?,
     ): WinNT.HRESULT? // IShellItem , SICHINTF
 
     companion object {

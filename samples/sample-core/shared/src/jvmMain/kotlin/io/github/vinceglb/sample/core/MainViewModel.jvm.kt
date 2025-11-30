@@ -9,5 +9,4 @@ actual fun downloadDirectoryPath(): PlatformFile? = FileKit.downloadDir
 actual suspend fun takePhotoIfSupported(): PlatformFile? = null
 
 actual suspend fun shareFileIfSupported(file: PlatformFile) {
-
 }

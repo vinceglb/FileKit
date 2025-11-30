@@ -26,7 +26,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = false,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow
+        parentWindow = dialogSettings.parentWindow,
     )?.firstOrNull()
 
     override suspend fun openFilesPicker(
@@ -39,23 +39,21 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow
+        parentWindow = dialogSettings.parentWindow,
     )
 
     override suspend fun openDirectoryPicker(
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
-        throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
-    }
+    ): File? = throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
 
     private suspend fun callAwtPicker(
         title: String?,
         isMultipleMode: Boolean,
         directory: PlatformFile?,
         fileExtensions: Set<String>?,
-        parentWindow: Window?
+        parentWindow: Window?,
     ): List<File>? = suspendCancellableCoroutine { continuation ->
         // Handle parentWindow: Dialog, Frame, or null
         val dialog = when (parentWindow) {

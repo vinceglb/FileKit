@@ -8,7 +8,8 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 public enum class FileKitCameraFacing {
-    Front, Back
+    Front,
+    Back,
 }
 
 @OptIn(ExperimentalUuidApi::class)

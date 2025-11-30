@@ -152,7 +152,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
     private suspend fun <FD : FileDialog, T> useFileDialog(
         type: FileDialogType<FD>,
-        block: (FD) -> T
+        block: (FD) -> T,
     ): T = withContext(Dispatchers.IO) {
         var fileDialog: FD? = null
         try {
@@ -161,14 +161,14 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
             // Create FileOpenDialog
             val pbrFileDialog = PointerByReference()
-            fileDialog = Ole32.INSTANCE.CoCreateInstance(
-                type.clsid,
-                null,
-                WTypes.CLSCTX_ALL,
-                type.iid,
-                pbrFileDialog
-            )
-                .verify("CoCreateInstance failed")
+            fileDialog = Ole32.INSTANCE
+                .CoCreateInstance(
+                    type.clsid,
+                    null,
+                    WTypes.CLSCTX_ALL,
+                    type.iid,
+                    pbrFileDialog,
+                ).verify("CoCreateInstance failed")
                 .let { type.build(pbrFileDialog) }
 
             // Run the block
@@ -187,24 +187,25 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
         data object Open : FileDialogType<FileOpenDialog>(
             IFileOpenDialog.CLSID_FILEOPENDIALOG,
-            IFileOpenDialog.IID_IFILEOPENDIALOG
+            IFileOpenDialog.IID_IFILEOPENDIALOG,
         ) {
             override fun build(pbr: PointerByReference) = FileOpenDialog(pbr.value)
         }
 
         data object Save : FileDialogType<FileSaveDialog>(
             IFileSaveDialog.CLSID_FILESAVEDIALOG,
-            IFileSaveDialog.IID_IFILESAVEDIALOG
+            IFileSaveDialog.IID_IFILESAVEDIALOG,
         ) {
             override fun build(pbr: PointerByReference) = FileSaveDialog(pbr.value)
         }
     }
 
     private fun initCom() {
-        Ole32.INSTANCE.CoInitializeEx(
-            null,
-            COINIT_APARTMENTTHREADED or Ole32.COINIT_DISABLE_OLE1DDE
-        ).verify("CoInitializeEx failed")
+        Ole32.INSTANCE
+            .CoInitializeEx(
+                null,
+                COINIT_APARTMENTTHREADED or Ole32.COINIT_DISABLE_OLE1DDE,
+            ).verify("CoInitializeEx failed")
 
         val isInit = COMUtils.comIsInitialized()
         if (!isInit) {
@@ -218,7 +219,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
             WString(defaultPath.path),
             null,
             Guid.REFIID(IShellItem.IID_ISHELLITEM),
-            pbrFolder
+            pbrFolder,
         )
 
         // Valid error code: File not found
@@ -273,7 +274,7 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
     private fun <FD : FileDialog, T> FD.show(
         parentWindow: Window?,
-        block: (FD) -> T
+        block: (FD) -> T,
     ): T? {
         // Show the dialog to the user
         val openDialogResult = this.Show(parentWindow.toHwnd())
@@ -386,10 +387,13 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 
-    private fun Window?.toHwnd(): WinDef.HWND? {
-        return when (this) {
-            null -> null
-            else -> Native
+    private fun Window?.toHwnd(): WinDef.HWND? = when (this) {
+        null -> {
+            null
+        }
+
+        else -> {
+            Native
                 .getWindowPointer(this)
                 .let { WinDef.HWND(it) }
         }

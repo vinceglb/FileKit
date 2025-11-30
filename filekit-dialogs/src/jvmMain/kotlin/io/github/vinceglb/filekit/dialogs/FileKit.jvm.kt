@@ -13,7 +13,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
     // Filter by extension
     val extensions = when (type) {
@@ -24,19 +24,25 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     }
 
     val files = when (mode) {
-        PickerMode.Single -> PlatformFilePicker.current.openFilePicker(
-            title = title,
-            directory = directory,
-            fileExtensions = extensions,
-            dialogSettings = dialogSettings,
-        )?.let { listOf(PlatformFile(it)) }
+        PickerMode.Single -> {
+            PlatformFilePicker.current
+                .openFilePicker(
+                    title = title,
+                    directory = directory,
+                    fileExtensions = extensions,
+                    dialogSettings = dialogSettings,
+                )?.let { listOf(PlatformFile(it)) }
+        }
 
-        is PickerMode.Multiple -> PlatformFilePicker.current.openFilesPicker(
-            title = title,
-            directory = directory,
-            fileExtensions = extensions,
-            dialogSettings = dialogSettings,
-        )?.map { PlatformFile(it) }
+        is PickerMode.Multiple -> {
+            PlatformFilePicker.current
+                .openFilesPicker(
+                    title = title,
+                    directory = directory,
+                    fileExtensions = extensions,
+                    dialogSettings = dialogSettings,
+                )?.map { PlatformFile(it) }
+        }
     }
 
     return files.toPickerStateFlow()
@@ -75,7 +81,7 @@ public actual suspend fun FileKit.openFileSaver(
 
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
-    openFileSettings: FileKitOpenFileSettings
+    openFileSettings: FileKitOpenFileSettings,
 ) {
     Desktop.getDesktop()?.open(file.file)
 }

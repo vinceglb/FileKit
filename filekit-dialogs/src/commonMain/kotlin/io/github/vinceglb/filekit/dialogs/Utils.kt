@@ -11,7 +11,10 @@ internal fun List<PlatformFile>?.toPickerStateFlow(): Flow<FileKitPickerState<Li
     val files = this
     return channelFlow {
         when {
-            files.isNullOrEmpty() -> send(FileKitPickerState.Cancelled)
+            files.isNullOrEmpty() -> {
+                send(FileKitPickerState.Cancelled)
+            }
+
             else -> {
                 send(FileKitPickerState.Started(files.size))
                 files.forEachIndexed { index, file ->

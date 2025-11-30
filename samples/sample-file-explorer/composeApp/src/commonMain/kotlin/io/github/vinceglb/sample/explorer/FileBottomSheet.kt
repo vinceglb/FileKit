@@ -92,13 +92,13 @@ fun FileBottomSheet(
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.padding(all = 16.dp)
+                modifier = Modifier.padding(all = 16.dp),
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     FileInfo(
                         label = "Name",
                         value = file.nameWithoutExtension,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
                     )
 
                     if (file.isRegularFile()) {
@@ -155,7 +155,7 @@ fun FileBottomSheet(
                 FileAction(
                     text = "Open file",
                     icon = ExplorerIcons.SquareArrowOutUpRight,
-                    onClick = { FileKit.openFileWithDefaultApplication(file) }
+                    onClick = { FileKit.openFileWithDefaultApplication(file) },
                 )
 
                 FileAction(
@@ -174,7 +174,7 @@ fun FileBottomSheet(
                                 onRefreshRequest()
                             }
                         }
-                    }
+                    },
                 )
             }
 
@@ -185,7 +185,7 @@ fun FileBottomSheet(
                     onClick = {
                         onOpenSubDirectoryRequest(file)
                         onDismissRequest()
-                    }
+                    },
                 )
             }
 
@@ -197,7 +197,9 @@ fun FileBottomSheet(
                 icon = ExplorerIcons.Truck,
                 onClick = {
                     scope.launch {
-                        println("name ${file.name} | nameWithoutExtension ${file.nameWithoutExtension} | extension ${file.extension} | parent ${file.parent()} | isRegularFile ${file.isRegularFile()} | isDirectory ${file.isDirectory()}")
+                        println(
+                            "name ${file.name} | nameWithoutExtension ${file.nameWithoutExtension} | extension ${file.extension} | parent ${file.parent()} | isRegularFile ${file.isRegularFile()} | isDirectory ${file.isDirectory()}",
+                        )
 
                         val selectedFile = FileKit.openFileSaver(
                             suggestedName = file.nameWithoutExtension,
@@ -211,7 +213,7 @@ fun FileBottomSheet(
                             onDismissRequest()
                         }
                     }
-                }
+                },
             )
 
             PlatformActions(file, scope)
@@ -226,7 +228,7 @@ fun FileBottomSheet(
                             onRefreshRequest()
                             onDismissRequest()
                         }
-                    }
+                    },
                 )
             }
         }
@@ -267,12 +269,12 @@ fun FileAction(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(all = 16.dp)
+                .padding(all = 16.dp),
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
             Text(
                 text = text,

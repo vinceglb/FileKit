@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 package io.github.vinceglb.sample.explorer
 
 import androidx.compose.ui.window.Window

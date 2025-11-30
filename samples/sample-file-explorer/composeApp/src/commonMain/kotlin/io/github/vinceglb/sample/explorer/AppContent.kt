@@ -126,7 +126,7 @@ private fun DirectorySelectedContent(
 
     LazyColumn(
         modifier = modifier,
-        contentPadding = contentPadding
+        contentPadding = contentPadding,
     ) {
         item {
             FlowRow(
@@ -199,7 +199,7 @@ private fun FileListItem(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(vertical = 2.dp)
-                .padding(start = 16.dp, end = 0.dp)
+                .padding(start = 16.dp, end = 0.dp),
         ) {
             FileIcon(file)
 
@@ -220,7 +220,7 @@ private fun FileListItem(
                     imageVector = ExplorerIcons.EllipsisVertical,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(20.dp),
                 )
             }
         }

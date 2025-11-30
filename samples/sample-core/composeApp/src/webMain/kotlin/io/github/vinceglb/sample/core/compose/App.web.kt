@@ -10,7 +10,7 @@ import io.github.vinceglb.filekit.PlatformFile
 @Composable
 actual fun PickDirectoryButton(
     directory: PlatformFile?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Button(onClick = {}, enabled = false) {

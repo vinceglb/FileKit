@@ -11,7 +11,7 @@ import io.github.vinceglb.filekit.toKotlinxIoPath
 @Composable
 actual fun PickDirectoryButton(
     directory: PlatformFile?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Button(onClick = onClick) {

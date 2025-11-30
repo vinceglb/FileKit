@@ -26,20 +26,20 @@ import java.io.File
 import java.net.URI
 import java.util.UUID
 
-//https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
+// https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
 internal class XdgFilePickerPortal : PlatformFilePicker {
-
     fun isAvailable(): Boolean {
         try {
             DBusConnectionBuilder.forSessionBus().build().use { connection ->
-                connection.getRemoteObject(
-                    "org.freedesktop.portal.Desktop",
-                    "/org/freedesktop/portal/desktop",
-                    Properties::class.java
-                ).Get<UInt32>("org.freedesktop.portal.FileChooser", "version")
+                connection
+                    .getRemoteObject(
+                        "org.freedesktop.portal.Desktop",
+                        "/org/freedesktop/portal/desktop",
+                        Properties::class.java,
+                    ).Get<UInt32>("org.freedesktop.portal.FileChooser", "version")
                 return true
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return false
         }
     }
@@ -49,47 +49,41 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
-        return openFilesPicker(
-            directory = directory,
-            fileExtensions = fileExtensions,
-            title = title,
-            parentWindow = dialogSettings.parentWindow,
-            multiple = false,
-            openDirectory = false
-        )?.firstOrNull()
-    }
+    ): File? = openFilesPicker(
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = title,
+        parentWindow = dialogSettings.parentWindow,
+        multiple = false,
+        openDirectory = false,
+    )?.firstOrNull()
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? {
-        return openFilesPicker(
-            directory = directory,
-            fileExtensions = fileExtensions,
-            title = title,
-            parentWindow = dialogSettings.parentWindow,
-            multiple = true,
-            openDirectory = false
-        )
-    }
+    ): List<File>? = openFilesPicker(
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = title,
+        parentWindow = dialogSettings.parentWindow,
+        multiple = true,
+        openDirectory = false,
+    )
 
     override suspend fun openDirectoryPicker(
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
-        return openFilesPicker(
-            directory = directory,
-            fileExtensions = null,
-            title = title,
-            parentWindow = dialogSettings.parentWindow,
-            multiple = false,
-            openDirectory = true
-        )?.firstOrNull()
-    }
+    ): File? = openFilesPicker(
+        directory = directory,
+        fileExtensions = null,
+        title = title,
+        parentWindow = dialogSettings.parentWindow,
+        multiple = false,
+        openDirectory = true,
+    )?.firstOrNull()
 
     private suspend fun openFilesPicker(
         directory: PlatformFile?,
@@ -112,7 +106,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             getFileChooserObject(connection).OpenFile(
                 parentWindow = getWindowIdentifier(parentWindow) ?: "",
                 title = title ?: "",
-                options = options
+                options = options,
             )
             val files = deferredResult.await()?.map { File(it) }
             return files
@@ -141,17 +135,17 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             getFileChooserObject(connection).SaveFile(
                 parentWindow = getWindowIdentifier(dialogSettings.parentWindow) ?: "",
                 title = "",
-                options = options
+                options = options,
             )
 
             return deferredResult.await()?.first()?.let { File(it) }
         }
     }
 
-    //https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Request.html
+    // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Request.html
     private fun registerResponseHandler(
         connection: DBusConnection,
-        handleToken: String
+        handleToken: String,
     ): CompletableDeferred<List<URI>?> {
         val sender = connection.uniqueName.substring(1).replace('.', '_')
         val path = "/org/freedesktop/portal/desktop/request/$sender/$handleToken"
@@ -168,9 +162,8 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     private class ResponseHandler(
         private val path: String,
-        private val onComplete: (result: List<URI>?, thisHandler: ResponseHandler) -> Unit
+        private val onComplete: (result: List<URI>?, thisHandler: ResponseHandler) -> Unit,
     ) : DBusSigHandler<DBusSignal> {
-
         @Suppress("UNCHECKED_CAST")
         override fun handle(signal: DBusSignal) {
             if (path == signal.path) {
@@ -197,7 +190,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
     private fun getFileChooserObject(connection: DBusConnection) = connection.getRemoteObject(
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
-        FileChooserDbusInterface::class.java
+        FileChooserDbusInterface::class.java,
     )
 
     private fun createFilterOption(extensions: Set<String>): Variant<*> {
@@ -205,7 +198,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         val individualExtensions = extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) }
         return Variant(
             listOf(allExtensions) + individualExtensions,
-            "a(sa(us))"
+            "a(sa(us))",
         )
     }
 
@@ -223,19 +216,19 @@ internal interface FileChooserDbusInterface : DBusInterface {
     fun OpenFile(
         parentWindow: String,
         title: String,
-        options: MutableMap<String, Variant<*>>
+        options: MutableMap<String, Variant<*>>,
     ): DBusPath
 
     fun SaveFile(
         parentWindow: String,
         title: String,
-        options: MutableMap<String, Variant<*>>
+        options: MutableMap<String, Variant<*>>,
     ): DBusPath
 
     fun SaveFiles(
         parentWindow: String,
         title: String,
-        options: MutableMap<String, Variant<*>>
+        options: MutableMap<String, Variant<*>>,
     ): DBusPath
 
     @DBusBoundProperty(name = "version", access = Access.READ)
@@ -244,7 +237,7 @@ internal interface FileChooserDbusInterface : DBusInterface {
 
 internal class Pair<A, B>(
     @field:Position(0) val a: A,
-    @field:Position(1) val b: B
+    @field:Position(1) val b: B,
 ) : Tuple()
 
 internal fun String.toURI(): URI =

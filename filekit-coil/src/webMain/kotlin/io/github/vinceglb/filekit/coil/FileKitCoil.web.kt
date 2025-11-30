@@ -38,7 +38,7 @@ public actual class PlatformFileMapper actual constructor() : Mapper<PlatformFil
 public actual class PlatformFileFetcher(
     private val file: PlatformFile,
     private val imageLoader: ImageLoader,
-    private val options: Options
+    private val options: Options,
 ) : Fetcher {
     actual override suspend fun fetch(): FetchResult? {
         val bytes = file.readBytes()
@@ -56,7 +56,7 @@ public actual class PlatformFileFetcher(
         actual override fun create(
             data: PlatformFile,
             options: Options,
-            imageLoader: ImageLoader
+            imageLoader: ImageLoader,
         ): Fetcher? = PlatformFileFetcher(data, imageLoader, options)
     }
 }
@@ -70,7 +70,9 @@ public actual class PlatformFileKeyer actual constructor() : Keyer<PlatformFile>
         "${data.hashCode()}-${data.extension}"
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? {
     var bytes by remember(file) { mutableStateOf<ByteArray?>(null) }
@@ -82,7 +84,9 @@ public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? {
     return bytes
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -100,7 +104,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     val coilModel = rememberPlatformFileCoilModel(file)
 
@@ -124,7 +128,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -141,7 +147,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     val coilModel = rememberPlatformFileCoilModel(file)
 
@@ -164,7 +170,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -178,7 +186,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     val coilModel = rememberPlatformFileCoilModel(file)
 
@@ -198,7 +206,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -211,7 +221,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     val coilModel = rememberPlatformFileCoilModel(file)
 

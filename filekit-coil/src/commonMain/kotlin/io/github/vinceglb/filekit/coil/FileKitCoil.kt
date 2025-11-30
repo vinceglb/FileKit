@@ -41,7 +41,7 @@ public expect class PlatformFileFetcher : Fetcher {
      * Factory class for creating PlatformFileFetcher instances.
      * This factory is used by Coil to create fetchers for PlatformFile objects.
      */
-    public class Factory() : Fetcher.Factory<PlatformFile> {
+    public class Factory : Fetcher.Factory<PlatformFile> {
         override fun create(data: PlatformFile, options: Options, imageLoader: ImageLoader): Fetcher?
     }
 }
@@ -79,18 +79,31 @@ public fun ComponentRegistry.Builder.addPlatformFileSupport() {
  */
 public fun State.securelyAccessFile(file: PlatformFile?) {
     when (this) {
-        is State.Loading -> file?.startAccessingSecurityScopedResource()
-        is State.Success -> file?.stopAccessingSecurityScopedResource()
-        is State.Error -> file?.stopAccessingSecurityScopedResource()
+        is State.Loading -> {
+            file?.startAccessingSecurityScopedResource()
+        }
+
+        is State.Success -> {
+            file?.stopAccessingSecurityScopedResource()
+        }
+
+        is State.Error -> {
+            file?.stopAccessingSecurityScopedResource()
+        }
+
         is State.Empty -> {}
     }
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public expect fun rememberPlatformFileCoilModel(file: PlatformFile?): Any?
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -111,7 +124,9 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -131,7 +146,9 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,
@@ -148,7 +165,9 @@ public expect fun AsyncImage(
     clipToBounds: Boolean = true,
 )
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public expect fun AsyncImage(
     file: PlatformFile?,

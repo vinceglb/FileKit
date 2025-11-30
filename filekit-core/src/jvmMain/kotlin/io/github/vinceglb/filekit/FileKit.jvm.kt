@@ -26,16 +26,16 @@ import javax.imageio.ImageWriteParam
 
 public actual object FileKit {
     private var _appId: String? = null
-    internal var _customCacheDir: Path? = null
-    internal var _customFilesDir: Path? = null
+    internal var customCacheDir: Path? = null
+    internal var customFilesDir: Path? = null
 
     public val appId: String
         get() = _appId ?: throw FileKitNotInitializedException()
 
     public fun init(appId: String) {
         _appId = appId
-        _customCacheDir = null
-        _customFilesDir = null
+        customCacheDir = null
+        customFilesDir = null
     }
 
     public fun init(
@@ -43,8 +43,8 @@ public actual object FileKit {
         cacheDir: File,
     ) {
         _appId = null
-        _customCacheDir = cacheDir.toKotlinxIoPath()
-        _customFilesDir = filesDir.toKotlinxIoPath()
+        customCacheDir = cacheDir.toKotlinxIoPath()
+        customFilesDir = filesDir.toKotlinxIoPath()
     }
 
     public fun init(
@@ -53,21 +53,28 @@ public actual object FileKit {
         cacheDir: File? = null,
     ) {
         _appId = appId
-        _customCacheDir = cacheDir?.toKotlinxIoPath()
-        _customFilesDir = filesDir?.toKotlinxIoPath()
+        customCacheDir = cacheDir?.toKotlinxIoPath()
+        customFilesDir = filesDir?.toKotlinxIoPath()
     }
 }
 
 public actual val FileKit.filesDir: PlatformFile
     get() {
-        val folder = FileKit._customFilesDir ?: when (PlatformUtil.current) {
-            Platform.Linux ->
-                System.getenv("XDG_DATA_HOME")
+        val folder = FileKit.customFilesDir ?: when (PlatformUtil.current) {
+            Platform.Linux -> {
+                System
+                    .getenv("XDG_DATA_HOME")
                     ?.let { it.toPath() / appId }
                     ?: (getEnv("HOME").toPath() / ".local" / "share" / appId)
+            }
 
-            Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Application Support" / appId
-            Platform.Windows -> getEnv("APPDATA").toPath() / appId
+            Platform.MacOS -> {
+                getEnv("HOME").toPath() / "Library" / "Application Support" / appId
+            }
+
+            Platform.Windows -> {
+                getEnv("APPDATA").toPath() / appId
+            }
         }
 
         return folder
@@ -77,11 +84,12 @@ public actual val FileKit.filesDir: PlatformFile
 
 public actual val FileKit.cacheDir: PlatformFile
     get() {
-        val folder = FileKit._customCacheDir ?: when (PlatformUtil.current) {
+        val folder = FileKit.customCacheDir ?: when (PlatformUtil.current) {
             Platform.Linux -> System.getenv("XDG_CACHE_HOME")?.let { it.toPath() / appId }
                 ?: (getEnv("HOME").toPath() / ".cache" / appId)
 
             Platform.MacOS -> getEnv("HOME").toPath() / "Library" / "Caches" / appId
+
             Platform.Windows -> getEnv("LOCALAPPDATA").toPath() / appId / "Cache"
         }
 
@@ -103,6 +111,7 @@ public val FileKit.downloadDir: PlatformFile
             ?: (getEnv("HOME").toPath() / "Downloads")
 
         Platform.MacOS -> getEnv("HOME").toPath() / "Downloads"
+
         Platform.Windows -> getEnv("USERPROFILE").toPath() / "Downloads"
     }.also(Path::assertExists).let(::PlatformFile)
 
@@ -113,13 +122,12 @@ public val FileKit.pictureDir: PlatformFile
             ?: (getEnv("HOME").toPath() / "Pictures")
 
         Platform.MacOS -> getEnv("HOME").toPath() / "Pictures"
+
         Platform.Windows -> getEnv("USERPROFILE").toPath() / "Pictures"
     }.also(Path::assertExists).let(::PlatformFile)
 
-private fun getEnv(key: String): String {
-    return System.getenv(key)
-        ?: throw IllegalStateException("Environment variable $key not found.")
-}
+private fun getEnv(key: String): String = System.getenv(key)
+    ?: throw IllegalStateException("Environment variable $key not found.")
 
 private fun Path.assertExists() {
     if (!SystemFileSystem.exists(this)) {
@@ -144,12 +152,15 @@ public actual suspend fun FileKit.compressImage(
         originalImage.width,
         originalImage.height,
         maxWidth,
-        maxHeight
+        maxHeight,
     )
 
     // Step 3: Resize the BufferedImage
     val imageType = when (imageFormat) {
-        ImageFormat.JPEG -> BufferedImage.TYPE_INT_RGB
+        ImageFormat.JPEG -> {
+            BufferedImage.TYPE_INT_RGB
+        }
+
         ImageFormat.PNG -> {
             if (originalImage.colorModel.hasAlpha()) {
                 BufferedImage.TYPE_INT_ARGB
@@ -162,7 +173,11 @@ public actual suspend fun FileKit.compressImage(
     val graphics: Graphics2D = resizedImage.createGraphics()
     graphics.drawImage(
         originalImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH),
-        0, 0, newWidth, newHeight, null
+        0,
+        0,
+        newWidth,
+        newHeight,
+        null,
     )
     graphics.dispose()
 
@@ -184,7 +199,7 @@ public actual suspend fun FileKit.compressImage(
 
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
-    filename: String
+    filename: String,
 ) {
     FileKit.pictureDir / filename write bytes
 }

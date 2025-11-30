@@ -24,7 +24,7 @@ class KotlinMultiplatformLibraryConventionPlugin : Plugin<Project> {
                     extension = this,
                     modulePackage = modulePackage,
                     moduleName = moduleName,
-                    addMacosTargets = true
+                    addMacosTargets = true,
                 )
             }
         }

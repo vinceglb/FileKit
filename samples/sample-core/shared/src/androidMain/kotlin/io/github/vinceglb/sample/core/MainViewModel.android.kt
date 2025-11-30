@@ -8,9 +8,7 @@ import io.github.vinceglb.filekit.dialogs.shareFile
 actual fun downloadDirectoryPath(): PlatformFile? =
     null
 
-actual suspend fun takePhotoIfSupported(): PlatformFile? {
-    return FileKit.openCameraPicker()
-}
+actual suspend fun takePhotoIfSupported(): PlatformFile? = FileKit.openCameraPicker()
 
 actual suspend fun shareFileIfSupported(file: PlatformFile) {
     FileKit.shareFile(file)

@@ -29,5 +29,7 @@ class PlatformFileSerializationTest {
     }
 
     @Serializable
-    private data class Wrapper(val file: PlatformFile)
+    private data class Wrapper(
+        val file: PlatformFile,
+    )
 }

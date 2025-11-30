@@ -15,7 +15,7 @@ internal fun calculateNewDimensions(
     originalWidth: Int,
     originalHeight: Int,
     maxWidth: Int?,
-    maxHeight: Int?
+    maxHeight: Int?,
 ): Pair<Int, Int> {
     var newWidth = originalWidth
     var newHeight = originalHeight

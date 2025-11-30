@@ -5,9 +5,8 @@ import io.github.vinceglb.filekit.exceptions.InvalidMimeTypeException
 public class MimeType private constructor(
     public val primaryType: String,
     public val subtype: String,
-    public val parameters: Set<MimeTypeParameter> = emptySet()
+    public val parameters: Set<MimeTypeParameter> = emptySet(),
 ) {
-
     init {
         if (primaryType.isBlank()) {
             throw InvalidMimeTypeException("MIME type primary type must not be blank")
@@ -82,18 +81,22 @@ public class MimeType private constructor(
             val subtype = typeParts[1].lowercase()
 
             val parameters = if (parts.size > 1) {
-                parts.drop(1).map { part ->
-                    val nameValuePair = part.split("=")
+                parts
+                    .drop(1)
+                    .map { part ->
+                        val nameValuePair = part.split("=")
 
-                    if (nameValuePair.size == 2) {
-                        val name = nameValuePair[0].lowercase()
-                        val value = nameValuePair[0].lowercase()
-                        MimeTypeParameter(name = name, value = value)
-                    } else {
-                        throw InvalidMimeTypeException("Invalid parameter in MIME type: $part")
-                    }
-                }.toSet()
-            } else emptySet()
+                        if (nameValuePair.size == 2) {
+                            val name = nameValuePair[0].lowercase()
+                            val value = nameValuePair[0].lowercase()
+                            MimeTypeParameter(name = name, value = value)
+                        } else {
+                            throw InvalidMimeTypeException("Invalid parameter in MIME type: $part")
+                        }
+                    }.toSet()
+            } else {
+                emptySet()
+            }
 
             return MimeType(primaryType = primaryType, subtype = subtype, parameters = parameters)
         }

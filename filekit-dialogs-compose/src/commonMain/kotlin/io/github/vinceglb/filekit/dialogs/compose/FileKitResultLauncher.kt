@@ -27,7 +27,9 @@ public class SaverResultLauncher(
     }
 
     @Deprecated(
-        message = "Use the function without the bytes parameter. If necessary, save the bytes in the returned PlatformFile. On web targets, you can use FileKit.download() to download the bytes. More info here: https://filekit.mintlify.app/migrate-to-v0.10",
+        message = "Use the function without the bytes parameter. If necessary, save the bytes in the returned PlatformFile. " +
+            "On web targets, you can use FileKit.download() to download the bytes. " +
+            "More info here: https://filekit.mintlify.app/migrate-to-v0.10",
         replaceWith = ReplaceWith("launch(suggestedName, extension, directory)"),
     )
     public fun launch(

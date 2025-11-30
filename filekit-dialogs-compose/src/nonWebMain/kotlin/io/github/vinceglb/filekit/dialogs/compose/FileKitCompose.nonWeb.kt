@@ -22,7 +22,7 @@ public expect fun rememberDirectoryPickerLauncher(
 @Composable
 public actual fun rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,
-    onResult: (PlatformFile?) -> Unit
+    onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     // Init FileKit
     InitFileKit()

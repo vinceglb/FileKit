@@ -7,5 +7,5 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 actual fun PlatformActions(
     file: PlatformFile,
-    scope: CoroutineScope
+    scope: CoroutineScope,
 ) {}

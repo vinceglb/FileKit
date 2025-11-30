@@ -4,7 +4,7 @@ import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
-
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IFileOpenDialog : IFileDialog {
     fun GetResults(ppenum: PointerByReference?): WinNT.HRESULT? // IShellItemArray
 

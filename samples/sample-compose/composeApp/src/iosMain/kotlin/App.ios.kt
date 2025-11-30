@@ -21,9 +21,9 @@ import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
 @Composable
-actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
+actual fun TakePhoto(onTakePhoto: (PlatformFile?) -> Unit) {
     val takePhotoLauncher = rememberCameraPickerLauncher {
-        onPhotoTaken(it)
+        onTakePhoto(it)
     }
 
     Button(
@@ -33,7 +33,7 @@ actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
                 cameraFacing = FileKitCameraFacing.Front,
                 destinationFile = destinationFile,
             )
-        }
+        },
     ) {
         Text("Take photo")
     }
@@ -45,13 +45,13 @@ actual fun ShareButton(file: PlatformFile) {
 
     IconButton(
         onClick = { shareLauncher.launch(file) },
-        modifier = Modifier.size(36.dp)
+        modifier = Modifier.size(36.dp),
     ) {
         Icon(
             Icons.Default.Share,
             modifier = Modifier.size(22.dp),
             contentDescription = "share",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

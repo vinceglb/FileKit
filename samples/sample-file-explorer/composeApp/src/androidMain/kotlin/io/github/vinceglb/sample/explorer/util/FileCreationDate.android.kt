@@ -10,24 +10,24 @@ import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.Instant
 
-actual fun PlatformFile.createdAt(): Instant? {
-    return this.androidFile.let { androidFile ->
-        when (androidFile) {
-            is AndroidFile.FileWrapper -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val attributes = Files.readAttributes(
-                        androidFile.file.toPath(),
-                        BasicFileAttributes::class.java
-                    )
-                    val timestamp = attributes.creationTime().toMillis()
-                    Instant.fromEpochMilliseconds(timestamp)
-                } else {
-                    // Fallback for older Android versions
-                    null
-                }
+actual fun PlatformFile.createdAt(): Instant? = this.androidFile.let { androidFile ->
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val attributes = Files.readAttributes(
+                    androidFile.file.toPath(),
+                    BasicFileAttributes::class.java,
+                )
+                val timestamp = attributes.creationTime().toMillis()
+                Instant.fromEpochMilliseconds(timestamp)
+            } else {
+                // Fallback for older Android versions
+                null
             }
+        }
 
-            is AndroidFile.UriWrapper -> null
+        is AndroidFile.UriWrapper -> {
+            null
         }
     }
 }
@@ -35,11 +35,16 @@ actual fun PlatformFile.createdAt(): Instant? {
 actual fun PlatformFile.lastModified(): Instant {
     val timestamp = this.androidFile.let { androidFile ->
         when (androidFile) {
-            is AndroidFile.FileWrapper -> androidFile.file.lastModified()
-            is AndroidFile.UriWrapper -> DocumentFile
-                .fromSingleUri(FileKit.context, androidFile.uri)
-                ?.lastModified()
-                ?: throw IllegalStateException("Unable to get last modified date for URI")
+            is AndroidFile.FileWrapper -> {
+                androidFile.file.lastModified()
+            }
+
+            is AndroidFile.UriWrapper -> {
+                DocumentFile
+                    .fromSingleUri(FileKit.context, androidFile.uri)
+                    ?.lastModified()
+                    ?: throw IllegalStateException("Unable to get last modified date for URI")
+            }
         }
     }
 

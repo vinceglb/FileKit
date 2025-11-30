@@ -18,7 +18,10 @@ class Storage {
 
     suspend fun saveBookmark(platformFile: PlatformFile?) {
         when (platformFile) {
-            null -> previousFolder.delete(mustExist = false)
+            null -> {
+                previousFolder.delete(mustExist = false)
+            }
+
             else -> {
                 val bookmark = platformFile.bookmarkData()
                 previousFolder.write(bookmark.bytes)
@@ -26,17 +29,13 @@ class Storage {
         }
     }
 
-    suspend fun retrieveFromBookmark(): PlatformFile? {
-        return if (previousFolder.exists()) {
-            val bytes = previousFolder.readBytes()
-            PlatformFile.fromBookmarkData(bytes)
-        } else {
-            null
-        }
+    suspend fun retrieveFromBookmark(): PlatformFile? = if (previousFolder.exists()) {
+        val bytes = previousFolder.readBytes()
+        PlatformFile.fromBookmarkData(bytes)
+    } else {
+        null
     }
 }
 
 @Composable
-fun rememberStorage(): Storage {
-    return remember { Storage() }
-} 
+fun rememberStorage(): Storage = remember { Storage() }

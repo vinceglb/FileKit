@@ -37,7 +37,7 @@ public actual class PlatformFileMapper : Mapper<PlatformFile, Any> {
 public actual class PlatformFileFetcher(
     private val file: PlatformFile,
     private val imageLoader: ImageLoader,
-    private val options: Options
+    private val options: Options,
 ) : Fetcher {
     actual override suspend fun fetch(): FetchResult? {
         val underlyingFile = file.underlyingFile
@@ -55,7 +55,7 @@ public actual class PlatformFileFetcher(
         actual override fun create(
             data: PlatformFile,
             options: Options,
-            imageLoader: ImageLoader
+            imageLoader: ImageLoader,
         ): Fetcher? = PlatformFileFetcher(data, imageLoader, options)
     }
 }
@@ -65,18 +65,20 @@ public actual class PlatformFileFetcher(
  * This ensures proper caching behavior for platform-specific files.
  */
 public actual class PlatformFileKeyer : Keyer<PlatformFile> {
-    actual override fun key(data: PlatformFile, options: Options): String? {
-        return data.path
-    }
+    actual override fun key(data: PlatformFile, options: Options): String? = data.path
 }
 
 internal expect val PlatformFile.underlyingFile: Any
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun rememberPlatformFileCoilModel(file: PlatformFile?): Any? = file?.underlyingFile
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -118,7 +120,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -135,7 +139,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     DisposableFileSecurityEffect(file)
 
@@ -159,7 +163,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -173,7 +179,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     DisposableFileSecurityEffect(file)
 
@@ -193,7 +199,9 @@ public actual fun AsyncImage(
     )
 }
 
-@Deprecated("Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil")
+@Deprecated(
+    "Migrate to the official Coil API by registering FileKit in your ImageLoader.Builder. Read more at https://filekit.mintlify.app/integrations/coil",
+)
 @Composable
 public actual fun AsyncImage(
     file: PlatformFile?,
@@ -206,7 +214,7 @@ public actual fun AsyncImage(
     alpha: Float,
     colorFilter: ColorFilter?,
     filterQuality: FilterQuality,
-    clipToBounds: Boolean
+    clipToBounds: Boolean,
 ) {
     DisposableFileSecurityEffect(file)
 

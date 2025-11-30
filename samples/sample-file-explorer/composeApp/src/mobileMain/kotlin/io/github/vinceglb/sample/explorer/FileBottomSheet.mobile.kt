@@ -24,7 +24,7 @@ actual fun PlatformActions(
             scope.launch {
                 FileKit.shareFile(file)
             }
-        }
+        },
     )
 
     if (listOf("jpg", "jpeg", "png", "gif").contains(file.extension)) {
@@ -35,7 +35,7 @@ actual fun PlatformActions(
                 scope.launch {
                     FileKit.saveImageToGallery(file)
                 }
-            }
+            },
         )
     }
 }

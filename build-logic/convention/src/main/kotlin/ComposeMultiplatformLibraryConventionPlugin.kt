@@ -27,7 +27,7 @@ class ComposeMultiplatformLibraryConventionPlugin : Plugin<Project> {
                     extension = this,
                     modulePackage = modulePackage,
                     moduleName = moduleName,
-                    addMacosTargets = false
+                    addMacosTargets = false,
                 )
                 configureComposeMultiplatform(this)
             }

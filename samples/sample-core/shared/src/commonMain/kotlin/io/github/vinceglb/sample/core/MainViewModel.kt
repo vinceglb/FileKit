@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val dialogSettings: FileKitDialogSettings
+    private val dialogSettings: FileKitDialogSettings,
 ) : ViewModel() {
     // Used for SwiftUI code
     @Suppress("unused")
@@ -97,8 +97,14 @@ class MainViewModel(
         viewModelScope.launch {
             files.collect { result ->
                 when (result) {
-                    FileKitPickerState.Cancelled -> println("File picker cancelled")
-                    is FileKitPickerState.Started -> println("Started picking ${result.total} files")
+                    FileKitPickerState.Cancelled -> {
+                        println("File picker cancelled")
+                    }
+
+                    is FileKitPickerState.Started -> {
+                        println("Started picking ${result.total} files")
+                    }
+
                     is FileKitPickerState.Progress -> {
                         println("New files processed: ${result.processed.size} / ${result.total}")
                         _uiState.update { it.copy(files = it.files + result.processed) }
@@ -159,13 +165,12 @@ class MainViewModel(
             _uiState.update { it.copy(loading = false) }
         }
     }
-
 }
 
 data class MainUiState(
-    val files: Set<PlatformFile> = emptySet(),    // Set instead of List to avoid duplicates
+    val files: Set<PlatformFile> = emptySet(), // Set instead of List to avoid duplicates
     val directory: PlatformFile? = null,
-    val loading: Boolean = false
+    val loading: Boolean = false,
 ) {
     // Used by SwiftUI code
     constructor() : this(emptySet(), null, false)
@@ -174,7 +179,7 @@ data class MainUiState(
 expect fun downloadDirectoryPath(): PlatformFile?
 
 expect suspend fun pickDirectoryIfSupported(
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile?
 
 expect suspend fun takePhotoIfSupported(): PlatformFile?
@@ -185,5 +190,5 @@ expect suspend fun shareFileIfSupported(file: PlatformFile)
 
 expect suspend fun saveFileOrDownload(
     file: PlatformFile,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile?

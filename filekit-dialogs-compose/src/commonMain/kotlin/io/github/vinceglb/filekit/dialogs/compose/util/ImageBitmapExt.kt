@@ -15,7 +15,7 @@ import io.github.vinceglb.filekit.PlatformFile
  */
 public expect suspend fun ImageBitmap.encodeToByteArray(
     format: ImageFormat = ImageFormat.JPEG,
-    @IntRange(from = 0, to = 100) quality: Int = 100
+    @IntRange(from = 0, to = 100) quality: Int = 100,
 ): ByteArray
 
 /**
