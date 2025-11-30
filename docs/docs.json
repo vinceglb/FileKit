@@ -51,7 +51,9 @@
       {
         "group": "Integrations",
         "pages": [
-          "integrations/coil"
+          "integrations/coil",
+          "integrations/krop",
+          "integrations/compose-media-player"
         ]
       }
     ]
