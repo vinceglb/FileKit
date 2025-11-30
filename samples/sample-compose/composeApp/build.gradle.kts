@@ -1,7 +1,7 @@
+
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.androidApplication)
@@ -14,37 +14,14 @@ kotlin {
     // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
     applyDefaultHierarchyTemplate()
 
-    @OptIn(ExperimentalWasmDsl::class) listOf(
-        js(),
-        wasmJs(),
-    ).forEach {
-        it.apply {
-            outputModuleName = "composeApp"
-            browser {
-                commonWebpackConfig {
-                    outputFileName = "composeApp.js"
-                    devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                        static = (static ?: mutableListOf()).apply {
-                            // Serve sources to debug inside browser
-                            add(project.projectDir.path)
-                        }
-                    }
-                }
-            }
-            binaries.executable()
-        }
-    }
-
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
 
-    jvm("desktop")
-
     listOf(
-        iosX64(),
+        // iosX64(),
         iosArm64(),
         iosSimulatorArm64(),
     ).forEach { iosTarget ->
@@ -54,15 +31,28 @@ kotlin {
         }
     }
 
+    jvm("desktop")
+
+    js {
+        browser()
+        binaries.executable()
+    }
+
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
+
     sourceSets {
         commonMain.dependencies {
             // Compose
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
+            // TODO with compose 1.10 implementation(libs.compose.uiToolingPreview)
 
             // FileKit
             implementation(projects.filekitCoil)
@@ -85,6 +75,7 @@ kotlin {
         androidMain {
             dependsOn(nonWebMain)
             dependencies {
+                implementation(libs.compose.uiTooling)
                 implementation(libs.androidx.activity.compose)
             }
         }

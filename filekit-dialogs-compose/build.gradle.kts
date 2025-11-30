@@ -1,126 +1,36 @@
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    alias(libs.plugins.androidLibrary)
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.filekit.composeMultiplatformLibrary)
     alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 kotlin {
-    explicitApi()
-
-    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
-    applyDefaultHierarchyTemplate()
-
-    // Android
-    androidTarget {
-        publishLibraryVariants("release")
-        compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
-        }
-    }
-
-    // JVM / Desktop
-    jvm()
-
-    // JS / Web
-    @OptIn(ExperimentalWasmDsl::class)
-    listOf(
-        js(),
-        wasmJs(),
-    ).forEach {
-        it.outputModuleName = "FileKitDialogsCompose"
-        it.browser()
-    }
-
-    // iOS / macOS
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64(),
-    ).forEach {
-        it.binaries.framework {
-            baseName = "FileKitDialogsCompose"
-            isStatic = true
-        }
-    }
-
     sourceSets {
+        val jvmAndNativeMain by creating { dependsOn(nonWebMain.get()) }
+        val nonAndroidMain by creating { dependsOn(commonMain.get()) }
+        jvmMain {
+            dependsOn(nonAndroidMain)
+            dependsOn(jvmAndNativeMain)
+        }
+        nativeMain {
+            dependsOn(nonAndroidMain)
+            dependsOn(jvmAndNativeMain)
+        }
+        webMain.get().dependsOn(nonAndroidMain)
+
         commonMain.dependencies {
-            // Compose
-            implementation(compose.runtime)
-            implementation(compose.ui)
-
-            // Coroutines
+            implementation(libs.compose.ui)
             implementation(libs.kotlinx.coroutines.core)
-
-            // Annotations
             implementation(libs.androidx.annotation)
-
-            // FileKit Dialog
             api(projects.filekitDialogs)
         }
 
-        val nonWebMain by creating {
-            dependsOn(commonMain.get())
-        }
-        val mobileMain by creating {
-            dependsOn(nonWebMain)
-        }
-        val nativeAndJvm by creating {
-            dependsOn(nonWebMain)
-        }
-        val nonAndroidMain by creating {
-            dependsOn(commonMain.get())
+        androidMain.dependencies {
+            implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.exifinterface)
         }
 
-        androidMain {
-            dependsOn(nonWebMain)
-            dependsOn(mobileMain)
-            dependencies {
-                implementation(libs.androidx.activity.compose)
-                implementation(libs.androidx.exifinterface)
-            }
+        jvmMain.dependencies {
+            implementation(libs.compose.ui)
         }
-
-        jvmMain {
-            dependsOn(nonWebMain)
-            dependsOn(nonAndroidMain)
-            dependsOn(nativeAndJvm)
-            dependencies {
-                implementation(compose.ui)
-            }
-        }
-
-        nativeMain {
-            dependsOn(nonWebMain)
-            dependsOn(nonAndroidMain)
-            dependsOn(nativeAndJvm)
-        }
-        iosMain {
-            dependsOn(mobileMain)
-        }
-
-        jsMain {
-            dependsOn(nonAndroidMain)
-        }
-        wasmJsMain {
-            dependsOn(nonAndroidMain)
-        }
-    }
-}
-
-android {
-    namespace = "io.github.vinceglb.filekit.dialogs.compose"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
     }
 }
