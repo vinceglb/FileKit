@@ -1,0 +1,89 @@
+name: ⚗️ FileKit CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    name: 💆‍♀️ Build FileKit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🔨 Build project
+        run: ./gradlew assemble
+
+  test-desktop:
+    name: 🖥️ Test Desktop
+    needs: build
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🧪 Run JVM Tests
+        run: ./gradlew jvmTest
+
+  test-android:
+    name: 🤖 Test Android
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🧪 Run Android Unit Tests
+        run: ./gradlew testAndroidHostTest
+
+  test-ios:
+    name: 🍎 Test iOS
+    needs: build
+    runs-on: macos-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🧪 Run iOS Tests
+        run: ./gradlew iosSimulatorArm64Test
