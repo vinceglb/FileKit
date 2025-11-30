@@ -15,7 +15,6 @@ public class SaverResultLauncher(
         suggestedName: String,
         extension: String?,
         directory: PlatformFile?,
-        bytes: ByteArray?,
     ) -> Unit,
 ) {
     public fun launch(
@@ -23,6 +22,6 @@ public class SaverResultLauncher(
         extension: String? = null,
         directory: PlatformFile? = null,
     ) {
-        onLaunch(suggestedName, extension, directory, null)
+        onLaunch(suggestedName, extension, directory)
     }
 }

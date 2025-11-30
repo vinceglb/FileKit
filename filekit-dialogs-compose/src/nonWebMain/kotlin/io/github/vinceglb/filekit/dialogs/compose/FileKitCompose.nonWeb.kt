@@ -8,7 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.deprecated.openFileSaver
+import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
 
 @Composable
@@ -20,7 +20,7 @@ public expect fun rememberDirectoryPickerLauncher(
 ): PickerResultLauncher
 
 @Composable
-public actual fun rememberFileSaverLauncher(
+public fun rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
@@ -35,10 +35,9 @@ public actual fun rememberFileSaverLauncher(
 
     // FileKit launcher
     val returnedLauncher = remember {
-        SaverResultLauncher { suggestedName, extension, directory, bytes ->
+        SaverResultLauncher { suggestedName, extension, directory ->
             coroutineScope.launch {
                 val result = FileKit.openFileSaver(
-                    bytes = bytes,
                     suggestedName = suggestedName,
                     extension = extension,
                     directory = directory,
