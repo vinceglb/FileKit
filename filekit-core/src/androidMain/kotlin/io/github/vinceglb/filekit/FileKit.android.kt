@@ -33,10 +33,22 @@ internal object FileKitCore {
     }
 }
 
+/**
+ * Returns the Android [Context] used by FileKit.
+ *
+ * @throws FileKitCoreNotInitializedException if FileKit has not been initialized.
+ */
 @Suppress("UnusedReceiverParameter")
 public val FileKit.context: Context
     get() = FileKitCore.context
 
+/**
+ * Manually initializes FileKit with the given [Context].
+ *
+ * This is usually done automatically by [io.github.vinceglb.filekit.initializer.FileKitInitializer].
+ *
+ * @param context The Android Context.
+ */
 @Suppress("UnusedReceiverParameter")
 public fun FileKit.manualFileKitCoreInitialization(context: Context) {
     FileKitCore.init(context)

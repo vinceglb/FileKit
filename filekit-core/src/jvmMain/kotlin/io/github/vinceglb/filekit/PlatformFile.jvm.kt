@@ -14,6 +14,11 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+/**
+ * Represents a file on the JVM platform.
+ *
+ * @property file The underlying [java.io.File] object.
+ */
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val file: File,

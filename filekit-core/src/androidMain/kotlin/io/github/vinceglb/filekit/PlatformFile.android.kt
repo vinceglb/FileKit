@@ -28,6 +28,13 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+/**
+ * Represents a file on the Android platform.
+ *
+ * This class wraps either a [File] (for filesystem paths) or a [Uri] (for content providers).
+ *
+ * @property androidFile The underlying [AndroidFile] wrapper (File or Uri).
+ */
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val androidFile: AndroidFile,
@@ -37,11 +44,20 @@ public actual data class PlatformFile(
     public actual companion object
 }
 
+/**
+ * Wrapper for Android file representations.
+ */
 public sealed class AndroidFile {
+    /**
+     * Wraps a standard Java [File].
+     */
     public data class FileWrapper(
         val file: File,
     ) : AndroidFile()
 
+    /**
+     * Wraps an Android [Uri].
+     */
     public data class UriWrapper(
         val uri: Uri,
     ) : AndroidFile()
@@ -50,9 +66,21 @@ public sealed class AndroidFile {
 public actual fun PlatformFile(path: Path): PlatformFile =
     PlatformFile(AndroidFile.FileWrapper(File(path.toString())))
 
+/**
+ * Creates a [PlatformFile] from an Android [Uri].
+ *
+ * @param uri The [Uri] to wrap.
+ * @return A [PlatformFile] instance.
+ */
 public fun PlatformFile(uri: Uri): PlatformFile =
     PlatformFile(AndroidFile.UriWrapper(uri))
 
+/**
+ * Creates a [PlatformFile] from a Java [File].
+ *
+ * @param file The [File] to wrap.
+ * @return A [PlatformFile] instance.
+ */
 public fun PlatformFile(file: File): PlatformFile =
     PlatformFile(AndroidFile.FileWrapper(file))
 

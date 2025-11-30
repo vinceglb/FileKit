@@ -5,6 +5,9 @@ import androidx.startup.Initializer
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.FileKitCore
 
+/**
+ * Initializes FileKit automatically on Android using AndroidX App Startup.
+ */
 @Suppress("unused")
 public class FileKitInitializer : Initializer<FileKit> {
     override fun create(context: Context): FileKit =

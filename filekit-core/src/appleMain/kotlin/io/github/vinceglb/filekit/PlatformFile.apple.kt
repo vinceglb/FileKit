@@ -47,6 +47,11 @@ import platform.UniformTypeIdentifiers.UTType
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
+/**
+ * Represents a file on the Apple platform (iOS/macOS).
+ *
+ * @property nsUrl The underlying [NSURL] object.
+ */
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val nsUrl: NSURL,
