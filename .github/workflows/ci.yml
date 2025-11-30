@@ -30,7 +30,7 @@ jobs:
         run: ./gradlew assemble
 
       - name: 🍹 Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: build-outputs
           path: |
@@ -61,7 +61,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-outputs
 
@@ -86,7 +86,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-outputs
 
@@ -111,9 +111,12 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-outputs
+
+      - name: Display structure of downloaded files
+        run: ls -R
 
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
@@ -135,10 +138,13 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-outputs
+      - name: Display structure of downloaded files
+        run: ls -R
+
+      # - name: 🦊 Download build artifacts
+      #   uses: actions/download-artifact@v6
+      #   with:
+      #     name: build-outputs
 
       - name: 🧪 Run macOS Tests
         run: ./gradlew macosArm64Test
