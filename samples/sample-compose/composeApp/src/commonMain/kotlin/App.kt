@@ -33,10 +33,8 @@ import io.github.vinceglb.filekit.extension
 import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.readBytes
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-@Preview
 fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context = context)
