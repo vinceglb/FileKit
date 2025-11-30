@@ -11,16 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: 🔨 Build project
         run: ./gradlew assemble
@@ -34,16 +34,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: 🧪 Run JVM Tests
         run: ./gradlew jvmTest
@@ -54,16 +54,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: 🧪 Run Android Unit Tests
         run: ./gradlew testAndroidHostTest
@@ -74,16 +74,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
