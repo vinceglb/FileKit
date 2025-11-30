@@ -38,6 +38,10 @@ public actual val FileKit.filesDir: PlatformFile
 
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(nsUrl = NSBundle.mainBundle.bundleURL)
+        .parent()
+        ?.parent()
+        ?.parent()
+        ?.parent() ?: throw FileKitException("Unable to find project directory")
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 public actual suspend fun FileKit.saveImageToGallery(
