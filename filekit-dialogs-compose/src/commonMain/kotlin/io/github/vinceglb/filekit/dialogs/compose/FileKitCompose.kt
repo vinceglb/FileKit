@@ -15,6 +15,17 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openFilePicker
 import kotlinx.coroutines.launch
 
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking files.
+ *
+ * @param type The type of files to pick. Defaults to [FileKitType.File].
+ * @param mode The picking mode (e.g. Single, Multiple).
+ * @param title The title of the dialog. Supported on desktop platforms.
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onResult Callback invoked with the result.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
 @Composable
 public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
@@ -56,6 +67,16 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
     return returnedLauncher
 }
 
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a single file.
+ *
+ * @param type The type of files to pick. Defaults to [FileKitType.File].
+ * @param title The title of the dialog. Supported on desktop platforms.
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onResult Callback invoked with the picked file, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
 @Composable
 public fun rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),

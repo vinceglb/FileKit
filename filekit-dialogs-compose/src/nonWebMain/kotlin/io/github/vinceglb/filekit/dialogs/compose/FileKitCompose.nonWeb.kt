@@ -11,6 +11,15 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
 
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param title The title of the dialog. Supported on desktop platforms.
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
 @Composable
 public expect fun rememberDirectoryPickerLauncher(
     title: String? = null,
@@ -19,6 +28,13 @@ public expect fun rememberDirectoryPickerLauncher(
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher
 
+/**
+ * Creates and remembers a [SaverResultLauncher] for saving a file.
+ *
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onResult Callback invoked with the saved file path, or null if cancelled.
+ * @return A [SaverResultLauncher] that can be used to launch the saver.
+ */
 @Composable
 public fun rememberFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,

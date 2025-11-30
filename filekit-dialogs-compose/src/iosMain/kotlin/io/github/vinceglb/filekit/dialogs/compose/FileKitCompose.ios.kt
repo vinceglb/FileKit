@@ -14,6 +14,13 @@ import kotlinx.coroutines.launch
 @Composable
 internal actual fun InitFileKit() {}
 
+/**
+ * Creates and remembers a [PhotoResultLauncher] for taking a picture or video with the camera.
+ *
+ * @param openCameraSettings Platform-specific settings for the camera.
+ * @param onResult Callback invoked with the saved file, or null if cancelled.
+ * @return A [PhotoResultLauncher] that can be used to launch the camera.
+ */
 @Composable
 public actual fun rememberCameraPickerLauncher(
     openCameraSettings: FileKitOpenCameraSettings,
