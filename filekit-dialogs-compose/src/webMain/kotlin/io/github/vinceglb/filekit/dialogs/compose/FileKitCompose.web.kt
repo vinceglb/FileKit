@@ -11,32 +11,5 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.download
 import kotlinx.coroutines.launch
 
-@Deprecated(
-    message = "Opening file saver dialog is not supported on web targets. " +
-        "Please use expect/actual to provide web and non-web implementations.",
-)
-@Composable
-public actual fun rememberFileSaverLauncher(
-    dialogSettings: FileKitDialogSettings,
-    onResult: (PlatformFile?) -> Unit,
-): SaverResultLauncher {
-    // Coroutine
-    val coroutineScope = rememberCoroutineScope()
-
-    // Updated state
-    val currentOnResult by rememberUpdatedState(onResult)
-
-    return remember {
-        SaverResultLauncher { suggestedName, extension, _, bytes ->
-            coroutineScope.launch {
-                if (bytes != null) {
-                    FileKit.download(bytes = bytes, fileName = "$suggestedName.$extension")
-                    currentOnResult(null)
-                }
-            }
-        }
-    }
-}
-
 @Composable
 internal actual fun InitFileKit() {}

@@ -72,15 +72,5 @@ public fun rememberFilePickerLauncher(
     onResult = onResult,
 )
 
-@Deprecated(
-    message = "Opening file saver dialog is not supported on web targets. " +
-        "Please use expect/actual to provide web and non-web implementations.",
-)
-@Composable
-public expect fun rememberFileSaverLauncher(
-    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
-    onResult: (PlatformFile?) -> Unit,
-): SaverResultLauncher
-
 @Composable
 internal expect fun InitFileKit()
