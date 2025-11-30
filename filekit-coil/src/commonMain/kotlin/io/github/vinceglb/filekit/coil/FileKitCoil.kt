@@ -41,7 +41,8 @@ public expect class PlatformFileFetcher : Fetcher {
      * Factory class for creating PlatformFileFetcher instances.
      * This factory is used by Coil to create fetchers for PlatformFile objects.
      */
-    public class Factory : Fetcher.Factory<PlatformFile> {
+    @Suppress("ktlint:standard:class-signature")
+    public class Factory() : Fetcher.Factory<PlatformFile> {
         override fun create(data: PlatformFile, options: Options, imageLoader: ImageLoader): Fetcher?
     }
 }
