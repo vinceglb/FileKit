@@ -19,14 +19,14 @@ import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.filesDir
 
 @Composable
-actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
+actual fun TakePhoto(onTakePhoto: (PlatformFile?) -> Unit) {
     val context = LocalContext.current
     val takePhotoLauncher = rememberCameraPickerLauncher(
 //        openCameraSettings = FileKitOpenCameraSettings(
 //            authority = "${context.packageName}.fileprovider"
 //        )
     ) {
-        onPhotoTaken(it)
+        onTakePhoto(it)
     }
 
     Button(
