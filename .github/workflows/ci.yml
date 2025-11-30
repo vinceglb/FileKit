@@ -60,10 +60,10 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v6
-        with:
-          name: build-outputs
+      # - name: 🦊 Download build artifacts
+      #   uses: actions/download-artifact@v6
+      #   with:
+      #     name: build-outputs
 
       - name: 🧪 Run JVM Tests
         run: ./gradlew jvmTest
@@ -85,10 +85,10 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v6
-        with:
-          name: build-outputs
+      # - name: 🦊 Download build artifacts
+      #   uses: actions/download-artifact@v6
+      #   with:
+      #     name: build-outputs
 
       - name: 🧪 Run Android Unit Tests
         run: ./gradlew testAndroidHostTest
@@ -110,13 +110,10 @@ jobs:
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
-      - name: 🦊 Download build artifacts
-        uses: actions/download-artifact@v6
-        with:
-          name: build-outputs
-
-      - name: Display structure of downloaded files
-        run: ls -R
+      # - name: 🦊 Download build artifacts
+      #   uses: actions/download-artifact@v6
+      #   with:
+      #     name: build-outputs
 
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
@@ -137,9 +134,6 @@ jobs:
 
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
-
-      - name: Display structure of downloaded files
-        run: ls -R
 
       # - name: 🦊 Download build artifacts
       #   uses: actions/download-artifact@v6
