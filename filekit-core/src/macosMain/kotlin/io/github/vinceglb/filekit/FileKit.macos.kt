@@ -46,6 +46,9 @@ public actual val FileKit.filesDir: PlatformFile
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
 
+/**
+ * Returns the pictures directory for the current user.
+ */
 @Suppress("UnusedReceiverParameter")
 public val FileKit.pictureDir: PlatformFile
     get() = NSFileManager

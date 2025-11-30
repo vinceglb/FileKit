@@ -6,6 +6,12 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.transform
 
+/**
+ * Defines the mode of the file picker (Single, Multiple, etc.) and handles result parsing.
+ *
+ * @param PickerResult The type of the result returned by the picker.
+ * @param ConsumedResult The type of the result consumed by the callback.
+ */
 public sealed class FileKitMode<PickerResult, ConsumedResult> {
     internal abstract fun getPickerMode(): PickerMode
 
@@ -16,6 +22,9 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         onConsumed: (ConsumedResult) -> Unit,
     )
 
+    /**
+     * Single file picker mode.
+     */
     public data object Single : FileKitMode<PlatformFile?, PlatformFile?>() {
         override fun getPickerMode(): PickerMode = PickerMode.Single
 
@@ -34,6 +43,11 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         }
     }
 
+    /**
+     * Multiple file picker mode.
+     *
+     * @property maxItems The maximum number of items to pick. Supported only on Android (Photo Picker).
+     */
     public data class Multiple(
         val maxItems: Int? = null,
     ) : FileKitMode<List<PlatformFile>?, List<PlatformFile>?>() {
@@ -54,6 +68,9 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         }
     }
 
+    /**
+     * Single file picker mode exposing the state as a [Flow].
+     */
     public data object SingleWithState :
         FileKitMode<Flow<FileKitPickerState<PlatformFile>>, FileKitPickerState<PlatformFile>>() {
         override fun getPickerMode(): PickerMode = PickerMode.Single
@@ -99,6 +116,11 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         }
     }
 
+    /**
+     * Multiple file picker mode exposing the state as a [Flow].
+     *
+     * @property maxItems The maximum number of items to pick. Supported only on Android (Photo Picker).
+     */
     public data class MultipleWithState(
         val maxItems: Int? = null,
     ) : FileKitMode<Flow<FileKitPickerState<List<PlatformFile>>>, FileKitPickerState<List<PlatformFile>>>() {

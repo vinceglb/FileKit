@@ -55,4 +55,11 @@ public actual class PlatformFileKeyer : Keyer<PlatformFile> {
     actual override fun key(data: PlatformFile, options: Options): String? = data.path
 }
 
+/**
+ * Returns the underlying file object for this platform.
+ *
+ * On Android, this is a [java.io.File] or [android.net.Uri].
+ * On JVM, this is a [java.io.File].
+ * On Apple, this is an [NSURL].
+ */
 internal expect val PlatformFile.underlyingFile: Any

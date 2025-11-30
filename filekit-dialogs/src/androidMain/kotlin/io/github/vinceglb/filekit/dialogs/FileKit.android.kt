@@ -45,6 +45,15 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     return files.toPickerStateFlow()
 }
 
+/**
+ * Opens a file saver dialog.
+ *
+ * @param suggestedName The suggested name for the file.
+ * @param extension The file extension (optional).
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @return The path where the file should be saved as a [PlatformFile], or null if cancelled.
+ */
 public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
     extension: String?,
@@ -73,6 +82,14 @@ public actual suspend fun FileKit.openFileSaver(
     }
 }
 
+/**
+ * Opens a directory picker dialog.
+ *
+ * @param title The title of the dialog. Supported on desktop platforms.
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @return The picked directory as a [PlatformFile], or null if cancelled.
+ */
 public actual suspend fun FileKit.openDirectoryPicker(
     title: String?,
     directory: PlatformFile?,
@@ -102,6 +119,15 @@ public actual suspend fun FileKit.openDirectoryPicker(
     }
 }
 
+/**
+ * Opens a camera picker dialog.
+ *
+ * @param type The type of media to capture (Image or Video).
+ * @param cameraFacing The camera facing (Back or Front).
+ * @param destinationFile The file where the captured media will be saved.
+ * @param openCameraSettings Platform-specific settings for the camera.
+ * @return The saved file as a [PlatformFile], or null if cancelled.
+ */
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
     cameraFacing: FileKitCameraFacing,
@@ -181,6 +207,12 @@ public class TakePictureWithCameraFacing(
     }
 }
 
+/**
+ * Shares a file using the Android share sheet.
+ *
+ * @param file The file to share.
+ * @param shareSettings Platform-specific settings for sharing.
+ */
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings,
@@ -191,6 +223,12 @@ public actual suspend fun FileKit.shareFile(
     )
 }
 
+/**
+ * Shares multiple files using the Android share sheet.
+ *
+ * @param files The list of files to share.
+ * @param shareSettings Platform-specific settings for sharing.
+ */
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
     shareSettings: FileKitShareSettings,
@@ -240,6 +278,12 @@ public actual suspend fun FileKit.shareFile(
     context.startActivity(chooseIntent)
 }
 
+/**
+ * Opens a file with the default application associated with its file type.
+ *
+ * @param file The file to open.
+ * @param openFileSettings Platform-specific settings for opening the file.
+ */
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
     openFileSettings: FileKitOpenFileSettings,

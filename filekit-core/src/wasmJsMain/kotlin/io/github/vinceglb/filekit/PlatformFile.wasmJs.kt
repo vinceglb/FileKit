@@ -14,6 +14,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * Represents a file on the Web (Wasm) platform.
+ *
+ * @property file The underlying W3C [File] object.
+ */
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
     val file: File,

@@ -11,6 +11,15 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import kotlinx.coroutines.launch
 
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param title The title of the dialog. Supported on desktop platforms.
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
 @Composable
 public actual fun rememberDirectoryPickerLauncher(
     title: String?,

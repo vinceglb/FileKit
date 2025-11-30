@@ -25,6 +25,9 @@ public actual val FileKit.cacheDir: PlatformFile
         ?.let(::PlatformFile)
         ?: throw FileKitException("Could not find cache directory")
 
+/**
+ * Returns the temporary directory for the current user.
+ */
 public val FileKit.tempDir: PlatformFile
     get() = NSFileManager
         .defaultManager

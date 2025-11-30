@@ -29,15 +29,31 @@ public actual object FileKit {
     internal var customCacheDir: Path? = null
     internal var customFilesDir: Path? = null
 
+    /**
+     * The application ID, used to resolve directory paths.
+     *
+     * @throws FileKitNotInitializedException if FileKit has not been initialized.
+     */
     public val appId: String
         get() = _appId ?: throw FileKitNotInitializedException()
 
+    /**
+     * Initializes FileKit with the given application ID.
+     *
+     * @param appId The application ID.
+     */
     public fun init(appId: String) {
         _appId = appId
         customCacheDir = null
         customFilesDir = null
     }
 
+    /**
+     * Initializes FileKit with custom directories.
+     *
+     * @param filesDir The directory for persistent files.
+     * @param cacheDir The directory for cache files.
+     */
     public fun init(
         filesDir: File,
         cacheDir: File,
@@ -47,6 +63,13 @@ public actual object FileKit {
         customFilesDir = filesDir.toKotlinxIoPath()
     }
 
+    /**
+     * Initializes FileKit with an optional application ID and custom directories.
+     *
+     * @param appId The application ID.
+     * @param filesDir The directory for persistent files.
+     * @param cacheDir The directory for cache files.
+     */
     public fun init(
         appId: String,
         filesDir: File? = null,
@@ -104,6 +127,9 @@ public actual val FileKit.databasesDir: PlatformFile
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
 
+/**
+ * Returns the downloads directory for the current user.
+ */
 @Suppress("UnusedReceiverParameter")
 public val FileKit.downloadDir: PlatformFile
     get() = when (PlatformUtil.current) {
@@ -115,6 +141,9 @@ public val FileKit.downloadDir: PlatformFile
         Platform.Windows -> getEnv("USERPROFILE").toPath() / "Downloads"
     }.also(Path::assertExists).let(::PlatformFile)
 
+/**
+ * Returns the pictures directory for the current user.
+ */
 @Suppress("UnusedReceiverParameter")
 public val FileKit.pictureDir: PlatformFile
     get() = when (PlatformUtil.current) {
