@@ -1,7 +1,7 @@
 [versions]
 agp = "8.13.1"
 android-compileSdk = "36"
-android-minSdk = "21"
+android-minSdk = "23"
 android-targetSdk = "36"
 androidx-activity-ktx = "1.12.0"
 androidx-annotation = "1.9.1"
@@ -12,6 +12,7 @@ androidx-lifecycle = "2.9.6"
 androidx-startup = "1.2.0"
 coilCompose = "3.3.0"
 compose-multiplatform = "1.9.3"
+compose-multiplatform-material3 = "1.9.0"
 dbus-java = "5.1.1"
 human-readable = "1.12.1"
 jna = "5.18.1"
@@ -53,11 +54,31 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "material-icons-core" }
 test-android-robolectric = { module = "org.robolectric:robolectric", version.ref = "test-android-robolectric" }
 
+# Compose
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform-material3" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-uiTooling = { module = "org.jetbrains.compose.ui:ui-tooling", version.ref = "compose-multiplatform" }
+compose-uiToolingPreview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
+
+# Gradle Plugins
+android-gradleApiPlugin = { module = "com.android.tools.build:gradle-api", version.ref = "agp" }
+compose-gradlePlugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
+compose-multiplatform-gradlePlugin = { module = "org.jetbrains.compose:org.jetbrains.compose.gradle.plugin", version.ref = "compose-multiplatform" }
+kotlin-multiplatform-gradlePlugin = { module = "org.jetbrains.kotlin.multiplatform:org.jetbrains.kotlin.multiplatform.gradle.plugin", version.ref = "kotlin" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
-composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" } # TODO remove
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-mavenPublish" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-mavenPublish" }
+
+# Plugins defined by this project
+filekit-kotlinMultiplatformLibrary = { id = "io.github.vinceglb.filekitKotlinMultiplatformLibrary" }
+filekit-composeMultiplatformLibrary = { id = "io.github.vinceglb.filekitComposeMultiplatformLibrary" }
