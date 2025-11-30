@@ -58,6 +58,7 @@
       {
         "group": "Cookbook",
         "pages": [
+          "cookbook/datastore",
           "cookbook/test-resources"
         ]
       }
