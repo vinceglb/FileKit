@@ -4,8 +4,8 @@
 
     <application>
         <provider
-            android:name=".FileKitFileProvider"
-            android:authorities="${applicationId}.filekit.fileprovider"
+            android:name=".fileprovider.FileKitFileProvider"
+            android:authorities="${applicationId}.FileKitFileProvider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data

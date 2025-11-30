@@ -1,4 +1,3 @@
-
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Share
@@ -14,7 +13,6 @@ import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
-import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberCameraPickerLauncher
 import io.github.vinceglb.filekit.dialogs.compose.rememberShareFileLauncher
 import io.github.vinceglb.filekit.div
@@ -24,9 +22,9 @@ import io.github.vinceglb.filekit.filesDir
 actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
     val context = LocalContext.current
     val takePhotoLauncher = rememberCameraPickerLauncher(
-        openCameraSettings = FileKitOpenCameraSettings(
-            authority = "${context.packageName}.fileprovider"
-        )
+//        openCameraSettings = FileKitOpenCameraSettings(
+//            authority = "${context.packageName}.fileprovider"
+//        )
     ) {
         onPhotoTaken(it)
     }
