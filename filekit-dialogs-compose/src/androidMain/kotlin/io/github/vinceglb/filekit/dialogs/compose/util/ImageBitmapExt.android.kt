@@ -30,7 +30,7 @@ import java.io.IOException
  */
 public actual suspend fun ImageBitmap.encodeToByteArray(
     format: ImageFormat,
-    @IntRange(from = 0, to = 100) quality: Int
+    @IntRange(from = 0, to = 100) quality: Int,
 ): ByteArray = withContext(Dispatchers.IO) {
     val bitmap = this@encodeToByteArray.asAndroidBitmap()
     val compressFormat = when (format) {
@@ -58,23 +58,28 @@ public actual suspend fun PlatformFile.toImageBitmap(): ImageBitmap =
         rotatedBitmap.asImageBitmap()
     }
 
-private fun PlatformFile.decodeBitmap(): Bitmap {
-    return when (val androidFile = androidFile) {
-        is AndroidFile.FileWrapper -> BitmapFactory.decodeFile(absolutePath())
-        is AndroidFile.UriWrapper -> {
-            FileKit.context.contentResolver.openInputStream(androidFile.uri)?.use { inputStream ->
-                BitmapFactory.decodeStream(inputStream)
-            } ?: throw IOException("Could not open InputStream for URI: ${androidFile.uri}")
-        }
+private fun PlatformFile.decodeBitmap(): Bitmap = when (val androidFile = androidFile) {
+    is AndroidFile.FileWrapper -> {
+        BitmapFactory.decodeFile(absolutePath())
+    }
+
+    is AndroidFile.UriWrapper -> {
+        FileKit.context.contentResolver.openInputStream(androidFile.uri)?.use { inputStream ->
+            BitmapFactory.decodeStream(inputStream)
+        } ?: throw IOException("Could not open InputStream for URI: ${androidFile.uri}")
     }
 }
 
 private fun PlatformFile.getExifOrientation(): Int {
     return try {
         when (val androidFile = androidFile) {
-            is AndroidFile.FileWrapper -> ExifInterface(absolutePath())
+            is AndroidFile.FileWrapper -> {
+                ExifInterface(absolutePath())
+            }
+
             is AndroidFile.UriWrapper -> {
-                FileKit.context.contentResolver.openInputStream(androidFile.uri)
+                FileKit.context.contentResolver
+                    .openInputStream(androidFile.uri)
                     ?.use { inputStream ->
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             ExifInterface(inputStream)
@@ -104,11 +109,26 @@ private fun PlatformFile.getExifOrientation(): Int {
 private fun rotateBitmapIfRequired(bitmap: Bitmap, orientation: Int): Bitmap {
     val matrix = Matrix()
     when (orientation) {
-        ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
-        ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
-        ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
-        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.preScale(-1.0f, 1.0f)
-        ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.preScale(1.0f, -1.0f)
+        ExifInterface.ORIENTATION_ROTATE_90 -> {
+            matrix.postRotate(90f)
+        }
+
+        ExifInterface.ORIENTATION_ROTATE_180 -> {
+            matrix.postRotate(180f)
+        }
+
+        ExifInterface.ORIENTATION_ROTATE_270 -> {
+            matrix.postRotate(270f)
+        }
+
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> {
+            matrix.preScale(-1.0f, 1.0f)
+        }
+
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+            matrix.preScale(1.0f, -1.0f)
+        }
+
         ExifInterface.ORIENTATION_TRANSPOSE -> {
             matrix.postRotate(90f)
             matrix.preScale(-1.0f, 1.0f)
@@ -119,8 +139,13 @@ private fun rotateBitmapIfRequired(bitmap: Bitmap, orientation: Int): Bitmap {
             matrix.preScale(-1.0f, 1.0f)
         }
 
-        ExifInterface.ORIENTATION_NORMAL, ExifInterface.ORIENTATION_UNDEFINED -> return bitmap
-        else -> return bitmap // Unknown orientation, return original
+        ExifInterface.ORIENTATION_NORMAL, ExifInterface.ORIENTATION_UNDEFINED -> {
+            return bitmap
+        }
+
+        else -> {
+            return bitmap
+        } // Unknown orientation, return original
     }
 
     return try {

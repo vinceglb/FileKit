@@ -68,7 +68,7 @@ class PlatformFileNonWebTest {
         assertEquals(expected = resourceDirectory.toKotlinxIoPath(), actual = notExistingFile.parent()?.toKotlinxIoPath())
         assertEquals(
             expected = FileKit.projectDir.resolve("src/nonWebTest").toKotlinxIoPath(),
-            actual = resourceDirectory.parent()?.toKotlinxIoPath()
+            actual = resourceDirectory.parent()?.toKotlinxIoPath(),
         )
     }
 

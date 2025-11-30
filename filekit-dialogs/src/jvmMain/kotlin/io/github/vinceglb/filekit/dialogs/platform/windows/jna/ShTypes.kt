@@ -5,30 +5,28 @@ import com.sun.jna.Structure.FieldOrder
 import com.sun.jna.WString
 import com.sun.jna.platform.win32.Guid.GUID
 
-
 internal interface ShTypes {
+    @Suppress("ktlint:standard:class-naming")
     @FieldOrder("pszName", "pszSpec")
     class COMDLG_FILTERSPEC : Structure() {
         @JvmField
         var pszName: WString? = null
+
         @JvmField
         var pszSpec: WString? = null
 
-        override fun getFieldOrder(): List<String> {
-            return listOf("pszName", "pszSpec")
-        }
+        override fun getFieldOrder(): List<String> = listOf("pszName", "pszSpec")
     }
 
     @FieldOrder("fmdid", "pid")
     class PROPERTYKEY : Structure() {
         @JvmField
         var fmtid: GUID? = null
+
         @JvmField
         var pid: Int = 0
 
-        override fun getFieldOrder(): List<String> {
-            return listOf("fmtid", "pid")
-        }
+        override fun getFieldOrder(): List<String> = listOf("fmtid", "pid")
     }
 
     interface FILEOPENDIALOGOPTIONS {
@@ -165,6 +163,7 @@ internal interface ShTypes {
         }
     }
 
+    @Suppress("ktlint:standard:property-naming")
     interface SIGDN {
         companion object {
             var SIGDN_NORMALDISPLAY: Long = 0

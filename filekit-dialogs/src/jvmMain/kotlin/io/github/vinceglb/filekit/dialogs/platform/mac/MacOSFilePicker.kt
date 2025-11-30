@@ -17,44 +17,38 @@ internal class MacOSFilePicker : PlatformFilePicker {
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
-        return callNativeMacOSPicker(
-            mode = MacOSFilePickerMode.SingleFile,
-            directory = directory,
-            fileExtensions = fileExtensions,
-            title = title,
-            macOSSettings = dialogSettings.macOS,
-        )
-    }
+    ): File? = callNativeMacOSPicker(
+        mode = MacOSFilePickerMode.SingleFile,
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = title,
+        macOSSettings = dialogSettings.macOS,
+    )
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? {
-        return callNativeMacOSPicker(
-            mode = MacOSFilePickerMode.MultipleFiles,
-            directory = directory,
-            fileExtensions = fileExtensions,
-            title = title,
-            macOSSettings = dialogSettings.macOS,
-        )
-    }
+    ): List<File>? = callNativeMacOSPicker(
+        mode = MacOSFilePickerMode.MultipleFiles,
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = title,
+        macOSSettings = dialogSettings.macOS,
+    )
 
     override suspend fun openDirectoryPicker(
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
-        return callNativeMacOSPicker(
-            mode = MacOSFilePickerMode.Directories,
-            directory = directory,
-            fileExtensions = null,
-            title = title,
-            macOSSettings = dialogSettings.macOS,
-        )
-    }
+    ): File? = callNativeMacOSPicker(
+        mode = MacOSFilePickerMode.Directories,
+        directory = directory,
+        fileExtensions = null,
+        title = title,
+        macOSSettings = dialogSettings.macOS,
+    )
 
     private suspend fun <T> callNativeMacOSPicker(
         mode: MacOSFilePickerMode<T>,
@@ -130,17 +124,19 @@ internal class MacOSFilePicker : PlatformFilePicker {
             val urls = Foundation.invoke(openPanel, "URLs")
             val urlCount = Foundation.invoke(urls, "count").toInt()
 
-            return (0 until urlCount).mapNotNull { index ->
-                val url = Foundation.invoke(urls, "objectAtIndex:", index)
-                val nsPath = Foundation.invoke(url, "path")
-                val path = Foundation.toStringViaUTF8(nsPath)
-                path?.let { File(it) }
-            }.ifEmpty { null }
+            return (0 until urlCount)
+                .mapNotNull { index ->
+                    val url = Foundation.invoke(urls, "objectAtIndex:", index)
+                    val nsPath = Foundation.invoke(url, "path")
+                    val path = Foundation.toStringViaUTF8(nsPath)
+                    path?.let { File(it) }
+                }.ifEmpty { null }
         }
     }
 
     private sealed class MacOSFilePickerMode<T> {
         abstract fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean)
+
         abstract fun getResult(openPanel: ID): T?
 
         data object SingleFile : MacOSFilePickerMode<File?>() {

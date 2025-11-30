@@ -9,10 +9,11 @@ import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.COMDLG_FILTERSPEC
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IFileDialog : IModalWindow {
     fun SetFileTypes(
         FileTypes: Int,
-        rgFilterSpec: Array<COMDLG_FILTERSPEC?>?
+        rgFilterSpec: Array<COMDLG_FILTERSPEC?>?,
     ): WinNT.HRESULT?
 
     fun SetFileTypeIndex(iFileType: Int): WinNT.HRESULT?
@@ -21,7 +22,7 @@ internal interface IFileDialog : IModalWindow {
 
     fun Advise(
         pfde: Pointer?,
-        pdwCookie: IntByReference?
+        pdwCookie: IntByReference?,
     ): WinNT.HRESULT? // IFileDialogEvents
 
     fun Unadvise(dwCookie: Int): WinNT.HRESULT?

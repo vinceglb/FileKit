@@ -11,12 +11,16 @@ import com.sun.jna.platform.win32.Guid
  * Declaring getFieldOrder() in the class works as expected.
  */
 internal object GuidFixed {
-    class CLSID(guid: String) : Guid.CLSID(guid) {
+    class CLSID(
+        guid: String,
+    ) : Guid.CLSID(guid) {
         override fun getFieldOrder(): List<String> =
             listOf("Data1", "Data2", "Data3", "Data4")
     }
 
-    class IID(iid: String) : Guid.IID(iid) {
+    class IID(
+        iid: String,
+    ) : Guid.IID(iid) {
         override fun getFieldOrder(): List<String> =
             listOf("Data1", "Data2", "Data3", "Data4")
     }

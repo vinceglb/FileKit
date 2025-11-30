@@ -6,7 +6,7 @@ import platform.PhotosUI.PHPickerViewControllerDelegateProtocol
 import platform.darwin.NSObject
 
 internal class PhPickerDelegate(
-    private val onFilesPicked: (List<PHPickerResult>) -> Unit
+    private val onFilesPicked: (List<PHPickerResult>) -> Unit,
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
     private var hasFinished = false

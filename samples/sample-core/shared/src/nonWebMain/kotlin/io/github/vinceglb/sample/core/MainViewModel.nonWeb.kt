@@ -13,9 +13,9 @@ import io.github.vinceglb.filekit.parent
 import io.github.vinceglb.filekit.saveImageToGallery
 import io.github.vinceglb.filekit.write
 
-actual suspend fun pickDirectoryIfSupported(dialogSettings: FileKitDialogSettings): PlatformFile? {
-    return FileKit.openDirectoryPicker(dialogSettings = dialogSettings)
-}
+actual suspend fun pickDirectoryIfSupported(dialogSettings: FileKitDialogSettings): PlatformFile? = FileKit.openDirectoryPicker(
+    dialogSettings = dialogSettings,
+)
 
 actual suspend fun compressImage(bytes: ByteArray) {
     val compressedImage = FileKit.compressImage(
@@ -23,7 +23,7 @@ actual suspend fun compressImage(bytes: ByteArray) {
         maxWidth = 200,
         maxHeight = 200,
         quality = 80,
-        imageFormat = ImageFormat.JPEG
+        imageFormat = ImageFormat.JPEG,
     )
 
     FileKit.saveImageToGallery(compressedImage, "compressed.jpg")
@@ -31,7 +31,7 @@ actual suspend fun compressImage(bytes: ByteArray) {
 
 actual suspend fun saveFileOrDownload(
     file: PlatformFile,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
     val newFile = FileKit.openFileSaver(
         suggestedName = file.name,

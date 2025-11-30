@@ -20,23 +20,23 @@ class PlatformFileAndroidTest {
     fun testPlatformMimeType() {
         assertEquals(
             expected = MimeType.parse("text/plain"),
-            actual = textFile.mimeType()
+            actual = textFile.mimeType(),
         )
         assertEquals(
             expected = MimeType.parse("image/png"),
-            actual = imageFile.mimeType()
+            actual = imageFile.mimeType(),
         )
         assertEquals(
             expected = null,
-            actual = emptyFile.mimeType()
+            actual = emptyFile.mimeType(),
         )
         assertEquals(
             expected = MimeType.parse("application/pdf"),
-            actual = notExistingFile.mimeType()
+            actual = notExistingFile.mimeType(),
         )
         assertEquals(
             expected = null,
-            actual = resourceDirectory.mimeType()
+            actual = resourceDirectory.mimeType(),
         )
     }
 }

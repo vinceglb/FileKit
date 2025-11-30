@@ -7,14 +7,14 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.dialogs.init
 
 class MainActivity : ComponentActivity() {
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-		// Important! Initialize the picker
-		FileKit.init(this)
+        // Important! Initialize the picker
+        FileKit.init(this)
 
-		setContent {
-			App()
-		}
-	}
+        setContent {
+            App()
+        }
+    }
 }

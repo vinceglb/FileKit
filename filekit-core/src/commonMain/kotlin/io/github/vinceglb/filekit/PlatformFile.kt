@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable(with = PlatformFileSerializer::class)
 public expect class PlatformFile {
     override fun toString(): String
+
     public companion object
 }
 

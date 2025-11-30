@@ -97,12 +97,16 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.sample.compose"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.android.compileSdk
+        .get()
+        .toInt()
 
     defaultConfig {
         applicationId = "io.github.vinceglb.sample.compose"
         minSdk = 23
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk
+            .get()
+            .toInt()
         versionCode = 1
         versionName = "1.0"
     }

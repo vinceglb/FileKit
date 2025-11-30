@@ -6,7 +6,7 @@ import org.w3c.files.FilePropertyBag
 
 actual fun createTestFile(
     name: String,
-    content: String
+    content: String,
 ): PlatformFile {
     val bytes = content.encodeToByteArray()
     val file = File(

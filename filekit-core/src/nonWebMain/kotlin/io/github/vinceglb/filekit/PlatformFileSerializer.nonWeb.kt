@@ -10,7 +10,7 @@ import kotlinx.serialization.encoding.Encoder
 public actual object PlatformFileSerializer : KSerializer<PlatformFile> {
     actual override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
         serialName = "io.github.vinceglb.filekit.PlatformFile",
-        kind = PrimitiveKind.STRING
+        kind = PrimitiveKind.STRING,
     )
 
     actual override fun deserialize(decoder: Decoder): PlatformFile {

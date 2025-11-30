@@ -14,7 +14,7 @@ public actual suspend fun FileKit.openFileSaver(
     suggestedName: String,
     extension: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
     if (bytes == null) {
         throw IllegalArgumentException("bytes must not be null")
@@ -25,7 +25,7 @@ public actual suspend fun FileKit.openFileSaver(
         fileName = when {
             extension != null -> "$suggestedName.$extension"
             else -> suggestedName
-        }
+        },
     )
 
     return null

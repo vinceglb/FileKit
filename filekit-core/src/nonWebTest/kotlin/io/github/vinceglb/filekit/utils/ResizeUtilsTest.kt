@@ -10,7 +10,7 @@ class ResizeUtilsTest {
             originalWidth = 100,
             originalHeight = 200,
             maxWidth = 50,
-            maxHeight = 100
+            maxHeight = 100,
         )
 
         assertEquals(50, newWidth)
@@ -23,7 +23,7 @@ class ResizeUtilsTest {
             originalWidth = 110,
             originalHeight = 120,
             maxWidth = 200,
-            maxHeight = 200
+            maxHeight = 200,
         )
 
         assertEquals(110, newWidth)
@@ -36,7 +36,7 @@ class ResizeUtilsTest {
             originalWidth = 200,
             originalHeight = 100,
             maxWidth = 100,
-            maxHeight = 100
+            maxHeight = 100,
         )
 
         assertEquals(100, newWidth)
@@ -49,7 +49,7 @@ class ResizeUtilsTest {
             originalWidth = 100,
             originalHeight = 200,
             maxWidth = 100,
-            maxHeight = 100
+            maxHeight = 100,
         )
 
         assertEquals(50, newWidth)
@@ -62,7 +62,7 @@ class ResizeUtilsTest {
             originalWidth = 400,
             originalHeight = 200,
             maxWidth = 200,
-            maxHeight = 50
+            maxHeight = 50,
         )
 
         assertEquals(100, newWidth)
@@ -75,7 +75,7 @@ class ResizeUtilsTest {
             originalWidth = 400,
             originalHeight = 200,
             maxWidth = null,
-            maxHeight = null
+            maxHeight = null,
         )
 
         assertEquals(400, newWidth)

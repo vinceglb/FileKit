@@ -22,7 +22,7 @@ import org.jetbrains.skia.Image
  */
 public actual suspend fun ImageBitmap.encodeToByteArray(
     format: ImageFormat,
-    @IntRange(from = 0, to = 100) quality: Int
+    @IntRange(from = 0, to = 100) quality: Int,
 ): ByteArray = withContext(Dispatchers.Unconfined) {
     val bitmap = this@encodeToByteArray.asSkiaBitmap()
     val imageFormat = when (format) {

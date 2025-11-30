@@ -19,7 +19,6 @@ internal class LinuxFilePicker(
     private val awtFilePicker: AwtFilePicker,
     private val swingFilePicker: SwingFilePicker,
 ) : PlatformFilePicker {
-
     private val xdgFilePickerPortalAvailable by lazy { xdgFilePickerPortal.isAvailable() }
 
     override suspend fun openFilePicker(
@@ -27,42 +26,61 @@ internal class LinuxFilePicker(
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.openFilePicker(
-        fileExtensions,
-        title,
-        directory,
-        dialogSettings
-    ) else awtFilePicker.openFilePicker(fileExtensions, title, directory, dialogSettings)
+    ): File? = if (xdgFilePickerPortalAvailable) {
+        xdgFilePickerPortal.openFilePicker(
+            fileExtensions,
+            title,
+            directory,
+            dialogSettings,
+        )
+    } else {
+        awtFilePicker.openFilePicker(fileExtensions, title, directory, dialogSettings)
+    }
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.openFilesPicker(
-        fileExtensions,
-        title,
-        directory,
-        dialogSettings
-    ) else awtFilePicker.openFilesPicker(fileExtensions, title, directory, dialogSettings)
+    ): List<File>? = if (xdgFilePickerPortalAvailable) {
+        xdgFilePickerPortal.openFilesPicker(
+            fileExtensions,
+            title,
+            directory,
+            dialogSettings,
+        )
+    } else {
+        awtFilePicker.openFilesPicker(fileExtensions, title, directory, dialogSettings)
+    }
 
     override suspend fun openDirectoryPicker(
         title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? =
-        if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.openDirectoryPicker(
-            title,
-            directory,
-            dialogSettings
-        ) else swingFilePicker.openDirectoryPicker(title, directory, dialogSettings)
+        if (xdgFilePickerPortalAvailable) {
+            xdgFilePickerPortal.openDirectoryPicker(
+                title,
+                directory,
+                dialogSettings,
+            )
+        } else {
+            swingFilePicker.openDirectoryPicker(title, directory, dialogSettings)
+        }
 
     override suspend fun openFileSaver(
         suggestedName: String,
         extension: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = if (xdgFilePickerPortalAvailable) xdgFilePickerPortal.openFileSaver(
-        suggestedName, extension, directory, dialogSettings
-    ) else awtFilePicker.openFileSaver(suggestedName, extension, directory, dialogSettings)
+    ): File? = if (xdgFilePickerPortalAvailable) {
+        xdgFilePickerPortal.openFileSaver(
+            suggestedName,
+            extension,
+            directory,
+            dialogSettings,
+        )
+    } else {
+        awtFilePicker.openFileSaver(suggestedName, extension, directory, dialogSettings)
+    }
 }

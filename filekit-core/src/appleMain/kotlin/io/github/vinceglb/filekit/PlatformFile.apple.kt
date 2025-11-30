@@ -60,9 +60,7 @@ public actual data class PlatformFile(
         return true
     }
 
-    override fun hashCode(): Int {
-        return nsUrl.path.hashCode()
-    }
+    override fun hashCode(): Int = nsUrl.path.hashCode()
 
     public actual companion object
 }
@@ -156,12 +154,12 @@ private fun mimeTypeFromUti(uti: String): String? {
         val cfUti = CFStringCreateWithCString(
             alloc = kCFAllocatorDefault,
             cStr = uti,
-            encoding = kCFStringEncodingUTF8
+            encoding = kCFStringEncodingUTF8,
         ) ?: return@memScoped null
 
         val mimeRef = UTTypeCopyPreferredTagWithClass(
             inUTI = cfUti,
-            inTagClass = kUTTagClassMIMEType
+            inTagClass = kUTTagClassMIMEType,
         )
 
         CFRelease(cfUti)
@@ -184,7 +182,7 @@ private fun cfStringToKString(cfString: CFStringRef?): String? {
 
     val maxSize = CFStringGetMaximumSizeForEncoding(
         length = length,
-        encoding = kCFStringEncodingUTF8
+        encoding = kCFStringEncodingUTF8,
     ) + 1
 
     return memScoped {
@@ -195,11 +193,13 @@ private fun cfStringToKString(cfString: CFStringRef?): String? {
                 theString = cfString,
                 buffer = buffer,
                 bufferSize = maxSize,
-                encoding = kCFStringEncodingUTF8
+                encoding = kCFStringEncodingUTF8,
             )
         ) {
             buffer.toKString()
-        } else null
+        } else {
+            null
+        }
     }
 }
 
@@ -216,7 +216,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
             options = 0u,
             includingResourceValuesForKeys = null,
             relativeToURL = null,
-            error = null
+            error = null,
         ) ?: throw FileKitException("Failed to create bookmark data")
         BookmarkData(bookmarkData.toByteArray())
     }
@@ -226,7 +226,7 @@ public actual fun PlatformFile.releaseBookmark() {}
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 public actual fun PlatformFile.Companion.fromBookmarkData(
-    bookmarkData: BookmarkData
+    bookmarkData: BookmarkData,
 ): PlatformFile = memScoped {
     val nsData = bookmarkData.bytes.toNSData()
     val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
@@ -236,7 +236,7 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
         options = 0u,
         relativeToURL = null,
         bookmarkDataIsStale = null,
-        error = error
+        error = error,
     ) ?: throw FileKitException("Failed to resolve bookmark data: ${error.pointed.value}")
 
     PlatformFile(restoredUrl)

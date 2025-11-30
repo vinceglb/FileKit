@@ -30,7 +30,7 @@ import kotlin.time.Instant
 
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
-    val androidFile: AndroidFile
+    val androidFile: AndroidFile,
 ) {
     public actual override fun toString(): String = path
 
@@ -38,8 +38,13 @@ public actual data class PlatformFile(
 }
 
 public sealed class AndroidFile {
-    public data class FileWrapper(val file: File) : AndroidFile()
-    public data class UriWrapper(val uri: Uri) : AndroidFile()
+    public data class FileWrapper(
+        val file: File,
+    ) : AndroidFile()
+
+    public data class UriWrapper(
+        val uri: Uri,
+    ) : AndroidFile()
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
@@ -78,6 +83,7 @@ public actual val PlatformFile.name: String
 public actual val PlatformFile.extension: String
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.extension
+
         is AndroidFile.UriWrapper -> when {
             isDirectory() -> ""
             else -> getUriFileName(androidFile.uri).substringAfterLast(".", "")
@@ -87,6 +93,7 @@ public actual val PlatformFile.extension: String
 public actual val PlatformFile.nameWithoutExtension: String
     get() = when (androidFile) {
         is AndroidFile.FileWrapper -> androidFile.file.nameWithoutExtension
+
         is AndroidFile.UriWrapper -> when {
             isDirectory() -> getUriFileName(androidFile.uri)
             else -> getUriFileName(androidFile.uri).substringBeforeLast(".", "")
@@ -100,13 +107,18 @@ public actual val PlatformFile.path: String
     }
 
 public actual fun PlatformFile.isRegularFile(): Boolean = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isRegularFile
-        ?: false
+    is AndroidFile.FileWrapper -> {
+        SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isRegularFile
+            ?: false
+    }
 
-    is AndroidFile.UriWrapper -> DocumentFile.fromSingleUri(
-        FileKit.context,
-        androidFile.uri
-    )?.isFile == true
+    is AndroidFile.UriWrapper -> {
+        DocumentFile
+            .fromSingleUri(
+                FileKit.context,
+                androidFile.uri,
+            )?.isFile == true
+    }
 }
 
 public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
@@ -114,10 +126,11 @@ public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
         ?: false
 
     is AndroidFile.UriWrapper -> try {
-        DocumentFile.fromTreeUri(
-            FileKit.context,
-            androidFile.uri
-        )?.isDirectory == true
+        DocumentFile
+            .fromTreeUri(
+                FileKit.context,
+                androidFile.uri,
+            )?.isDirectory == true
     } catch (_: Exception) {
         false
     }
@@ -139,10 +152,14 @@ public actual fun PlatformFile.size(): Long = when (androidFile) {
 }
 
 public actual fun PlatformFile.parent(): PlatformFile? = when (androidFile) {
-    is AndroidFile.FileWrapper -> toKotlinxIoPath().parent?.let(::PlatformFile)
+    is AndroidFile.FileWrapper -> {
+        toKotlinxIoPath().parent?.let(::PlatformFile)
+    }
+
     is AndroidFile.UriWrapper -> {
         val uri = androidFile.uri
-        val parentUri = uri.buildUpon()
+        val parentUri = uri
+            .buildUpon()
             .path(uri.path?.substringBeforeLast('/'))
             .build()
 
@@ -163,24 +180,24 @@ public actual fun PlatformFile.absoluteFile(): PlatformFile = when (androidFile)
 }
 
 @OptIn(ExperimentalTime::class)
-public actual fun PlatformFile.createdAt(): Instant? {
-    return this.androidFile.let { androidFile ->
-        when (androidFile) {
-            is AndroidFile.FileWrapper -> {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val attributes = Files.readAttributes(
-                        androidFile.file.toPath(),
-                        BasicFileAttributes::class.java
-                    )
-                    val timestamp = attributes.creationTime().toMillis()
-                    Instant.fromEpochMilliseconds(timestamp)
-                } else {
-                    // Fallback for older Android versions
-                    null
-                }
+public actual fun PlatformFile.createdAt(): Instant? = this.androidFile.let { androidFile ->
+    when (androidFile) {
+        is AndroidFile.FileWrapper -> {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val attributes = Files.readAttributes(
+                    androidFile.file.toPath(),
+                    BasicFileAttributes::class.java,
+                )
+                val timestamp = attributes.creationTime().toMillis()
+                Instant.fromEpochMilliseconds(timestamp)
+            } else {
+                // Fallback for older Android versions
+                null
             }
+        }
 
-            is AndroidFile.UriWrapper -> null
+        is AndroidFile.UriWrapper -> {
+            null
         }
     }
 }
@@ -189,11 +206,16 @@ public actual fun PlatformFile.createdAt(): Instant? {
 public actual fun PlatformFile.lastModified(): Instant {
     val timestamp = this.androidFile.let { androidFile ->
         when (androidFile) {
-            is AndroidFile.FileWrapper -> androidFile.file.lastModified()
-            is AndroidFile.UriWrapper -> DocumentFile
-                .fromSingleUri(FileKit.context, androidFile.uri)
-                ?.lastModified()
-                ?: throw IllegalStateException("Unable to get last modified date for URI")
+            is AndroidFile.FileWrapper -> {
+                androidFile.file.lastModified()
+            }
+
+            is AndroidFile.UriWrapper -> {
+                DocumentFile
+                    .fromSingleUri(FileKit.context, androidFile.uri)
+                    ?.lastModified()
+                    ?: throw IllegalStateException("Unable to get last modified date for URI")
+            }
         }
     }
 
@@ -236,7 +258,7 @@ private fun getMimeTypeValueFromExtension(extension: String): String? {
 private const val DEFAULT_STREAM_MIME_TYPE = "application/octet-stream"
 
 internal actual suspend fun PlatformFile.prepareDestinationForWrite(
-    source: PlatformFile
+    source: PlatformFile,
 ): PlatformFile = withContext(Dispatchers.IO) {
     if (!isDirectory()) {
         return@withContext this@prepareDestinationForWrite
@@ -272,23 +294,27 @@ internal actual suspend fun PlatformFile.prepareDestinationForWrite(
     }
 }
 
-private fun resolveMimeTypeForCopy(source: PlatformFile): String {
-    return source.mimeType()?.toString()
-        ?: getMimeTypeValueFromExtension(source.extension)
-        ?: DEFAULT_STREAM_MIME_TYPE
-}
+private fun resolveMimeTypeForCopy(source: PlatformFile): String = source.mimeType()?.toString()
+    ?: getMimeTypeValueFromExtension(source.extension)
+    ?: DEFAULT_STREAM_MIME_TYPE
 
 public actual fun PlatformFile.source(): RawSource = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.source(toKotlinxIoPath())
+    is AndroidFile.FileWrapper -> {
+        SystemFileSystem.source(toKotlinxIoPath())
+    }
 
-    is AndroidFile.UriWrapper -> FileKit.context.contentResolver
-        .openInputStream(androidFile.uri)
-        ?.asSource()
-        ?: throw FileKitException("Could not open input stream for Uri")
+    is AndroidFile.UriWrapper -> {
+        FileKit.context.contentResolver
+            .openInputStream(androidFile.uri)
+            ?.asSource()
+            ?: throw FileKitException("Could not open input stream for Uri")
+    }
 }
 
 public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.sink(toKotlinxIoPath(), append)
+    is AndroidFile.FileWrapper -> {
+        SystemFileSystem.sink(toKotlinxIoPath(), append)
+    }
 
     is AndroidFile.UriWrapper -> {
         // Use "wt" (write+truncate) for overwrite, "wa" (write+append) for append
@@ -322,7 +348,9 @@ public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit) 
 }
 
 public actual fun PlatformFile.list(): List<PlatformFile> = when (androidFile) {
-    is AndroidFile.FileWrapper -> SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+    is AndroidFile.FileWrapper -> {
+        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+    }
 
     is AndroidFile.UriWrapper -> {
         val documentFile = DocumentFile.fromTreeUri(FileKit.context, androidFile.uri)
@@ -357,10 +385,12 @@ public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Un
 public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
     withContext(Dispatchers.IO) {
         when (androidFile) {
-            is AndroidFile.FileWrapper -> SystemFileSystem.delete(
-                path = toKotlinxIoPath(),
-                mustExist = mustExist
-            )
+            is AndroidFile.FileWrapper -> {
+                SystemFileSystem.delete(
+                    path = toKotlinxIoPath(),
+                    mustExist = mustExist,
+                )
+            }
 
             is AndroidFile.UriWrapper -> {
                 val documentFile = DocumentFile.fromSingleUri(FileKit.context, androidFile.uri)
@@ -414,7 +444,9 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
 
 public actual fun PlatformFile.releaseBookmark() {
     when (androidFile) {
-        is AndroidFile.FileWrapper -> {} // No action needed for regular files
+        is AndroidFile.FileWrapper -> {}
+
+        // No action needed for regular files
         is AndroidFile.UriWrapper -> {
             val uriToRelease = androidFile.uri.getUriToRelease(isDirectory())
             val flags =
@@ -433,7 +465,7 @@ private fun Uri.getUriToRelease(isDirectory: Boolean): Uri = if (isDirectory) {
 }
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
-    bookmarkData: BookmarkData
+    bookmarkData: BookmarkData,
 ): PlatformFile {
     val str = bookmarkData.bytes.decodeToString()
 
@@ -477,11 +509,9 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
     return platformFile
 }
 
-private fun getUriFileSize(uri: Uri): Long? {
-    return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-        val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-        if (cursor.moveToFirst()) cursor.getLong(sizeIndex) else null
-    }
+private fun getUriFileSize(uri: Uri): Long? = FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+    if (cursor.moveToFirst()) cursor.getLong(sizeIndex) else null
 }
 
 private fun getUriFileName(uri: Uri): String {
@@ -491,7 +521,5 @@ private fun getUriFileName(uri: Uri): String {
     } ?: uri.lastPathSegment ?: "" // Fallback to the Uri's last path segment
 }
 
-private fun getDocumentFile(uri: Uri): DocumentFile? {
-    return DocumentFile.fromSingleUri(FileKit.context, uri)
-        ?: DocumentFile.fromTreeUri(FileKit.context, uri)
-}
+private fun getDocumentFile(uri: Uri): DocumentFile? = DocumentFile.fromSingleUri(FileKit.context, uri)
+    ?: DocumentFile.fromTreeUri(FileKit.context, uri)

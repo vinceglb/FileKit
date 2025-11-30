@@ -78,32 +78,31 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): Flow<FileKitPickerState<List<PlatformFile>>> {
-    return when (type) {
-        // Use PHPickerViewController for images and videos
-        is FileKitType.Image,
-        is FileKitType.Video,
-        is FileKitType.ImageAndVideo -> callPhPicker(
-            mode = mode,
-            type = type
-        )
+): Flow<FileKitPickerState<List<PlatformFile>>> = when (type) {
+    // Use PHPickerViewController for images and videos
+    is FileKitType.Image,
+    is FileKitType.Video,
+    is FileKitType.ImageAndVideo,
+    -> callPhPicker(
+        mode = mode,
+        type = type,
+    )
 
-        // Use UIDocumentPickerViewController for other types
-        else -> flow {
-            val picked = callPicker(
-                mode = when (mode) {
-                    is PickerMode.Single -> Mode.Single
-                    is PickerMode.Multiple -> Mode.Multiple
-                },
-                contentTypes = type.contentTypes,
-                directory = directory
-            )?.map { PlatformFile(it) }
+    // Use UIDocumentPickerViewController for other types
+    else -> flow {
+        val picked = callPicker(
+            mode = when (mode) {
+                is PickerMode.Single -> Mode.Single
+                is PickerMode.Multiple -> Mode.Multiple
+            },
+            contentTypes = type.contentTypes,
+            directory = directory,
+        )?.map { PlatformFile(it) }
 
-            if (picked.isNullOrEmpty()) {
-                emit(FileKitPickerState.Cancelled)
-            } else {
-                emit(FileKitPickerState.Completed(picked))
-            }
+        if (picked.isNullOrEmpty()) {
+            emit(FileKitPickerState.Cancelled)
+        } else {
+            emit(FileKitPickerState.Completed(picked))
         }
     }
 }
@@ -115,7 +114,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
     contentTypes = listOf(UTTypeFolder),
-    directory = directory
+    directory = directory,
 )?.firstOrNull()?.let { PlatformFile(it) }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -143,7 +142,7 @@ public actual suspend fun FileKit.openFileSaver(
             },
             onPickerCancelled = {
                 continuation.resume(null)
-            }
+            },
         )
 
         // suggestedName cannot include "/" because the OS interprets it as a directory separator.
@@ -173,7 +172,7 @@ public actual suspend fun FileKit.openFileSaver(
 
         // Create a picker controller
         val pickerController = UIDocumentPickerViewController(
-            forExportingURLs = listOf(fileUrl)
+            forExportingURLs = listOf(fileUrl),
         )
 
         // Set the initial directory
@@ -186,7 +185,7 @@ public actual suspend fun FileKit.openFileSaver(
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
-            completion = null
+            completion = null,
         )
     }
 }
@@ -218,7 +217,7 @@ public actual suspend fun FileKit.openCameraPicker(
                 } else {
                     continuation.resume(null)
                 }
-            }
+            },
         )
 
         val pickerController = UIImagePickerController()
@@ -234,7 +233,7 @@ public actual suspend fun FileKit.openCameraPicker(
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
-            completion = null
+            completion = null,
         )
     }
 }
@@ -242,18 +241,18 @@ public actual suspend fun FileKit.openCameraPicker(
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
-    shareSettings: FileKitShareSettings
+    shareSettings: FileKitShareSettings,
 ) {
     shareFile(
         files = listOf(file),
-        shareSettings = shareSettings
+        shareSettings = shareSettings,
     )
 }
 
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
-    shareSettings: FileKitShareSettings
+    shareSettings: FileKitShareSettings,
 ) {
     if (files.isEmpty()) return
 
@@ -284,14 +283,14 @@ public actual suspend fun FileKit.shareFile(
     viewController.presentViewController(
         viewControllerToPresent = shareVC,
         animated = true,
-        completion = null
+        completion = null,
     )
 }
 
 @OptIn(ExperimentalForeignApi::class)
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
-    openFileSettings: FileKitOpenFileSettings
+    openFileSettings: FileKitOpenFileSettings,
 ) {
     // Try to open with the system's default app first
     val opened = UIApplication.sharedApplication.openURL(file.nsUrl)
@@ -309,7 +308,7 @@ public actual fun FileKit.openFileWithDefaultApplication(
             documentController.presentOptionsMenuFromRect(
                 rect = rootViewController.view.bounds,
                 inView = rootViewController.view,
-                animated = true
+                animated = true,
             )
         }
     }
@@ -329,7 +328,7 @@ private suspend fun callPicker(
         // Create a picker delegate
         documentPickerDelegate = DocumentPickerDelegate(
             onFilesPicked = { urls -> continuation.resume(urls) },
-            onPickerCancelled = { continuation.resume(null) }
+            onPickerCancelled = { continuation.resume(null) },
         )
 
         // Create a picker controller
@@ -348,7 +347,7 @@ private suspend fun callPicker(
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
             pickerController,
             animated = true,
-            completion = null
+            completion = null,
         )
     }
 }
@@ -370,18 +369,20 @@ private suspend fun getPhPickerResults(
         PickerMode.Single -> 1
     }
 
-    // Use current mode per Apple documentation for faster file provider 
+    // Use current mode per Apple documentation for faster file provider
     configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent
 
     // Filter configuration
     configuration.filter = when (type) {
         is FileKitType.Image -> PHPickerFilter.imagesFilter
+
         is FileKitType.Video -> PHPickerFilter.videosFilter
+
         is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
             listOf(
                 PHPickerFilter.imagesFilter,
                 PHPickerFilter.videosFilter,
-            )
+            ),
         )
 
         else -> throw IllegalArgumentException("Unsupported type: $type")
@@ -396,7 +397,7 @@ private suspend fun getPhPickerResults(
     UIApplication.sharedApplication.topMostViewController()?.presentViewController(
         controller,
         animated = true,
-        completion = null
+        completion = null,
     )
 }
 
@@ -420,12 +421,12 @@ private fun callPhPicker(
     val fileManager = NSFileManager.defaultManager
     val tempRoot = fileManager.temporaryDirectory
         .URLByAppendingPathComponent(NSUUID().UUIDString)
-    ?: throw IllegalStateException("Failed to create temporary directory")
+        ?: throw IllegalStateException("Failed to create temporary directory")
     fileManager.createDirectoryAtURL(
         url = tempRoot,
         withIntermediateDirectories = true,
         attributes = null,
-        error = null
+        error = null,
     )
 
     // Pre-allocated array to preserve selection order
@@ -433,49 +434,64 @@ private fun callPhPicker(
     val lock = Mutex()
 
     // Launch a child coroutine for every copy, preserving index
-    pickerResults.mapIndexed { index, result ->
-        launch(Dispatchers.IO) {
-            val src = suspendCancellableCoroutine<NSURL?> { cont ->
-                result.itemProvider.loadFileRepresentationForTypeIdentifier(
-                    when (type) {
-                        is FileKitType.Image -> UTTypeImage.identifier
-                        is FileKitType.Video -> UTTypeMovie.identifier
-                        is FileKitType.ImageAndVideo -> UTTypeContent.identifier
-                        else -> error("Unsupported type $type")
-                    }
-                ) { url, error ->
-                    when {
-                        error != null -> cont.resumeWithException(IllegalStateException(error.localizedFailureReason()))
-                        else -> {
-                            // Must copy the URL here because it becomes invalid outside of the loadFileRepresentationForTypeIdentifier callback scope
-                            val tempUrl = url?.let {
-                                copyToTempFile(fileManager, it, tempRoot.lastPathComponent!!)
+    pickerResults
+        .mapIndexed { index, result ->
+            launch(Dispatchers.IO) {
+                val src = suspendCancellableCoroutine<NSURL?> { cont ->
+                    result.itemProvider.loadFileRepresentationForTypeIdentifier(
+                        when (type) {
+                            is FileKitType.Image -> UTTypeImage.identifier
+                            is FileKitType.Video -> UTTypeMovie.identifier
+                            is FileKitType.ImageAndVideo -> UTTypeContent.identifier
+                            else -> error("Unsupported type $type")
+                        },
+                    ) { url, error ->
+                        when {
+                            error != null -> {
+                                cont.resumeWithException(IllegalStateException(error.localizedFailureReason()))
                             }
-                            cont.resume(tempUrl)
+
+                            else -> {
+                                // Must copy the URL here because it becomes invalid outside of the loadFileRepresentationForTypeIdentifier callback scope
+                                val tempUrl = url?.let {
+                                    copyToTempFile(fileManager, it, tempRoot.lastPathComponent!!)
+                                }
+                                cont.resume(tempUrl)
+                            }
                         }
                     }
-                }
-            } ?: return@launch // skip nulls
+                } ?: return@launch // skip nulls
 
-            lock.withLock {
-                // Insert at original index to preserve selection order
-                orderedFiles[index] = PlatformFile(src)
-                send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
+                lock.withLock {
+                    // Insert at original index to preserve selection order
+                    orderedFiles[index] = PlatformFile(src)
+                    send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
+                }
             }
-        }
-    }.joinAll()
+        }.joinAll()
 
     send(FileKitPickerState.Completed(orderedFiles.filterNotNull()))
 }
 
 private val FileKitType.contentTypes: List<UTType>
     get() = when (this) {
-        is FileKitType.Image -> listOf(UTTypeImage)
-        is FileKitType.Video -> listOf(UTTypeMovie)
-        is FileKitType.ImageAndVideo -> listOf(UTTypeImage, UTTypeMovie)
-        is FileKitType.File -> extensions
-            ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
-            .ifNullOrEmpty { listOf(UTTypeItem) }
+        is FileKitType.Image -> {
+            listOf(UTTypeImage)
+        }
+
+        is FileKitType.Video -> {
+            listOf(UTTypeMovie)
+        }
+
+        is FileKitType.ImageAndVideo -> {
+            listOf(UTTypeImage, UTTypeMovie)
+        }
+
+        is FileKitType.File -> {
+            extensions
+                ?.mapNotNull { UTType.typeWithFilenameExtension(it) }
+                .ifNullOrEmpty { listOf(UTTypeItem) }
+        }
     }
 
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
@@ -524,5 +540,5 @@ private fun UIApplication.topMostViewController(): UIViewController? {
 private enum class Mode {
     Single,
     Multiple,
-    Directory
+    Directory,
 }

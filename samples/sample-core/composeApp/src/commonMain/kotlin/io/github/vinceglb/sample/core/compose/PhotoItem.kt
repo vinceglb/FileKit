@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +38,7 @@ import nl.jacobras.humanreadable.HumanReadable
 fun PhotoItem(
     file: PlatformFile,
     onSaveFile: (PlatformFile) -> Unit,
-    onShareFile: (PlatformFile) -> Unit
+    onShareFile: (PlatformFile) -> Unit,
 ) {
     var showName by remember { mutableStateOf(false) }
 
@@ -45,7 +46,7 @@ fun PhotoItem(
         onClick = { showName = !showName },
         modifier = Modifier
             .aspectRatio(1f)
-            .clip(shape = MaterialTheme.shapes.medium)
+            .clip(shape = MaterialTheme.shapes.medium),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             if (listOf("jpg", "jpeg", "png").contains(file.extension.lowercase())) {
@@ -61,18 +62,18 @@ fun PhotoItem(
             Surface(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = CircleShape,
-                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
             ) {
                 Row {
                     IconButton(
                         onClick = { onShareFile(file) },
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(36.dp),
                     ) {
                         Icon(
                             Icons.Default.Share,
                             modifier = Modifier.size(22.dp),
                             contentDescription = "share",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     IconButton(
@@ -83,7 +84,7 @@ fun PhotoItem(
                             Icons.Default.Check,
                             modifier = Modifier.size(22.dp),
                             contentDescription = "Save",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
@@ -91,7 +92,7 @@ fun PhotoItem(
 
             AnimatedVisibility(
                 visible = showName,
-                modifier = Modifier.padding(4.dp).align(Alignment.BottomStart)
+                modifier = Modifier.padding(4.dp).align(Alignment.BottomStart),
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
@@ -100,7 +101,7 @@ fun PhotoItem(
                     Text(
                         "${file.name} - ${HumanReadable.fileSize(file.size())}",
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(4.dp),
                     )
                 }
             }

@@ -7,7 +7,7 @@ import org.w3c.files.FilePropertyBag
 @OptIn(ExperimentalWasmJsInterop::class)
 actual fun createTestFile(
     name: String,
-    content: String
+    content: String,
 ): PlatformFile {
     val jsArray = content.encodeToByteArray().toJsArray()
     val file = File(jsArray, name, FilePropertyBag(type = "text/plain"))

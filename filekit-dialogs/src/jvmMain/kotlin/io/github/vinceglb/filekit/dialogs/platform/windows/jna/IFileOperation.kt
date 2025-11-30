@@ -8,11 +8,11 @@ import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.IntByReference
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
-
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IFileOperation : IUnknown {
     fun Advise(
         pfops: Pointer?,
-        pdwCookie: IntByReference?
+        pdwCookie: IntByReference?,
     ): WinNT.HRESULT? // IFileOperationProgressSink
 
     fun Unadvise(dwCookie: Int): WinNT.HRESULT?
@@ -34,7 +34,7 @@ internal interface IFileOperation : IUnknown {
     fun RenameItem(
         psiItem: Pointer?,
         pszNewName: WString?,
-        pfopsItem: Pointer?
+        pfopsItem: Pointer?,
     ): WinNT.HRESULT? // IShellItem,
 
     // IFileOperationProgressSink
@@ -44,33 +44,33 @@ internal interface IFileOperation : IUnknown {
         psiItem: Pointer?,
         psiDestinationFolder: Pointer?,
         pszNewName: WString?,
-        pfopsItem: Pointer?
+        pfopsItem: Pointer?,
     ): WinNT.HRESULT? // IShellItem,
 
     // IShellItem,
     // IFileOperationProgressSink
     fun MoveItems(
         punkItems: Pointer?,
-        psiDestinationFolder: Pointer?
+        psiDestinationFolder: Pointer?,
     ): WinNT.HRESULT? // IUnknown, IShellItem
 
     fun CopyItem(
         psiItem: Pointer?,
         psiDestinationFolder: Pointer?,
         pszCopyName: WString?,
-        pfopsItem: Pointer?
+        pfopsItem: Pointer?,
     ): WinNT.HRESULT? // IShellItem,
 
     // IShellItem,
     // IFileOperationProgressSink
     fun CopyItems(
         punkItems: Pointer?,
-        psiDestinationFolder: Pointer?
+        psiDestinationFolder: Pointer?,
     ): WinNT.HRESULT? // IUnknown, IShellItem
 
     fun DeleteItem(
         psiItem: Pointer?,
-        pfopsItem: Pointer?
+        pfopsItem: Pointer?,
     ): WinNT.HRESULT? // IShellItem, IFileOperationProgressSink
 
     fun DeleteItems(punkItems: Pointer?): WinNT.HRESULT? // IUnknown
@@ -80,7 +80,7 @@ internal interface IFileOperation : IUnknown {
         dwFileAttributes: Int,
         pszName: WString?,
         pszTemplateName: WString?,
-        pfopsItem: Pointer?
+        pfopsItem: Pointer?,
     ): WinNT.HRESULT? // IShellItem, IFileOperationProgressSink
 
     fun PerformOperations(): WinNT.HRESULT?

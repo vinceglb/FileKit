@@ -7,8 +7,9 @@ import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
 
-
-internal class ShellItem : Unknown, IShellItem {
+internal class ShellItem :
+    Unknown,
+    IShellItem {
     constructor()
 
     constructor(pvInstance: Pointer?) : super(pvInstance)
@@ -18,49 +19,44 @@ internal class ShellItem : Unknown, IShellItem {
         pbc: Pointer?,
         bhid: Guid.GUID.ByReference?,
         riid: Guid.REFIID?,
-        ppv: PointerByReference?
-    ): WinNT.HRESULT {
-        return _invokeNativeObject(
-            3, arrayOf(this.pointer, pbc, bhid, riid, ppv),
-            WinNT.HRESULT::class.java
-        ) as WinNT.HRESULT
-    }
+        ppv: PointerByReference?,
+    ): WinNT.HRESULT = _invokeNativeObject(
+        3,
+        arrayOf(this.pointer, pbc, bhid, riid, ppv),
+        WinNT.HRESULT::class.java,
+    ) as WinNT.HRESULT
 
-    override fun GetParent(ppsi: PointerByReference?): WinNT.HRESULT {
-        return _invokeNativeObject(
-            4, arrayOf(this.pointer, ppsi),
-            WinNT.HRESULT::class.java
-        ) as WinNT.HRESULT
-    }
+    override fun GetParent(ppsi: PointerByReference?): WinNT.HRESULT = _invokeNativeObject(
+        4,
+        arrayOf(this.pointer, ppsi),
+        WinNT.HRESULT::class.java,
+    ) as WinNT.HRESULT
 
     override fun GetDisplayName(
         sigdnName: Long,
-        ppszName: PointerByReference?
-    ): WinNT.HRESULT {
-        return _invokeNativeObject(
-            5, arrayOf(this.pointer, sigdnName, ppszName),
-            WinNT.HRESULT::class.java
-        ) as WinNT.HRESULT
-    }
+        ppszName: PointerByReference?,
+    ): WinNT.HRESULT = _invokeNativeObject(
+        5,
+        arrayOf(this.pointer, sigdnName, ppszName),
+        WinNT.HRESULT::class.java,
+    ) as WinNT.HRESULT
 
     override fun GetAttributes(
         sfgaoMask: Int,
-        psfgaoAttribs: IntByReference?
-    ): WinNT.HRESULT {
-        return _invokeNativeObject(
-            6, arrayOf(this.pointer, sfgaoMask, psfgaoAttribs),
-            WinNT.HRESULT::class.java
-        ) as WinNT.HRESULT
-    }
+        psfgaoAttribs: IntByReference?,
+    ): WinNT.HRESULT = _invokeNativeObject(
+        6,
+        arrayOf(this.pointer, sfgaoMask, psfgaoAttribs),
+        WinNT.HRESULT::class.java,
+    ) as WinNT.HRESULT
 
     override fun Compare(
         psi: Pointer?,
         hint: Int,
-        piOrder: IntByReference?
-    ): WinNT.HRESULT {
-        return _invokeNativeObject(
-            7, arrayOf(this.pointer, psi, hint, piOrder),
-            WinNT.HRESULT::class.java
-        ) as WinNT.HRESULT
-    }
+        piOrder: IntByReference?,
+    ): WinNT.HRESULT = _invokeNativeObject(
+        7,
+        arrayOf(this.pointer, psi, hint, piOrder),
+        WinNT.HRESULT::class.java,
+    ) as WinNT.HRESULT
 }

@@ -30,7 +30,8 @@ import io.github.vinceglb.sample.core.MainViewModel
 @Composable
 fun App(dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault()) {
     setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context = context)
+        ImageLoader
+            .Builder(context = context)
             .components { addPlatformFileSupport() }
             .build()
     }
@@ -75,7 +76,7 @@ private fun SampleApp(viewModel: MainViewModel) {
 
             PickDirectoryButton(
                 directory = uiState.directory,
-                onClick = viewModel::pickDirectory
+                onClick = viewModel::pickDirectory,
             )
 
             if (uiState.loading) {
@@ -93,7 +94,6 @@ private fun SampleApp(viewModel: MainViewModel) {
                     PhotoItem(it, viewModel::saveFile, viewModel::shareFile)
                 }
             }
-
         }
     }
 }
@@ -101,5 +101,5 @@ private fun SampleApp(viewModel: MainViewModel) {
 @Composable
 expect fun PickDirectoryButton(
     directory: PlatformFile?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 )

@@ -6,23 +6,17 @@ import com.sun.jna.NativeLong
  * Could be an address in memory (if pointer to a class or method) or a value (like 0 or 1)
  */
 internal class ID : NativeLong {
-	constructor()
+    constructor()
 
-	constructor(peer: Long) : super(peer)
+    constructor(peer: Long) : super(peer)
 
-	fun booleanValue(): Boolean {
-		return toInt() != 0
-	}
+    fun booleanValue(): Boolean = toInt() != 0
 
-	override fun toByte(): Byte {
-		return toLong().toByte()
-	}
+    override fun toByte(): Byte = toLong().toByte()
 
-	override fun toShort(): Short {
-		return toLong().toShort()
-	}
+    override fun toShort(): Short = toLong().toShort()
 
-	companion object {
-		val NIL: ID = ID(0L)
-	}
+    companion object {
+        val NIL: ID = ID(0L)
+    }
 }

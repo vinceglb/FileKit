@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.utils.div
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -7,7 +8,6 @@ import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import io.github.vinceglb.filekit.utils.div
 
 public actual val PlatformFile.name: String
     get() = toKotlinxIoPath().name
@@ -67,7 +67,7 @@ public actual suspend fun PlatformFile.atomicMove(destination: PlatformFile): Un
     }
 
 internal actual suspend fun PlatformFile.prepareDestinationForWrite(
-    source: PlatformFile
+    source: PlatformFile,
 ): PlatformFile = withScopedAccess {
     if (isDirectory()) {
         PlatformFile(toKotlinxIoPath() / source.name)

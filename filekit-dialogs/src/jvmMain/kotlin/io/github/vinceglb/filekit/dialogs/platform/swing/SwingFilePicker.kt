@@ -12,11 +12,10 @@ import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.coroutines.resume
 
 internal class SwingFilePicker : PlatformFilePicker {
-
     init {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-        } catch (ex: Throwable) {
+        } catch (_: Throwable) {
             println("Failed to set native UI for JFileChooser")
         }
     }
@@ -75,7 +74,7 @@ internal class SwingFilePicker : PlatformFilePicker {
         jFileChooser.fileSelectionMode = mode
         jFileChooser.isMultiSelectionEnabled = isMultiSelectionEnabled
 
-        if(fileExtensions != null) {
+        if (fileExtensions != null) {
             val filter = FileNameExtensionFilter(null, *fileExtensions.toTypedArray())
             jFileChooser.addChoosableFileFilter(filter)
         }
@@ -86,7 +85,9 @@ internal class SwingFilePicker : PlatformFilePicker {
 
         val returnValue = jFileChooser.showOpenDialog(dialogSettings.parentWindow)
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            continuation.resume(jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: jFileChooser.selectedFile?.let { listOf(it) })
+            continuation.resume(
+                jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: jFileChooser.selectedFile?.let { listOf(it) },
+            )
         }
 
         continuation.invokeOnCancellation { jFileChooser.cancelSelection() }

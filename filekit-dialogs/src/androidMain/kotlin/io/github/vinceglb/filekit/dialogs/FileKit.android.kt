@@ -91,7 +91,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
                 // Transform the treeUri to a documentUri
                 val documentUri = DocumentsContract.buildDocumentUriUsingTree(
                     treeUri,
-                    DocumentsContract.getTreeDocumentId(treeUri)
+                    DocumentsContract.getTreeDocumentId(treeUri),
                 )
                 PlatformFile(documentUri)
             }
@@ -183,17 +183,17 @@ public class TakePictureWithCameraFacing(
 
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
-    shareSettings: FileKitShareSettings
+    shareSettings: FileKitShareSettings,
 ) {
     shareFile(
         files = listOf(file),
-        shareSettings = shareSettings
+        shareSettings = shareSettings,
     )
 }
 
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
-    shareSettings: FileKitShareSettings
+    shareSettings: FileKitShareSettings,
 ) {
     if (files.isEmpty()) return
 
@@ -201,11 +201,13 @@ public actual suspend fun FileKit.shareFile(
         platformFile.toAndroidUri(shareSettings.authority)
     }
 
-    val mimeTypes = files.map { platformFile ->
-        getMimeType(platformFile.extension)
-    }.distinct().let { types ->
-        if (types.size == 1) types.first() else "*/*"
-    }
+    val mimeTypes = files
+        .map { platformFile ->
+            getMimeType(platformFile.extension)
+        }.distinct()
+        .let { types ->
+            if (types.size == 1) types.first() else "*/*"
+        }
 
     // make intent share
     val intentShareSend = Intent().apply {
@@ -240,7 +242,7 @@ public actual suspend fun FileKit.shareFile(
 
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
-    openFileSettings: FileKitOpenFileSettings
+    openFileSettings: FileKitOpenFileSettings,
 ) {
     val uri = file.toAndroidUri(openFileSettings.authority)
     val mimeType = getMimeType(file.extension)
@@ -252,7 +254,7 @@ public actual fun FileKit.openFileWithDefaultApplication(
 
 private suspend fun callFilePicker(
     type: FileKitType,
-    mode: PickerMode
+    mode: PickerMode,
 ): List<PlatformFile>? = withContext(Dispatchers.IO) {
     // Throw exception if registry is not initialized
     val registry = FileKit.registry
@@ -264,7 +266,8 @@ private suspend fun callFilePicker(
         when (type) {
             FileKitType.Image,
             FileKitType.Video,
-            FileKitType.ImageAndVideo -> {
+            FileKitType.ImageAndVideo,
+            -> {
                 val request = when (type) {
                     FileKitType.Image -> PickVisualMediaRequest(ImageOnly)
                     FileKitType.Video -> PickVisualMediaRequest(VideoOnly)
@@ -273,7 +276,7 @@ private suspend fun callFilePicker(
                 }
 
                 val launcher = when {
-                    mode is PickerMode.Single || mode is PickerMode.Multiple && mode.maxItems == 1 -> {
+                    mode is PickerMode.Single || (mode is PickerMode.Multiple && mode.maxItems == 1) -> {
                         val contract = PickVisualMedia()
                         registry.register(key, contract) { uri ->
                             val result = uri?.let { listOf(PlatformFile(it)) }
@@ -292,7 +295,9 @@ private suspend fun callFilePicker(
                         }
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported mode: $mode")
+                    else -> {
+                        throw IllegalArgumentException("Unsupported mode: $mode")
+                    }
                 }
                 launcher.launch(request)
             }
@@ -329,12 +334,19 @@ private fun getMimeTypes(fileExtensions: Set<String>?): Array<String> {
     val mimeTypeMap = MimeTypeMap.getSingleton()
     return fileExtensions
         ?.map {
-            when(it) {
-                "csv" -> listOf("text/csv", "application/csv", "application/x-csv", "text/comma-separated-values", "text/x-comma-separated-values", "text/x-csv")
+            when (it) {
+                "csv" -> listOf(
+                    "text/csv",
+                    "application/csv",
+                    "application/x-csv",
+                    "text/comma-separated-values",
+                    "text/x-comma-separated-values",
+                    "text/x-csv",
+                )
+
                 else -> listOf(mimeTypeMap.getMimeTypeFromExtension(it))
             }
-        }
-        ?.let { res -> res.flatten().mapNotNull { it } }
+        }?.let { res -> res.flatten().mapNotNull { it } }
         ?.takeIf { it.isNotEmpty() }
         ?.toTypedArray()
         ?: arrayOf("*/*")

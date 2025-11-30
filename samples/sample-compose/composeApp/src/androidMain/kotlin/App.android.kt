@@ -34,9 +34,9 @@ actual fun TakePhoto(onPhotoTaken: (PlatformFile?) -> Unit) {
             val destinationFile = FileKit.filesDir / "photo_${System.currentTimeMillis()}.jpg"
             takePhotoLauncher.launch(
                 destinationFile = destinationFile,
-                cameraFacing = FileKitCameraFacing.Front
+                cameraFacing = FileKitCameraFacing.Front,
             )
-        }
+        },
     ) {
         Text("Take photo")
     }
@@ -48,13 +48,13 @@ actual fun ShareButton(file: PlatformFile) {
 
     IconButton(
         onClick = { shareLauncher.launch(file) },
-        modifier = Modifier.size(36.dp)
+        modifier = Modifier.size(36.dp),
     ) {
         Icon(
             Icons.Default.Share,
             modifier = Modifier.size(22.dp),
             contentDescription = "share",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }

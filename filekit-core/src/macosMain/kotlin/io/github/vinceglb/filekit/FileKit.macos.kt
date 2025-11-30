@@ -27,13 +27,13 @@ public actual val FileKit.filesDir: PlatformFile
             .firstOrNull()
             ?.let { it as NSURL? }
             ?: throw FileKitException("Could not find Application Support directory")
-        
+
         val bundleId = NSBundle.mainBundle.bundleIdentifier
             ?: throw FileKitException("Could not find bundle identifier")
-        
+
         val appDir = appSupportDir.URLByAppendingPathComponent(bundleId, true)
             ?: throw FileKitException("Could not create app directory path")
-        
+
         val filesDir = PlatformFile(nsUrl = appDir)
 
         if (!filesDir.exists()) {
@@ -58,7 +58,7 @@ public val FileKit.pictureDir: PlatformFile
 
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
-    filename: String
+    filename: String,
 ): Unit = FileKit.pictureDir / filename write bytes
 
 @OptIn(ExperimentalForeignApi::class)
@@ -74,7 +74,7 @@ internal actual fun compress(
         originalImage.size.useContents { width }.toInt(),
         originalImage.size.useContents { height }.toInt(),
         maxWidth,
-        maxHeight
+        maxHeight,
     )
 
     val resizedImage = originalImage.resizeTo(newWidth / 2, newHeight / 2)
@@ -89,7 +89,7 @@ internal actual fun compress(
 
     return imageRep.representationUsingType(
         storageType = storageType,
-        properties = mapOf(NSImageCompressionFactor to (quality / 100.0))
+        properties = mapOf(NSImageCompressionFactor to (quality / 100.0)),
     ) ?: throw FileKitException("Failed to compress image")
 }
 
@@ -104,8 +104,8 @@ private fun NSImage.resizeTo(newWidth: Int, newHeight: Int): NSImage {
             x = 0.0,
             y = 0.0,
             w = newSize.useContents { width },
-            h = newSize.useContents { height }
-        )
+            h = newSize.useContents { height },
+        ),
     )
     newImage.unlockFocus()
 

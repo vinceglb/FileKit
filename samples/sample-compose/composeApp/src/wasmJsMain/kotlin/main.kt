@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:filename")
+
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 

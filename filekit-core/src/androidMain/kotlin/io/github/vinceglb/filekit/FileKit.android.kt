@@ -58,7 +58,7 @@ public actual val FileKit.projectDir: PlatformFile
 
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
-    filename: String
+    filename: String,
 ): Unit = withContext(Dispatchers.IO) {
     val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
@@ -95,7 +95,7 @@ public actual suspend fun FileKit.compressImage(
         correctedBitmap.width,
         correctedBitmap.height,
         maxWidth,
-        maxHeight
+        maxHeight,
     )
 
     // Step 4: Resize the Bitmap
@@ -120,14 +120,14 @@ public actual suspend fun FileKit.compressImage(
 private fun correctBitmapOrientation(imageData: ByteArray, bitmap: Bitmap): Bitmap {
     // Step 1: Write ByteArray to a temporary file
     val tempId = Uuid.random().toString()
-    val tempFile = File.createTempFile("image-${tempId}", null)
+    val tempFile = File.createTempFile("image-$tempId", null)
     tempFile.writeBytes(imageData)
 
     // Step 2: Read EXIF data from the temporary file
     val exif = ExifInterface(tempFile.path)
     val orientation = exif.getAttributeInt(
         ExifInterface.TAG_ORIENTATION,
-        ExifInterface.ORIENTATION_NORMAL
+        ExifInterface.ORIENTATION_NORMAL,
     )
 
     // Step 3: Apply rotation or flipping based on the orientation

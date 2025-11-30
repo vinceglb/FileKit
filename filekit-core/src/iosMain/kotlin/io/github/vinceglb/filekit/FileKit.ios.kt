@@ -46,12 +46,12 @@ public actual val FileKit.projectDir: PlatformFile
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 public actual suspend fun FileKit.saveImageToGallery(
     bytes: ByteArray,
-    filename: String
+    filename: String,
 ): Unit = withContext(Dispatchers.IO) {
     val nsData = bytes.usePinned {
         NSData.create(
             bytes = it.addressOf(0),
-            length = bytes.size.toULong()
+            length = bytes.size.toULong(),
         )
     }
     val uiImage = UIImage(nsData)
@@ -74,7 +74,7 @@ internal actual fun compress(
         originalWidth,
         originalHeight,
         maxWidth,
-        maxHeight
+        maxHeight,
     )
 
     val resizedImage = originalImage.scaleToSize(newWidth, newHeight)

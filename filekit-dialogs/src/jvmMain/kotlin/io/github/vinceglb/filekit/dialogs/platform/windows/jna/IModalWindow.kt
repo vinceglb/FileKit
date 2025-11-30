@@ -5,7 +5,7 @@ import com.sun.jna.platform.win32.WinDef
 import com.sun.jna.platform.win32.WinNT
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
-
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IModalWindow : IUnknown {
     fun Show(hwndOwner: WinDef.HWND?): WinNT.HRESULT?
 

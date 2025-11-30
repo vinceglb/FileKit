@@ -24,7 +24,7 @@ kotlin {
     @OptIn(ExperimentalWasmDsl::class)
     listOf(
         js(IR),
-        wasmJs()
+        wasmJs(),
     ).forEach {
         it.outputModuleName = "SamplePickerKt"
         it.browser()
@@ -64,9 +64,13 @@ kotlin {
 
 android {
     namespace = "io.github.vinceglb.sample.core.shared"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.android.compileSdk
+        .get()
+        .toInt()
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk
+            .get()
+            .toInt()
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

@@ -17,7 +17,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     mode: PickerMode,
     title: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
     val files = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
@@ -36,8 +36,11 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                 // Set the allowed file types
                 when (type) {
                     is FileKitType.Image -> accept = "image/*"
+
                     is FileKitType.Video -> accept = "video/*"
+
                     is FileKitType.ImageAndVideo -> accept = "image/*,video/*"
+
                     is FileKitType.File -> type.extensions?.let {
                         accept = type.extensions.joinToString(",") { ".$it" }
                     }

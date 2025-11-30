@@ -7,19 +7,19 @@ import platform.darwin.NSObject
 
 internal class DocumentPickerDelegate(
     private val onFilesPicked: (List<NSURL>) -> Unit,
-    private val onPickerCancelled: () -> Unit
+    private val onPickerCancelled: () -> Unit,
 ) : NSObject(),
     UIDocumentPickerDelegateProtocol {
     override fun documentPicker(
         controller: UIDocumentPickerViewController,
-        didPickDocumentAtURL: NSURL
+        didPickDocumentAtURL: NSURL,
     ) {
         onFilesPicked(listOf(didPickDocumentAtURL))
     }
 
     override fun documentPicker(
         controller: UIDocumentPickerViewController,
-        didPickDocumentsAtURLs: List<*>
+        didPickDocumentsAtURLs: List<*>,
     ) {
         val res = didPickDocumentsAtURLs.mapNotNull { it as? NSURL }
         onFilesPicked(res)

@@ -8,14 +8,13 @@ import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.darwin.NSObject
 
 internal class CameraControllerDelegate(
-    private val onImagePicked: (UIImage?) -> Unit
+    private val onImagePicked: (UIImage?) -> Unit,
 ) : NSObject(),
     UIImagePickerControllerDelegateProtocol,
     UINavigationControllerDelegateProtocol {
-
     override fun imagePickerController(
         picker: UIImagePickerController,
-        didFinishPickingMediaWithInfo: Map<Any?, *>
+        didFinishPickingMediaWithInfo: Map<Any?, *>,
     ) {
         val image = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
         onImagePicked.invoke(image)
@@ -26,5 +25,4 @@ internal class CameraControllerDelegate(
         picker.dismissViewControllerAnimated(true, null)
         onImagePicked.invoke(null)
     }
-
 }

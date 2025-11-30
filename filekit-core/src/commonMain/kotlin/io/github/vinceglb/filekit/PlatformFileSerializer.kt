@@ -7,6 +7,8 @@ import kotlinx.serialization.encoding.Encoder
 
 public expect object PlatformFileSerializer : KSerializer<PlatformFile> {
     override val descriptor: SerialDescriptor
+
     override fun serialize(encoder: Encoder, value: PlatformFile)
+
     override fun deserialize(decoder: Decoder): PlatformFile
 }

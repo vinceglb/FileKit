@@ -6,13 +6,16 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import io.github.vinceglb.filekit.write
 
-@Deprecated(message = "Use the function without the bytes parameter. More info in the migration guide: https://filekit.mintlify.app/migrate-to-v0.10")
+@Deprecated(
+    message = "Use the function without the bytes parameter. " +
+        "More info in the migration guide: https://filekit.mintlify.app/migrate-to-v0.10",
+)
 public actual suspend fun FileKit.openFileSaver(
     bytes: ByteArray?,
     suggestedName: String,
     extension: String?,
     directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings
+    dialogSettings: FileKitDialogSettings,
 ): PlatformFile? {
     val file = FileKit.openFileSaver(
         suggestedName = suggestedName,

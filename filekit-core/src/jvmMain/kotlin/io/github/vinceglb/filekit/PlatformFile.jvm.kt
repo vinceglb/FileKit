@@ -5,14 +5,14 @@ import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import kotlinx.serialization.Serializable
 
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
@@ -83,7 +83,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
 public actual fun PlatformFile.releaseBookmark() {}
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
-    bookmarkData: BookmarkData
+    bookmarkData: BookmarkData,
 ): PlatformFile {
     val path = bookmarkData.bytes.decodeToString()
     return PlatformFile(Path(path))

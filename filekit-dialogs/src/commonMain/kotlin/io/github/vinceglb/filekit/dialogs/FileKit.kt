@@ -26,15 +26,13 @@ public suspend fun FileKit.openFilePicker(
     title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
-): PlatformFile? {
-    return openFilePicker(
-        type = type,
-        mode = FileKitMode.Single,
-        title = title,
-        directory = directory,
-        dialogSettings = dialogSettings,
-    )
-}
+): PlatformFile? = openFilePicker(
+    type = type,
+    mode = FileKitMode.Single,
+    title = title,
+    directory = directory,
+    dialogSettings = dialogSettings,
+)
 
 internal expect suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,

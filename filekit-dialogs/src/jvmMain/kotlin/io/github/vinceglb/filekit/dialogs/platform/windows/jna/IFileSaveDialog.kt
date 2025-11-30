@@ -6,7 +6,7 @@ import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 
-
+@Suppress("ktlint:standard:function-naming", "FunctionName")
 internal interface IFileSaveDialog : IFileDialog {
     fun SetSaveAsItem(psi: Pointer?): WinNT.HRESULT?
 
@@ -14,7 +14,7 @@ internal interface IFileSaveDialog : IFileDialog {
 
     fun SetCollectedProperties(
         pList: Pointer?,
-        fAppendDefault: Boolean
+        fAppendDefault: Boolean,
     ): WinNT.HRESULT? // IPropertyDescriptionList
 
     fun GetProperties(ppStore: PointerByReference?): WinNT.HRESULT? // IPropertyStore
@@ -23,7 +23,7 @@ internal interface IFileSaveDialog : IFileDialog {
         psi: Pointer?,
         pStore: Pointer?,
         hwnd: WinDef.HWND?,
-        pSink: Pointer?
+        pSink: Pointer?,
     ): WinNT.HRESULT? // IShellItem, IPropertyStore, HWND, IFileOperationProgressSink
 
     companion object {
