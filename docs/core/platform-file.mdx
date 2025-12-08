@@ -205,7 +205,7 @@ val sink: RawSink = file.sink()
 val file = PlatformFile(FileKit.filesDir, "document.txt")
 
 // Check if it exists
-if (!file.exists()) {
+if (file.exists()) {
     // Write content to the file
     file.writeString("Hello, FileKit!")
 }
