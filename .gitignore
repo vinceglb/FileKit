@@ -1,14 +1,23 @@
 *.iml
+.kotlin
 .gradle
+**/build/
+xcuserdata
+!src/**/build/
+local.properties
 .idea
 .DS_Store
-build
 captures
 .externalNativeBuild
 .cxx
-local.properties
-xcuserdata
-.kotlin
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+node_modules/
+
 #So we don't accidentally commit our private keys
 *.gpg
 ktlint-compose-*-all.jar
