@@ -1,16 +1,16 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 android-compileSdk = "36"
 android-minSdk = "23"
 android-targetSdk = "36"
-androidx-activity-ktx = "1.12.0"
+androidx-activity = "1.12.1"
 androidx-annotation = "1.9.1"
-androidx-compose = "1.12.0"
 androidx-documentfile = "1.1.0"
-androidx-exifinterface = "1.4.1"
+androidx-exifinterface = "1.4.2"
 androidx-lifecycle = "2.9.6"
 androidx-startup = "1.2.0"
 coilCompose = "3.3.0"
+compose-hot-reload = "1.0.0"
 compose-multiplatform = "1.9.3"
 compose-multiplatform-material3 = "1.9.0"
 dbus-java = "5.1.1"
@@ -26,8 +26,8 @@ test-android-robolectric = "4.16"
 vanniktech-mavenPublish = "0.35.0"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-compose" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity-ktx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "androidx-documentfile" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "androidx-exifinterface" }
@@ -72,6 +72,7 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" } # TODO remove
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
