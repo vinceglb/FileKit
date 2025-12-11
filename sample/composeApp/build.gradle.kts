@@ -13,6 +13,9 @@ plugins {
 }
 
 kotlin {
+    // https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets
+    applyDefaultHierarchyTemplate()
+
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
@@ -44,15 +47,33 @@ kotlin {
     }
 
     sourceSets {
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        nativeMain.get().dependsOn(nonWebMain)
+
+        val mobileMain by creating { dependsOn(nonWebMain) }
+        androidMain.get().dependsOn(mobileMain)
+        iosMain.get().dependsOn(mobileMain)
+
         commonMain.dependencies {
+            // Compose
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
             // TODO wait for compose 1.10 implementation(libs.compose.uiToolingPreview)
+
+            // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
+
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
+
+            // FileKit
+            implementation(projects.filekitDialogsCompose)
         }
 
         commonTest.dependencies {
