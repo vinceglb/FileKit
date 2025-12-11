@@ -23,6 +23,6 @@ val Project.moduleName: String
         }
 
 private fun String.uppercaseAfterChar(delimiter: String): String = this
-    .split(":")
+    .split(delimiter)
     .filter { it.isNotEmpty() }
     .joinToString(separator = "") { it.uppercaseFirstChar() }
