@@ -6,6 +6,8 @@ FileKit is split across multiplatform modules: `filekit-core` contains platform-
 ## Build, Test, and Development Commands
 Use `./gradlew assemble` to ensure all published artifacts compile before raising a PR. Run `./gradlew :filekit-core:check :filekit-dialogs:check` to execute the multiplatform test matrix for the primary modules. Sample apps can be exercised with `./gradlew :samples:sample-compose:composeApp:run` (desktop) or by opening the Gradle targets in Android Studio for mobile builds. For smoke testing local publishing, run `./gradlew publishToMavenLocal` and consume the artifacts from a sample project.
 
+For Kotlin formatting/linting, run `ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.4.28-all.jar`. To auto-fix issues, add `--format` to that command.
+
 ## Coding Style & Naming Conventions
 Follow Kotlin official style: four-space indentation, trailing commas where helpful, and `UpperCamelCase` for public APIs. Keep expect/actual implementations mirrored across targets and group platform-specific helpers under the corresponding `src/<platform>Main` directory. Compose functions remain PascalCase and should take a `modifier` parameter when rendering UI. Prefer descriptive file names that match the primary type, and keep shared constants in `commonMain` to minimise duplication.
 
