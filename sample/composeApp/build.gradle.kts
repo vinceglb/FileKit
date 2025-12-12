@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -63,14 +64,19 @@ kotlin {
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
             implementation(libs.compose.components.resources)
-            // TODO wait for compose 1.10 implementation(libs.compose.uiToolingPreview)
+            implementation(libs.compose.uiToolingPreview)
+
+            // KotlinX
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.core)
 
             // Lifecycle
             implementation(libs.androidx.lifecycle.viewmodel.compose)
             implementation(libs.androidx.lifecycle.runtime.compose)
 
-            // Coroutines
-            implementation(libs.kotlinx.coroutines.core)
+            // Navigation 3
+            implementation(libs.androidx.navigation3.ui)
+            implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 
             // FileKit
             implementation(projects.filekitDialogsCompose)

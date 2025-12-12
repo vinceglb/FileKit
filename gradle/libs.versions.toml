@@ -7,12 +7,13 @@ androidx-activity = "1.12.1"
 androidx-annotation = "1.9.1"
 androidx-documentfile = "1.1.0"
 androidx-exifinterface = "1.4.2"
-androidx-lifecycle = "2.9.6"
+androidx-lifecycle = "2.10.0-alpha06"
+androidx-navigation3 = "1.0.0-alpha06"
 androidx-startup = "1.2.0"
 coilCompose = "3.3.0"
 compose-hot-reload = "1.0.0"
-compose-multiplatform = "1.9.3"
-compose-multiplatform-material3 = "1.9.0"
+compose-multiplatform = "1.10.0-rc02"
+compose-multiplatform-material3 = "1.10.0-alpha05"
 dbus-java = "5.1.1"
 jna = "5.18.1"
 kotlin = "2.2.21"
@@ -34,6 +35,8 @@ androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", vers
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
+androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 dbus-java-core = { module = "com.github.hypfvieh:dbus-java-core", version.ref = "dbus-java" }
