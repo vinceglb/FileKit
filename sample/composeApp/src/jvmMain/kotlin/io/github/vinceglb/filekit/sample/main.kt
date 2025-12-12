@@ -11,8 +11,15 @@ fun main() = application {
 
     Window(
         onCloseRequest = ::exitApplication,
-        title = "Sample",
+        title = "FileKit Sample",
     ) {
+        // Configure macOS window appearance
+        window.apply {
+            rootPane.putClientProperty("apple.awt.fullWindowContent", true)
+            rootPane.putClientProperty("apple.awt.transparentTitleBar", true)
+            rootPane.putClientProperty("apple.awt.windowTitleVisible", false)
+        }
+
         App()
     }
 }
