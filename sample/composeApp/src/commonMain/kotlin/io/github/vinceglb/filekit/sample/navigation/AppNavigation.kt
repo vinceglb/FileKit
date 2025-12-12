@@ -25,13 +25,13 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.sample.SampleAppState
+import io.github.vinceglb.filekit.sample.ui.icons.Home
+import io.github.vinceglb.filekit.sample.ui.icons.LucideIcons
+import io.github.vinceglb.filekit.sample.ui.icons.MessageCircleCode
+import io.github.vinceglb.filekit.sample.ui.icons.ScanFace
 import io.github.vinceglb.filekit.sample.ui.screens.core.CoreScreen
 import io.github.vinceglb.filekit.sample.ui.screens.dialogs.DialogsScreen
 import io.github.vinceglb.filekit.sample.ui.screens.home.HomeScreen
-import io.github.vinceglb.starterkit.core.ui.icon.Home
-import io.github.vinceglb.starterkit.core.ui.icon.LucideIcons
-import io.github.vinceglb.starterkit.core.ui.icon.MessageCircleCode
-import io.github.vinceglb.starterkit.core.ui.icon.ScanFace
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
