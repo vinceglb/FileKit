@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-public val LucideIcons.ChevronDown: ImageVector
+public val LucideIcons.X: ImageVector
     get() {
-        if (_ChevronDown != null) {
-            return _ChevronDown!!
+        if (_X != null) {
+            return _X!!
         }
-        _ChevronDown = ImageVector
+        _X = ImageVector
             .Builder(
-                name = "ChevronDown",
+                name = "X",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,14 +28,22 @@ public val LucideIcons.ChevronDown: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveToRelative(6f, 9f)
-                    lineToRelative(6f, 6f)
-                    lineToRelative(6f, -6f)
+                    moveTo(18f, 6f)
+                    lineTo(6f, 18f)
+                }
+                path(
+                    stroke = SolidColor(Color.Black),
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                ) {
+                    moveToRelative(6f, 6f)
+                    lineToRelative(12f, 12f)
                 }
             }.build()
 
-        return _ChevronDown!!
+        return _X!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ChevronDown: ImageVector? = null
+private var _X: ImageVector? = null

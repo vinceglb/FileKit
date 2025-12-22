@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-public val LucideIcons.ChevronDown: ImageVector
+public val LucideIcons.CheckCheck: ImageVector
     get() {
-        if (_ChevronDown != null) {
-            return _ChevronDown!!
+        if (_CheckCheck != null) {
+            return _CheckCheck!!
         }
-        _ChevronDown = ImageVector
+        _CheckCheck = ImageVector
             .Builder(
-                name = "ChevronDown",
+                name = "CheckCheck",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,14 +28,24 @@ public val LucideIcons.ChevronDown: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveToRelative(6f, 9f)
-                    lineToRelative(6f, 6f)
-                    lineToRelative(6f, -6f)
+                    moveTo(18f, 6f)
+                    lineTo(7f, 17f)
+                    lineToRelative(-5f, -5f)
+                }
+                path(
+                    stroke = SolidColor(Color.Black),
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                ) {
+                    moveToRelative(22f, 10f)
+                    lineToRelative(-7.5f, 7.5f)
+                    lineTo(13f, 16f)
                 }
             }.build()
 
-        return _ChevronDown!!
+        return _CheckCheck!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ChevronDown: ImageVector? = null
+private var _CheckCheck: ImageVector? = null
