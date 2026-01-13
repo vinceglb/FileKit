@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.sample.shared.navigation
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -12,9 +13,12 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
+import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.icons.MessageCircleCode
 import io.github.vinceglb.filekit.sample.shared.ui.screens.dialogs.DialogsRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -27,9 +31,17 @@ private sealed interface TopLevelRoute : NavKey {
 }
 
 @Serializable
-internal data object Dialogs : TopLevelRoute {
+private data object Dialogs : TopLevelRoute {
     override val icon: ImageVector = LucideIcons.MessageCircleCode
 }
+
+@Serializable
+private data object GalleryPicker : NavKey
+
+@Serializable
+private data class FileDetails(
+    val file: PlatformFile,
+) : NavKey
 
 private val TOP_LEVEL_ROUTES: List<TopLevelRoute> = listOf(
     Dialogs,
@@ -45,11 +57,14 @@ internal fun AppNavigation(
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(Dialogs::class, Dialogs.serializer())
+                    subclass(GalleryPicker::class, GalleryPicker.serializer())
+                    subclass(FileDetails::class, FileDetails.serializer())
                 }
             }
         },
-        Dialogs,
+        GalleryPicker,
     )
+    val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
 
     NavDisplay(
         backStack = backStack,
@@ -57,9 +72,29 @@ internal fun AppNavigation(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
         ),
+        sceneStrategy = bottomSheetStrategy,
         entryProvider = entryProvider {
             entry<Dialogs> {
                 DialogsRoute()
+            }
+            entry<GalleryPicker> {
+                GalleryPickerRoute(
+                    onNavigateBack = { /* backStack.removeLastOrNull() */ },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<FileDetails>(
+                metadata = BottomSheetSceneStrategy.bottomSheet(),
+            ) {
+                FileDetailsRoute(
+                    file = it.file,
+                    onDeleteFile = {
+                        println("File deleted, closing details")
+                        backStack.removeLastOrNull()
+                    },
+                )
             }
         },
         modifier = Modifier.fillMaxSize(),

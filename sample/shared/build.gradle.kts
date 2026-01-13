@@ -31,6 +31,8 @@ kotlin {
 
             // FileKit
             implementation(projects.filekitDialogsCompose)
+            implementation(projects.filekitCoil)
+            implementation(libs.coil.compose)
         }
 
         commonTest.dependencies {
