@@ -4,5 +4,7 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>This app requires access to the photo library to save photos.</string>
 </dict>
 </plist>
