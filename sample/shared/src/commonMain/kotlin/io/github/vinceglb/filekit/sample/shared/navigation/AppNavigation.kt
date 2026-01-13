@@ -19,6 +19,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.icons.MessageCircleCode
 import io.github.vinceglb.filekit.sample.shared.ui.screens.dialogs.DialogsRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -29,6 +30,9 @@ private sealed interface TopLevelRoute : NavKey {
     val label: String
         get() = this::class.simpleName ?: "Unknown"
 }
+
+@Serializable
+private data object Home : NavKey
 
 @Serializable
 private data object Dialogs : TopLevelRoute {
@@ -57,12 +61,13 @@ internal fun AppNavigation(
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(Dialogs::class, Dialogs.serializer())
-                    subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
+                    subclass(GalleryPicker::class, GalleryPicker.serializer())
+                    subclass(Home::class, Home.serializer())
                 }
             }
         },
-        GalleryPicker,
+        Home,
     )
     val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
 
@@ -74,6 +79,9 @@ internal fun AppNavigation(
         ),
         sceneStrategy = bottomSheetStrategy,
         entryProvider = entryProvider {
+            entry<Home> {
+                HomeRoute()
+            }
             entry<Dialogs> {
                 DialogsRoute()
             }
