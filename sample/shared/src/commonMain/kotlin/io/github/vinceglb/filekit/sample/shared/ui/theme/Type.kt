@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.sample.shared.theme
+package io.github.vinceglb.filekit.sample.shared.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography

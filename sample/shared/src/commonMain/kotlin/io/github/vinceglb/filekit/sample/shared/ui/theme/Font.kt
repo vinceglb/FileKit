@@ -1,4 +1,4 @@
-package io.github.vinceglb.filekit.sample.shared.theme
+package io.github.vinceglb.filekit.sample.shared.ui.theme
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontFamily
