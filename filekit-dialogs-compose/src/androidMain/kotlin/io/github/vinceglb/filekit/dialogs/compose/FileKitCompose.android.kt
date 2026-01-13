@@ -42,7 +42,6 @@ internal actual fun InitFileKit() {
 /**
  * Creates and remembers a [PickerResultLauncher] for picking a directory.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
@@ -50,7 +49,6 @@ internal actual fun InitFileKit() {
  */
 @Composable
 public actual fun rememberDirectoryPickerLauncher(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,

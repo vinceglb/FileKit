@@ -20,7 +20,6 @@ import kotlinx.coroutines.launch
  *
  * @param type The type of files to pick. Defaults to [FileKitType.File].
  * @param mode The picking mode (e.g. Single, Multiple).
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the result.
@@ -30,7 +29,6 @@ import kotlinx.coroutines.launch
 public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     mode: FileKitMode<PickerResult, ConsumedResult>,
-    title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (ConsumedResult) -> Unit,
@@ -44,7 +42,6 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
     // Updated state
     val currentType by rememberUpdatedState(type)
     val currentMode by rememberUpdatedState(mode)
-    val currentTitle by rememberUpdatedState(title)
     val currentDirectory by rememberUpdatedState(directory)
     val currentOnConsumed by rememberUpdatedState(onResult)
 
@@ -55,7 +52,6 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
                 val result = FileKit.openFilePicker(
                     type = currentType,
                     mode = currentMode,
-                    title = currentTitle,
                     directory = currentDirectory,
                     dialogSettings = dialogSettings,
                 )
@@ -71,7 +67,6 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * Creates and remembers a [PickerResultLauncher] for picking a single file.
  *
  * @param type The type of files to pick. Defaults to [FileKitType.File].
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked file, or null if cancelled.
@@ -80,14 +75,12 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
 @Composable
 public fun rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
-    title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher = rememberFilePickerLauncher(
     type = type,
     mode = FileKitMode.Single,
-    title = title,
     directory = directory,
     dialogSettings = dialogSettings,
     onResult = onResult,
