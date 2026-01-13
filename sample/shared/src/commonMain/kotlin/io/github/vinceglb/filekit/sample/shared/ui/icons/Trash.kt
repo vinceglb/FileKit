@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-internal val LucideIcons.File: ImageVector
+public val LucideIcons.Trash: ImageVector
     get() {
-        if (_File != null) {
-            return _File!!
+        if (_Trash != null) {
+            return _Trash!!
         }
-        _File = ImageVector
+        _Trash = ImageVector
             .Builder(
-                name = "File",
+                name = "Trash",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,17 +28,12 @@ internal val LucideIcons.File: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(6f, 22f)
-                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, -2f, -2f)
-                    verticalLineTo(4f)
-                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 2f, -2f)
-                    horizontalLineToRelative(8f)
-                    arcToRelative(2.4f, 2.4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 1.704f, 0.706f)
-                    lineToRelative(3.588f, 3.588f)
-                    arcTo(2.4f, 2.4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 20f, 8f)
-                    verticalLineToRelative(12f)
+                    moveTo(19f, 6f)
+                    verticalLineToRelative(14f)
                     arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, -2f, 2f)
-                    close()
+                    horizontalLineTo(7f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, -2f, -2f)
+                    verticalLineTo(6f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -46,15 +41,26 @@ internal val LucideIcons.File: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(14f, 2f)
-                    verticalLineToRelative(5f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = false, 1f, 1f)
-                    horizontalLineToRelative(5f)
+                    moveTo(3f, 6f)
+                    horizontalLineToRelative(18f)
+                }
+                path(
+                    stroke = SolidColor(Color.Black),
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                ) {
+                    moveTo(8f, 6f)
+                    verticalLineTo(4f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 2f, -2f)
+                    horizontalLineToRelative(4f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 2f, 2f)
+                    verticalLineToRelative(2f)
                 }
             }.build()
 
-        return _File!!
+        return _Trash!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _File: ImageVector? = null
+private var _Trash: ImageVector? = null

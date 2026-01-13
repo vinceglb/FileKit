@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-public val LucideIcons.ArrowUpRight: ImageVector
+public val LucideIcons.Copy: ImageVector
     get() {
-        if (_ArrowUpRight != null) {
-            return _ArrowUpRight!!
+        if (_Copy != null) {
+            return _Copy!!
         }
-        _ArrowUpRight = ImageVector
+        _Copy = ImageVector
             .Builder(
-                name = "ArrowUpRight",
+                name = "Copy",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,9 +28,16 @@ public val LucideIcons.ArrowUpRight: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(7f, 7f)
-                    horizontalLineToRelative(10f)
-                    verticalLineToRelative(10f)
+                    moveTo(10f, 8f)
+                    lineTo(20f, 8f)
+                    arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 22f, 10f)
+                    lineTo(22f, 20f)
+                    arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 20f, 22f)
+                    lineTo(10f, 22f)
+                    arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 8f, 20f)
+                    lineTo(8f, 10f)
+                    arcTo(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 10f, 8f)
+                    close()
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -38,13 +45,17 @@ public val LucideIcons.ArrowUpRight: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(7f, 17f)
-                    lineTo(17f, 7f)
+                    moveTo(4f, 16f)
+                    curveToRelative(-1.1f, 0f, -2f, -0.9f, -2f, -2f)
+                    verticalLineTo(4f)
+                    curveToRelative(0f, -1.1f, 0.9f, -2f, 2f, -2f)
+                    horizontalLineToRelative(10f)
+                    curveToRelative(1.1f, 0f, 2f, 0.9f, 2f, 2f)
                 }
             }.build()
 
-        return _ArrowUpRight!!
+        return _Copy!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ArrowUpRight: ImageVector? = null
+private var _Copy: ImageVector? = null

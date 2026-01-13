@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-public val LucideIcons.ArrowUpRight: ImageVector
+public val LucideIcons.ChevronLeft: ImageVector
     get() {
-        if (_ArrowUpRight != null) {
-            return _ArrowUpRight!!
+        if (_ChevronLeft != null) {
+            return _ChevronLeft!!
         }
-        _ArrowUpRight = ImageVector
+        _ChevronLeft = ImageVector
             .Builder(
-                name = "ArrowUpRight",
+                name = "ChevronLeft",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,23 +28,14 @@ public val LucideIcons.ArrowUpRight: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(7f, 7f)
-                    horizontalLineToRelative(10f)
-                    verticalLineToRelative(10f)
-                }
-                path(
-                    stroke = SolidColor(Color.Black),
-                    strokeLineWidth = 2f,
-                    strokeLineCap = StrokeCap.Round,
-                    strokeLineJoin = StrokeJoin.Round,
-                ) {
-                    moveTo(7f, 17f)
-                    lineTo(17f, 7f)
+                    moveToRelative(15f, 18f)
+                    lineToRelative(-6f, -6f)
+                    lineToRelative(6f, -6f)
                 }
             }.build()
 
-        return _ArrowUpRight!!
+        return _ChevronLeft!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ArrowUpRight: ImageVector? = null
+private var _ChevronLeft: ImageVector? = null

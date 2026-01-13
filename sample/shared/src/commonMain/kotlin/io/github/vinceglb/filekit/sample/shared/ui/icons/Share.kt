@@ -8,15 +8,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-@Suppress("UnusedReceiverParameter")
-public val LucideIcons.ArrowUpRight: ImageVector
+public val LucideIcons.Share: ImageVector
     get() {
-        if (_ArrowUpRight != null) {
-            return _ArrowUpRight!!
+        if (_Share != null) {
+            return _Share!!
         }
-        _ArrowUpRight = ImageVector
+        _Share = ImageVector
             .Builder(
-                name = "ArrowUpRight",
+                name = "Share",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,9 +27,8 @@ public val LucideIcons.ArrowUpRight: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(7f, 7f)
-                    horizontalLineToRelative(10f)
-                    verticalLineToRelative(10f)
+                    moveTo(12f, 2f)
+                    verticalLineToRelative(13f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -38,13 +36,27 @@ public val LucideIcons.ArrowUpRight: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(7f, 17f)
-                    lineTo(17f, 7f)
+                    moveToRelative(16f, 6f)
+                    lineToRelative(-4f, -4f)
+                    lineToRelative(-4f, 4f)
+                }
+                path(
+                    stroke = SolidColor(Color.Black),
+                    strokeLineWidth = 2f,
+                    strokeLineCap = StrokeCap.Round,
+                    strokeLineJoin = StrokeJoin.Round,
+                ) {
+                    moveTo(4f, 12f)
+                    verticalLineToRelative(8f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = false, 2f, 2f)
+                    horizontalLineToRelative(12f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = false, 2f, -2f)
+                    verticalLineToRelative(-8f)
                 }
             }.build()
 
-        return _ArrowUpRight!!
+        return _Share!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _ArrowUpRight: ImageVector? = null
+private var _Share: ImageVector? = null

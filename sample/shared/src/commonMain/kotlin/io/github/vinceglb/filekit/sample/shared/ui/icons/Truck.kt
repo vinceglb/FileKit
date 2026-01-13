@@ -8,14 +8,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
-public val LucideIcons.BookOpenText: ImageVector
+@Suppress("UnusedReceiverParameter")
+public val LucideIcons.Truck: ImageVector
     get() {
-        if (_BookOpenText != null) {
-            return _BookOpenText!!
+        if (_Truck != null) {
+            return _Truck!!
         }
-        _BookOpenText = ImageVector
+        _Truck = ImageVector
             .Builder(
-                name = "BookOpenText",
+                name = "Truck",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -27,16 +28,13 @@ public val LucideIcons.BookOpenText: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(12f, 7f)
-                    verticalLineToRelative(14f)
-                }
-                path(
-                    stroke = SolidColor(Color.Black),
-                    strokeLineWidth = 2f,
-                    strokeLineCap = StrokeCap.Round,
-                    strokeLineJoin = StrokeJoin.Round,
-                ) {
-                    moveTo(16f, 12f)
+                    moveTo(14f, 18f)
+                    verticalLineTo(6f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = false, -2f, -2f)
+                    horizontalLineTo(4f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = false, -2f, 2f)
+                    verticalLineToRelative(11f)
+                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = false, 1f, 1f)
                     horizontalLineToRelative(2f)
                 }
                 path(
@@ -45,8 +43,8 @@ public val LucideIcons.BookOpenText: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(16f, 8f)
-                    horizontalLineToRelative(2f)
+                    moveTo(15f, 18f)
+                    horizontalLineTo(9f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -54,21 +52,14 @@ public val LucideIcons.BookOpenText: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(3f, 18f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, -1f, -1f)
-                    verticalLineTo(4f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, 1f, -1f)
-                    horizontalLineToRelative(5f)
-                    arcToRelative(4f, 4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 4f, 4f)
-                    arcToRelative(4f, 4f, 0f, isMoreThanHalf = false, isPositiveArc = true, 4f, -4f)
-                    horizontalLineToRelative(5f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, 1f, 1f)
-                    verticalLineToRelative(13f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, -1f, 1f)
-                    horizontalLineToRelative(-6f)
-                    arcToRelative(3f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = false, -3f, 3f)
-                    arcToRelative(3f, 3f, 0f, isMoreThanHalf = false, isPositiveArc = false, -3f, -3f)
-                    close()
+                    moveTo(19f, 18f)
+                    horizontalLineToRelative(2f)
+                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = false, 1f, -1f)
+                    verticalLineToRelative(-3.65f)
+                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = false, -0.22f, -0.624f)
+                    lineToRelative(-3.48f, -4.35f)
+                    arcTo(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = false, 17.52f, 8f)
+                    horizontalLineTo(14f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -76,8 +67,10 @@ public val LucideIcons.BookOpenText: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(6f, 12f)
-                    horizontalLineToRelative(2f)
+                    moveTo(17f, 18f)
+                    moveToRelative(-2f, 0f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 4f, 0f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -4f, 0f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -85,13 +78,15 @@ public val LucideIcons.BookOpenText: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(6f, 8f)
-                    horizontalLineToRelative(2f)
+                    moveTo(7f, 18f)
+                    moveToRelative(-2f, 0f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 4f, 0f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -4f, 0f)
                 }
             }.build()
 
-        return _BookOpenText!!
+        return _Truck!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _BookOpenText: ImageVector? = null
+private var _Truck: ImageVector? = null

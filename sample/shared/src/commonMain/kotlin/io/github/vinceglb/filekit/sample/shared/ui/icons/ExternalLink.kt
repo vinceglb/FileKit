@@ -9,14 +9,14 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
 @Suppress("UnusedReceiverParameter")
-public val LucideIcons.BookImage: ImageVector
+public val LucideIcons.ExternalLink: ImageVector
     get() {
-        if (_BookImage != null) {
-            return _BookImage!!
+        if (_ExternalLink != null) {
+            return _ExternalLink!!
         }
-        _BookImage = ImageVector
+        _ExternalLink = ImageVector
             .Builder(
-                name = "BookImage",
+                name = "ExternalLink",
                 defaultWidth = 24.dp,
                 defaultHeight = 24.dp,
                 viewportWidth = 24f,
@@ -28,10 +28,9 @@ public val LucideIcons.BookImage: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveToRelative(20f, 13.7f)
-                    lineToRelative(-2.1f, -2.1f)
-                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = false, -2.8f, 0f)
-                    lineTo(9.7f, 17f)
+                    moveTo(15f, 3f)
+                    horizontalLineToRelative(6f)
+                    verticalLineToRelative(6f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -39,16 +38,8 @@ public val LucideIcons.BookImage: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(4f, 19.5f)
-                    verticalLineToRelative(-15f)
-                    arcTo(2.5f, 2.5f, 0f, isMoreThanHalf = false, isPositiveArc = true, 6.5f, 2f)
-                    horizontalLineTo(19f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, 1f, 1f)
-                    verticalLineToRelative(18f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, -1f, 1f)
-                    horizontalLineTo(6.5f)
-                    arcToRelative(1f, 1f, 0f, isMoreThanHalf = false, isPositiveArc = true, 0f, -5f)
-                    horizontalLineTo(20f)
+                    moveTo(10f, 14f)
+                    lineTo(21f, 3f)
                 }
                 path(
                     stroke = SolidColor(Color.Black),
@@ -56,15 +47,19 @@ public val LucideIcons.BookImage: ImageVector
                     strokeLineCap = StrokeCap.Round,
                     strokeLineJoin = StrokeJoin.Round,
                 ) {
-                    moveTo(10f, 8f)
-                    moveToRelative(-2f, 0f)
-                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, 4f, 0f)
-                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = true, isPositiveArc = true, -4f, 0f)
+                    moveTo(18f, 13f)
+                    verticalLineToRelative(6f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, -2f, 2f)
+                    horizontalLineTo(5f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, -2f, -2f)
+                    verticalLineTo(8f)
+                    arcToRelative(2f, 2f, 0f, isMoreThanHalf = false, isPositiveArc = true, 2f, -2f)
+                    horizontalLineToRelative(6f)
                 }
             }.build()
 
-        return _BookImage!!
+        return _ExternalLink!!
     }
 
 @Suppress("ObjectPropertyName")
-private var _BookImage: ImageVector? = null
+private var _ExternalLink: ImageVector? = null
