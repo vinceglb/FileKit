@@ -80,14 +80,21 @@ internal fun AppNavigation(
         sceneStrategy = bottomSheetStrategy,
         entryProvider = entryProvider {
             entry<Home> {
-                HomeRoute()
+                HomeRoute(
+                    onGalleryPickerClick = { backStack.add(GalleryPicker) },
+                    onFilePickerClick = { /* TODO */ },
+                    onDirectoryPickerClick = { /* TODO */ },
+                    onCameraPickerClick = { /* TODO */ },
+                    onFileSaverClick = { /* TODO */ },
+                    onShareFileClick = { /* TODO */ },
+                )
             }
             entry<Dialogs> {
                 DialogsRoute()
             }
             entry<GalleryPicker> {
                 GalleryPickerRoute(
-                    onNavigateBack = { /* backStack.removeLastOrNull() */ },
+                    onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
                     },

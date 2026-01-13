@@ -35,7 +35,16 @@ import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 
 @Composable
-internal fun AppEmpty() {
+internal fun AppEmpty(
+    title: String,
+    subtitle: String,
+    primaryButtonText: String,
+    secondaryButtonText: String,
+    tertiaryButtonText: String,
+    onPrimaryButtonClick: () -> Unit,
+    onSecondaryButtonClick: () -> Unit,
+    onTertiaryButtonClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,7 +81,7 @@ internal fun AppEmpty() {
                 }
 
                 Text(
-                    text = "File picker",
+                    text = title,
                     fontWeight = FontWeight.Medium,
                     fontSize = 18.sp,
                     letterSpacing = (-0.45).sp,
@@ -80,7 +89,7 @@ internal fun AppEmpty() {
                 )
 
                 Text(
-                    text = "You haven't created any projects yet. Get started by creating your first project.",
+                    text = subtitle,
                     color = MaterialTheme.colorScheme.outline,
                     textAlign = TextAlign.Center,
                     fontSize = 14.sp,
@@ -98,29 +107,29 @@ internal fun AppEmpty() {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 AppButton(
-                    onClick = { },
+                    onClick = onPrimaryButtonClick,
                     contentPadding = AppButtonDefaults.SmallButtonContentPadding,
                 ) {
-                    Text("Open file picker")
+                    Text(primaryButtonText)
                 }
 
                 AppOutlinedButton(
-                    onClick = {},
+                    onClick = onSecondaryButtonClick,
                     contentPadding = AppButtonDefaults.SmallButtonContentPadding,
                 ) {
-                    Text("Import project")
+                    Text(secondaryButtonText)
                 }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             AppTextButton(
-                onClick = {},
+                onClick = onTertiaryButtonClick,
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.outline,
                 ),
             ) {
-                Text("Learn more")
+                Text(tertiaryButtonText)
                 Spacer(modifier = Modifier.size(4.dp))
                 Icon(
                     imageVector = LucideIcons.ArrowUpRight,
@@ -138,7 +147,16 @@ internal fun AppEmpty() {
 private fun AppEmptyPreview() {
     AppTheme {
         Surface {
-            AppEmpty()
+            AppEmpty(
+                title = "File picker",
+                subtitle = "You haven't created any items yet. Get started by creating your first item.",
+                primaryButtonText = "Open file picker",
+                secondaryButtonText = "Import project",
+                tertiaryButtonText = "Learn more",
+                onPrimaryButtonClick = {},
+                onSecondaryButtonClick = {},
+                onTertiaryButtonClick = {},
+            )
         }
     }
 }
