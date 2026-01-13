@@ -42,7 +42,7 @@ internal actual fun PlatformFile.toMetadataItems(): List<FileMetadataItem> = lis
     ),
     FileMetadataItem(
         label = "Parent",
-        value = this.parent()?.name ?: "-",
+        value = this.runCatching { parent()?.name }.getOrNull() ?: "N/A",
     ),
     FileMetadataItem(
         label = "Created At",

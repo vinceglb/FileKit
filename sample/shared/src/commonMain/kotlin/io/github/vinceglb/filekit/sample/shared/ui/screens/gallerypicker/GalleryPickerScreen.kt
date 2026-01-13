@@ -59,6 +59,8 @@ import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.components.GalleryPickerDirectory
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.ui.theme.geistMonoFontFamily
+import io.github.vinceglb.filekit.sample.shared.util.AppUrl
+import io.github.vinceglb.filekit.sample.shared.util.openUrlInBrowser
 import io.github.vinceglb.filekit.sample.shared.util.plus
 
 @Composable
@@ -146,7 +148,7 @@ private fun GalleryPickerScreen(
         topBar = {
             GalleryPickerTopBar(
                 onNavigateBack = onNavigateBack,
-                onOpenDocumentation = { /* TODO */ },
+                onOpenDocumentation = { AppUrl("https://filekit.mintlify.app/dialogs/gallery-picker").openUrlInBrowser() },
                 modifier = Modifier.padding(8.dp),
             )
         },
