@@ -14,39 +14,36 @@ import java.io.File
 internal class MacOSFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = callNativeMacOSPicker(
         mode = MacOSFilePickerMode.SingleFile,
         directory = directory,
         fileExtensions = fileExtensions,
-        title = title,
+        title = dialogSettings.title,
         macOSSettings = dialogSettings.macOS,
     )
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = callNativeMacOSPicker(
         mode = MacOSFilePickerMode.MultipleFiles,
         directory = directory,
         fileExtensions = fileExtensions,
-        title = title,
+        title = dialogSettings.title,
         macOSSettings = dialogSettings.macOS,
     )
 
     override suspend fun openDirectoryPicker(
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = callNativeMacOSPicker(
         mode = MacOSFilePickerMode.Directories,
         directory = directory,
         fileExtensions = null,
-        title = title,
+        title = dialogSettings.title,
         macOSSettings = dialogSettings.macOS,
     )
 

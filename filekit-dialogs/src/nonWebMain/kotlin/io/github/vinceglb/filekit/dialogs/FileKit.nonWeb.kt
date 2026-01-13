@@ -6,13 +6,11 @@ import io.github.vinceglb.filekit.PlatformFile
 /**
  * Opens a directory picker dialog.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
  */
 public expect suspend fun FileKit.openDirectoryPicker(
-    title: String? = null,
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
 ): PlatformFile?

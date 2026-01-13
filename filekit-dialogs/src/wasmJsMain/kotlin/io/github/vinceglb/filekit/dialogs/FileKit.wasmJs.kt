@@ -12,10 +12,10 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+@OptIn(ExperimentalWasmJsInterop::class)
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {

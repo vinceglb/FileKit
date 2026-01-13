@@ -37,7 +37,6 @@ import kotlin.coroutines.suspendCoroutine
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
@@ -85,13 +84,11 @@ public actual suspend fun FileKit.openFileSaver(
 /**
  * Opens a directory picker dialog.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
  */
 public actual suspend fun FileKit.openDirectoryPicker(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {

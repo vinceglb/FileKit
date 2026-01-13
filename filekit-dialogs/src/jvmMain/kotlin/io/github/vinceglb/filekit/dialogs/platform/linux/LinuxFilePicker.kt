@@ -23,49 +23,43 @@ internal class LinuxFilePicker(
 
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = if (xdgFilePickerPortalAvailable) {
         xdgFilePickerPortal.openFilePicker(
             fileExtensions,
-            title,
             directory,
             dialogSettings,
         )
     } else {
-        awtFilePicker.openFilePicker(fileExtensions, title, directory, dialogSettings)
+        awtFilePicker.openFilePicker(fileExtensions, directory, dialogSettings)
     }
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = if (xdgFilePickerPortalAvailable) {
         xdgFilePickerPortal.openFilesPicker(
             fileExtensions,
-            title,
             directory,
             dialogSettings,
         )
     } else {
-        awtFilePicker.openFilesPicker(fileExtensions, title, directory, dialogSettings)
+        awtFilePicker.openFilesPicker(fileExtensions, directory, dialogSettings)
     }
 
     override suspend fun openDirectoryPicker(
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? =
         if (xdgFilePickerPortalAvailable) {
             xdgFilePickerPortal.openDirectoryPicker(
-                title,
                 directory,
                 dialogSettings,
             )
         } else {
-            swingFilePicker.openDirectoryPicker(title, directory, dialogSettings)
+            swingFilePicker.openDirectoryPicker(directory, dialogSettings)
         }
 
     override suspend fun openFileSaver(

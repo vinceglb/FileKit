@@ -46,13 +46,12 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = openFilesPicker(
         directory = directory,
         fileExtensions = fileExtensions,
-        title = title,
+        title = dialogSettings.title,
         parentWindow = dialogSettings.parentWindow,
         multiple = false,
         openDirectory = false,
@@ -60,26 +59,24 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = openFilesPicker(
         directory = directory,
         fileExtensions = fileExtensions,
-        title = title,
+        title = dialogSettings.title,
         parentWindow = dialogSettings.parentWindow,
         multiple = true,
         openDirectory = false,
     )
 
     override suspend fun openDirectoryPicker(
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = openFilesPicker(
         directory = directory,
         fileExtensions = null,
-        title = title,
+        title = dialogSettings.title,
         parentWindow = dialogSettings.parentWindow,
         multiple = false,
         openDirectory = true,

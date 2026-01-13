@@ -15,7 +15,6 @@ import kotlin.coroutines.suspendCoroutine
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
