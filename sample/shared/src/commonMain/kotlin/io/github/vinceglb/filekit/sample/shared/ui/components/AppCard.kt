@@ -1,10 +1,12 @@
 package io.github.vinceglb.filekit.sample.shared.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -18,21 +20,48 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.sample.shared.theme.AppTheme
+import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import kotlin.math.max
+
+public object AppCardDefaults {
+    public val ContentPadding: PaddingValues = PaddingValues(16.dp)
+    public val BorderColor: Color
+        @Composable
+        get() = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+}
+
+@Composable
+public fun AppOutlinedCard(
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = AppCardDefaults.ContentPadding,
+    content: @Composable () -> Unit,
+) {
+    OutlinedCard(
+        modifier = modifier,
+        border = BorderStroke(
+            width = 1.dp,
+            color = AppCardDefaults.BorderColor,
+        ),
+    ) {
+        Box(Modifier.padding(contentPadding)) {
+            content()
+        }
+    }
+}
 
 @Composable
 public fun AppDottedBorderCard(
     modifier: Modifier = Modifier,
-    dotColor: Color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+    dotColor: Color = AppCardDefaults.BorderColor,
     strokeWidth: Dp = 1.dp,
     dotLength: Dp = 3.dp,
     gapLength: Dp = 2.dp,
     cornerRadius: Dp = 16.dp,
-    contentPadding: PaddingValues = PaddingValues(16.dp),
+    contentPadding: PaddingValues = AppCardDefaults.ContentPadding,
     content: @Composable () -> Unit,
 ) {
     Box(
@@ -85,7 +114,21 @@ private fun Modifier.dottedBorder(
     }
 }
 
-@Preview
+@Preview(name = "Light")
+@Preview(name = "Dark", uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
+@Composable
+private fun AppOutlinedCardPreview() {
+    AppTheme {
+        Surface {
+            AppOutlinedCard(modifier = Modifier.padding(16.dp)) {
+                Text(text = "Outlined card content")
+            }
+        }
+    }
+}
+
+@Preview(name = "Light")
+@Preview(name = "Dark", uiMode = AndroidUiModes.UI_MODE_NIGHT_YES)
 @Composable
 private fun AppDottedBorderCardPreview() {
     AppTheme {

@@ -1,9 +1,11 @@
 package io.github.vinceglb.filekit.sample.shared.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +19,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import io.github.vinceglb.filekit.sample.shared.theme.AppTheme
+import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 
 public object AppButtonDefaults {
     public val ContentPadding: PaddingValues = PaddingValues(horizontal = 24.dp, vertical = 14.dp)
@@ -32,6 +34,7 @@ public object AppButtonDefaults {
 public fun AppButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     contentPadding: PaddingValues = AppButtonDefaults.ContentPadding,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -39,6 +42,7 @@ public fun AppButton(
         onClick = onClick,
         shape = AppButtonDefaults.Shape,
         contentPadding = contentPadding,
+        enabled = enabled,
         modifier = modifier,
     ) {
         content()
@@ -51,6 +55,7 @@ public fun AppOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = AppButtonDefaults.ContentPadding,
+    enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
     OutlinedButton(
@@ -60,7 +65,12 @@ public fun AppOutlinedButton(
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.3f),
         ),
+        enabled = enabled,
         modifier = modifier,
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+        ),
     ) {
         content()
     }
@@ -70,15 +80,14 @@ public fun AppOutlinedButton(
 public fun AppTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    colors: ButtonColors = ButtonDefaults.textButtonColors(),
     content: @Composable RowScope.() -> Unit,
 ) {
     TextButton(
         onClick = onClick,
         shape = AppButtonDefaults.Shape,
         contentPadding = AppButtonDefaults.SmallButtonContentPadding,
-        colors = ButtonDefaults.textButtonColors(
-            contentColor = MaterialTheme.colorScheme.outline,
-        ),
+        colors = colors,
         modifier = modifier,
     ) {
         content()
