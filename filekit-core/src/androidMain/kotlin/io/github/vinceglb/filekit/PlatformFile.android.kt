@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
@@ -348,10 +349,23 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
         // Use "wt" (write+truncate) for overwrite, "wa" (write+append) for append
         // This ensures existing file content is properly truncated when overwriting
         val mode = if (append) "wa" else "wt"
-        FileKit.context.contentResolver
-            .openOutputStream(androidFile.uri, mode)
-            ?.asSink()
+        val fos = FileKit.context.contentResolver
+            .openFileDescriptor(androidFile.uri, mode)
+            ?.let{ ParcelFileDescriptor.AutoCloseOutputStream(it) }
             ?: throw FileKitException("Could not open output stream for Uri")
+
+        // If overwriting, explicitly set the size to 0
+        // This is necessary because Truncate does not work well for Google Drive Uri.
+        if (!append) {
+            try {
+                fos.channel.truncate(0)
+            } catch (e: Exception) {
+                fos.close()
+                throw e
+            }
+        }
+
+        fos.asSink()
     }
 }
 
