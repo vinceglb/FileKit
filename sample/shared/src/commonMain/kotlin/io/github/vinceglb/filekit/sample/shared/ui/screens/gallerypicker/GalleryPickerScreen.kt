@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -57,6 +58,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.icons.Film
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Images
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.components.GalleryPickerDirectory
+import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.ui.theme.geistMonoFontFamily
 import io.github.vinceglb.filekit.sample.shared.util.AppUrl
@@ -149,13 +151,13 @@ private fun GalleryPickerScreen(
             GalleryPickerTopBar(
                 onNavigateBack = onNavigateBack,
                 onOpenDocumentation = { AppUrl("https://filekit.mintlify.app/dialogs/gallery-picker").openUrlInBrowser() },
-                modifier = Modifier.padding(8.dp),
             )
         },
     ) { contentPadding ->
         LazyColumn(
-            contentPadding = contentPadding + PaddingValues(horizontal = 16.dp),
+            contentPadding = contentPadding + PaddingValues(all = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth(),
         ) {
             item {
@@ -166,11 +168,12 @@ private fun GalleryPickerScreen(
                     documentationUrl = "https://filekit.mintlify.app/dialogs/gallery-picker",
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = ::openGalleryPicker,
+                    modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                 )
             }
 
             item {
-                AppDottedBorderCard {
+                AppDottedBorderCard(modifier = Modifier.sizeIn(maxWidth = AppMaxWidth)) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
@@ -238,6 +241,7 @@ private fun GalleryPickerScreen(
             item {
                 AppDottedBorderCard(
                     contentPadding = PaddingValues(0.dp),
+                    modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                 ) {
                     if (files.isEmpty()) {
                         Box(
@@ -277,19 +281,6 @@ private fun GalleryPickerScreen(
                 }
             }
         }
-
-//        selectedFile?.let { file ->
-//            ModalBottomSheet(
-//                onDismissRequest = { selectedFile = null },
-//            ) {
-//                FileDetailsContent(
-//                    file = file,
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(horizontal = 16.dp, vertical = 12.dp),
-//                )
-//            }
-//        }
     }
 }
 
@@ -299,18 +290,26 @@ private fun GalleryPickerTopBar(
     onOpenDocumentation: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
+    Box(
         modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
     ) {
-        GalleryPickerTopBarButton(
-            icon = LucideIcons.ChevronLeft,
-            onClick = onNavigateBack,
-        )
-        GalleryPickerTopBarButton(
-            icon = LucideIcons.BookOpenText,
-            onClick = onOpenDocumentation,
-        )
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                // .widthIn(max = AppMaxWidth)
+                .fillMaxWidth()
+                .padding(all = 8.dp),
+        ) {
+            GalleryPickerTopBarButton(
+                icon = LucideIcons.ChevronLeft,
+                onClick = onNavigateBack,
+            )
+            GalleryPickerTopBarButton(
+                icon = LucideIcons.BookOpenText,
+                onClick = onOpenDocumentation,
+            )
+        }
     }
 }
 

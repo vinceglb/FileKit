@@ -44,9 +44,10 @@ internal fun AppEmpty(
     onPrimaryButtonClick: () -> Unit,
     onSecondaryButtonClick: () -> Unit,
     onTertiaryButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 52.dp),
     ) {

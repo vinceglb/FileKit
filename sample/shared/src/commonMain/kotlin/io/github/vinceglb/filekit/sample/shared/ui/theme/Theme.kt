@@ -7,6 +7,7 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 
 internal val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -19,6 +20,8 @@ internal val LightColorScheme = lightColorScheme(
     secondary = PurpleGrey40,
     tertiary = Pink40,
 )
+
+internal val AppMaxWidth = 500.dp
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
