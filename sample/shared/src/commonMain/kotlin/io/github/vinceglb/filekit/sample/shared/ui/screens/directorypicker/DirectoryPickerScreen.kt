@@ -1,19 +1,12 @@
 package io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,9 +23,8 @@ import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
-import io.github.vinceglb.filekit.sample.shared.ui.components.AppField
-import io.github.vinceglb.filekit.sample.shared.ui.components.AppOutlinedButton
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerResultsCard
+import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerSelectionButton
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerSupportCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerTopBar
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeader
@@ -40,7 +32,6 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderBut
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Folder
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Home
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
-import io.github.vinceglb.filekit.sample.shared.ui.icons.X
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.AppUrl
@@ -165,43 +156,15 @@ private fun DirectoryPickerSettingsCard(
 ) {
     AppDottedBorderCard(modifier = modifier) {
         Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            AppField(
+            AppPickerSelectionButton(
                 label = "Start In",
-            ) {
-                AppOutlinedButton(
-                    onClick = onPickStartDirectory,
-                    enabled = isSupported,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    contentPadding = PaddingValues(start = 16.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp, alignment = Alignment.Start),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            imageVector = LucideIcons.Home,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(20.dp),
-                        )
-                        Text(startDirectoryName ?: "System default")
-                        Spacer(modifier = Modifier.weight(1f))
-                        AnimatedVisibility(visible = startDirectoryName != null) {
-                            IconButton(onClick = onClearStartDirectory) {
-                                Icon(
-                                    imageVector = LucideIcons.X,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+                value = startDirectoryName,
+                placeholder = "System default",
+                icon = LucideIcons.Home,
+                enabled = isSupported,
+                onClick = onPickStartDirectory,
+                onClear = onClearStartDirectory,
+            )
 
             Text(
                 text = "Tip: Start In hints the initial folder, but some platforms remember the last location.",

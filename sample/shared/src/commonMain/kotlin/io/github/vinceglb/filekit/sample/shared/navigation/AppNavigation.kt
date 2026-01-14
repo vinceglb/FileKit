@@ -16,6 +16,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.DirectoryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.filesaver.FileSaverRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
 import kotlinx.serialization.Serializable
@@ -35,6 +36,9 @@ private data object CameraPicker : NavKey
 private data object DirectoryPicker : NavKey
 
 @Serializable
+private data object FileSaver : NavKey
+
+@Serializable
 private data class FileDetails(
     val file: PlatformFile,
 ) : NavKey
@@ -51,6 +55,7 @@ internal fun AppNavigation(
                     subclass(CameraPicker::class, CameraPicker.serializer())
                     subclass(DirectoryPicker::class, DirectoryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
+                    subclass(FileSaver::class, FileSaver.serializer())
                     subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(Home::class, Home.serializer())
                 }
@@ -74,7 +79,7 @@ internal fun AppNavigation(
                     onFilePickerClick = { /* TODO */ },
                     onDirectoryPickerClick = { backStack.add(DirectoryPicker) },
                     onCameraPickerClick = { backStack.add(CameraPicker) },
-                    onFileSaverClick = { /* TODO */ },
+                    onFileSaverClick = { backStack.add(FileSaver) },
                     onShareFileClick = { /* TODO */ },
                 )
             }
@@ -96,6 +101,14 @@ internal fun AppNavigation(
             }
             entry<DirectoryPicker> {
                 DirectoryPickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<FileSaver> {
+                FileSaverRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
