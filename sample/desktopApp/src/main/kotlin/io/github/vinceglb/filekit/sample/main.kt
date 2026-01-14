@@ -17,7 +17,7 @@ fun main() = application {
     // MacOS System Appearance
     System.setProperty("apple.awt.application.appearance", "system")
 
-    val windowState = rememberWindowState(size = DpSize(width = 393.dp, height = 852.dp))
+    val windowState = rememberWindowState(size = DpSize(width = 920.dp, height = 720.dp))
 
     Window(
         state = windowState,
