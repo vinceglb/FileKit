@@ -213,7 +213,6 @@ private fun FileSaverSettingsCard(
                             Text(
                                 text = "pdf",
                                 color = MaterialTheme.colorScheme.outline,
-                                fontFamily = monoFontFamily,
                             )
                         },
                         modifier = Modifier.fillMaxWidth(),

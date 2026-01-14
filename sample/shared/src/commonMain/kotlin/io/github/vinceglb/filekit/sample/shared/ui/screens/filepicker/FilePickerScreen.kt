@@ -268,7 +268,6 @@ private fun FilePickerSettingsCard(
                                 Text(
                                     text = "-",
                                     color = MaterialTheme.colorScheme.outline,
-                                    fontFamily = geistMonoFontFamily(),
                                 )
                             },
                             modifier = Modifier.width(100.dp),
@@ -286,7 +285,6 @@ private fun FilePickerSettingsCard(
                         Text(
                             text = "pdf, png",
                             color = MaterialTheme.colorScheme.outline,
-                            fontFamily = geistMonoFontFamily(),
                         )
                     },
                     modifier = Modifier.fillMaxWidth(),
