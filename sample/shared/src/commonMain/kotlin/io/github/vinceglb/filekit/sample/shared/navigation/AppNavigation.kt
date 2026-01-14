@@ -16,6 +16,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.DirectoryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.filepicker.FilePickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filesaver.FileSaverRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
@@ -35,6 +36,9 @@ private data object CameraPicker : NavKey
 
 @Serializable
 private data object DirectoryPicker : NavKey
+
+@Serializable
+private data object FilePicker : NavKey
 
 @Serializable
 private data object FileSaver : NavKey
@@ -59,6 +63,7 @@ internal fun AppNavigation(
                     subclass(CameraPicker::class, CameraPicker.serializer())
                     subclass(DirectoryPicker::class, DirectoryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
+                    subclass(FilePicker::class, FilePicker.serializer())
                     subclass(FileSaver::class, FileSaver.serializer())
                     subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(Home::class, Home.serializer())
@@ -81,11 +86,19 @@ internal fun AppNavigation(
             entry<Home> {
                 HomeRoute(
                     onGalleryPickerClick = { backStack.add(GalleryPicker) },
-                    onFilePickerClick = { /* TODO */ },
+                    onFilePickerClick = { backStack.add(FilePicker) },
                     onDirectoryPickerClick = { backStack.add(DirectoryPicker) },
                     onCameraPickerClick = { backStack.add(CameraPicker) },
                     onFileSaverClick = { backStack.add(FileSaver) },
                     onShareFileClick = { backStack.add(ShareFile) },
+                )
+            }
+            entry<FilePicker> {
+                FilePickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
                 )
             }
             entry<GalleryPicker> {

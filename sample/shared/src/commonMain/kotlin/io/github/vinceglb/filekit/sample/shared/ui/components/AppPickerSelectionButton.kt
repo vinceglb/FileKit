@@ -20,7 +20,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.icons.X
-import io.github.vinceglb.filekit.sample.shared.ui.icons.X
 
 @Composable
 internal fun AppPickerSelectionButton(

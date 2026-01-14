@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 
 internal interface DirectoryPickerLauncher {
     val isSupported: Boolean
+
     fun launch()
 }
 

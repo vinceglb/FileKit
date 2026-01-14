@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 
 internal interface ShareFileLauncher {
     val isSupported: Boolean
+
     fun launch(files: List<PlatformFile>)
 }
 

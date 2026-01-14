@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 
 internal interface FileSaverLauncher {
     val isSupported: Boolean
+
     fun launch(
         suggestedName: String,
         extension: String?,

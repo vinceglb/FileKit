@@ -10,6 +10,7 @@ internal enum class CameraFacingOption {
 
 internal interface CameraPickerLauncher {
     val isSupported: Boolean
+
     fun launch(cameraFacing: CameraFacingOption)
 }
 
