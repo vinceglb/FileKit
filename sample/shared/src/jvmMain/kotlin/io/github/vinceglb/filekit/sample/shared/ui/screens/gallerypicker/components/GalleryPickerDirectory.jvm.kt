@@ -27,7 +27,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.icons.X
 internal actual fun GalleryPickerDirectory(
     directory: io.github.vinceglb.filekit.PlatformFile?,
     onPickDirectory: (directory: io.github.vinceglb.filekit.PlatformFile?) -> Unit,
-    modifier: androidx.compose.ui.Modifier,
+    modifier: Modifier,
 ) {
     val directoryPicker = rememberDirectoryPickerLauncher { pickedDirectory ->
         pickedDirectory?.let { onPickDirectory(pickedDirectory) }

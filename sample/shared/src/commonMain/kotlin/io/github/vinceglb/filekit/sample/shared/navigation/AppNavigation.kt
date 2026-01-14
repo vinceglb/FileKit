@@ -14,6 +14,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.DirectoryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
@@ -31,6 +32,9 @@ private data object GalleryPicker : NavKey
 private data object CameraPicker : NavKey
 
 @Serializable
+private data object DirectoryPicker : NavKey
+
+@Serializable
 private data class FileDetails(
     val file: PlatformFile,
 ) : NavKey
@@ -45,6 +49,7 @@ internal fun AppNavigation(
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(CameraPicker::class, CameraPicker.serializer())
+                    subclass(DirectoryPicker::class, DirectoryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
                     subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(Home::class, Home.serializer())
@@ -67,7 +72,7 @@ internal fun AppNavigation(
                 HomeRoute(
                     onGalleryPickerClick = { backStack.add(GalleryPicker) },
                     onFilePickerClick = { /* TODO */ },
-                    onDirectoryPickerClick = { /* TODO */ },
+                    onDirectoryPickerClick = { backStack.add(DirectoryPicker) },
                     onCameraPickerClick = { backStack.add(CameraPicker) },
                     onFileSaverClick = { /* TODO */ },
                     onShareFileClick = { /* TODO */ },
@@ -83,6 +88,14 @@ internal fun AppNavigation(
             }
             entry<CameraPicker> {
                 CameraPickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<DirectoryPicker> {
+                DirectoryPickerRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
