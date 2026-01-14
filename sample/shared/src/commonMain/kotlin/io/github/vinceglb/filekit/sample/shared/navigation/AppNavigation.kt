@@ -19,6 +19,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetai
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filesaver.FileSaverRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.sharefile.ShareFileRoute
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
@@ -37,6 +38,9 @@ private data object DirectoryPicker : NavKey
 
 @Serializable
 private data object FileSaver : NavKey
+
+@Serializable
+private data object ShareFile : NavKey
 
 @Serializable
 private data class FileDetails(
@@ -58,6 +62,7 @@ internal fun AppNavigation(
                     subclass(FileSaver::class, FileSaver.serializer())
                     subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(Home::class, Home.serializer())
+                    subclass(ShareFile::class, ShareFile.serializer())
                 }
             }
         },
@@ -80,7 +85,7 @@ internal fun AppNavigation(
                     onDirectoryPickerClick = { backStack.add(DirectoryPicker) },
                     onCameraPickerClick = { backStack.add(CameraPicker) },
                     onFileSaverClick = { backStack.add(FileSaver) },
-                    onShareFileClick = { /* TODO */ },
+                    onShareFileClick = { backStack.add(ShareFile) },
                 )
             }
             entry<GalleryPicker> {
@@ -109,6 +114,14 @@ internal fun AppNavigation(
             }
             entry<FileSaver> {
                 FileSaverRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<ShareFile> {
+                ShareFileRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
