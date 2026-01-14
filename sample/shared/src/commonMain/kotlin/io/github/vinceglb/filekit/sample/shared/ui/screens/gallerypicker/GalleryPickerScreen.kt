@@ -1,25 +1,15 @@
 package io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,8 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -44,16 +32,15 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCar
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdown
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdownItem
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppField
-import io.github.vinceglb.filekit.sample.shared.ui.components.AppFileItem
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppOutlinedTextField
+import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerResultsCard
+import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerTopBar
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeader
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderButtonState
 import io.github.vinceglb.filekit.sample.shared.ui.icons.BookImage
-import io.github.vinceglb.filekit.sample.shared.ui.icons.BookOpenText
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Camera
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Check
 import io.github.vinceglb.filekit.sample.shared.ui.icons.CheckCheck
-import io.github.vinceglb.filekit.sample.shared.ui.icons.ChevronLeft
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Film
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Images
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
@@ -148,7 +135,7 @@ private fun GalleryPickerScreen(
 
     Scaffold(
         topBar = {
-            GalleryPickerTopBar(
+            AppPickerTopBar(
                 onNavigateBack = onNavigateBack,
                 onOpenDocumentation = { AppUrl("https://filekit.mintlify.app/dialogs/gallery-picker").openUrlInBrowser() },
             )
@@ -166,6 +153,7 @@ private fun GalleryPickerScreen(
                     title = "Gallery Picker",
                     subtitle = "Open the native photos and videos picker on Android and iOS",
                     documentationUrl = "https://filekit.mintlify.app/dialogs/gallery-picker",
+                    primaryButtonText = "Open Gallery",
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = ::openGalleryPicker,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
@@ -239,104 +227,14 @@ private fun GalleryPickerScreen(
             }
 
             item {
-                AppDottedBorderCard(
-                    contentPadding = PaddingValues(0.dp),
+                AppPickerResultsCard(
+                    files = files,
+                    emptyText = "No files selected",
+                    emptyIcon = LucideIcons.Camera,
+                    onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
-                ) {
-                    if (files.isEmpty()) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier
-                                .height(120.dp)
-                                .fillMaxWidth(),
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = LucideIcons.Camera,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.outline,
-                                    modifier = Modifier.size(20.dp),
-                                )
-                                Text(
-                                    text = "No files selected",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.outline,
-                                )
-                            }
-                        }
-                    } else {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            files.forEach { file ->
-                                AppFileItem(
-                                    file = file,
-                                    isSelected = false,
-                                    onClick = { onDisplayFileDetails(file) },
-                                )
-                            }
-                        }
-                    }
-                }
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun GalleryPickerTopBar(
-    onNavigateBack: () -> Unit,
-    onOpenDocumentation: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier = modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center,
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier
-                // .widthIn(max = AppMaxWidth)
-                .fillMaxWidth()
-                .padding(all = 8.dp),
-        ) {
-            GalleryPickerTopBarButton(
-                icon = LucideIcons.ChevronLeft,
-                onClick = onNavigateBack,
-            )
-            GalleryPickerTopBarButton(
-                icon = LucideIcons.BookOpenText,
-                onClick = onOpenDocumentation,
-            )
-        }
-    }
-}
-
-@Composable
-private fun GalleryPickerTopBarButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    AppDottedBorderCard(
-        contentPadding = PaddingValues(all = 0.dp),
-        modifier = modifier
-            .systemBarsPadding()
-            .size(48.dp)
-            .background(MaterialTheme.colorScheme.background)
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick),
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier
-                    .size(20.dp)
-                    .align(Alignment.Center),
-            )
         }
     }
 }

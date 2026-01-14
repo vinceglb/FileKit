@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.gallerypicker.GalleryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.home.HomeRoute
@@ -25,6 +26,9 @@ private data object Home : NavKey
 
 @Serializable
 private data object GalleryPicker : NavKey
+
+@Serializable
+private data object CameraPicker : NavKey
 
 @Serializable
 private data class FileDetails(
@@ -40,6 +44,7 @@ internal fun AppNavigation(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
+                    subclass(CameraPicker::class, CameraPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
                     subclass(GalleryPicker::class, GalleryPicker.serializer())
                     subclass(Home::class, Home.serializer())
@@ -63,13 +68,21 @@ internal fun AppNavigation(
                     onGalleryPickerClick = { backStack.add(GalleryPicker) },
                     onFilePickerClick = { /* TODO */ },
                     onDirectoryPickerClick = { /* TODO */ },
-                    onCameraPickerClick = { /* TODO */ },
+                    onCameraPickerClick = { backStack.add(CameraPicker) },
                     onFileSaverClick = { /* TODO */ },
                     onShareFileClick = { /* TODO */ },
                 )
             }
             entry<GalleryPicker> {
                 GalleryPickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<CameraPicker> {
+                CameraPickerRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
@@ -90,86 +103,4 @@ internal fun AppNavigation(
         },
         modifier = Modifier.fillMaxSize(),
     )
-
-//    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-//        val isWide = maxWidth > 720.dp
-//
-//        Scaffold(
-//            bottomBar = {
-//                if (!isWide) {
-//                    NavigationBar {
-//                        TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
-//                            val isSelected = topLevelRoute == backStack.lastOrNull()
-//                            NavigationBarItem(
-//                                selected = isSelected,
-//                                onClick = {
-//                                    backStack.remove(topLevelRoute)
-//                                    backStack.add(topLevelRoute)
-//                                },
-//                                icon = {
-//                                    Icon(
-//                                        imageVector = topLevelRoute.icon,
-//                                        contentDescription = null,
-//                                    )
-//                                },
-//                                label = { Text(topLevelRoute.label) },
-//                            )
-//                        }
-//                    }
-//                }
-//            },
-//        ) {
-//            Row {
-//                if (isWide) {
-//                    NavigationRail(
-//                        header = {
-//                            Text(
-//                                text = "FileKit",
-//                                style = MaterialTheme.typography.titleMedium,
-//                                modifier = Modifier.padding(16.dp),
-//                            )
-//                        },
-//                    ) {
-//                        TOP_LEVEL_ROUTES.forEach { topLevelRoute ->
-//                            val isSelected = topLevelRoute == backStack.lastOrNull()
-//                            NavigationRailItem(
-//                                selected = isSelected,
-//                                onClick = {
-//                                    backStack.remove(topLevelRoute)
-//                                    backStack.add(topLevelRoute)
-//                                },
-//                                icon = {
-//                                    Icon(
-//                                        imageVector = topLevelRoute.icon,
-//                                        contentDescription = null,
-//                                    )
-//                                },
-//                                label = { Text(topLevelRoute.label) },
-//                            )
-//                        }
-//                    }
-//                }
-//
-//                NavDisplay(
-//                    backStack = backStack,
-//                    entryDecorators = listOf(
-//                        rememberSaveableStateHolderNavEntryDecorator(),
-//                        rememberViewModelStoreNavEntryDecorator(),
-//                    ),
-//                    entryProvider = entryProvider {
-//                        entry<Home> {
-//                            HomeScreen(appState = appState)
-//                        }
-//                        entry<Dialogs> {
-//                            DialogsRoute()
-//                        }
-//                        entry<Core> {
-//                            CoreScreen(appState = appState)
-//                        }
-//                    },
-//                    modifier = Modifier.fillMaxSize(),
-//                )
-//            }
-//        }
-//    }
 }

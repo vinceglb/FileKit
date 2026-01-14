@@ -49,4 +49,9 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
         }
     }
+
+    // https://kotlinlang.org/docs/multiplatform/compose-multiplatform-resources-setup.html#resources-in-the-androidlibrary-target
+    androidLibrary {
+        androidResources.enable = true
+    }
 }

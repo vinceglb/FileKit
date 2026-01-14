@@ -39,8 +39,10 @@ internal fun AppScreenHeader(
     title: String,
     subtitle: String,
     documentationUrl: String,
+    primaryButtonText: String,
     onPrimaryButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
+    primaryButtonEnabled: Boolean = true,
     primaryButtonState: AppScreenHeaderButtonState = AppScreenHeaderButtonState.Enabled,
 ) {
     Box(
@@ -106,7 +108,7 @@ internal fun AppScreenHeader(
             ) {
                 AppButton(
                     onClick = onPrimaryButtonClick,
-                    enabled = primaryButtonState != AppScreenHeaderButtonState.Loading,
+                    enabled = primaryButtonEnabled && primaryButtonState != AppScreenHeaderButtonState.Loading,
                     contentPadding = AppButtonDefaults.SmallButtonContentPadding,
                 ) {
                     AnimatedVisibility(
@@ -119,7 +121,7 @@ internal fun AppScreenHeader(
                                 .size(24.dp),
                         )
                     }
-                    Text("Open Gallery")
+                    Text(primaryButtonText)
                 }
 
 //                AppOutlinedButton(
@@ -161,6 +163,7 @@ private fun AppScreenHeaderPreview() {
                 title = "Create Project",
                 subtitle = "You haven't created any projects yet. Get started by creating your first project.",
                 documentationUrl = "https://filekit.mintlify.app",
+                primaryButtonText = "Create Project",
                 primaryButtonState = AppScreenHeaderButtonState.Loading,
                 onPrimaryButtonClick = {},
             )
