@@ -19,7 +19,6 @@ import kotlin.test.assertTrue
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
 class PlatformFileAndroidTest {
-
     @Before
     fun setup() {
         // Initialize FileKit with Robolectric's application context
@@ -89,7 +88,7 @@ class PlatformFileAndroidTest {
         // The error message should be about DocumentFile access, not Path conversion
         assertTrue(
             exception.message?.contains("Could not access Uri as directory") == true ||
-                    exception.message?.contains("Could not create child file") == true
+                exception.message?.contains("Could not create child file") == true,
         )
     }
 }
