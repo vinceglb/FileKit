@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,9 +24,11 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeader
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderButtonState
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.icons.MessageCircleCode
+import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.plus
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun DebugRoute(
@@ -49,6 +52,15 @@ private fun DebugScreen(
     val picker = rememberFilePickerLauncher { file ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = file?.let(::listOf) ?: emptyList()
+    }
+
+    val scope = rememberCoroutineScope()
+    val folderPicker = rememberDirectoryPickerLauncher(directory = null) { folder ->
+        scope.launch {
+            folder?.let {
+                debugPlatformTest(folder)
+            }
+        }
     }
 
     Scaffold(
@@ -75,7 +87,8 @@ private fun DebugScreen(
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = {
                         buttonState = AppScreenHeaderButtonState.Loading
-                        picker.launch()
+                        // picker.launch()
+                        folderPicker.launch()
                     },
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                 )
@@ -93,6 +106,8 @@ private fun DebugScreen(
         }
     }
 }
+
+internal expect suspend fun debugPlatformTest(folder: PlatformFile)
 
 @Preview
 @Composable
