@@ -9,7 +9,6 @@ import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.hardware.camera2.CameraCharacteristics
 import android.net.Uri
 import android.os.Build
-import android.provider.DocumentsContract
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -101,14 +100,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
     suspendCoroutine { continuation ->
         val contract = ActivityResultContracts.OpenDocumentTree()
         val launcher = registry.register(key, contract) { treeUri ->
-            val platformDirectory = treeUri?.let {
-                // Transform the treeUri to a documentUri
-                val documentUri = DocumentsContract.buildDocumentUriUsingTree(
-                    treeUri,
-                    DocumentsContract.getTreeDocumentId(treeUri),
-                )
-                PlatformFile(documentUri)
-            }
+            val platformDirectory = treeUri?.let(::PlatformFile)
             continuation.resume(platformDirectory)
         }
         val initialUri = directory?.path?.toUri()

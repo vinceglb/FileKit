@@ -1,6 +1,5 @@
 package io.github.vinceglb.filekit.dialogs.compose
 
-import android.provider.DocumentsContract
 import androidx.activity.compose.LocalActivityResultRegistryOwner
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -60,13 +59,7 @@ public actual fun rememberDirectoryPickerLauncher(
     val currentDirectory by rememberUpdatedState(directory)
 
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { treeUri ->
-        val platformDirectory = treeUri?.let { uri ->
-            val documentUri = DocumentsContract.buildDocumentUriUsingTree(
-                uri,
-                DocumentsContract.getTreeDocumentId(uri),
-            )
-            PlatformFile(documentUri)
-        }
+        val platformDirectory = treeUri?.let(::PlatformFile)
         currentOnResult(platformDirectory)
     }
 
