@@ -14,6 +14,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
+import io.github.vinceglb.filekit.sample.shared.ui.screens.debug.DebugRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.DirectoryPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.FileDetailsRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.filepicker.FilePickerRoute
@@ -33,6 +34,9 @@ private data object GalleryPicker : NavKey
 
 @Serializable
 private data object CameraPicker : NavKey
+
+@Serializable
+private data object Debug : NavKey
 
 @Serializable
 private data object DirectoryPicker : NavKey
@@ -61,6 +65,7 @@ internal fun AppNavigation(
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(CameraPicker::class, CameraPicker.serializer())
+                    subclass(Debug::class, Debug.serializer())
                     subclass(DirectoryPicker::class, DirectoryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
                     subclass(FilePicker::class, FilePicker.serializer())
@@ -91,6 +96,7 @@ internal fun AppNavigation(
                     onCameraPickerClick = { backStack.add(CameraPicker) },
                     onFileSaverClick = { backStack.add(FileSaver) },
                     onShareFileClick = { backStack.add(ShareFile) },
+                    onDebugClick = { backStack.add(Debug) },
                 )
             }
             entry<FilePicker> {
@@ -111,6 +117,14 @@ internal fun AppNavigation(
             }
             entry<CameraPicker> {
                 CameraPickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<Debug> {
+                DebugRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))

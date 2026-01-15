@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.sample.shared.ui.screens.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,11 +11,15 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +40,8 @@ import filekit.sample.shared.generated.resources.gallery_picker
 import filekit.sample.shared.generated.resources.share_file
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.exp.AppEmpty
+import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
+import io.github.vinceglb.filekit.sample.shared.ui.icons.MessageCircleCode
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.AppUrl
@@ -51,6 +58,7 @@ internal fun HomeRoute(
     onCameraPickerClick: () -> Unit,
     onFileSaverClick: () -> Unit,
     onShareFileClick: () -> Unit,
+    onDebugClick: () -> Unit,
 ) {
     HomeScreen(
         onFilePickerClick = onFilePickerClick,
@@ -59,6 +67,7 @@ internal fun HomeRoute(
         onCameraPickerClick = onCameraPickerClick,
         onFileSaverClick = onFileSaverClick,
         onShareFileClick = onShareFileClick,
+        onDebugClick = onDebugClick,
     )
 }
 
@@ -70,6 +79,7 @@ private fun HomeScreen(
     onCameraPickerClick: () -> Unit,
     onFileSaverClick: () -> Unit,
     onShareFileClick: () -> Unit,
+    onDebugClick: () -> Unit,
 ) {
     Scaffold { paddingValues ->
         BoxWithConstraints(
@@ -155,6 +165,12 @@ private fun HomeScreen(
                         onClick = onShareFileClick,
                     )
                 }
+
+                item {
+                    HomeDebugEntry(
+                        onClick = onDebugClick,
+                    )
+                }
             }
         }
     }
@@ -204,6 +220,54 @@ private fun HomeEntry(
     }
 }
 
+@Composable
+private fun HomeDebugEntry(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        AppDottedBorderCard(
+            contentPadding = PaddingValues(6.dp),
+            modifier = Modifier
+                .height(220.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable(onClick = onClick),
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = LucideIcons.MessageCircleCode,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(40.dp),
+                    )
+                }
+            }
+        }
+
+        Text(
+            text = "Debug",
+            fontWeight = FontWeight.Medium,
+            fontSize = 15.sp,
+            letterSpacing = (-0.45).sp,
+            lineHeight = 28.sp,
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun HomeScreenPreview() {
@@ -215,6 +279,7 @@ private fun HomeScreenPreview() {
             onCameraPickerClick = {},
             onFileSaverClick = {},
             onShareFileClick = {},
+            onDebugClick = {},
         )
     }
 }
