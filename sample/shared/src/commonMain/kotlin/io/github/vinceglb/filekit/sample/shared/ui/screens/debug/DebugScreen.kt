@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -23,6 +24,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderBut
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.icons.MessageCircleCode
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
+import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.plus
 
 @Composable
@@ -44,9 +46,6 @@ private fun DebugScreen(
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var files by remember { mutableStateOf(emptyList<PlatformFile>()) }
 
-    // ========================================
-    // CUSTOMIZE YOUR PICKER HERE
-    // ========================================
     val picker = rememberFilePickerLauncher { file ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = file?.let(::listOf) ?: emptyList()
@@ -82,10 +81,6 @@ private fun DebugScreen(
                 )
             }
 
-            // ========================================
-            // ADD YOUR CUSTOM DEBUG UI HERE
-            // ========================================
-
             item {
                 AppPickerResultsCard(
                     files = files,
@@ -96,5 +91,16 @@ private fun DebugScreen(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun DebugScreenPreview() {
+    AppTheme {
+        DebugScreen(
+            onNavigateBack = {},
+            onDisplayFileDetails = {},
+        )
     }
 }

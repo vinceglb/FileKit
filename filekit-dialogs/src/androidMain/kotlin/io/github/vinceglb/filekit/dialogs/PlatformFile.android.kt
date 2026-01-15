@@ -7,13 +7,20 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.context
 
-public fun PlatformFile.toAndroidUri(authority: String): Uri =
+/**
+ * Returns the default authority string for FileProvider operations.
+ * Uses the pattern "{applicationId}.FileKitFileProvider".
+ */
+internal fun getDefaultAuthority(): String =
+    "${FileKit.context.packageName}.FileKitFileProvider"
+
+public fun PlatformFile.toAndroidUri(authority: String? = null): Uri =
     when (val androidFile = androidFile) {
         is AndroidFile.UriWrapper -> androidFile.uri
 
         is AndroidFile.FileWrapper -> FileProvider.getUriForFile(
             FileKit.context,
-            authority,
+            authority ?: getDefaultAuthority(),
             androidFile.file,
         )
     }
