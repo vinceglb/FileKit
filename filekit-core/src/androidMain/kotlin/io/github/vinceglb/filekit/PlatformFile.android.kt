@@ -98,6 +98,36 @@ public actual fun PlatformFile(path: String): PlatformFile {
     }
 }
 
+public actual fun PlatformFile(base: PlatformFile, child: String): PlatformFile {
+    return when (val baseFile = base.androidFile) {
+        is AndroidFile.FileWrapper -> {
+            // For file-based paths, use kotlinx.io Path
+            PlatformFile(base.toKotlinxIoPath() / child)
+        }
+
+        is AndroidFile.UriWrapper -> {
+            // For Uri-based directories, use DocumentFile API
+            val context = FileKit.context
+            val directoryDocument = DocumentFile.fromTreeUri(context, baseFile.uri)
+                ?: throw FileKitException("Could not access Uri as directory: ${baseFile.uri}")
+
+            // Find existing child
+            directoryDocument.findFile(child)?.let { existing ->
+                return PlatformFile(existing.uri)
+            }
+
+            // Create the file since it doesn't exist
+            // Android SAF requires files to be created via DocumentFile.createFile()
+            val extension = child.substringAfterLast('.', "")
+            val mimeType = getMimeTypeValueFromExtension(extension) ?: DEFAULT_STREAM_MIME_TYPE
+            val created = directoryDocument.createFile(mimeType, child)
+                ?: throw FileKitException("Could not create child file: $child")
+
+            PlatformFile(created.uri)
+        }
+    }
+}
+
 public actual fun PlatformFile.toKotlinxIoPath(): Path = when (androidFile) {
     is AndroidFile.FileWrapper -> androidFile.file.toKotlinxPath()
     is AndroidFile.UriWrapper -> throw FileKitUriPathNotSupportedException()
@@ -551,16 +581,32 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
     return platformFile
 }
 
-private fun getUriFileSize(uri: Uri): Long? = FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-    val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
-    if (cursor.moveToFirst()) cursor.getLong(sizeIndex) else null
+private fun getUriFileSize(uri: Uri): Long? {
+    val queryUri = uri.toDocumentUriForMetadata()
+    return FileKit.context.contentResolver.query(queryUri, null, null, null, null)?.use { cursor ->
+        val sizeIndex = cursor.getColumnIndex(OpenableColumns.SIZE)
+        if (cursor.moveToFirst()) cursor.getLong(sizeIndex) else null
+    }
 }
 
 private fun getUriFileName(uri: Uri): String {
-    return FileKit.context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+    val queryUri = uri.toDocumentUriForMetadata()
+    return FileKit.context.contentResolver.query(queryUri, null, null, null, null)?.use { cursor ->
         val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
         if (cursor.moveToFirst()) cursor.getString(nameIndex) else null
     } ?: uri.lastPathSegment ?: "" // Fallback to the Uri's last path segment
+}
+
+private fun Uri.toDocumentUriForMetadata(): Uri {
+    if (!DocumentsContract.isTreeUri(this)) return this
+
+    val documentId = try {
+        DocumentsContract.getDocumentId(this)
+    } catch (_: IllegalArgumentException) {
+        DocumentsContract.getTreeDocumentId(this)
+    }
+
+    return DocumentsContract.buildDocumentUriUsingTree(this, documentId)
 }
 
 private fun getDocumentFile(uri: Uri): DocumentFile? = DocumentFile.fromSingleUri(FileKit.context, uri)
