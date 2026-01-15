@@ -351,7 +351,7 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
         val mode = if (append) "wa" else "wt"
         val fos = FileKit.context.contentResolver
             .openFileDescriptor(androidFile.uri, mode)
-            ?.let{ ParcelFileDescriptor.AutoCloseOutputStream(it) }
+            ?.let { ParcelFileDescriptor.AutoCloseOutputStream(it) }
             ?: throw FileKitException("Could not open output stream for Uri")
 
         // If overwriting, explicitly set the size to 0

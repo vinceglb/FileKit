@@ -1,22 +1,23 @@
 [versions]
-agp = "8.13.1"
+agp = "9.0.0-rc03"
 android-compileSdk = "36"
 android-minSdk = "23"
 android-targetSdk = "36"
-androidx-activity-ktx = "1.12.0"
+androidx-activity = "1.12.2"
 androidx-annotation = "1.9.1"
-androidx-compose = "1.12.0"
 androidx-documentfile = "1.1.0"
-androidx-exifinterface = "1.4.1"
-androidx-lifecycle = "2.9.6"
+androidx-exifinterface = "1.4.2"
+androidx-lifecycle = "2.10.0-alpha06"
+androidx-navigation3 = "1.0.0-alpha06"
 androidx-startup = "1.2.0"
 coilCompose = "3.3.0"
-compose-multiplatform = "1.9.3"
-compose-multiplatform-material3 = "1.9.0"
-dbus-java = "5.1.1"
+compose-hot-reload = "1.0.0"
+compose-multiplatform = "1.10.0"
+compose-multiplatform-material3 = "1.10.0-alpha05"
+dbus-java = "5.2.0"
 jna = "5.18.1"
-kotlin = "2.2.21"
-kotlinx-serialization = "1.9.0"
+kotlin = "2.3.0"
+kotlinx-serialization = "1.10.0-RC"
 kotlinx-browser = "0.5.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1"
@@ -26,14 +27,16 @@ test-android-robolectric = "4.16"
 vanniktech-mavenPublish = "0.35.0"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-compose" }
-androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity-ktx" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-annotation = { module = "androidx.annotation:annotation", version.ref = "androidx-annotation" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "androidx-documentfile" }
 androidx-exifinterface = { module = "androidx.exifinterface:exifinterface", version.ref = "androidx-exifinterface" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "androidx-lifecycle" }
+androidx-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "androidx-navigation3" }
 androidx-startup = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 dbus-java-core = { module = "com.github.hypfvieh:dbus-java-core", version.ref = "dbus-java" }
@@ -70,9 +73,10 @@ kotlin-multiplatform-gradlePlugin = { module = "org.jetbrains.kotlin.multiplatfo
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" } # TODO remove
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-mavenPublish" }

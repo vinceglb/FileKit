@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 pluginManagement {
     includeBuild("build-logic")
     repositories {
@@ -28,14 +30,22 @@ dependencyResolutionManagement {
     }
 }
 
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
 rootProject.name = "FileKit"
-enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":filekit-coil")
 include(":filekit-core")
 include(":filekit-dialogs")
 include(":filekit-dialogs-compose")
-// include(":samples:sample-core:shared")
-// include(":samples:sample-core:composeApp")
-// include(":samples:sample-compose:composeApp")
-// include(":samples:sample-file-explorer:composeApp")
+include(":sample:androidApp")
+include(":sample:desktopApp")
+include(":sample:shared")
+include(":sample:webApp")
+
+// include(":samples-old:sample-core:shared")
+// include(":samples-old:sample-core:composeApp")
+// include(":samples-old:sample-compose:composeApp")
+// include(":samples-old:sample-file-explorer:composeApp")

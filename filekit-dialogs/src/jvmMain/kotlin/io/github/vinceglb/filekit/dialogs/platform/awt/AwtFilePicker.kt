@@ -18,11 +18,10 @@ import kotlin.coroutines.resume
 internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = callAwtPicker(
-        title = title,
+        title = dialogSettings.title,
         isMultipleMode = false,
         fileExtensions = fileExtensions,
         directory = directory,
@@ -31,11 +30,10 @@ internal class AwtFilePicker : PlatformFilePicker {
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = callAwtPicker(
-        title = title,
+        title = dialogSettings.title,
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         directory = directory,
@@ -43,7 +41,6 @@ internal class AwtFilePicker : PlatformFilePicker {
     )
 
     override suspend fun openDirectoryPicker(
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")

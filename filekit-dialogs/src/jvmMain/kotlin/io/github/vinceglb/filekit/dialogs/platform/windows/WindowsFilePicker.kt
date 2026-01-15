@@ -43,7 +43,6 @@ import java.io.File
 internal class WindowsFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
@@ -51,9 +50,9 @@ internal class WindowsFilePicker : PlatformFilePicker {
         directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
-        title?.let {
+        dialogSettings.title?.let {
             fileOpenDialog
-                .SetTitle(WString(title))
+                .SetTitle(WString(dialogSettings.title))
                 .verify("SetTitle failed")
         }
 
@@ -69,7 +68,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
@@ -77,9 +75,9 @@ internal class WindowsFilePicker : PlatformFilePicker {
         directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
-        title?.let {
+        dialogSettings.title?.let {
             fileOpenDialog
-                .SetTitle(WString(title))
+                .SetTitle(WString(dialogSettings.title))
                 .verify("SetTitle failed")
         }
 
@@ -97,7 +95,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     override suspend fun openDirectoryPicker(
-        title: String?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
@@ -105,9 +102,9 @@ internal class WindowsFilePicker : PlatformFilePicker {
         directory?.let { fileOpenDialog.setDefaultPath(it) }
 
         // Set title
-        title?.let {
+        dialogSettings.title?.let {
             fileOpenDialog
-                .SetTitle(WString(title))
+                .SetTitle(WString(dialogSettings.title))
                 .verify("SetTitle failed")
         }
 

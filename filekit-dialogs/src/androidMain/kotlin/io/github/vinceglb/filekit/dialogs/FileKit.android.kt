@@ -37,7 +37,6 @@ import kotlin.coroutines.suspendCoroutine
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
@@ -85,13 +84,11 @@ public actual suspend fun FileKit.openFileSaver(
 /**
  * Opens a directory picker dialog.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
  */
 public actual suspend fun FileKit.openDirectoryPicker(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
@@ -178,23 +175,17 @@ public class TakePictureWithCameraFacing(
     override fun createIntent(context: Context, input: Uri): Intent = super.createIntent(context, input).apply {
         // Intent extras taken from the flutter codebase because they are known to work and battle-tested:
         // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-            val cameraCharacteristic = when (currentCameraFacing) {
-                FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
-                FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
-            }
-            putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+        val cameraCharacteristic = when (currentCameraFacing) {
+            FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
+            FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
+        }
+        putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                putExtra(
-                    "android.intent.extras.USE_FRONT_CAMERA",
-                    currentCameraFacing == FileKitCameraFacing.Front,
-                )
-            }
-        } else {
-            if (currentCameraFacing == FileKitCameraFacing.Front) {
-                putExtra("android.intent.extras.CAMERA_FACING", 1)
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            putExtra(
+                "android.intent.extras.USE_FRONT_CAMERA",
+                currentCameraFacing == FileKitCameraFacing.Front,
+            )
         }
 
         // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera

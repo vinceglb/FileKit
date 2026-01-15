@@ -55,11 +55,11 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     }
 
 @OptIn(ExperimentalTime::class)
-public actual fun PlatformFile.createdAt(): Instant? {
+public actual fun PlatformFile.createdAt(): Instant? = runCatching {
     val attributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
     val timestamp = attributes.creationTime().toMillis()
     return Instant.fromEpochMilliseconds(timestamp)
-}
+}.getOrNull()
 
 @OptIn(ExperimentalTime::class)
 public actual fun PlatformFile.lastModified(): Instant {

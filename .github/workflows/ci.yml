@@ -135,4 +135,4 @@ jobs:
         run: curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.4.28/ktlint-compose-0.4.28-all.jar
 
       - name: 🚨 Run ktlint
-        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' '!samples/**' -R ktlint-compose-0.4.28-all.jar
+        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.4.28-all.jar

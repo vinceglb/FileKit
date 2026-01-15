@@ -2,7 +2,6 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
-import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
@@ -143,7 +142,7 @@ private fun NSURL.mimeTypeFromExtension(): String? =
         ?.let { ext -> UTType.typeWithFilenameExtension(ext)?.preferredMIMEType }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun NSURL.resourceValue(key: NSURLResourceKey?): Any? = memScoped {
+private fun NSURL.resourceValue(key: NSURLResourceKey): Any? = memScoped {
     val valuePtr = alloc<ObjCObjectVar<Any?>>()
     val success = getResourceValue(value = valuePtr.ptr, forKey = key, error = null)
     if (success) valuePtr.value else null

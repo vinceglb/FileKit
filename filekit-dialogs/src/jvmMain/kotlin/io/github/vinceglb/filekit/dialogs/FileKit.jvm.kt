@@ -11,7 +11,6 @@ import java.awt.Desktop
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
@@ -27,7 +26,6 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         PickerMode.Single -> {
             PlatformFilePicker.current
                 .openFilePicker(
-                    title = title,
                     directory = directory,
                     fileExtensions = extensions,
                     dialogSettings = dialogSettings,
@@ -37,7 +35,6 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         is PickerMode.Multiple -> {
             PlatformFilePicker.current
                 .openFilesPicker(
-                    title = title,
                     directory = directory,
                     fileExtensions = extensions,
                     dialogSettings = dialogSettings,
@@ -51,19 +48,16 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
 /**
  * Opens a directory picker dialog.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
  */
 public actual suspend fun FileKit.openDirectoryPicker(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = withContext(Dispatchers.IO) {
     // Open native file picker
     val file = PlatformFilePicker.current.openDirectoryPicker(
-        title = title,
         directory = directory,
         dialogSettings = dialogSettings,
     )

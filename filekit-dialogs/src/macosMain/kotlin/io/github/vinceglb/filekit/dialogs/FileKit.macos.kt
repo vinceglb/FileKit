@@ -17,7 +17,6 @@ import platform.Foundation.NSURL
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
     mode: PickerMode,
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> {
@@ -26,7 +25,6 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
             is PickerMode.Single -> Mode.Single
             is PickerMode.Multiple -> Mode.Multiple
         },
-        title = title,
         directory = directory,
         fileExtensions = when (type) {
             FileKitType.Image -> imageExtensions
@@ -43,18 +41,15 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
 /**
  * Opens a directory picker dialog.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
  */
 public actual suspend fun FileKit.openDirectoryPicker(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): PlatformFile? = callPicker(
     mode = Mode.Directory,
-    title = title,
     directory = directory,
     fileExtensions = null,
     dialogSettings = dialogSettings,
@@ -136,7 +131,6 @@ public actual fun FileKit.openFileWithDefaultApplication(
 
 private fun callPicker(
     mode: Mode,
-    title: String?,
     directory: PlatformFile?,
     fileExtensions: Set<String>?,
     dialogSettings: FileKitDialogSettings,
@@ -147,7 +141,7 @@ private fun callPicker(
     // Configure the NSOpenPanel
     nsOpenPanel.configure(
         mode = mode,
-        title = title,
+        title = dialogSettings.title,
         extensions = fileExtensions,
         directory = directory,
         canCreateDirectories = dialogSettings.canCreateDirectories,

@@ -1,4 +1,0 @@
-<paths>
-    <cache-path name="filekit_cache" path="." />
-    <files-path name="filekit_files" path="." />
-</paths>

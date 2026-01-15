@@ -23,7 +23,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Build
-        run: ./gradlew samples:sample-compose:composeApp:wasmJsBrowserDistribution
+        run: ./gradlew sample:sample-compose:composeApp:wasmJsBrowserDistribution
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -31,7 +31,7 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'samples/sample-compose/composeApp/build/dist/wasmJs/productionExecutable'
+          path: 'sample/sample-compose/composeApp/build/dist/wasmJs/productionExecutable'
 
   deploy:
     name: Deploy to GitHub Pages

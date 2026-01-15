@@ -14,7 +14,6 @@ import kotlinx.coroutines.launch
 /**
  * Creates and remembers a [PickerResultLauncher] for picking a directory.
  *
- * @param title The title of the dialog. Supported on desktop platforms.
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
@@ -22,7 +21,6 @@ import kotlinx.coroutines.launch
  */
 @Composable
 public actual fun rememberDirectoryPickerLauncher(
-    title: String?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
@@ -34,7 +32,6 @@ public actual fun rememberDirectoryPickerLauncher(
     val coroutineScope = rememberCoroutineScope()
 
     // Updated state
-    val currentTitle by rememberUpdatedState(title)
     val currentDirectory by rememberUpdatedState(directory)
     val currentOnResult by rememberUpdatedState(onResult)
 
@@ -43,7 +40,6 @@ public actual fun rememberDirectoryPickerLauncher(
         PickerResultLauncher {
             coroutineScope.launch {
                 val result = FileKit.openDirectoryPicker(
-                    title = currentTitle,
                     directory = currentDirectory,
                     dialogSettings = dialogSettings,
                 )
