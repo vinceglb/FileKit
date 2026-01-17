@@ -18,6 +18,9 @@ public actual val PlatformFile.path: String
 public actual fun PlatformFile(path: String): PlatformFile =
     PlatformFile(Path(path))
 
+public actual fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
+    PlatformFile(base.toKotlinxIoPath() / child)
+
 public actual fun PlatformFile.isRegularFile(): Boolean = withScopedAccess {
     SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isRegularFile ?: false
 }

@@ -1,6 +1,5 @@
 package io.github.vinceglb.filekit
 
-import io.github.vinceglb.filekit.utils.div
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
@@ -38,8 +37,7 @@ public expect fun PlatformFile(path: String): PlatformFile
  * @param child The child path string.
  * @return A [PlatformFile] instance representing the combined path.
  */
-public fun PlatformFile(base: PlatformFile, child: String): PlatformFile =
-    PlatformFile(base.toKotlinxIoPath() / child)
+public expect fun PlatformFile(base: PlatformFile, child: String): PlatformFile
 
 /**
  * Converts this [PlatformFile] to a [Path].
