@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.sample.shared.ui.screens.bookmarks.BookmarksRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.debug.DebugRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker.DirectoryPickerRoute
@@ -34,6 +35,9 @@ private data object GalleryPicker : NavKey
 
 @Serializable
 private data object CameraPicker : NavKey
+
+@Serializable
+private data object Bookmarks : NavKey
 
 @Serializable
 private data object Debug : NavKey
@@ -65,6 +69,7 @@ internal fun AppNavigation(
             serializersModule = SerializersModule {
                 polymorphic(NavKey::class) {
                     subclass(CameraPicker::class, CameraPicker.serializer())
+                    subclass(Bookmarks::class, Bookmarks.serializer())
                     subclass(Debug::class, Debug.serializer())
                     subclass(DirectoryPicker::class, DirectoryPicker.serializer())
                     subclass(FileDetails::class, FileDetails.serializer())
@@ -94,6 +99,7 @@ internal fun AppNavigation(
                     onFilePickerClick = { backStack.add(FilePicker) },
                     onDirectoryPickerClick = { backStack.add(DirectoryPicker) },
                     onCameraPickerClick = { backStack.add(CameraPicker) },
+                    onBookmarksClick = { backStack.add(Bookmarks) },
                     onFileSaverClick = { backStack.add(FileSaver) },
                     onShareFileClick = { backStack.add(ShareFile) },
                     onDebugClick = { backStack.add(Debug) },
@@ -117,6 +123,14 @@ internal fun AppNavigation(
             }
             entry<CameraPicker> {
                 CameraPickerRoute(
+                    onNavigateBack = { backStack.removeLastOrNull() },
+                    onDisplayFileDetails = { file ->
+                        backStack.add(FileDetails(file))
+                    },
+                )
+            }
+            entry<Bookmarks> {
+                BookmarksRoute(
                     onNavigateBack = { backStack.removeLastOrNull() },
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))

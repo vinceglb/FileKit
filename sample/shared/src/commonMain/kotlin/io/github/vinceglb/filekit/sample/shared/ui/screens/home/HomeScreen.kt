@@ -32,6 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import filekit.sample.shared.generated.resources.Res
+import filekit.sample.shared.generated.resources.bookmark
 import filekit.sample.shared.generated.resources.camera_picker
 import filekit.sample.shared.generated.resources.directory_picker
 import filekit.sample.shared.generated.resources.file_picker
@@ -56,6 +57,7 @@ internal fun HomeRoute(
     onGalleryPickerClick: () -> Unit,
     onDirectoryPickerClick: () -> Unit,
     onCameraPickerClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     onFileSaverClick: () -> Unit,
     onShareFileClick: () -> Unit,
     onDebugClick: () -> Unit,
@@ -65,6 +67,7 @@ internal fun HomeRoute(
         onGalleryPickerClick = onGalleryPickerClick,
         onDirectoryPickerClick = onDirectoryPickerClick,
         onCameraPickerClick = onCameraPickerClick,
+        onBookmarksClick = onBookmarksClick,
         onFileSaverClick = onFileSaverClick,
         onShareFileClick = onShareFileClick,
         onDebugClick = onDebugClick,
@@ -77,6 +80,7 @@ private fun HomeScreen(
     onGalleryPickerClick: () -> Unit,
     onDirectoryPickerClick: () -> Unit,
     onCameraPickerClick: () -> Unit,
+    onBookmarksClick: () -> Unit,
     onFileSaverClick: () -> Unit,
     onShareFileClick: () -> Unit,
     onDebugClick: () -> Unit,
@@ -160,6 +164,14 @@ private fun HomeScreen(
 
                 item {
                     HomeEntry(
+                        label = "Bookmarks",
+                        image = Res.drawable.bookmark,
+                        onClick = onBookmarksClick,
+                    )
+                }
+
+                item {
+                    HomeEntry(
                         label = "Share File",
                         image = Res.drawable.share_file,
                         onClick = onShareFileClick,
@@ -167,7 +179,9 @@ private fun HomeScreen(
                 }
 
                 item {
-                    HomeDebugEntry(
+                    HomeIconEntry(
+                        label = "Debug",
+                        icon = LucideIcons.MessageCircleCode,
                         onClick = onDebugClick,
                     )
                 }
@@ -221,7 +235,9 @@ private fun HomeEntry(
 }
 
 @Composable
-private fun HomeDebugEntry(
+private fun HomeIconEntry(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -249,7 +265,7 @@ private fun HomeDebugEntry(
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
-                        imageVector = LucideIcons.MessageCircleCode,
+                        imageVector = icon,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(40.dp),
@@ -259,7 +275,7 @@ private fun HomeDebugEntry(
         }
 
         Text(
-            text = "Debug",
+            text = label,
             fontWeight = FontWeight.Medium,
             fontSize = 15.sp,
             letterSpacing = (-0.45).sp,
@@ -277,6 +293,7 @@ private fun HomeScreenPreview() {
             onFilePickerClick = {},
             onDirectoryPickerClick = {},
             onCameraPickerClick = {},
+            onBookmarksClick = {},
             onFileSaverClick = {},
             onShareFileClick = {},
             onDebugClick = {},
