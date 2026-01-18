@@ -598,7 +598,7 @@ private fun getUriFileName(uri: Uri): String {
 }
 
 private fun Uri.toDocumentUriForMetadata(): Uri {
-    if (!DocumentsContract.isTreeUri(this)) return this
+    if (!isTreeUriCompat()) return this
 
     val documentId = try {
         DocumentsContract.getDocumentId(this)
@@ -609,5 +609,29 @@ private fun Uri.toDocumentUriForMetadata(): Uri {
     return DocumentsContract.buildDocumentUriUsingTree(this, documentId)
 }
 
-private fun getDocumentFile(uri: Uri): DocumentFile? = DocumentFile.fromSingleUri(FileKit.context, uri)
-    ?: DocumentFile.fromTreeUri(FileKit.context, uri)
+private fun Uri.isTreeUriCompat(): Boolean {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        return DocumentsContract.isTreeUri(this)
+    }
+
+    val segments = pathSegments ?: return false
+    return segments.isNotEmpty() && segments[0] == "tree"
+}
+
+private fun getDocumentFile(uri: Uri): DocumentFile? {
+    val context = FileKit.context
+    return when {
+        DocumentsContract.isDocumentUri(context, uri) -> {
+            DocumentFile.fromSingleUri(context, uri)
+        }
+
+        uri.isTreeUriCompat() -> {
+            DocumentFile.fromTreeUri(context, uri)
+        }
+
+        else -> {
+            DocumentFile.fromSingleUri(context, uri)
+                ?: DocumentFile.fromTreeUri(context, uri)
+        }
+    }
+}
