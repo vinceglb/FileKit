@@ -19,6 +19,7 @@ internal actual fun rememberCameraPickerLauncher(
             override fun launch(cameraFacing: CameraFacingOption) {
                 launcher.launch(
                     cameraFacing = when (cameraFacing) {
+                        CameraFacingOption.System -> FileKitCameraFacing.System
                         CameraFacingOption.Front -> FileKitCameraFacing.Front
                         CameraFacingOption.Back -> FileKitCameraFacing.Back
                     },
