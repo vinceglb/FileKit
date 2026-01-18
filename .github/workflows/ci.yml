@@ -108,9 +108,11 @@ jobs:
 
       - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-disabled: true
 
       - name: 🧪 Run macOS Tests
-        run: ./gradlew macosArm64Test
+        run: ./gradlew macosArm64Test --no-daemon
 
   lint:
     name: 🚨 Lint
