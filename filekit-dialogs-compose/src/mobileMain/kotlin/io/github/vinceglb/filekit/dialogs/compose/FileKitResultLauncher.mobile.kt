@@ -19,7 +19,7 @@ public class PhotoResultLauncher(
     @OptIn(ExperimentalUuidApi::class)
     public fun launch(
         type: FileKitCameraType = FileKitCameraType.Photo,
-        cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
+        cameraFacing: FileKitCameraFacing = FileKitCameraFacing.System,
         destinationFile: PlatformFile = FileKit.cacheDir / "${Uuid.random()}.jpg",
     ) {
         onLaunch(type, cameraFacing, destinationFile)

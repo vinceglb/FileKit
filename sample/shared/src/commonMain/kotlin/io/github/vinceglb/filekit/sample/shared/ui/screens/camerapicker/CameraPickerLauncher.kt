@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
 
 internal enum class CameraFacingOption {
+    System,
     Front,
     Back,
 }

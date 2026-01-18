@@ -61,7 +61,7 @@ private fun CameraPickerScreen(
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
 ) {
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
-    var cameraFacing by remember { mutableStateOf(CameraFacingOption.Back) }
+    var cameraFacing by remember { mutableStateOf(CameraFacingOption.System) }
     var capturedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
 
     val cameraLauncher = rememberCameraPickerLauncher { file ->
@@ -201,6 +201,11 @@ private fun CameraPickerSettingsCard(
 }
 
 private val facingOptions: List<AppDropdownItem.IconItem<CameraFacingOption>> = listOf(
+    AppDropdownItem.IconItem(
+        label = "System Default",
+        value = CameraFacingOption.System,
+        icon = LucideIcons.Camera,
+    ),
     AppDropdownItem.IconItem(
         label = "Rear Camera",
         value = CameraFacingOption.Back,

@@ -59,10 +59,12 @@ Video capture support is planned for a future release.
 ## Camera facing
 
 You can specify whether the front or rear facing camera is used, using the `cameraFacing` parameter:
+- `System` lets the camera app decide which camera to open (default)
 - `Front` opens the front facing camera (Selfie-Camera)
 - `Back` opens the rear facing camera
 
-By default, the rear facing camera is used.
+By default, the camera app decides which camera to use.
+On Android, FileKit only applies camera-facing intent extras when you explicitly request `Front` or `Back`.
 
 <CodeGroup>
 ```kotlin filekit-dialogs

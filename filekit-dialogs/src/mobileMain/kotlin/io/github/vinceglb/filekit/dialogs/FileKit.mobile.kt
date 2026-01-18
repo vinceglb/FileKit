@@ -8,6 +8,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 public enum class FileKitCameraFacing {
+    System,
     Front,
     Back,
 }
@@ -15,7 +16,7 @@ public enum class FileKitCameraFacing {
 @OptIn(ExperimentalUuidApi::class)
 public expect suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType = FileKitCameraType.Photo,
-    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
+    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.System,
     destinationFile: PlatformFile = FileKit.cacheDir / "${Uuid.random()}.jpg",
     openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
 ): PlatformFile?

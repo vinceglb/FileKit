@@ -208,7 +208,7 @@ public actual suspend fun FileKit.openFileSaver(
  * Opens a camera picker dialog.
  *
  * @param type The type of media to capture (Image or Video).
- * @param cameraFacing The camera facing (Back or Front).
+ * @param cameraFacing The camera facing (System, Back or Front).
  * @param destinationFile The file where the captured media will be saved.
  * @param openCameraSettings Platform-specific settings for the camera.
  * @return The saved file as a [PlatformFile], or null if cancelled.
@@ -248,9 +248,18 @@ public actual suspend fun FileKit.openCameraPicker(
             UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
         pickerController.delegate = cameraControllerDelegate
 
-        pickerController.cameraDevice = when (cameraFacing) {
-            FileKitCameraFacing.Front -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
-            FileKitCameraFacing.Back -> UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
+        when (cameraFacing) {
+            FileKitCameraFacing.Front -> {
+                pickerController.cameraDevice =
+                    UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
+            }
+
+            FileKitCameraFacing.Back -> {
+                pickerController.cameraDevice =
+                    UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
+            }
+
+            FileKitCameraFacing.System -> {}
         }
 
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
