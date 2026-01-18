@@ -253,11 +253,13 @@ public actual suspend fun FileKit.openCameraPicker(
                 pickerController.cameraDevice =
                     UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
             }
+
             FileKitCameraFacing.Back -> {
                 pickerController.cameraDevice =
                     UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
             }
-            FileKitCameraFacing.System -> Unit
+
+            FileKitCameraFacing.System -> {}
         }
 
         UIApplication.sharedApplication.topMostViewController()?.presentViewController(
