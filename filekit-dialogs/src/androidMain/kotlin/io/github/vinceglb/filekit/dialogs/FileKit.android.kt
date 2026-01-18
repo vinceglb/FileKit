@@ -6,9 +6,7 @@ import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-import android.hardware.camera2.CameraCharacteristics
 import android.net.Uri
-import android.os.Build
 import android.webkit.MimeTypeMap
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultRegistry
@@ -112,7 +110,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
  * Opens a camera picker dialog.
  *
  * @param type The type of media to capture (Image or Video).
- * @param cameraFacing The camera facing (Back or Front).
+ * @param cameraFacing The camera facing (System, Back or Front).
  * @param destinationFile The file where the captured media will be saved.
  * @param openCameraSettings Platform-specific settings for the camera.
  * @return The saved file as a [PlatformFile], or null if cancelled.
@@ -152,7 +150,7 @@ public actual suspend fun FileKit.openCameraPicker(
  * 2. With [setCameraFacing] for reusable contracts (e.g., with rememberLauncherForActivityResult)
  */
 public class TakePictureWithCameraFacing(
-    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.Back,
+    cameraFacing: FileKitCameraFacing = FileKitCameraFacing.System,
 ) : ActivityResultContracts.TakePicture() {
     private var currentCameraFacing: FileKitCameraFacing = cameraFacing
 
@@ -165,28 +163,36 @@ public class TakePictureWithCameraFacing(
     }
 
     override fun createIntent(context: Context, input: Uri): Intent = super.createIntent(context, input).apply {
-        // Intent extras taken from the flutter codebase because they are known to work and battle-tested:
-        // https://github.com/flutter/packages/blob/27a2302a3d716e7ee3abbb08e57c5dfa729c9e2e/packages/image_picker/image_picker_android/android/src/main/java/io/flutter/plugins/imagepicker/ImagePickerDelegate.java#L990
-        val cameraCharacteristic = when (currentCameraFacing) {
-            FileKitCameraFacing.Front -> CameraCharacteristics.LENS_FACING_FRONT
-            FileKitCameraFacing.Back -> CameraCharacteristics.LENS_FACING_BACK
+        if (currentCameraFacing == FileKitCameraFacing.System) {
+            return@apply
         }
-        putExtra("android.intent.extras.CAMERA_FACING", cameraCharacteristic)
+        applyCameraFacingExtras(currentCameraFacing)
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            putExtra(
-                "android.intent.extras.USE_FRONT_CAMERA",
-                currentCameraFacing == FileKitCameraFacing.Front,
-            )
-        }
+    private fun Intent.applyCameraFacingExtras(cameraFacing: FileKitCameraFacing) {
+        val isFront = cameraFacing == FileKitCameraFacing.Front
 
-        // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
-        val facing = when (currentCameraFacing) {
-            FileKitCameraFacing.Front -> "front"
-            FileKitCameraFacing.Back -> "rear"
+        // Intent extras adapted from community implementations (expo-image-picker / Flutter).
+        // They are undocumented, so we apply them only when the caller explicitly requested a facing.
+        if (isFront) {
+            // https://github.com/expo/expo/blob/c54eb1e0cbc0f09af9e4308ff76ed9dca457d90e/packages/expo-image-picker/android/src/main/java/expo/modules/imagepicker/contracts/CameraContract.kt#L32
+            putExtra("android.intent.extras.LENS_FACING_FRONT", 1)
+            putExtra("android.intent.extras.CAMERA_FACING", 1)
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", true)
+
+            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+            putExtra("camerafacing", "front")
+            putExtra("previous_mode", "front")
+        } else {
+            // https://github.com/expo/expo/blob/c54eb1e0cbc0f09af9e4308ff76ed9dca457d90e/packages/expo-image-picker/android/src/main/java/expo/modules/imagepicker/contracts/CameraContract.kt#L32
+            putExtra("android.intent.extras.LENS_FACING_BACK", 1)
+            putExtra("android.intent.extras.CAMERA_FACING", 0)
+            putExtra("android.intent.extra.USE_FRONT_CAMERA", false)
+
+            // Required for Samsung according to https://stackoverflow.com/questions/64263476/android-camera-intent-open-front-camera-instead-of-back-camera
+            putExtra("camerafacing", "rear")
+            putExtra("previous_mode", "rear")
         }
-        putExtra("camerafacing", facing)
-        putExtra("previous_mode", facing)
     }
 }
 
