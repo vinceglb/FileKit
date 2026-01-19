@@ -24,7 +24,7 @@ kotlinx-datetime = "0.7.1"
 kotlinx-io = "0.8.2"
 material-icons-core = "1.7.3"
 test-android-robolectric = "4.16"
-vanniktech-mavenPublish = "0.35.0"
+vanniktech-mavenPublish = "0.36.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
