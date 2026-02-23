@@ -20,6 +20,10 @@ kotlin {
             implementation(libs.androidx.activity.ktx)
         }
 
+        androidHostTest.dependencies {
+            implementation(libs.test.android.robolectric)
+        }
+
         jvmMain.dependencies {
             implementation(libs.jna)
             implementation(libs.jna.platform)

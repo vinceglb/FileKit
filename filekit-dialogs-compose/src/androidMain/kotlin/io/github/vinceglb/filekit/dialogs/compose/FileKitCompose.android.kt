@@ -2,6 +2,7 @@
 
 package io.github.vinceglb.filekit.dialogs.compose
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -22,9 +23,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitAndroidCameraPermissionInternal
+import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -280,6 +284,10 @@ public actual fun rememberCameraPickerLauncher(
     // Store the destination file URI string to survive process death.
     // If the user launches again before a callback, latest launch wins.
     var pendingDestinationUri by rememberSaveable { mutableStateOf<String?>(null) }
+    var pendingCameraFacingName by rememberSaveable { mutableStateOf(FileKitCameraFacing.System.name) }
+    var hasPendingPermissionRequest by rememberSaveable { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     // Updated callback
     val currentOnResult by rememberUpdatedState(onResult)
@@ -294,20 +302,102 @@ public actual fun rememberCameraPickerLauncher(
         currentOnResult(resolveCameraResult(success, pendingUri))
     }
 
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { permissionGranted ->
+            if (!hasPendingPermissionRequest) return@rememberLauncherForActivityResult
+            hasPendingPermissionRequest = false
+
+            when (
+                val resolution = resolveCameraPermissionResult(
+                    permissionGranted = permissionGranted,
+                    pendingDestinationUri = pendingDestinationUri,
+                )
+            ) {
+                CameraPermissionResolution.NoOp -> {
+                    Unit
+                }
+
+                CameraPermissionResolution.ReturnNullResult -> {
+                    pendingDestinationUri = null
+                    currentOnResult(null)
+                }
+
+                is CameraPermissionResolution.LaunchCamera -> {
+                    val cameraFacing = runCatching {
+                        FileKitCameraFacing.valueOf(pendingCameraFacingName)
+                    }.getOrDefault(FileKitCameraFacing.System)
+
+                    contract.setCameraFacing(cameraFacing)
+                    val isLaunched = launchCameraSafely(
+                        uri = resolution.uri,
+                        launch = launcher::launch,
+                    )
+                    if (!isLaunched) {
+                        pendingDestinationUri = null
+                        currentOnResult(null)
+                    }
+                }
+            }
+        }
+
     // Return the PhotoResultLauncher wrapper
-    return remember(launcher, contract) {
-        PhotoResultLauncher { type, cameraFacing, destinationFile ->
+    return remember(launcher, permissionLauncher, contract, context) {
+        PhotoResultLauncher { _, cameraFacing, destinationFile ->
             // Store the destination URI for retrieval after potential activity recreation
             val uri = destinationFile.toAndroidUri(openCameraSettings.authority)
             pendingDestinationUri = uri.toString()
+            pendingCameraFacingName = cameraFacing.name
+
+            if (FileKitAndroidCameraPermissionInternal.needsRuntimeCameraPermission(context)) {
+                hasPendingPermissionRequest = true
+                permissionLauncher.launch(Manifest.permission.CAMERA)
+                return@PhotoResultLauncher
+            }
 
             // Set the camera facing on the contract before launching
             contract.setCameraFacing(cameraFacing)
 
             // Launch the camera
-            launcher.launch(uri)
+            val isLaunched = launchCameraSafely(
+                uri = uri,
+                launch = launcher::launch,
+            )
+            if (!isLaunched) {
+                pendingDestinationUri = null
+                currentOnResult(null)
+            }
         }
     }
+}
+
+internal sealed interface CameraPermissionResolution {
+    data object NoOp : CameraPermissionResolution
+
+    data object ReturnNullResult : CameraPermissionResolution
+
+    data class LaunchCamera(
+        val uri: Uri,
+    ) : CameraPermissionResolution
+}
+
+internal fun resolveCameraPermissionResult(
+    permissionGranted: Boolean,
+    pendingDestinationUri: String?,
+): CameraPermissionResolution {
+    if (!permissionGranted) return CameraPermissionResolution.ReturnNullResult
+
+    val pendingUri = pendingDestinationUri ?: return CameraPermissionResolution.NoOp
+    return CameraPermissionResolution.LaunchCamera(pendingUri.toUri())
+}
+
+internal fun launchCameraSafely(
+    uri: Uri,
+    launch: (Uri) -> Unit,
+): Boolean = try {
+    launch(uri)
+    true
+} catch (_: SecurityException) {
+    false
 }
 
 internal fun resolveCameraResult(

@@ -2,13 +2,16 @@
 
 package io.github.vinceglb.filekit.dialogs
 
+import android.Manifest
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.ACTION_VIEW
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.ActivityResultRegistry
@@ -116,14 +119,73 @@ public actual suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? {
     val registry = FileKit.registry
+    if (!FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)) {
+        return null
+    }
+
     val contract = TakePictureWithCameraFacing(cameraFacing)
     val uri = destinationFile.toAndroidUri(openCameraSettings.authority)
-    val isSaved = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = uri,
-    )
+    val isSaved = try {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = uri,
+        )
+    } catch (_: SecurityException) {
+        return null
+    }
     return if (isSaved) destinationFile else null
+}
+
+@FileKitDialogsInternalApi
+public object FileKitAndroidCameraPermissionInternal {
+    public fun isPermissionDeclared(
+        context: Context,
+        permission: String,
+    ): Boolean {
+        val requestedPermissions = runCatching {
+            @Suppress("DEPRECATION")
+            context.packageManager
+                .getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+                .requestedPermissions
+                .orEmpty()
+        }.getOrElse {
+            return false
+        }
+
+        return requestedPermissions.contains(permission)
+    }
+
+    public fun needsRuntimeCameraPermission(context: Context): Boolean {
+        val cameraPermissionGranted =
+            context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        return shouldRequestRuntimeCameraPermission(
+            apiLevel = Build.VERSION.SDK_INT,
+            isCameraPermissionDeclared = isPermissionDeclared(context, Manifest.permission.CAMERA),
+            isCameraPermissionGranted = cameraPermissionGranted,
+        )
+    }
+
+    public fun shouldRequestRuntimeCameraPermission(
+        apiLevel: Int,
+        isCameraPermissionDeclared: Boolean,
+        isCameraPermissionGranted: Boolean,
+    ): Boolean = apiLevel >= Build.VERSION_CODES.M && isCameraPermissionDeclared && !isCameraPermissionGranted
+
+    public suspend fun requestCameraPermissionIfNeeded(
+        registry: ActivityResultRegistry,
+        context: Context,
+    ): Boolean {
+        if (!needsRuntimeCameraPermission(context)) {
+            return true
+        }
+
+        return awaitActivityResult(
+            registry = registry,
+            contract = ActivityResultContracts.RequestPermission(),
+            input = Manifest.permission.CAMERA,
+        )
+    }
 }
 
 /**

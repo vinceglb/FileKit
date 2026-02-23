@@ -55,6 +55,59 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun CameraPermission_denied_returnsNullResult() {
+        val resolution = resolveCameraPermissionResult(
+            permissionGranted = false,
+            pendingDestinationUri = "content://example.provider/camera/photo.jpg",
+        )
+
+        assertIs<CameraPermissionResolution.ReturnNullResult>(resolution)
+    }
+
+    @Test
+    fun CameraPermission_grantedWithPendingUri_requestsCameraLaunch() {
+        val resolution = resolveCameraPermissionResult(
+            permissionGranted = true,
+            pendingDestinationUri = "content://example.provider/camera/photo.jpg",
+        )
+
+        val launch = assertIs<CameraPermissionResolution.LaunchCamera>(resolution)
+        assertEquals("content://example.provider/camera/photo.jpg", launch.uri.toString())
+    }
+
+    @Test
+    fun CameraPermission_grantedWithoutPendingUri_returnsNoOp() {
+        val resolution = resolveCameraPermissionResult(
+            permissionGranted = true,
+            pendingDestinationUri = null,
+        )
+
+        assertIs<CameraPermissionResolution.NoOp>(resolution)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenSecurityException_returnsFalse() {
+        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw SecurityException("camera permission denied")
+        }
+
+        assertFalse(launched)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenNoError_returnsTrue() {
+        val expectedUri = Uri.parse("content://example.provider/camera/photo.jpg")
+        var launchedUri: Uri? = null
+
+        val launched = launchCameraSafely(expectedUri) { uri ->
+            launchedUri = uri
+        }
+
+        assertTrue(launched)
+        assertEquals(expectedUri, launchedUri)
+    }
+
+    @Test
     fun PickerResult_singleModeWhenCancelled_emitsNullResult() {
         val consumed = mutableListOf<Any?>()
 

@@ -30,6 +30,17 @@ Button(onClick = { launcher.launch() }) {
 
 The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 
+## Android camera permission behavior
+
+On Android, camera capture is launched with `ACTION_IMAGE_CAPTURE`.
+If your app declares `android.permission.CAMERA`, FileKit checks runtime permission before launching the camera:
+
+- If camera permission is already granted, FileKit opens the camera as usual.
+- If camera permission is not granted, FileKit requests it first.
+- If the user denies the permission, FileKit returns `null` (same as cancel) and does not crash.
+
+If your app only launches the external camera app through this picker, you usually do not need to declare `android.permission.CAMERA`.
+
 ## Camera type
 
 You can specify the type of media to capture using the `type` parameter:
