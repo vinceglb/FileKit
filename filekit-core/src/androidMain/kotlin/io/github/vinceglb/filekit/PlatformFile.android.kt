@@ -75,7 +75,8 @@ public actual fun PlatformFile(path: Path): PlatformFile =
  * @return A [PlatformFile] instance.
  */
 public fun PlatformFile(uri: Uri): PlatformFile =
-    PlatformFile(AndroidFile.UriWrapper(uri))
+    uri.toFileOrNull()?.let(::PlatformFile)
+        ?: PlatformFile(AndroidFile.UriWrapper(uri))
 
 /**
  * Creates a [PlatformFile] from a Java [File].
@@ -89,11 +90,12 @@ public fun PlatformFile(file: File): PlatformFile =
 public actual fun PlatformFile(path: String): PlatformFile {
     // If the path looks like an Android Uri ("content://" or "file://" scheme),
     // parse it accordingly, otherwise treat it as a regular filesystem path.
+    // "file://" values are normalized to FileWrapper by PlatformFile(uri).
     return if (path.startsWith("content://", ignoreCase = true) ||
         path.startsWith("file://", ignoreCase = true)
     ) {
         @SuppressLint("UseKtx")
-        PlatformFile(AndroidFile.UriWrapper(Uri.parse(path)))
+        PlatformFile(Uri.parse(path))
     } else {
         PlatformFile(AndroidFile.FileWrapper(File(path)))
     }
@@ -561,9 +563,11 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
         }
 
         // Very rarely used Uri, discouraged and deprecated, may starts with "file://"
+        // Parse through PlatformFile(Uri) so encoded paths (e.g. "%20") resolve correctly.
         str.startsWith("file://") -> {
-            val filePath = str.removePrefix("file://")
-            PlatformFile(File(filePath))
+            val uriString = str
+            @SuppressLint("UseKtx")
+            PlatformFile(Uri.parse(uriString))
         }
 
         // TODO remove this in future
@@ -848,4 +852,13 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
                 ?: DocumentFile.fromTreeUri(context, uri)
         }
     }
+}
+
+private fun Uri.toFileOrNull(): File? {
+    if (!scheme.equals("file", ignoreCase = true)) {
+        return null
+    }
+
+    val filePath = path ?: return null
+    return File(filePath)
 }

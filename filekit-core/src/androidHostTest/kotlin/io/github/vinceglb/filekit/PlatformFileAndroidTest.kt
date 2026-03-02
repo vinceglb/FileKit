@@ -65,6 +65,20 @@ class PlatformFileAndroidTest {
     private val emptyFile = resourceDirectory / "empty-file"
     private val notExistingFile = resourceDirectory / "not-existing-file.pdf"
 
+    private fun createTempAudioFileWithEncodedSpacePath(): Pair<File, String> {
+        val directory = File.createTempFile("filekit-file-uri-", "").apply {
+            delete()
+            mkdirs()
+            deleteOnExit()
+        }
+        val file = File(directory, "encoded space audio.mp3").apply {
+            writeText("audio")
+            deleteOnExit()
+        }
+        val encodedFileUri = "file://${file.absolutePath.replace(" ", "%20")}"
+        return file to encodedFileUri
+    }
+
     @Test
     fun testPlatformMimeType() {
         assertEquals(
@@ -124,6 +138,51 @@ class PlatformFileAndroidTest {
             exception.message?.contains("Could not access Uri as directory") == true ||
                 exception.message?.contains("Could not create child file") == true,
         )
+    }
+
+    @Test
+    fun PlatformFile_fromFileSchemeString_existsAndUsesFileWrapper() {
+        val (backingFile, encodedFileUri) = createTempAudioFileWithEncodedSpacePath()
+
+        try {
+            val file = PlatformFile(encodedFileUri)
+            assertTrue(file.exists())
+            assertIs<AndroidFile.FileWrapper>(file.androidFile)
+            assertEquals(backingFile.absolutePath, file.path)
+        } finally {
+            backingFile.delete()
+            backingFile.parentFile?.delete()
+        }
+    }
+
+    @Test
+    fun PlatformFile_fromFileSchemeUri_existsAndUsesFileWrapper() {
+        val (backingFile, encodedFileUri) = createTempAudioFileWithEncodedSpacePath()
+
+        try {
+            val file = PlatformFile(Uri.parse(encodedFileUri))
+            assertTrue(file.exists())
+            assertIs<AndroidFile.FileWrapper>(file.androidFile)
+            assertEquals(backingFile.absolutePath, file.path)
+        } finally {
+            backingFile.delete()
+            backingFile.parentFile?.delete()
+        }
+    }
+
+    @Test
+    fun PlatformFile_fromBookmarkData_fileSchemeUriWithEncodedPath_restoresAccessibleFile() {
+        val (backingFile, encodedFileUri) = createTempAudioFileWithEncodedSpacePath()
+
+        try {
+            val restored = PlatformFile.fromBookmarkData(BookmarkData(encodedFileUri.encodeToByteArray()))
+            assertTrue(restored.exists())
+            assertIs<AndroidFile.FileWrapper>(restored.androidFile)
+            assertEquals(backingFile.absolutePath, restored.path)
+        } finally {
+            backingFile.delete()
+            backingFile.parentFile?.delete()
+        }
     }
 
     @Test
