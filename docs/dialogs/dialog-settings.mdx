@@ -10,17 +10,20 @@ FileKit allows you to customize dialog behavior with platform-specific settings.
 
 On JVM platforms (Windows, macOS, Linux), you can customize:
 
+- `title`: Set a custom title for the dialog
 - `parentWindow`: Set the parent window for the dialog (useful for modal behavior)
 - `macOS`: Configure macOS-specific settings
 
 ```kotlin
-// Basic settings with parent window
+// Basic settings with title and parent window
 val settings = FileKitDialogSettings(
+    title = "Select a file",
     parentWindow = window
 )
 
 // With macOS-specific settings
 val settings = FileKitDialogSettings(
+    title = "Select a file",
     parentWindow = window,
     macOS = FileKitMacOSSettings(
         resolvesAliases = false,
@@ -42,10 +45,12 @@ Window(onCloseRequest = ::exitApplication) {
 
 On macOS, you can configure:
 
+- `title`: Set a custom title for the dialog
 - `canCreateDirectories`: Allow or prevent directory creation in dialogs (default: true)
 
 ```kotlin
 val settings = FileKitDialogSettings(
+    title = "Save document",
     canCreateDirectories = true
 )
 ```
@@ -71,6 +76,7 @@ expect fun createDialogSettings(): FileKitDialogSettings
 // desktopMain
 actual fun createDialogSettings(): FileKitDialogSettings {
     return FileKitDialogSettings(
+        title = "Select a file",
         parentWindow = window,
         macOS = FileKitMacOSSettings(
             canCreateDirectories = true
@@ -106,4 +112,3 @@ This approach allows you to:
 <Note>
 Platform-specific settings are continuously evolving. You can ask for a feature or report a bug on the [GitHub repository](https://github.com/vinceglb/FileKit/issues).
 </Note>
-
