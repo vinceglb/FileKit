@@ -34,13 +34,6 @@ Select one or multiple files using the `mode` parameter. FileKit provides four d
 - `Single` - Allows the user to select a single file (default).
 - `Multiple()` - Allows the user to select multiple files.
 
-<Warning>
-`Single` and `Multiple` now distinguish between user cancellation and picker I/O failures.
-
-- If the user dismisses the picker, FileKit returns `null`.
-- If the user selects a file but FileKit cannot resolve it, FileKit throws `FileKitPickerException`.
-</Warning>
-
 <CodeGroup>
 ```kotlin filekit-dialogs
 // Single file selection
@@ -69,15 +62,6 @@ val multipleLauncher = rememberFilePickerLauncher(
 }
 ```
 </CodeGroup>
-
-```kotlin
-try {
-    val files = FileKit.openFilePicker(mode = FileKitMode.Multiple(maxItems = 5))
-    println("Picked ${files?.size ?: 0} files")
-} catch (error: FileKitPickerException) {
-    println("Failed to load one of the selected files: ${error.message}")
-}
-```
 
 ### State-tracking modes
 
@@ -131,13 +115,6 @@ val stateLauncher = rememberFilePickerLauncher(
 }
 ```
 </CodeGroup>
-
-<Info>
-Stateful picker modes now preserve failure information explicitly:
-
-- `Cancelled` means the user dismissed the picker.
-- `Failed` means the user selected one or more files, but FileKit could not resolve them.
-</Info>
 
 <Info>
 The `Multiple` and `MultipleWithState` modes support a `maxItems` parameter (1-50 files). If not specified, there's no limit.

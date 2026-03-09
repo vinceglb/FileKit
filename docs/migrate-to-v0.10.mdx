@@ -65,23 +65,6 @@ FileKit v0.10 is a full rewrite of the library. It introduces a new API that is 
 
     Take a look at the [Writing files](/core/write-file) documentation to learn more about the new API.
   </Step>
-  <Step title="Handle picker failures explicitly">
-    File picker failures are now distinct from user cancellation.
-
-    - `FileKit.openFilePicker()` with `Single` or `Multiple` returns `null` only when the user cancels.
-    - If the user selects files but FileKit cannot resolve them, FileKit throws `FileKitPickerException`.
-    - Stateful picker modes now emit `FileKitPickerState.Failed(cause)` instead of collapsing that case into `Cancelled`.
-
-    ```kotlin
-    when (state) {
-        is FileKitPickerState.Started -> Unit
-        is FileKitPickerState.Progress -> Unit
-        is FileKitPickerState.Completed -> Unit
-        is FileKitPickerState.Failed -> println(state.cause.message)
-        is FileKitPickerState.Cancelled -> Unit
-    }
-    ```
-  </Step>
 </Steps>
 
 ## Feedback
