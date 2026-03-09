@@ -61,7 +61,6 @@ import platform.UniformTypeIdentifiers.UTTypeImage
 import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.UniformTypeIdentifiers.UTTypeMovie
 import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 private object FileKitDialog {
     // Create a reference to the picker delegate to prevent it from being garbage collected
@@ -497,7 +496,7 @@ private fun callPhPicker(
                     ) { url, error ->
                         when {
                             error != null -> {
-                                cont.resumeWithException(IllegalStateException(error.localizedFailureReason()))
+                                cont.resume(null)
                             }
 
                             else -> {
@@ -519,7 +518,11 @@ private fun callPhPicker(
             }
         }.joinAll()
 
-    send(FileKitPickerState.Completed(orderedFiles.filterNotNull()))
+    val files = orderedFiles.filterNotNull()
+    when {
+        files.isEmpty() -> send(FileKitPickerState.Cancelled)
+        else -> send(FileKitPickerState.Completed(files))
+    }
 }
 
 private val FileKitType.contentTypes: List<UTType>
@@ -551,7 +554,7 @@ private fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
     id: String,
-): NSURL {
+): NSURL? {
     // Get the temporary directory
     val fileComponents = fileManager.temporaryDirectory.pathComponents
         ?.plus(id)
@@ -563,11 +566,12 @@ private fun copyToTempFile(
         ?: throw IllegalStateException("Failed to create file URL")
 
     // Write the data to the file URL
-    fileManager.copyItemAtURL(
+    val didCopy = fileManager.copyItemAtURL(
         srcURL = url,
         toURL = fileUrl,
         error = null,
     )
+    if (!didCopy) return null
 
     return fileUrl
 }

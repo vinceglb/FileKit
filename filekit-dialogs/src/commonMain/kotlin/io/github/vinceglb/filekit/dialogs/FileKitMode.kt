@@ -63,9 +63,10 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         override suspend fun parseResult(flow: Flow<FileKitPickerState<List<PlatformFile>>>): List<PlatformFile>? = flow.last().let {
             when (it) {
                 is FileKitPickerState.Completed -> {
-                    maxItems
+                    val files = maxItems
                         ?.let { max -> it.result.take(max) }
                         ?: it.result
+                    files.takeIfNotEmpty()
                 }
 
                 else -> {
@@ -145,29 +146,35 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         override suspend fun parseResult(
             flow: Flow<FileKitPickerState<List<PlatformFile>>>,
         ): Flow<FileKitPickerState<List<PlatformFile>>> = flow
-            .mapNotNull {
-                when (it) {
+            .mapNotNull { pickerState ->
+                when (pickerState) {
                     is FileKitPickerState.Cancelled -> {
                         FileKitPickerState.Cancelled
                     }
 
                     is FileKitPickerState.Started -> {
                         FileKitPickerState.Started(
-                            total = maxItems?.let { max -> minOf(it.total, max) } ?: it.total,
+                            total = maxItems?.let { max -> minOf(pickerState.total, max) } ?: pickerState.total,
                         )
                     }
 
                     is FileKitPickerState.Progress -> {
                         FileKitPickerState.Progress(
-                            processed = maxItems?.let { max -> it.processed.take(max) } ?: it.processed,
-                            total = maxItems?.let { max -> minOf(it.total, max) } ?: it.total,
+                            processed = maxItems?.let { max -> pickerState.processed.take(max) } ?: pickerState.processed,
+                            total = maxItems?.let { max -> minOf(pickerState.total, max) } ?: pickerState.total,
                         )
                     }
 
                     is FileKitPickerState.Completed -> {
-                        FileKitPickerState.Completed(
-                            result = maxItems?.let { max -> it.result.take(max) } ?: it.result,
-                        )
+                        val files = (
+                            maxItems?.let { max -> pickerState.result.take(max) }
+                                ?: pickerState.result
+                            ).takeIfNotEmpty()
+
+                        when {
+                            files != null -> FileKitPickerState.Completed(result = files)
+                            else -> FileKitPickerState.Cancelled
+                        }
                     }
                 }
             }
@@ -180,6 +187,8 @@ public sealed class FileKitMode<PickerResult, ConsumedResult> {
         }
     }
 }
+
+private fun List<PlatformFile>.takeIfNotEmpty(): List<PlatformFile>? = takeIf { it.isNotEmpty() }
 
 internal sealed class PickerMode {
     data object Single : PickerMode()

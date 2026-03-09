@@ -12,6 +12,28 @@ import kotlin.test.assertEquals
 
 class FileKitModeMaxItemsTest {
     @Test
+    fun Single_parseResult_returnsNull_whenCompletedResultEmpty() = runTest {
+        val result = FileKitMode.Single.parseResult(
+            flow = flowOf(FileKitPickerState.Completed(emptyList())),
+        )
+
+        assertEquals(expected = null, actual = result)
+    }
+
+    @Test
+    fun SingleWithState_parseResult_treatsEmptyCompletedResultAsCancelled() = runTest {
+        val states = FileKitMode
+            .SingleWithState
+            .parseResult(flow = flowOf(FileKitPickerState.Completed(emptyList())))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Cancelled),
+            actual = states,
+        )
+    }
+
+    @Test
     fun Multiple_parseResult_truncatesCompletedResult_whenMaxItemsSet() = runTest {
         val files = createFiles(count = 4)
         val result = FileKitMode.Multiple(maxItems = 2).parseResult(
@@ -29,6 +51,15 @@ class FileKitModeMaxItemsTest {
         )
 
         assertEquals(expected = files, actual = result)
+    }
+
+    @Test
+    fun Multiple_parseResult_returnsNull_whenCompletedResultEmpty() = runTest {
+        val result = FileKitMode.Multiple(maxItems = null).parseResult(
+            flow = flowOf(FileKitPickerState.Completed(emptyList())),
+        )
+
+        assertEquals(expected = null, actual = result)
     }
 
     @Test
@@ -60,6 +91,19 @@ class FileKitModeMaxItemsTest {
         val states = FileKitMode
             .MultipleWithState(maxItems = 2)
             .parseResult(flow = flowOf(FileKitPickerState.Cancelled))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Cancelled),
+            actual = states,
+        )
+    }
+
+    @Test
+    fun MultipleWithState_parseResult_treatsEmptyCompletedResultAsCancelled() = runTest {
+        val states = FileKitMode
+            .MultipleWithState(maxItems = null)
+            .parseResult(flow = flowOf(FileKitPickerState.Completed(emptyList())))
             .toList()
 
         assertEquals(
