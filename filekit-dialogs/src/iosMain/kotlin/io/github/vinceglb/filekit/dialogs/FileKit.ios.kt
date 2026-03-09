@@ -481,45 +481,78 @@ private fun callPhPicker(
     // Pre-allocated array to preserve selection order
     val orderedFiles = arrayOfNulls<PlatformFile>(pickerResults.size)
     val lock = Mutex()
+    var failure: FileKitPickerException? = null
 
     // Launch a child coroutine for every copy, preserving the index
     pickerResults
         .mapIndexed { index, result ->
             launch(Dispatchers.IO) {
-                val src = suspendCancellableCoroutine<NSURL?> { cont ->
-                    result.itemProvider.loadFileRepresentationForTypeIdentifier(
-                        when (type) {
-                            is FileKitType.Image -> UTTypeImage.identifier
-                            is FileKitType.Video -> UTTypeMovie.identifier
-                            is FileKitType.ImageAndVideo -> UTTypeContent.identifier
-                            else -> error("Unsupported type $type")
-                        },
-                    ) { url, error ->
-                        when {
-                            error != null -> {
-                                cont.resumeWithException(IllegalStateException(error.localizedFailureReason()))
-                            }
-
-                            else -> {
-                                // Must copy the URL here because it becomes invalid outside the loadFileRepresentationForTypeIdentifier callback scope
-                                val tempUrl = url?.let {
-                                    copyToTempFile(fileManager, it, tempRoot.lastPathComponent!!)
+                try {
+                    val src = suspendCancellableCoroutine<NSURL> { cont ->
+                        result.itemProvider.loadFileRepresentationForTypeIdentifier(
+                            when (type) {
+                                is FileKitType.Image -> UTTypeImage.identifier
+                                is FileKitType.Video -> UTTypeMovie.identifier
+                                is FileKitType.ImageAndVideo -> UTTypeContent.identifier
+                                else -> error("Unsupported type $type")
+                            },
+                        ) { url, error ->
+                            when {
+                                error != null -> {
+                                    cont.resumeWithException(
+                                        FileKitPickerException(
+                                            message = error.localizedDescription,
+                                        ),
+                                    )
                                 }
-                                cont.resume(tempUrl)
+
+                                url == null -> {
+                                    cont.resumeWithException(
+                                        FileKitPickerException("The selected file could not be resolved."),
+                                    )
+                                }
+
+                                else -> {
+                                    // Must copy the URL here because it becomes invalid outside the loadFileRepresentationForTypeIdentifier callback scope
+                                    runCatching {
+                                        copyToTempFile(fileManager, url, tempRoot.lastPathComponent!!)
+                                    }.onSuccess(cont::resume)
+                                        .onFailure { cont.resumeWithException(it) }
+                                }
                             }
                         }
                     }
-                } ?: return@launch // skip nulls
 
-                lock.withLock {
-                    // Insert at the original index to preserve selection order
-                    orderedFiles[index] = PlatformFile(src)
-                    send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
+                    lock.withLock {
+                        if (failure != null) return@launch
+
+                        // Insert at the original index to preserve selection order
+                        orderedFiles[index] = PlatformFile(src)
+                        send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
+                    }
+                } catch (cause: Throwable) {
+                    val pickerFailure = cause as? FileKitPickerException
+                        ?: FileKitPickerException("Failed to load the selected file.", cause)
+
+                    lock.withLock {
+                        if (failure == null) {
+                            failure = pickerFailure
+                        }
+                    }
                 }
             }
         }.joinAll()
 
-    send(FileKitPickerState.Completed(orderedFiles.filterNotNull()))
+    failure?.let {
+        send(FileKitPickerState.Failed(it))
+        return@channelFlow
+    }
+
+    val files = orderedFiles.filterNotNull()
+    when {
+        files.isEmpty() -> send(FileKitPickerState.Cancelled)
+        else -> send(FileKitPickerState.Completed(files))
+    }
 }
 
 private val FileKitType.contentTypes: List<UTType>
@@ -563,11 +596,14 @@ private fun copyToTempFile(
         ?: throw IllegalStateException("Failed to create file URL")
 
     // Write the data to the file URL
-    fileManager.copyItemAtURL(
+    val didCopy = fileManager.copyItemAtURL(
         srcURL = url,
         toURL = fileUrl,
         error = null,
     )
+    if (!didCopy) {
+        throw FileKitPickerException("Failed to copy the selected file to a temporary location.")
+    }
 
     return fileUrl
 }

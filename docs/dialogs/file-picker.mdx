@@ -79,6 +79,7 @@ stateFlow.collect { state ->
         is FileKitPickerState.Started -> println("Selection started with ${state.total} files")
         is FileKitPickerState.Progress -> println("Processing: ${state.processed.size} / ${state.total}")
         is FileKitPickerState.Completed -> println("Completed: ${state.result.size} files selected")
+        is FileKitPickerState.Failed -> println("Selection failed: ${state.cause.message}")
         is FileKitPickerState.Cancelled -> println("Selection cancelled")
     }
 }
@@ -101,6 +102,10 @@ val stateLauncher = rememberFilePickerLauncher(
         is FileKitPickerState.Completed -> {
             // Handle selected file: state.result
             println("Completed: ${state.result.size} files selected")
+        }
+        is FileKitPickerState.Failed -> {
+            // Handle picker failure
+            println("Selection failed: ${state.cause.message}")
         }
         is FileKitPickerState.Cancelled -> {
             // Handle cancellation

@@ -12,6 +12,15 @@ public sealed class FileKitPickerState<out T> {
     public data object Cancelled : FileKitPickerState<Nothing>()
 
     /**
+     * The picker failed after the user made a selection.
+     *
+     * @property cause The underlying picker failure.
+     */
+    public data class Failed(
+        val cause: FileKitPickerException,
+    ) : FileKitPickerState<Nothing>()
+
+    /**
      * The picker has started and is processing the files.
      *
      * @property total The total number of files to process.

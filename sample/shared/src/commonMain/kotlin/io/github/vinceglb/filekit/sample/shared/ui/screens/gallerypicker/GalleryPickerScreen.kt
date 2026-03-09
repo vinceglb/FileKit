@@ -103,6 +103,7 @@ private fun GalleryPickerScreen(
         buttonState = AppScreenHeaderButtonState.Enabled
         files = when (state) {
             FileKitPickerState.Cancelled -> emptyList()
+            is FileKitPickerState.Failed -> emptyList()
             is FileKitPickerState.Completed<PlatformFile> -> listOf(state.result)
             is FileKitPickerState.Progress<PlatformFile> -> listOf(state.processed)
             is FileKitPickerState.Started -> emptyList()
@@ -117,6 +118,7 @@ private fun GalleryPickerScreen(
         buttonState = AppScreenHeaderButtonState.Enabled
         files = when (state) {
             FileKitPickerState.Cancelled -> emptyList()
+            is FileKitPickerState.Failed -> emptyList()
             is FileKitPickerState.Completed<List<PlatformFile>> -> state.result
             is FileKitPickerState.Progress<List<PlatformFile>> -> state.processed
             is FileKitPickerState.Started -> emptyList()

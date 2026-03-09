@@ -9,8 +9,59 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class FileKitModeMaxItemsTest {
+    @Test
+    fun Single_parseResult_throwsPickerException_whenFailed() = runTest {
+        val failure = FileKitPickerException("Failed to load the selected file.")
+
+        val thrown = assertFailsWith<FileKitPickerException> {
+            FileKitMode.Single.parseResult(
+                flow = flowOf(FileKitPickerState.Failed(failure)),
+            )
+        }
+
+        assertEquals(expected = failure.message, actual = thrown.message)
+    }
+
+    @Test
+    fun Single_parseResult_returnsNull_whenCompletedResultEmpty() = runTest {
+        val result = FileKitMode.Single.parseResult(
+            flow = flowOf(FileKitPickerState.Completed(emptyList())),
+        )
+
+        assertEquals(expected = null, actual = result)
+    }
+
+    @Test
+    fun SingleWithState_parseResult_treatsEmptyCompletedResultAsCancelled() = runTest {
+        val states = FileKitMode
+            .SingleWithState
+            .parseResult(flow = flowOf(FileKitPickerState.Completed(emptyList())))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Cancelled),
+            actual = states,
+        )
+    }
+
+    @Test
+    fun SingleWithState_parseResult_keepsFailedUnchanged() = runTest {
+        val failure = FileKitPickerException("Failed to load the selected file.")
+
+        val states = FileKitMode
+            .SingleWithState
+            .parseResult(flow = flowOf(FileKitPickerState.Failed(failure)))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Failed(failure)),
+            actual = states,
+        )
+    }
+
     @Test
     fun Multiple_parseResult_truncatesCompletedResult_whenMaxItemsSet() = runTest {
         val files = createFiles(count = 4)
@@ -29,6 +80,28 @@ class FileKitModeMaxItemsTest {
         )
 
         assertEquals(expected = files, actual = result)
+    }
+
+    @Test
+    fun Multiple_parseResult_returnsNull_whenCompletedResultEmpty() = runTest {
+        val result = FileKitMode.Multiple(maxItems = null).parseResult(
+            flow = flowOf(FileKitPickerState.Completed(emptyList())),
+        )
+
+        assertEquals(expected = null, actual = result)
+    }
+
+    @Test
+    fun Multiple_parseResult_throwsPickerException_whenFailed() = runTest {
+        val failure = FileKitPickerException("Failed to load one of the selected files.")
+
+        val thrown = assertFailsWith<FileKitPickerException> {
+            FileKitMode.Multiple(maxItems = null).parseResult(
+                flow = flowOf(FileKitPickerState.Failed(failure)),
+            )
+        }
+
+        assertEquals(expected = failure.message, actual = thrown.message)
     }
 
     @Test
@@ -64,6 +137,34 @@ class FileKitModeMaxItemsTest {
 
         assertEquals(
             expected = listOf(FileKitPickerState.Cancelled),
+            actual = states,
+        )
+    }
+
+    @Test
+    fun MultipleWithState_parseResult_treatsEmptyCompletedResultAsCancelled() = runTest {
+        val states = FileKitMode
+            .MultipleWithState(maxItems = null)
+            .parseResult(flow = flowOf(FileKitPickerState.Completed(emptyList())))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Cancelled),
+            actual = states,
+        )
+    }
+
+    @Test
+    fun MultipleWithState_parseResult_keepsFailedUnchanged() = runTest {
+        val failure = FileKitPickerException("Failed to load one of the selected files.")
+
+        val states = FileKitMode
+            .MultipleWithState(maxItems = null)
+            .parseResult(flow = flowOf(FileKitPickerState.Failed(failure)))
+            .toList()
+
+        assertEquals(
+            expected = listOf(FileKitPickerState.Failed(failure)),
             actual = states,
         )
     }

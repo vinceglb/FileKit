@@ -612,6 +612,10 @@ internal fun dispatchPickerConsumedResult(
                         onConsumed(FileKitPickerState.Cancelled)
                     }
 
+                    is FileKitPickerState.Failed -> {
+                        onConsumed(FileKitPickerState.Failed(cause = state.cause))
+                    }
+
                     is FileKitPickerState.Started -> {
                         onConsumed(FileKitPickerState.Started(total = state.total))
                     }
@@ -645,6 +649,10 @@ internal fun dispatchPickerConsumedResult(
                 when (state) {
                     is FileKitPickerState.Cancelled -> {
                         onConsumed(FileKitPickerState.Cancelled)
+                    }
+
+                    is FileKitPickerState.Failed -> {
+                        onConsumed(FileKitPickerState.Failed(cause = state.cause))
                     }
 
                     is FileKitPickerState.Started -> {
