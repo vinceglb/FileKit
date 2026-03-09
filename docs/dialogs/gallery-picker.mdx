@@ -38,6 +38,31 @@ val launcher = rememberFilePickerLauncher(
 ```
 </CodeGroup>
 
+### Failure handling
+
+Gallery pickers can fail after the user makes a valid selection, for example when a provider cannot vend a temporary file or a cloud-backed asset is not available locally yet.
+
+- `FileKitMode.Single` and `FileKitMode.Multiple` throw `FileKitPickerException` on these failures.
+- `FileKitMode.SingleWithState` and `FileKitMode.MultipleWithState` emit `FileKitPickerState.Failed`.
+- `FileKitPickerState.Cancelled` is reserved for user cancellation only.
+
+```kotlin
+val stateFlow = FileKit.openFilePicker(
+    type = FileKitType.ImageAndVideo,
+    mode = FileKitMode.MultipleWithState(maxItems = 5),
+)
+
+stateFlow.collect { state ->
+    when (state) {
+        is FileKitPickerState.Started -> println("Selection started")
+        is FileKitPickerState.Progress -> println("Loaded ${state.processed.size} / ${state.total}")
+        is FileKitPickerState.Completed -> println("Loaded ${state.result.size} items")
+        is FileKitPickerState.Failed -> println("Gallery picker failed: ${state.cause.message}")
+        is FileKitPickerState.Cancelled -> println("User cancelled the picker")
+    }
+}
+```
+
 ### Maximum number of items
 
 On both Android and iOS, you can set a limit on the number of items a user can select by passing the `maxItems` parameter to `FileKitMode.Multiple()`:
