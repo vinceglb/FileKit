@@ -305,11 +305,28 @@ class PlatformFileAndroidTest {
     }
 
     @Test
-    fun PlatformFile_name_photoPickerMediaStoreLookupFails_usesStableFallback() {
+    fun PlatformFile_name_photoPickerMediaStoreLookupFails_usesStableFallbackWithExtension() {
         val pickerUri = Uri.parse("content://media/picker/0/com.android.providers.media.photopicker/media/18")
         val provider = PhotoPickerNameContentProvider(
             pickerUri = pickerUri,
             pickerDisplayName = "18.jpg",
+            mediaStoreDisplayName = null,
+            throwOnMediaStoreQuery = true,
+        )
+        ShadowContentResolver.registerProviderInternal("media", provider)
+
+        val file = PlatformFile(pickerUri)
+        assertEquals(expected = "photopicker-18.jpg", actual = file.name)
+        assertEquals(expected = "jpg", actual = file.extension)
+        assertEquals(expected = "photopicker-18", actual = file.nameWithoutExtension)
+    }
+
+    @Test
+    fun PlatformFile_name_photoPickerWithoutDisplayName_usesStableFallback() {
+        val pickerUri = Uri.parse("content://media/picker/0/com.android.providers.media.photopicker/media/18")
+        val provider = PhotoPickerNameContentProvider(
+            pickerUri = pickerUri,
+            pickerDisplayName = null,
             mediaStoreDisplayName = null,
             throwOnMediaStoreQuery = true,
         )
@@ -338,8 +355,8 @@ class PlatformFileAndroidTest {
         val firstFile = PlatformFile(firstPickerUri)
         val secondFile = PlatformFile(secondPickerUri)
 
-        assertEquals(expected = "photopicker-18", actual = firstFile.name)
-        assertEquals(expected = "photopicker-19", actual = secondFile.name)
+        assertEquals(expected = "photopicker-18.jpg", actual = firstFile.name)
+        assertEquals(expected = "photopicker-19.jpg", actual = secondFile.name)
     }
 
     @Test
@@ -498,13 +515,13 @@ private class MissingSizeContentProvider(
 
 private class PhotoPickerNameContentProvider(
     pickerUri: Uri,
-    pickerDisplayName: String,
+    pickerDisplayName: String?,
     private val mediaStoreDisplayName: String?,
     private val throwOnMediaStoreQuery: Boolean = false,
 ) : ContentProvider() {
     private val pickerDisplayNamesByUri = mutableMapOf(pickerUri to pickerDisplayName)
 
-    fun registerPickerDisplayName(uri: Uri, displayName: String) {
+    fun registerPickerDisplayName(uri: Uri, displayName: String?) {
         pickerDisplayNamesByUri[uri] = displayName
     }
 

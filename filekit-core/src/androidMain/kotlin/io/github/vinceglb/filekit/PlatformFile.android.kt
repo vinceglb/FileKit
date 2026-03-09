@@ -657,6 +657,13 @@ private object UriMetadataResolver {
         }
 
         return queryPhotoPickerMediaStoreDisplayName(uri)
+            ?: fallbackDisplayName(
+                uri = uri,
+                extension = openableDisplayName
+                    ?.takeIf(::isSyntheticPhotoPickerDisplayName)
+                    ?.substringAfterLast('.', "")
+                    ?.takeIf(String::isNotEmpty),
+            )
     }
 
     private fun queryPhotoPickerMediaStoreDisplayName(uri: Uri): String? {
@@ -715,18 +722,23 @@ private object UriMetadataResolver {
         )
     }
 
-    private fun fallbackDisplayName(uri: Uri): String = when {
+    private fun fallbackDisplayName(
+        uri: Uri,
+        extension: String? = null,
+    ): String = when {
         uri.isPhotoPickerUri() -> {
             val providerName = uri.photoPickerProviderName()
             val uniqueSuffix = uri.extractPhotoPickerMediaId()?.toString()
                 ?: uri.lastPathSegment
 
-            when {
+            val baseName = when {
                 providerName != null && uniqueSuffix != null -> "$providerName-$uniqueSuffix"
                 providerName != null -> providerName
                 uniqueSuffix != null -> uniqueSuffix
                 else -> ""
             }
+
+            baseName.withExtension(extension)
         }
 
         else -> {
@@ -736,6 +748,14 @@ private object UriMetadataResolver {
 
     private fun isSyntheticPhotoPickerDisplayName(displayName: String): Boolean =
         SYNTHETIC_PHOTO_PICKER_NAME_REGEX.matches(displayName)
+
+    private fun String.withExtension(extension: String?): String {
+        if (isEmpty() || extension.isNullOrBlank()) {
+            return this
+        }
+
+        return "$this.$extension"
+    }
 
     private fun Uri.extractPhotoPickerMediaId(): Long? {
         lastPathSegment?.toLongOrNull()?.let { return it }
