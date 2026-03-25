@@ -125,14 +125,6 @@ public expect fun PlatformFile.exists(): Boolean
 @OptIn(ExperimentalTime::class)
 public expect fun PlatformFile.createdAt(): Instant?
 
-/**
- * Returns the last modification time of this file.
- *
- * @return The [Instant] of the last modification.
- */
-@OptIn(ExperimentalTime::class)
-public expect fun PlatformFile.lastModified(): Instant
-
 public actual suspend fun PlatformFile.readBytes(): ByteArray =
     withContext(Dispatchers.IO) {
         this@readBytes
