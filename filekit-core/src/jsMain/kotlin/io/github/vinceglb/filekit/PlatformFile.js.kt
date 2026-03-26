@@ -90,9 +90,11 @@ public actual fun PlatformFile.lastModified(): Instant {
 
 @OptIn(ExperimentalWasmJsInterop::class)
 private open external class File(
-    fileBits: JsArray<JsAny? /* BufferSource|Blob|String */>,
-    fileName: String, options: FilePropertyBag = definedExternally
-) : Blob, JsAny {
+    fileBits: JsArray<JsAny?>, // BufferSource|Blob|String
+    fileName: String,
+    options: FilePropertyBag = definedExternally,
+) : Blob,
+    JsAny {
     val name: String
     val lastModified: JsNumber
 }
