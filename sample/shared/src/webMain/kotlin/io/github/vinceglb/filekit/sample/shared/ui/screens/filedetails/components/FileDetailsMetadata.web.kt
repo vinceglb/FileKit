@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.componen
 
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.lastModified
 import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.nameWithoutExtension
@@ -28,5 +29,9 @@ internal actual fun PlatformFile.toMetadataItems(): List<FileMetadataItem> = lis
     FileMetadataItem(
         label = "Mime Type",
         value = this.mimeType().toString(),
+    ),
+    FileMetadataItem(
+        label = "Updated At",
+        value = this.lastModified().toString(),
     ),
 )

@@ -8,11 +8,15 @@ import kotlinx.serialization.Serializable
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
+import org.w3c.files.Blob
 import org.w3c.files.File
+import org.w3c.files.FilePropertyBag
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 /**
  * Represents a file on the Web (JS) platform.
@@ -77,3 +81,20 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
 public actual fun PlatformFile.mimeType(): MimeType? =
     takeIf { file.type.isNotBlank() }
         ?.let { MimeType.parse(file.type) }
+
+@OptIn(ExperimentalTime::class, ExperimentalWasmJsInterop::class)
+public actual fun PlatformFile.lastModified(): Instant {
+    val ts = file.unsafeCast<io.github.vinceglb.filekit.File>()
+    return Instant.fromEpochMilliseconds(ts.lastModified.toLong())
+}
+
+@OptIn(ExperimentalWasmJsInterop::class)
+private open external class File(
+    fileBits: JsArray<JsAny?>, // BufferSource|Blob|String
+    fileName: String,
+    options: FilePropertyBag = definedExternally,
+) : Blob,
+    JsAny {
+    val name: String
+    val lastModified: JsNumber
+}

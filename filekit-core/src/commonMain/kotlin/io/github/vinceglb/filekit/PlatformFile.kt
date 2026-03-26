@@ -2,6 +2,8 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.serialization.Serializable
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 /**
  * Represents a file on a specific platform.
@@ -35,6 +37,14 @@ public expect val PlatformFile.nameWithoutExtension: String
  * Returns the size of the file in bytes.
  */
 public expect fun PlatformFile.size(): Long
+
+/**
+ * Returns the last modification time of this file.
+ *
+ * @return The [Instant] of the last modification.
+ */
+@OptIn(ExperimentalTime::class)
+public expect fun PlatformFile.lastModified(): Instant
 
 /**
  * Reads the content of the file as a byte array.
