@@ -9,5 +9,5 @@ import org.w3c.files.FilePropertyBag
 internal actual fun createTestPlatformFile(name: String): PlatformFile {
     val jsArray = name.encodeToByteArray().toJsArray()
     val file = File(jsArray, name, FilePropertyBag(type = "text/plain"))
-    return PlatformFile(file)
+    return PlatformFile(file.unsafeCast<io.github.vinceglb.filekit.File>())
 }

@@ -1,24 +1,23 @@
 package io.github.vinceglb.filekit.dialogs
 
-import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.File
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
+import org.w3c.files.FileList
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @OptIn(ExperimentalWasmJsInterop::class)
-internal actual suspend fun FileKit.platformOpenFilePicker(
+internal actual suspend fun platformOpenFilePickerWeb(
     type: FileKitType,
-    mode: PickerMode,
-    directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings,
-): Flow<FileKitPickerState<List<PlatformFile>>> {
+    multipleMode: Boolean, // select multiple files
+    directoryMode: Boolean, // select a directory
+): List<PlatformFile>? {
     val files = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
             // Create input element
@@ -47,7 +46,8 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                 }
 
                 // Set the multiple attribute
-                multiple = mode is PickerMode.Multiple
+                multiple = multipleMode
+                webkitdirectory = directoryMode
 
                 // max is not supported for file inputs
             }
@@ -60,6 +60,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                         ?.unsafeCast<HTMLInputElement>()
                         ?.files
                         ?.asList()
+                        ?.map { it.unsafeCast<File>() }
 
                     // Return the result
                     val result = files?.map { PlatformFile(it) }
@@ -81,5 +82,14 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         }
     }
 
-    return files.toPickerStateFlow()
+    return files
+}
+
+public abstract external class HTMLInputElement : HTMLElement {
+    public open var accept: String
+    public open val files: FileList?
+    public open var multiple: Boolean
+    public open var webkitdirectory: Boolean
+    public open var type: String
+    public open var value: String
 }

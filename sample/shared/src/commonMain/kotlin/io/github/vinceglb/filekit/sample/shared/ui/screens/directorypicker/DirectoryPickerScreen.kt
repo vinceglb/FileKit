@@ -21,11 +21,11 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerResultsCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerSelectionButton
-import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerSupportCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerTopBar
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeader
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderButtonState
@@ -74,13 +74,8 @@ private fun DirectoryPickerScreen(
             startDirectory = directory
         }
     }
-    val isSupported = directoryLauncher.isSupported
-    val primaryButtonText = if (isSupported) "Pick Directory" else "Directory Unavailable"
 
     fun openDirectoryPicker() {
-        if (!isSupported) {
-            return
-        }
         buttonState = AppScreenHeaderButtonState.Loading
         directoryLauncher.launch()
     }
@@ -105,8 +100,8 @@ private fun DirectoryPickerScreen(
                     title = "Directory Picker",
                     subtitle = "Select folders with the native picker on desktop and mobile",
                     documentationUrl = "https://filekit.mintlify.app/dialogs/directory-picker",
-                    primaryButtonText = primaryButtonText,
-                    primaryButtonEnabled = isSupported,
+                    primaryButtonText = "Pick Directory",
+                    primaryButtonEnabled = true,
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = ::openDirectoryPicker,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
@@ -116,21 +111,11 @@ private fun DirectoryPickerScreen(
             item {
                 DirectoryPickerSettingsCard(
                     startDirectoryName = startDirectory?.name,
-                    isSupported = isSupported,
+                    isSupported = true,
                     onPickStartDirectory = startDirectoryLauncher::launch,
                     onClearStartDirectory = { startDirectory = null },
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                 )
-            }
-
-            if (!isSupported) {
-                item {
-                    AppPickerSupportCard(
-                        text = "Directory picker is available on Android, iOS, and desktop targets.",
-                        icon = LucideIcons.Folder,
-                        modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
-                    )
-                }
             }
 
             item {
