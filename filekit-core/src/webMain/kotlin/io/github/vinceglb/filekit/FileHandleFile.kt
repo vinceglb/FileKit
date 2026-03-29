@@ -10,7 +10,7 @@ import kotlin.time.Instant
  */
 @OptIn(ExperimentalWasmJsInterop::class)
 public class FileHandleFile(
-    public val file: File,
+    public val file: FileExt,
     public val parent: WebFileHandle? = null,
 ) : WebFileHandle {
     override val name: String
@@ -26,7 +26,7 @@ public class FileHandleFile(
     override val lastModified: Instant
         get() = Instant.fromEpochMilliseconds(file.lastModified.toDouble().toLong())
 
-    override fun getFile(): File = file
+    override fun getFile(): FileExt = file
 
     override fun getParent(): PlatformFile? =
         parent?.let { PlatformFile(fh = it) }
@@ -35,4 +35,4 @@ public class FileHandleFile(
         emptyList()
 }
 
-public fun PlatformFile(file: File): PlatformFile = PlatformFile(fh = FileHandleFile(file))
+public fun PlatformFile(file: FileExt): PlatformFile = PlatformFile(fh = FileHandleFile(file))

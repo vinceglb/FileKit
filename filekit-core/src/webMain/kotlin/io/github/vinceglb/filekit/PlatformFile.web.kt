@@ -9,6 +9,8 @@ import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
 import org.w3c.files.Blob
+import org.w3c.files.BlobPropertyBag
+import org.w3c.files.File
 import org.w3c.files.FilePropertyBag
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
@@ -17,7 +19,9 @@ import kotlin.coroutines.suspendCoroutine
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.JsAny
 import kotlin.js.JsArray
+import kotlin.js.JsName
 import kotlin.js.JsNumber
+import kotlin.js.Promise
 import kotlin.js.definedExternally
 import kotlin.js.unsafeCast
 import kotlin.time.Instant
@@ -31,7 +35,7 @@ public interface WebFileHandle {
     public val lastModified: Instant
     public val path: String
 
-    public fun getFile(): File
+    public fun getFile(): FileExt
 
     public fun getParent(): PlatformFile?
 
@@ -44,11 +48,15 @@ public interface WebFileHandle {
  */
 @Serializable(with = PlatformFileSerializer::class)
 public actual data class PlatformFile(
-    val fh: WebFileHandle,
+    internal val fh: WebFileHandle,
 ) {
+    @Deprecated("Please do not use this anymore to create an instance.")
     @OptIn(ExperimentalWasmJsInterop::class)
-    public val file: org.w3c.files.File
-        get() = fh.getFile().unsafeCast<org.w3c.files.File>()
+    public constructor(file: File) : this(FileHandleFile(file.unsafeCast()))
+
+    @OptIn(ExperimentalWasmJsInterop::class)
+    public val file: File
+        get() = fh.getFile().unsafeCast()
 
     public actual override fun toString(): String = name
 
@@ -87,7 +95,7 @@ public actual fun PlatformFile.isDirectory(): Boolean =
     fh.isDirectory
 
 public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit) {
-    block(fh.list())
+    block(list())
 }
 
 public actual fun PlatformFile.list(): List<PlatformFile> =
@@ -128,7 +136,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
         }
 
         // Read the file as an ArrayBuffer
-        reader.readAsArrayBuffer(fh.getFile())
+        reader.readAsArrayBuffer(fh.getFile().unsafeCast())
     }
 }
 
@@ -139,7 +147,8 @@ public actual suspend fun PlatformFile.readString(): String =
  *
  */
 @OptIn(ExperimentalWasmJsInterop::class)
-public open external class File(
+@JsName("File")
+public open external class FileExt(
     fileBits: JsArray<JsAny?>, // BufferSource|Blob|String
     fileName: String,
     options: FilePropertyBag = definedExternally,

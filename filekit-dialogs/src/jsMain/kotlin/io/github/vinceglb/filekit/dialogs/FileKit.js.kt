@@ -1,6 +1,6 @@
 package io.github.vinceglb.filekit.dialogs
 
-import io.github.vinceglb.filekit.File
+import io.github.vinceglb.filekit.FileExt
 import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,7 @@ internal actual suspend fun platformOpenFilePickerWeb(
                         ?.unsafeCast<HTMLInputElement>()
                         ?.files
                         ?.asList()
-                        ?.map { it.unsafeCast<File>() }
+                        ?.map { it.unsafeCast<FileExt>() }
 
                     // Return the result
                     val result = files?.map { PlatformFile(it) }

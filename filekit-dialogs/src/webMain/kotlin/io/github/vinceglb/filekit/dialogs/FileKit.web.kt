@@ -1,6 +1,6 @@
 package io.github.vinceglb.filekit.dialogs
 
-import io.github.vinceglb.filekit.File
+import io.github.vinceglb.filekit.FileExt
 import io.github.vinceglb.filekit.FileHandleFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
@@ -79,19 +79,19 @@ internal expect suspend fun platformOpenFilePickerWeb(
 /**
  * Virtual directory
  */
-public class FileHandleVirtualDirectory(
-    public override val name: String,
-    public override val path: String,
+internal class FileHandleVirtualDirectory(
+    override val name: String,
+    override val path: String,
     override val lastModified: Instant,
-    public val parent: FileHandleVirtualDirectory?,
-    public val list: MutableList<PlatformFile>,
+    val parent: FileHandleVirtualDirectory?,
+    val list: MutableList<PlatformFile>,
 ) : WebFileHandle {
     override val type: String = ""
     override val size: Long = 0
     override val isDirectory: Boolean = true
     override val isRegularFile: Boolean = false
 
-    override fun getFile(): File {
+    override fun getFile(): FileExt {
         TODO("Not supported!")
     }
 
