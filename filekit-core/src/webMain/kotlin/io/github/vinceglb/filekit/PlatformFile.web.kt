@@ -52,11 +52,11 @@ public actual data class PlatformFile(
 ) {
     @Deprecated("Please do not use this anymore to create an instance.")
     @OptIn(ExperimentalWasmJsInterop::class)
-    public constructor(file: File) : this(FileHandleFile(file.unsafeCast()))
+    public constructor(file: File) : this(FileHandleFile(file.unsafeCast<FileExt>()))
 
     @OptIn(ExperimentalWasmJsInterop::class)
     public val file: File
-        get() = fh.getFile().unsafeCast()
+        get() = fh.getFile().unsafeCast<File>()
 
     public actual override fun toString(): String = name
 
@@ -136,7 +136,7 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = withContext(Disp
         }
 
         // Read the file as an ArrayBuffer
-        reader.readAsArrayBuffer(fh.getFile().unsafeCast())
+        reader.readAsArrayBuffer(fh.getFile().unsafeCast<File>())
     }
 }
 
