@@ -9,7 +9,6 @@ import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
 import org.w3c.files.Blob
-import org.w3c.files.BlobPropertyBag
 import org.w3c.files.File
 import org.w3c.files.FilePropertyBag
 import org.w3c.files.FileReader
@@ -21,7 +20,6 @@ import kotlin.js.JsAny
 import kotlin.js.JsArray
 import kotlin.js.JsName
 import kotlin.js.JsNumber
-import kotlin.js.Promise
 import kotlin.js.definedExternally
 import kotlin.js.unsafeCast
 import kotlin.time.Instant
@@ -37,10 +35,12 @@ public interface WebFileHandle {
 
     public fun getFile(): FileExt
 
-    public fun getParent(): PlatformFile?
+    public fun getParent(): WebFileHandle?
 
-    public fun list(): List<PlatformFile>
+    public fun list(): List<WebFileHandle>
 }
+
+public fun WebFileHandle.toPlatformFile(): PlatformFile = PlatformFile(this)
 
 /**
  * Represents a file on the Web platform.
@@ -86,7 +86,7 @@ public actual fun PlatformFile.lastModified(): Instant =
     fh.lastModified
 
 public actual fun PlatformFile.parent(): PlatformFile? =
-    fh.getParent()
+    fh.getParent()?.toPlatformFile()
 
 public actual fun PlatformFile.isRegularFile(): Boolean =
     fh.isRegularFile
@@ -99,7 +99,7 @@ public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit) 
 }
 
 public actual fun PlatformFile.list(): List<PlatformFile> =
-    fh.list()
+    fh.list().map { it.toPlatformFile() }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 

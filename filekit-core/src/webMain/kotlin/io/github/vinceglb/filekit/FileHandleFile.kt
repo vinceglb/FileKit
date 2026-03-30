@@ -28,10 +28,10 @@ public class FileHandleFile(
 
     override fun getFile(): FileExt = file
 
-    override fun getParent(): PlatformFile? =
-        parent?.let { PlatformFile(fh = it) }
+    override fun getParent(): WebFileHandle? =
+        parent
 
-    override fun list(): List<PlatformFile> =
+    override fun list(): List<WebFileHandle> =
         emptyList()
 }
 

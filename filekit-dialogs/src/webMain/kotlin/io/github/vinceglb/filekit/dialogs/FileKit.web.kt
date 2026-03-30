@@ -5,7 +5,7 @@ import io.github.vinceglb.filekit.FileHandleFile
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.WebFileHandle
-import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.toPlatformFile
 import kotlinx.coroutines.flow.Flow
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.time.Instant
@@ -21,7 +21,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         type = type,
         multipleMode = mode is PickerMode.Multiple,
         directoryMode = false,
-    ).toPickerStateFlow()
+    )?.map { it.toPlatformFile() }.toPickerStateFlow()
 
 public actual suspend fun FileKit.openDirectoryPicker(
     directory: PlatformFile?,
@@ -42,8 +42,8 @@ public actual suspend fun FileKit.openDirectoryPicker(
     fileList?.forEach { file ->
         val pathOnlyPart = file.path.substringBeforeLast(delimiter = '/', missingDelimiterValue = "") // Exclude the file name
         val directory = rootDirectory.findOrCreateRelativeDirectory(pathOnlyPart)
-        val file = FileHandleFile(file = file.fh.getFile(), parent = directory)
-        directory.list.add(PlatformFile(file))
+        val file = FileHandleFile(file = file.getFile(), parent = directory)
+        directory.list.add(file)
     }
     return PlatformFile(rootDirectory)
 }
@@ -56,7 +56,7 @@ private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(path: Strin
         child.findOrCreateRelativeDirectory(path.substringAfter('/'))
     } else { // not a children so we just check if this directory exists
         val dirName = path
-        list.map { it.fh }.filterIsInstance<FileHandleVirtualDirectory>().find { item ->
+        list.filterIsInstance<FileHandleVirtualDirectory>().find { item ->
             item.name == dirName
         } ?: FileHandleVirtualDirectory(
             name = dirName,
@@ -65,7 +65,7 @@ private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(path: Strin
             parent = self,
             list = mutableListOf(),
         ).also { newDir ->
-            list.add(PlatformFile(newDir))
+            list.add(newDir)
         }
     }
 }
@@ -74,7 +74,7 @@ internal expect suspend fun platformOpenFilePickerWeb(
     type: FileKitType,
     multipleMode: Boolean, // select multiple files
     directoryMode: Boolean, // select a directory
-): List<PlatformFile>?
+): List<FileHandleFile>?
 
 /**
  * Virtual directory
@@ -84,7 +84,7 @@ internal class FileHandleVirtualDirectory(
     override val path: String,
     override val lastModified: Instant,
     val parent: FileHandleVirtualDirectory?,
-    val list: MutableList<PlatformFile>,
+    val list: MutableList<WebFileHandle>,
 ) : WebFileHandle {
     override val type: String = ""
     override val size: Long = 0
@@ -95,9 +95,9 @@ internal class FileHandleVirtualDirectory(
         TODO("Not supported!")
     }
 
-    override fun getParent(): PlatformFile? =
-        parent?.let { PlatformFile(it) }
+    override fun getParent(): WebFileHandle? =
+        parent
 
-    override fun list(): List<PlatformFile> =
+    override fun list(): List<WebFileHandle> =
         list
 }
