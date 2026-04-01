@@ -24,13 +24,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.icons.File
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Folder
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.createPlatformFileForPreviews
-import io.github.vinceglb.filekit.sample.shared.util.isDirectory
 
 @Composable
 public fun AppFileItem(

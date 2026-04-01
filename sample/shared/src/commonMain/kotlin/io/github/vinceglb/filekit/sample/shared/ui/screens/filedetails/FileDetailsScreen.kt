@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.coil.securelyAccessFile
+import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
@@ -39,7 +40,6 @@ import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.component
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.createPlatformFileForPreviews
 import io.github.vinceglb.filekit.sample.shared.util.formatBytes
-import io.github.vinceglb.filekit.sample.shared.util.isDirectory
 import io.github.vinceglb.filekit.sample.shared.util.isImageFile
 import io.github.vinceglb.filekit.size
 
