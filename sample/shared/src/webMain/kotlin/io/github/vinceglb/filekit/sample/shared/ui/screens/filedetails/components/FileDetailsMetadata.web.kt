@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.componen
 
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.isRegularFile
 import io.github.vinceglb.filekit.lastModified
 import io.github.vinceglb.filekit.mimeType
@@ -10,7 +11,6 @@ import io.github.vinceglb.filekit.nameWithoutExtension
 import io.github.vinceglb.filekit.parent
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.sample.shared.util.formatBytes
-import io.github.vinceglb.filekit.sample.shared.util.isDirectory
 import io.github.vinceglb.filekit.size
 
 internal actual fun PlatformFile.toMetadataItems(): List<FileMetadataItem> = listOf(
