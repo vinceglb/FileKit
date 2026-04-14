@@ -26,6 +26,7 @@ class KotlinMultiplatformLibraryConventionPlugin : Plugin<Project> {
                     moduleName = moduleName,
                     addMacosTargets = true,
                     addWatchosTargets = path == ":filekit-core",
+                    addMingwTargets = path == ":filekit-core" || path == ":filekit-dialogs",
                 )
             }
         }

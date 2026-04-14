@@ -13,6 +13,7 @@ internal fun Project.configureKotlinMultiplatform(
     moduleName: String,
     addMacosTargets: Boolean,
     addWatchosTargets: Boolean,
+    addMingwTargets: Boolean = false,
 ) = extension.apply {
     // Force visibility of public API
     explicitApi()
@@ -40,6 +41,11 @@ internal fun Project.configureKotlinMultiplatform(
             baseName = "${moduleName}Kit"
             binaryOption("bundleId", modulePackage)
         }
+    }
+
+    // Windows native target
+    if (addMingwTargets) {
+        mingwX64()
     }
 
     // If one day we need to disable watchOS tests
