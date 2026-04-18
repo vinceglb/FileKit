@@ -96,8 +96,14 @@ private fun resolveFullPath(rawPath: String): String? = memScoped {
     val requiredLength = GetFullPathNameW(rawPath, MAX_PATH.toUInt(), initialBuffer, null)
 
     when {
-        requiredLength == 0u -> null
-        requiredLength < MAX_PATH.toUInt() -> initialBuffer.toKStringFromUtf16()
+        requiredLength == 0u -> {
+            null
+        }
+
+        requiredLength < MAX_PATH.toUInt() -> {
+            initialBuffer.toKStringFromUtf16()
+        }
+
         else -> {
             val fullBuffer = allocArray<UShortVar>(requiredLength.toInt())
             val resolvedLength = GetFullPathNameW(rawPath, requiredLength, fullBuffer, null)

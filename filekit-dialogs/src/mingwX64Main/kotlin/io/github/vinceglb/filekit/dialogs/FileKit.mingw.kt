@@ -61,6 +61,7 @@ import platform.windows.ShellExecuteW
 // Opaque pointer type for COM objects (cinterop doesn't export C++ interfaces)
 private typealias ComPtr = CPointer<ByteVar>
 private typealias ComPtrVar = CPointerVar<ByteVar>
+
 private const val S_FALSE_HRESULT = 1
 private val ERROR_CANCELLED_HRESULT = 0x800704C7u.toInt()
 private val ERROR_FILE_NOT_FOUND_HRESULT = 0x80070002u.toInt()
@@ -208,7 +209,9 @@ private fun showSaveDialog(
         extension?.let {
             val setDefaultExtensionHr = fk_dialog_set_default_extension(dlg.reinterpret(), it)
             if (setDefaultExtensionHr != S_OK) {
-                throw IllegalStateException("IFileDialog::SetDefaultExtension failed with HRESULT 0x${setDefaultExtensionHr.toUInt().toString(16)}")
+                throw IllegalStateException(
+                    "IFileDialog::SetDefaultExtension failed with HRESULT 0x${setDefaultExtensionHr.toUInt().toString(16)}",
+                )
             }
             setFileTypes(dlg, setOf(it))
         }
