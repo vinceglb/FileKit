@@ -10,6 +10,7 @@ kotlin {
         val jvmAndNativeMain by creating { dependsOn(nonWebMain.get()) }
         jvmMain.get().dependsOn(desktopMain)
         macosMain.get().dependsOn(desktopMain)
+        mingwX64Main.get().dependsOn(desktopMain)
         jvmMain.get().dependsOn(jvmAndNativeMain)
         nativeMain.get().dependsOn(jvmAndNativeMain)
 

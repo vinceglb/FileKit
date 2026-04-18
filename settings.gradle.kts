@@ -44,6 +44,7 @@ include(":sample:androidApp")
 include(":sample:desktopApp")
 include(":sample:shared")
 include(":sample:webApp")
+include(":sample:windowsNativeApp")
 
 // include(":samples-old:sample-core:shared")
 // include(":samples-old:sample-core:composeApp")

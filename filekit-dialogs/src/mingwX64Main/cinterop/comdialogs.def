@@ -1,0 +1,112 @@
+headers = windows.h shobjidl.h
+headerFilter = **
+compilerOpts = -DCOBJMACROS -DCINTEROP_FILE_DIALOG
+linkerOpts = -lole32 -lshell32 -luuid
+
+---
+
+#include <windows.h>
+#include <shobjidl.h>
+#include <initguid.h>
+
+// Define GUIDs
+DEFINE_GUID(CLSID_FileOpenDialog_,  0xDC1C5A9C, 0xE88A, 0x4DDE, 0xA5, 0xA1, 0x60, 0xF8, 0x2A, 0x20, 0xAE, 0xF7);
+DEFINE_GUID(CLSID_FileSaveDialog_,  0xC0B4E2F3, 0xBA21, 0x4773, 0x8D, 0xBA, 0x33, 0x5E, 0xC9, 0x46, 0xEB, 0x8B);
+DEFINE_GUID(IID_IFileOpenDialog_,   0xD57C7288, 0xD4AD, 0x4768, 0xBE, 0x02, 0x9D, 0x96, 0x95, 0x32, 0xD9, 0x60);
+DEFINE_GUID(IID_IFileSaveDialog_,   0x84BCCD23, 0x5FDE, 0x4CDB, 0xAE, 0xA4, 0xAF, 0x64, 0xB8, 0x3D, 0x78, 0xAB);
+DEFINE_GUID(IID_IShellItem_,        0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
+
+// FOS constants
+#define FK_FOS_OVERWRITEPROMPT  0x2
+#define FK_FOS_PICKFOLDERS      0x20
+#define FK_FOS_FORCEFILESYSTEM  0x40
+#define FK_FOS_ALLOWMULTISELECT 0x200
+#define FK_FOS_PATHMUSTEXIST    0x800
+#define FK_FOS_FILEMUSTEXIST    0x1000
+
+#define FK_SIGDN_FILESYSPATH           0x80058000
+#define FK_SIGDN_DESKTOPABSOLUTEPARSING 0x80028000
+
+static inline HRESULT fk_create_open_dialog(IFileOpenDialog** ppDialog) {
+    return CoCreateInstance(&CLSID_FileOpenDialog_, NULL, CLSCTX_ALL, &IID_IFileOpenDialog_, (void**)ppDialog);
+}
+
+static inline HRESULT fk_create_save_dialog(IFileSaveDialog** ppDialog) {
+    return CoCreateInstance(&CLSID_FileSaveDialog_, NULL, CLSCTX_ALL, &IID_IFileSaveDialog_, (void**)ppDialog);
+}
+
+static inline HRESULT fk_dialog_show(IFileDialog* dlg, HWND hwnd) {
+    return IFileDialog_Show(dlg, hwnd);
+}
+
+static inline HRESULT fk_dialog_set_options(IFileDialog* dlg, DWORD opts) {
+    return IFileDialog_SetOptions(dlg, opts);
+}
+
+static inline HRESULT fk_dialog_get_options(IFileDialog* dlg, DWORD* opts) {
+    return IFileDialog_GetOptions(dlg, opts);
+}
+
+static inline HRESULT fk_dialog_set_title(IFileDialog* dlg, LPCWSTR title) {
+    return IFileDialog_SetTitle(dlg, title);
+}
+
+static inline HRESULT fk_dialog_set_filename(IFileDialog* dlg, LPCWSTR name) {
+    return IFileDialog_SetFileName(dlg, name);
+}
+
+static inline HRESULT fk_dialog_set_default_extension(IFileDialog* dlg, LPCWSTR ext) {
+    return IFileDialog_SetDefaultExtension(dlg, ext);
+}
+
+static inline HRESULT fk_dialog_set_folder(IFileDialog* dlg, IShellItem* folder) {
+    return IFileDialog_SetFolder(dlg, folder);
+}
+
+static inline HRESULT fk_dialog_set_file_types(IFileDialog* dlg, UINT count, const COMDLG_FILTERSPEC* specs) {
+    return IFileDialog_SetFileTypes(dlg, count, specs);
+}
+
+static inline HRESULT fk_dialog_get_result(IFileDialog* dlg, IShellItem** ppItem) {
+    return IFileDialog_GetResult(dlg, ppItem);
+}
+
+static inline HRESULT fk_open_dialog_get_results(IFileOpenDialog* dlg, IShellItemArray** ppItems) {
+    return IFileOpenDialog_GetResults(dlg, ppItems);
+}
+
+static inline HRESULT fk_shell_item_get_display_name(IShellItem* item, SIGDN sigdn, LPWSTR* ppName) {
+    return IShellItem_GetDisplayName(item, sigdn, ppName);
+}
+
+static inline void fk_shell_item_release(IShellItem* item) {
+    IShellItem_Release(item);
+}
+
+static inline void fk_dialog_release(IFileDialog* dlg) {
+    IFileDialog_Release(dlg);
+}
+
+static inline void fk_open_dialog_release(IFileOpenDialog* dlg) {
+    IFileOpenDialog_Release(dlg);
+}
+
+static inline void fk_save_dialog_release(IFileSaveDialog* dlg) {
+    IFileSaveDialog_Release(dlg);
+}
+
+static inline void fk_shell_item_array_release(IShellItemArray* arr) {
+    IShellItemArray_Release(arr);
+}
+
+static inline HRESULT fk_shell_item_array_get_count(IShellItemArray* arr, DWORD* count) {
+    return IShellItemArray_GetCount(arr, count);
+}
+
+static inline HRESULT fk_shell_item_array_get_item_at(IShellItemArray* arr, DWORD index, IShellItem** ppItem) {
+    return IShellItemArray_GetItemAt(arr, index, ppItem);
+}
+
+static inline HRESULT fk_create_shell_item_from_path(LPCWSTR path, IShellItem** ppItem) {
+    return SHCreateItemFromParsingName(path, NULL, &IID_IShellItem_, (void**)ppItem);
+}

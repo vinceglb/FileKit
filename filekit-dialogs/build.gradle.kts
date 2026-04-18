@@ -10,6 +10,16 @@ kotlin {
         }
     }
 
+    mingwX64 {
+        compilations.getByName("main") {
+            cinterops {
+                val comdialogs by creating {
+                    defFile(project.file("src/mingwX64Main/cinterop/comdialogs.def"))
+                }
+            }
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             api(projects.filekitCore)
