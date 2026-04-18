@@ -78,14 +78,31 @@ public actual val PlatformFile.nameWithoutExtension: String
 public actual fun PlatformFile.absolutePath(): String {
     val rawPath = windowsPath.path.toString()
     // Already absolute (drive letter or UNC path)
-    if (rawPath.length >= 2 && rawPath[1] == ':') return rawPath
+    if (rawPath.isDriveAbsolutePath()) return rawPath
     if (rawPath.startsWith("\\\\")) return rawPath
 
     // Resolve relative path using Win32 API (Unicode-safe)
-    return memScoped {
-        val buffer = allocArray<UShortVar>(MAX_PATH)
-        val len = GetFullPathNameW(rawPath, MAX_PATH.toUInt(), buffer, null)
-        if (len > 0u) buffer.toKStringFromUtf16() else rawPath
+    return resolveFullPath(rawPath) ?: rawPath
+}
+
+private fun String.isDriveAbsolutePath(): Boolean =
+    length >= 3 &&
+        this[1] == ':' &&
+        (this[2] == '\\' || this[2] == '/')
+
+@OptIn(ExperimentalForeignApi::class)
+private fun resolveFullPath(rawPath: String): String? = memScoped {
+    val initialBuffer = allocArray<UShortVar>(MAX_PATH)
+    val requiredLength = GetFullPathNameW(rawPath, MAX_PATH.toUInt(), initialBuffer, null)
+
+    when {
+        requiredLength == 0u -> null
+        requiredLength < MAX_PATH.toUInt() -> initialBuffer.toKStringFromUtf16()
+        else -> {
+            val fullBuffer = allocArray<UShortVar>(requiredLength.toInt())
+            val resolvedLength = GetFullPathNameW(rawPath, requiredLength, fullBuffer, null)
+            if (resolvedLength == 0u) null else fullBuffer.toKStringFromUtf16()
+        }
     }
 }
 

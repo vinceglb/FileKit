@@ -61,6 +61,10 @@ import platform.windows.ShellExecuteW
 // Opaque pointer type for COM objects (cinterop doesn't export C++ interfaces)
 private typealias ComPtr = CPointer<ByteVar>
 private typealias ComPtrVar = CPointerVar<ByteVar>
+private const val S_FALSE_HRESULT = 1
+private val ERROR_CANCELLED_HRESULT = 0x800704C7u.toInt()
+private val ERROR_FILE_NOT_FOUND_HRESULT = 0x80070002u.toInt()
+private val ERROR_INVALID_DRIVE_HRESULT = 0x8007000Fu.toInt()
 
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
@@ -109,26 +113,46 @@ private fun showOpenDialog(
     pickFolders: Boolean,
     allowMultiple: Boolean,
 ): List<PlatformFile>? = memScoped {
-    CoInitializeEx(null, (COINIT_APARTMENTTHREADED or COINIT_DISABLE_OLE1DDE).toUInt())
+    val comInitialized = initializeComForDialogs()
     val ppDlg = alloc<ComPtrVar>()
     try {
-        if (fk_create_open_dialog(ppDlg.ptr.reinterpret()) != S_OK) return@memScoped null
-        val dlg = ppDlg.value ?: return@memScoped null
+        val createHr = fk_create_open_dialog(ppDlg.ptr.reinterpret())
+        if (createHr != S_OK) {
+            throw IllegalStateException("CoCreateInstance(IFileOpenDialog) failed with HRESULT 0x${createHr.toUInt().toString(16)}")
+        }
+        val dlg = ppDlg.value
+            ?: throw IllegalStateException("CoCreateInstance(IFileOpenDialog) returned a null dialog pointer")
 
         // Options
         val optsVar = alloc<DWORDVar>()
-        fk_dialog_get_options(dlg.reinterpret(), optsVar.ptr)
+        val getOptionsHr = fk_dialog_get_options(dlg.reinterpret(), optsVar.ptr)
+        if (getOptionsHr != S_OK) {
+            throw IllegalStateException("IFileDialog::GetOptions failed with HRESULT 0x${getOptionsHr.toUInt().toString(16)}")
+        }
         var opts = optsVar.value.toInt() or FK_FOS_FORCEFILESYSTEM or FK_FOS_PATHMUSTEXIST
         if (pickFolders) opts = opts or FK_FOS_PICKFOLDERS else opts = opts or FK_FOS_FILEMUSTEXIST
         if (allowMultiple) opts = opts or FK_FOS_ALLOWMULTISELECT
-        fk_dialog_set_options(dlg.reinterpret(), opts.toUInt())
+        val setOptionsHr = fk_dialog_set_options(dlg.reinterpret(), opts.toUInt())
+        if (setOptionsHr != S_OK) {
+            throw IllegalStateException("IFileDialog::SetOptions failed with HRESULT 0x${setOptionsHr.toUInt().toString(16)}")
+        }
 
-        title?.let { fk_dialog_set_title(dlg.reinterpret(), it) }
+        title?.let {
+            val setTitleHr = fk_dialog_set_title(dlg.reinterpret(), it)
+            if (setTitleHr != S_OK) {
+                throw IllegalStateException("IFileDialog::SetTitle failed with HRESULT 0x${setTitleHr.toUInt().toString(16)}")
+            }
+        }
         directory?.let { setFolder(dlg, it) }
         if (!extensions.isNullOrEmpty() && !pickFolders) setFileTypes(dlg, extensions)
 
         val hr = fk_dialog_show(dlg.reinterpret(), null)
-        if (hr != S_OK) return@memScoped null
+        if (hr != S_OK) {
+            if (hr == ERROR_CANCELLED_HRESULT) {
+                return@memScoped null
+            }
+            throw IllegalStateException("IFileOpenDialog::Show failed with HRESULT 0x${hr.toUInt().toString(16)}")
+        }
 
         if (allowMultiple) {
             getMultipleResults(dlg)
@@ -138,7 +162,9 @@ private fun showOpenDialog(
         }
     } finally {
         ppDlg.value?.let { fk_open_dialog_release(it.reinterpret()) }
-        CoUninitialize()
+        if (comInitialized) {
+            CoUninitialize()
+        }
     }
 }
 
@@ -148,39 +174,86 @@ private fun showSaveDialog(
     directory: PlatformFile?,
     title: String?,
 ): PlatformFile? = memScoped {
-    CoInitializeEx(null, (COINIT_APARTMENTTHREADED or COINIT_DISABLE_OLE1DDE).toUInt())
+    val comInitialized = initializeComForDialogs()
     val ppDlg = alloc<ComPtrVar>()
     try {
-        if (fk_create_save_dialog(ppDlg.ptr.reinterpret()) != S_OK) return@memScoped null
-        val dlg = ppDlg.value ?: return@memScoped null
+        val createHr = fk_create_save_dialog(ppDlg.ptr.reinterpret())
+        if (createHr != S_OK) {
+            throw IllegalStateException("CoCreateInstance(IFileSaveDialog) failed with HRESULT 0x${createHr.toUInt().toString(16)}")
+        }
+        val dlg = ppDlg.value
+            ?: throw IllegalStateException("CoCreateInstance(IFileSaveDialog) returned a null dialog pointer")
 
         val optsVar = alloc<DWORDVar>()
-        fk_dialog_get_options(dlg.reinterpret(), optsVar.ptr)
+        val getOptionsHr = fk_dialog_get_options(dlg.reinterpret(), optsVar.ptr)
+        if (getOptionsHr != S_OK) {
+            throw IllegalStateException("IFileDialog::GetOptions failed with HRESULT 0x${getOptionsHr.toUInt().toString(16)}")
+        }
         val opts = optsVar.value.toInt() or FK_FOS_FORCEFILESYSTEM or FK_FOS_PATHMUSTEXIST or FK_FOS_OVERWRITEPROMPT
-        fk_dialog_set_options(dlg.reinterpret(), opts.toUInt())
+        val setOptionsHr = fk_dialog_set_options(dlg.reinterpret(), opts.toUInt())
+        if (setOptionsHr != S_OK) {
+            throw IllegalStateException("IFileDialog::SetOptions failed with HRESULT 0x${setOptionsHr.toUInt().toString(16)}")
+        }
 
-        title?.let { fk_dialog_set_title(dlg.reinterpret(), it) }
-        fk_dialog_set_filename(dlg.reinterpret(), suggestedName)
+        title?.let {
+            val setTitleHr = fk_dialog_set_title(dlg.reinterpret(), it)
+            if (setTitleHr != S_OK) {
+                throw IllegalStateException("IFileDialog::SetTitle failed with HRESULT 0x${setTitleHr.toUInt().toString(16)}")
+            }
+        }
+        val setFilenameHr = fk_dialog_set_filename(dlg.reinterpret(), suggestedName)
+        if (setFilenameHr != S_OK) {
+            throw IllegalStateException("IFileDialog::SetFileName failed with HRESULT 0x${setFilenameHr.toUInt().toString(16)}")
+        }
         extension?.let {
-            fk_dialog_set_default_extension(dlg.reinterpret(), it)
+            val setDefaultExtensionHr = fk_dialog_set_default_extension(dlg.reinterpret(), it)
+            if (setDefaultExtensionHr != S_OK) {
+                throw IllegalStateException("IFileDialog::SetDefaultExtension failed with HRESULT 0x${setDefaultExtensionHr.toUInt().toString(16)}")
+            }
             setFileTypes(dlg, setOf(it))
         }
         directory?.let { setFolder(dlg, it) }
 
         val hr = fk_dialog_show(dlg.reinterpret(), null)
-        if (hr != S_OK) return@memScoped null
+        if (hr != S_OK) {
+            if (hr == ERROR_CANCELLED_HRESULT) {
+                return@memScoped null
+            }
+            throw IllegalStateException("IFileSaveDialog::Show failed with HRESULT 0x${hr.toUInt().toString(16)}")
+        }
         getSingleResult(dlg, FK_SIGDN_FILESYSPATH.toInt())
     } finally {
         ppDlg.value?.let { fk_save_dialog_release(it.reinterpret()) }
-        CoUninitialize()
+        if (comInitialized) {
+            CoUninitialize()
+        }
     }
 }
 
 // region Helpers
 
+private fun initializeComForDialogs(): Boolean {
+    val result = CoInitializeEx(
+        null,
+        COINIT_APARTMENTTHREADED or COINIT_DISABLE_OLE1DDE,
+    )
+
+    if (result == S_OK || result == S_FALSE_HRESULT) {
+        return true
+    }
+
+    throw IllegalStateException("CoInitializeEx failed with HRESULT 0x${result.toUInt().toString(16)}")
+}
+
 private fun MemScope.setFolder(dlg: ComPtr, dir: PlatformFile) {
     val ppsi = alloc<ComPtrVar>()
-    if (fk_create_shell_item_from_path(dir.path, ppsi.ptr.reinterpret()) != S_OK) return
+    val hr = fk_create_shell_item_from_path(dir.path, ppsi.ptr.reinterpret())
+    if (hr != S_OK) {
+        if (hr == ERROR_FILE_NOT_FOUND_HRESULT || hr == ERROR_INVALID_DRIVE_HRESULT) {
+            return
+        }
+        throw IllegalStateException("SHCreateItemFromParsingName failed with HRESULT 0x${hr.toUInt().toString(16)}")
+    }
     val folder = ppsi.value ?: return
     try {
         fk_dialog_set_folder(dlg.reinterpret(), folder.reinterpret())
@@ -196,13 +269,20 @@ private fun MemScope.setFileTypes(dlg: ComPtr, exts: Set<String>) {
     val spec = allocArray<CPointerVar<UShortVar>>(2)
     spec[0] = display.wcstr.ptr
     spec[1] = pattern.wcstr.ptr
-    fk_dialog_set_file_types(dlg.reinterpret(), 1u, spec.reinterpret())
+    val hr = fk_dialog_set_file_types(dlg.reinterpret(), 1u, spec.reinterpret())
+    if (hr != S_OK) {
+        throw IllegalStateException("IFileDialog::SetFileTypes failed with HRESULT 0x${hr.toUInt().toString(16)}")
+    }
 }
 
 private fun MemScope.getSingleResult(dlg: ComPtr, sigdn: Int): PlatformFile? {
     val ppsi = alloc<ComPtrVar>()
-    if (fk_dialog_get_result(dlg.reinterpret(), ppsi.ptr.reinterpret()) != S_OK) return null
-    val item = ppsi.value ?: return null
+    val hr = fk_dialog_get_result(dlg.reinterpret(), ppsi.ptr.reinterpret())
+    if (hr != S_OK) {
+        throw IllegalStateException("IFileDialog::GetResult failed with HRESULT 0x${hr.toUInt().toString(16)}")
+    }
+    val item = ppsi.value
+        ?: throw IllegalStateException("IFileDialog::GetResult returned a null result item")
     try {
         return shellItemToFile(item, sigdn)
     } finally {
@@ -212,15 +292,26 @@ private fun MemScope.getSingleResult(dlg: ComPtr, sigdn: Int): PlatformFile? {
 
 private fun MemScope.getMultipleResults(dlg: ComPtr): List<PlatformFile> {
     val ppArr = alloc<ComPtrVar>()
-    if (fk_open_dialog_get_results(dlg.reinterpret(), ppArr.ptr.reinterpret()) != S_OK) return emptyList()
-    val arr = ppArr.value ?: return emptyList()
+    val resultsHr = fk_open_dialog_get_results(dlg.reinterpret(), ppArr.ptr.reinterpret())
+    if (resultsHr != S_OK) {
+        throw IllegalStateException("IFileOpenDialog::GetResults failed with HRESULT 0x${resultsHr.toUInt().toString(16)}")
+    }
+    val arr = ppArr.value
+        ?: throw IllegalStateException("IFileOpenDialog::GetResults returned a null result array")
     try {
         val cntVar = alloc<DWORDVar>()
-        fk_shell_item_array_get_count(arr.reinterpret(), cntVar.ptr)
+        val countHr = fk_shell_item_array_get_count(arr.reinterpret(), cntVar.ptr)
+        if (countHr != S_OK) {
+            throw IllegalStateException("IShellItemArray::GetCount failed with HRESULT 0x${countHr.toUInt().toString(16)}")
+        }
         return (0 until cntVar.value.toInt()).mapNotNull { i ->
             val ppsi = alloc<ComPtrVar>()
-            if (fk_shell_item_array_get_item_at(arr.reinterpret(), i.toUInt(), ppsi.ptr.reinterpret()) != S_OK) return@mapNotNull null
-            val item = ppsi.value ?: return@mapNotNull null
+            val itemHr = fk_shell_item_array_get_item_at(arr.reinterpret(), i.toUInt(), ppsi.ptr.reinterpret())
+            if (itemHr != S_OK) {
+                throw IllegalStateException("IShellItemArray::GetItemAt failed with HRESULT 0x${itemHr.toUInt().toString(16)}")
+            }
+            val item = ppsi.value
+                ?: throw IllegalStateException("IShellItemArray::GetItemAt returned a null shell item")
             try {
                 shellItemToFile(item, FK_SIGDN_FILESYSPATH.toInt())
             } finally {
@@ -234,8 +325,12 @@ private fun MemScope.getMultipleResults(dlg: ComPtr): List<PlatformFile> {
 
 private fun MemScope.shellItemToFile(item: ComPtr, sigdn: Int): PlatformFile? {
     val ppName = alloc<CPointerVar<UShortVar>>()
-    if (fk_shell_item_get_display_name(item.reinterpret(), sigdn, ppName.ptr.reinterpret()) != S_OK) return null
-    val namePtr = ppName.value ?: return null
+    val hr = fk_shell_item_get_display_name(item.reinterpret(), sigdn, ppName.ptr.reinterpret())
+    if (hr != S_OK) {
+        throw IllegalStateException("IShellItem::GetDisplayName failed with HRESULT 0x${hr.toUInt().toString(16)}")
+    }
+    val namePtr = ppName.value
+        ?: throw IllegalStateException("IShellItem::GetDisplayName returned a null display name")
     try {
         return PlatformFile(namePtr.toKStringFromUtf16())
     } finally {
