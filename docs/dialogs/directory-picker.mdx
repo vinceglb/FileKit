@@ -28,21 +28,19 @@ Button(onClick = { launcher.launch() }) {
 
 ## Customizing the dialog
 
-You can customize the dialog by setting the title and the initial directory.
+You can customize the dialog by setting the initial directory and platform-specific `dialogSettings`, such as a title on supported platforms.
 
 <CodeGroup>
 ```kotlin filekit-dialogs
 val directory = FileKit.openDirectoryPicker(
-    title = "Directory picker",
     directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = dialogSettings,
+    dialogSettings = FileKitDialogSettings.createDefault(),
 )
 ```
 ```kotlin filekit-dialogs-compose
 val launcher = rememberDirectoryPickerLauncher(
-    title = "Directory picker",
     directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = dialogSettings,
+    dialogSettings = FileKitDialogSettings.createDefault(),
 ) { directory ->
     // Handle the directory
 }

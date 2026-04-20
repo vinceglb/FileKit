@@ -150,22 +150,20 @@ val launcher = rememberFilePickerLauncher(
 
 ## Customizing the dialog
 
-You can customize the dialog by setting the title, the initial directory and some settings relative to the platform.
+You can customize the dialog by setting the initial directory and platform-specific `dialogSettings`, such as a title on supported platforms.
 
 <CodeGroup>
 ```kotlin filekit-dialogs
 val file = FileKit.openFilePicker(
-    title = "Custom title",
     directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault()
+    dialogSettings = FileKitDialogSettings.createDefault(),
 )
 ```
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
-    title = "Custom title",
     directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault()
+    dialogSettings = FileKitDialogSettings.createDefault(),
 ) { file ->
     // Handle the file
 }
