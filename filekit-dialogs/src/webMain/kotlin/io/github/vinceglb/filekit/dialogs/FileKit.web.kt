@@ -32,20 +32,27 @@ public actual suspend fun FileKit.openDirectoryPicker(
         multipleMode = true,
         directoryMode = true,
     )
-    val rootDirectory = FileHandleVirtualDirectory(
-        name = "/",
-        path = "",
-        lastModified = Instant.fromEpochMilliseconds(0),
-        parent = null,
-        list = mutableListOf(),
-    )
-    fileList?.forEach { file ->
-        val pathOnlyPart = file.path.substringBeforeLast(delimiter = '/', missingDelimiterValue = "") // Exclude the file name
-        val directory = rootDirectory.findOrCreateRelativeDirectory(pathOnlyPart)
-        val file = FileHandleFile(file = file.getFile(), parent = directory)
-        directory.list.add(file)
+    if (fileList.isNullOrEmpty()) {
+        // Unfortunately, when the fileList is empty (Empty directory selected), we do not know the directory name.
+        return null
+    } else {
+        val directoryName = fileList.first().path.substringBefore('/')
+        val rootDirectory = FileHandleVirtualDirectory(
+            name = directoryName,
+            path = directoryName,
+            lastModified = Instant.fromEpochMilliseconds(0),
+            parent = null,
+            list = mutableListOf(),
+        )
+        fileList.forEach { file ->
+            val pathOnlyPart = file.path.substringBeforeLast(delimiter = '/', missingDelimiterValue = "") // Exclude the file name
+            val removedRoot = pathOnlyPart.substringAfter('/')
+            val directory = rootDirectory.findOrCreateRelativeDirectory(removedRoot)
+            val file = FileHandleFile(file = file.getFile(), parent = directory)
+            directory.list.add(file)
+        }
+        return PlatformFile(rootDirectory)
     }
-    return PlatformFile(rootDirectory)
 }
 
 private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(path: String): FileHandleVirtualDirectory {
@@ -54,7 +61,7 @@ private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(path: Strin
         val childDirectory = path.substringBefore('/')
         val child = findOrCreateRelativeDirectory(childDirectory)
         child.findOrCreateRelativeDirectory(path.substringAfter('/'))
-    } else { // not a children so we just check if this directory exists
+    } else { // not a child, so we just check if this directory exists
         val dirName = path
         list.filterIsInstance<FileHandleVirtualDirectory>().find { item ->
             item.name == dirName
