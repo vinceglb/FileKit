@@ -117,7 +117,6 @@ private fun DirectoryPickerScreen(
             item {
                 DirectoryPickerSettingsCard(
                     startDirectoryName = startDirectory?.name,
-                    isSupported = true,
                     onPickStartDirectory = startDirectoryLauncher::launch,
                     onClearStartDirectory = { startDirectory = null },
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
@@ -177,7 +176,6 @@ private fun DirectoryPickerScreen(
 @Composable
 private fun DirectoryPickerSettingsCard(
     startDirectoryName: String?,
-    isSupported: Boolean,
     onPickStartDirectory: () -> Unit,
     onClearStartDirectory: () -> Unit,
     modifier: Modifier = Modifier,
@@ -189,7 +187,6 @@ private fun DirectoryPickerSettingsCard(
                 value = startDirectoryName,
                 placeholder = "System default",
                 icon = LucideIcons.Home,
-                enabled = isSupported,
                 onClick = onPickStartDirectory,
                 onClear = onClearStartDirectory,
             )

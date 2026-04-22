@@ -2,7 +2,6 @@ package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileExt
 import io.github.vinceglb.filekit.FileHandleFile
-import io.github.vinceglb.filekit.PlatformFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

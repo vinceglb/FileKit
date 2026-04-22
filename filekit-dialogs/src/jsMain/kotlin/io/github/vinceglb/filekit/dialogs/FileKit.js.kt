@@ -21,7 +21,7 @@ internal actual suspend fun platformOpenFilePickerWeb(
     val files = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
             // Create input element
-            val input = document.createElement("input") as HTMLInputElement
+            val input = document.createElement("input") as HTMLInputElementExt
 
             // Visually hide the element
             input.style.display = "none"
@@ -57,7 +57,7 @@ internal actual suspend fun platformOpenFilePickerWeb(
                 try {
                     // Get the selected files
                     val files = event.target
-                        ?.unsafeCast<HTMLInputElement>()
+                        ?.unsafeCast<HTMLInputElementExt>()
                         ?.files
                         ?.asList()
                         ?.map { it.unsafeCast<FileExt>() }
@@ -85,7 +85,8 @@ internal actual suspend fun platformOpenFilePickerWeb(
     return files
 }
 
-public abstract external class HTMLInputElement : HTMLElement {
+@JsName("HTMLInputElement")
+public abstract external class HTMLInputElementExt : HTMLElement {
     public open var accept: String
     public open val files: FileList?
     public open var multiple: Boolean
