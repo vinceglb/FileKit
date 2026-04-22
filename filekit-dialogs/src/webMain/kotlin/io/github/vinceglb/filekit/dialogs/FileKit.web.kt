@@ -46,8 +46,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
         )
         fileList.forEach { file ->
             val pathOnlyPart = file.path.substringBeforeLast(delimiter = '/', missingDelimiterValue = "") // Exclude the file name
-            val removedRoot = pathOnlyPart.substringAfter('/')
-            val directory = rootDirectory.findOrCreateRelativeDirectory(removedRoot)
+            val directory = rootDirectory.findOrCreateRelativeDirectory(pathOnlyPart)
             val file = FileHandleFile(file = file.getFile(), parent = directory)
             directory.list.add(file)
         }
@@ -55,24 +54,31 @@ public actual suspend fun FileKit.openDirectoryPicker(
     }
 }
 
-private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(path: String): FileHandleVirtualDirectory {
+private fun FileHandleVirtualDirectory.findOrCreateRelativeDirectory(absolutePath: String): FileHandleVirtualDirectory {
     val self = this
-    return if (path.contains('/')) {
-        val childDirectory = path.substringBefore('/')
-        val child = findOrCreateRelativeDirectory(childDirectory)
-        child.findOrCreateRelativeDirectory(path.substringAfter('/'))
-    } else { // not a child, so we just check if this directory exists
-        val dirName = path
-        list.filterIsInstance<FileHandleVirtualDirectory>().find { item ->
-            item.name == dirName
-        } ?: FileHandleVirtualDirectory(
-            name = dirName,
-            path = "${self.path}/$dirName",
-            lastModified = Instant.fromEpochMilliseconds(0),
-            parent = self,
-            list = mutableListOf(),
-        ).also { newDir ->
-            list.add(newDir)
+    val childPath = absolutePath.substringAfter('/', "")
+    return when {
+        childPath.isBlank() -> {
+            self
+        }
+
+        childPath.contains('/') -> {
+            findOrCreateRelativeDirectory(childPath)
+        }
+
+        else -> {
+            val dirName = childPath
+            list.filterIsInstance<FileHandleVirtualDirectory>().find { item ->
+                item.name == dirName
+            } ?: FileHandleVirtualDirectory(
+                name = dirName,
+                path = "${self.path}/$dirName",
+                lastModified = Instant.fromEpochMilliseconds(0),
+                parent = self,
+                list = mutableListOf(),
+            ).also { newDir ->
+                list.add(newDir)
+            }
         }
     }
 }
