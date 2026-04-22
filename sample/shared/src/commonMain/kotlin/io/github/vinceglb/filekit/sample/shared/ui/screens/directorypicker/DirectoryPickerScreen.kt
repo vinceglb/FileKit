@@ -1,13 +1,16 @@
 package io.github.vinceglb.filekit.sample.shared.ui.screens.directorypicker
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,9 +32,11 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerSelection
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppPickerTopBar
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeader
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppScreenHeaderButtonState
+import io.github.vinceglb.filekit.sample.shared.ui.components.DirectoryTreeView
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Folder
 import io.github.vinceglb.filekit.sample.shared.ui.icons.Home
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
+import io.github.vinceglb.filekit.sample.shared.ui.screens.filedetails.components.FileMetadata
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppMaxWidth
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 import io.github.vinceglb.filekit.sample.shared.util.AppUrl
@@ -58,6 +63,7 @@ private fun DirectoryPickerScreen(
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var startDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var pickedDirectories by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var selectedFile by remember { mutableStateOf<PlatformFile?>(null) }
 
     val directoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
@@ -118,14 +124,51 @@ private fun DirectoryPickerScreen(
                 )
             }
 
-            item {
-                AppPickerResultsCard(
-                    files = pickedDirectories,
-                    emptyText = "No directory selected yet",
-                    emptyIcon = LucideIcons.Folder,
-                    onFileClick = onDisplayFileDetails,
-                    modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
-                )
+            if (pickedDirectories.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "Picked Directories Content",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .sizeIn(maxWidth = AppMaxWidth)
+                            .padding(top = 8.dp),
+                    )
+                }
+
+                pickedDirectories.forEach { directory ->
+                    item {
+                        AppDottedBorderCard(
+                            modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
+                        ) {
+                            DirectoryTreeView(
+                                file = directory,
+                                onFileClick = { selectedFile = it },
+                                initiallyExpanded = true,
+                            )
+                        }
+                    }
+                }
+            } else {
+                item {
+                    AppPickerResultsCard(
+                        files = pickedDirectories,
+                        emptyText = "No directory selected yet",
+                        emptyIcon = LucideIcons.Folder,
+                        onFileClick = onDisplayFileDetails,
+                        modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
+                    )
+                }
+            }
+        }
+    }
+
+    if (selectedFile != null) {
+        ModalBottomSheet(
+            onDismissRequest = { selectedFile = null },
+        ) {
+            Box(modifier = Modifier.padding(bottom = 32.dp)) {
+                FileMetadata(file = selectedFile!!)
             }
         }
     }
