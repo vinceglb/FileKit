@@ -64,8 +64,8 @@ private fun DebugScreen(
     val folderPicker = rememberDirectoryPickerLauncher(directory = null) { folder ->
         scope.launch {
             folder?.let {
-                // debugPlatformTest(folder)
-                bookmarkFolder(folder)
+                debugPlatformTest(folder)
+                // bookmarkFolder(folder)
             }
         }
     }
@@ -127,7 +127,7 @@ private fun DebugScreen(
     }
 }
 
-internal expect suspend fun debugPlatformTest(file: PlatformFile)
+internal expect suspend fun debugPlatformTest(folder: PlatformFile)
 
 internal expect suspend fun bookmarkFolder(folder: PlatformFile)
 

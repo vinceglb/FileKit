@@ -9,7 +9,6 @@ import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlinx.io.writeString
@@ -230,8 +229,7 @@ internal expect suspend fun PlatformFile.prepareDestinationForWrite(source: Plat
  *
  * @param mustCreate If `true`, fails if the directory already exists. Defaults to `false`.
  */
-public fun PlatformFile.createDirectories(mustCreate: Boolean = false): Unit =
-    SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
+public expect fun PlatformFile.createDirectories(mustCreate: Boolean = false)
 
 /**
  * Lists the files in this directory and passes them to the given block.

@@ -7,9 +7,11 @@ import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
+import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -31,7 +33,6 @@ import java.io.FileNotFoundException
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
@@ -113,9 +114,7 @@ class PlatformFileAndroidTest {
         assertEquals("/tmp/test/child.txt", child.path)
     }
 
-    // Issue #415: Test `/` operator on UriWrapper does NOT throw FileKitUriPathNotSupportedException
-    // Note: In Robolectric, DocumentFile.fromTreeUri() returns null (no real SAF support),
-    // so this test verifies that the ORIGINAL bug (FileKitUriPathNotSupportedException) is fixed.
+    // Issue #415: Test `/` operator on UriWrapper does NOT throw FileKitUriPathNotSupportedException.
     // Full integration testing requires a real Android device with SAF support.
     @Test
     fun testDivOperatorOnUriWrapper_noLongerThrowsPathNotSupportedException() {
@@ -123,21 +122,75 @@ class PlatformFileAndroidTest {
         val uri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
         val base = PlatformFile(uri)
 
-        // Before the fix, this would throw FileKitUriPathNotSupportedException
-        // because PlatformFile(base, child) called base.toKotlinxIoPath() which throws for UriWrapper.
-        // After the fix, it uses DocumentFile API instead, which fails in Robolectric
-        // with a generic FileKitException (not FileKitUriPathNotSupportedException).
-        val exception = assertFailsWith<FileKitException> {
-            base / "backup.zip"
-        }
+        val child = base / "backup.zip"
 
-        // Verify it's NOT the old exception type (the bug we fixed)
-        assertIsNot<FileKitUriPathNotSupportedException>(exception)
-        // The error message should be about DocumentFile access, not Path conversion
-        assertTrue(
-            exception.message?.contains("Could not access Uri as directory") == true ||
-                exception.message?.contains("Could not create child file") == true,
+        assertIs<AndroidFile.UriWrapper>(child.androidFile)
+        assertEquals(
+            "content://com.android.externalstorage.documents/tree/primary%3ADocuments/document/primary%3ADocuments%2Fbackup.zip",
+            child.path,
         )
+    }
+
+    @Test
+    fun createDirectories_onUriChild_doesNotUsePathRepresentation() {
+        val uri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        val base = PlatformFile(uri)
+
+        val directory = base / "Notes"
+        assertFalse(directory.exists())
+        assertFalse(directory.isDirectory())
+
+        val exception = runCatching {
+            directory.createDirectories()
+        }.exceptionOrNull()
+
+        assertIsNot<FileKitUriPathNotSupportedException>(exception)
+    }
+
+    @Test
+    fun div_onNestedUriChild_keepsUsingGrantedTreeUri() {
+        val uri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        val base = PlatformFile(uri)
+
+        val nestedFile = base / "Notes" / "note.txt"
+
+        assertIs<AndroidFile.UriWrapper>(nestedFile.androidFile)
+        assertEquals(
+            "content://com.android.externalstorage.documents/tree/primary%3ADocuments/document/primary%3ADocuments%2FNotes%2Fnote.txt",
+            nestedFile.path,
+        )
+    }
+
+    @Test
+    fun list_onUriChildDirectory_returnsChildDirectoryContents() {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val base = PlatformFile(treeUri)
+
+        val notes = base / "Notes"
+
+        assertEquals(listOf("Notes", "parent-only.txt"), base.list().map { it.name })
+        assertEquals(listOf("note.txt"), notes.list().map { it.name })
+    }
+
+    @Test
+    fun createDirectories_onNestedUriChild_createsMissingParents() {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val base = PlatformFile(treeUri)
+
+        val target = base / "Created" / "Nested"
+        target.createDirectories()
+
+        assertTrue((base / "Created").isDirectory())
+        assertTrue(target.isDirectory())
+        assertEquals(listOf("Nested"), (base / "Created").list().map { it.name })
     }
 
     @Test
@@ -423,6 +476,139 @@ private class NullInsertContentProvider : ContentProvider() {
         selectionArgs: Array<out String>?,
     ): Int = 0
 }
+
+private class NestedTreeContentProvider : ContentProvider() {
+    private val documents = mutableMapOf(
+        "primary:Documents" to TestDocument("primary:Documents", "Documents", true),
+        "primary:Documents/Notes" to TestDocument("primary:Documents/Notes", "Notes", true),
+        "primary:Documents/parent-only.txt" to TestDocument(
+            "primary:Documents/parent-only.txt",
+            "parent-only.txt",
+            false,
+        ),
+        "primary:Documents/Notes/note.txt" to TestDocument("primary:Documents/Notes/note.txt", "note.txt", false),
+    )
+
+    override fun onCreate(): Boolean = true
+
+    override fun query(
+        uri: Uri,
+        projection: Array<out String>?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+        sortOrder: String?,
+    ): Cursor {
+        val columns = projection?.toList()?.toTypedArray()
+            ?: arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+                OpenableColumns.SIZE,
+            )
+
+        val cursor = MatrixCursor(columns)
+        val segments = uri.pathSegments
+        val documentId = segments
+            .indexOf("document")
+            .takeIf { it != -1 }
+            ?.let { segments.getOrNull(it + 1) }
+
+        if (segments.lastOrNull() == "children") {
+            documents
+                .values
+                .filter { it.parentId == documentId }
+                .forEach { cursor.addDocumentRow(columns, it) }
+        } else if (documentId != null) {
+            documents[documentId]?.let { cursor.addDocumentRow(columns, it) }
+        }
+
+        return cursor
+    }
+
+    override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
+        if (method != "android:createDocument") {
+            return super.call(method, arg, extras)
+        }
+
+        val parentUri = extras?.getParcelableCompat(DOCUMENTS_CONTRACT_EXTRA_URI)
+            ?: return null
+        val parentId = DocumentsContract.getDocumentId(parentUri)
+        val displayName = extras.getString(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            ?: return null
+        val mimeType = extras.getString(DocumentsContract.Document.COLUMN_MIME_TYPE)
+        val documentId = "$parentId/$displayName"
+        val isDirectory = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+        documents[documentId] = TestDocument(documentId, displayName, isDirectory)
+        val uri = DocumentsContract.buildDocumentUriUsingTree(parentUri, documentId)
+
+        return Bundle().apply {
+            putParcelable(DOCUMENTS_CONTRACT_EXTRA_URI, uri)
+        }
+    }
+
+    override fun getType(uri: Uri): String? = null
+
+    override fun insert(uri: Uri, values: ContentValues?): Uri? = null
+
+    override fun delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?): Int = 0
+
+    override fun update(
+        uri: Uri,
+        values: ContentValues?,
+        selection: String?,
+        selectionArgs: Array<out String>?,
+    ): Int = 0
+}
+
+private fun createNestedTreeContentProvider(): NestedTreeContentProvider =
+    NestedTreeContentProvider().apply {
+        attachInfo(
+            RuntimeEnvironment.getApplication(),
+            ProviderInfo().apply {
+                authority = "com.android.externalstorage.documents"
+            },
+        )
+    }
+
+private fun MatrixCursor.addDocumentRow(
+    columns: Array<out String>,
+    document: TestDocument,
+) {
+    val row = columns
+        .map { column ->
+            when (column) {
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID -> document.id
+
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME -> document.name
+
+                DocumentsContract.Document.COLUMN_MIME_TYPE -> if (document.isDirectory) {
+                    DocumentsContract.Document.MIME_TYPE_DIR
+                } else {
+                    "text/plain"
+                }
+
+                OpenableColumns.SIZE -> null
+
+                else -> null
+            }
+        }.toTypedArray()
+    addRow(row)
+}
+
+private data class TestDocument(
+    val id: String,
+    val name: String,
+    val isDirectory: Boolean,
+) {
+    val parentId: String?
+        get() = id.substringBeforeLast('/', missingDelimiterValue = "").takeIf(String::isNotEmpty)
+}
+
+@Suppress("DEPRECATION")
+private fun Bundle.getParcelableCompat(key: String): Uri? =
+    getParcelable(key)
+
+private const val DOCUMENTS_CONTRACT_EXTRA_URI = "uri"
 
 private class MissingSizeContentProvider(
     private val sourceUri: Uri,

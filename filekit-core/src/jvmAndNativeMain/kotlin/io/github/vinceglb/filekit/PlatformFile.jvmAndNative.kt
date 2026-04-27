@@ -54,6 +54,9 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = withScopedAccess
     SystemFileSystem.sink(toKotlinxIoPath(), append)
 }
 
+public actual fun PlatformFile.createDirectories(mustCreate: Boolean): Unit =
+    SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
+
 public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
     withContext(Dispatchers.IO) {
         SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
