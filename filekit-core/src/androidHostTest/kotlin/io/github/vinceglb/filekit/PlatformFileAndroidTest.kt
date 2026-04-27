@@ -33,7 +33,6 @@ import java.io.FileNotFoundException
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
@@ -579,7 +578,9 @@ private fun MatrixCursor.addDocumentRow(
         .map { column ->
             when (column) {
                 DocumentsContract.Document.COLUMN_DOCUMENT_ID -> document.id
+
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME -> document.name
+
                 DocumentsContract.Document.COLUMN_MIME_TYPE -> if (document.isDirectory) {
                     DocumentsContract.Document.MIME_TYPE_DIR
                 } else {
@@ -587,6 +588,7 @@ private fun MatrixCursor.addDocumentRow(
                 }
 
                 OpenableColumns.SIZE -> null
+
                 else -> null
             }
         }.toTypedArray()
