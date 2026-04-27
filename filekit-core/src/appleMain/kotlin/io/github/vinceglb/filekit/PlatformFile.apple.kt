@@ -223,7 +223,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
                 options = 0u,
                 includingResourceValuesForKeys = null,
                 relativeToURL = null,
-                error = errorPtr.ptr
+                error = errorPtr.ptr,
             ) ?: throw FileKitException("Failed to create bookmark data: ${errorPtr.ptr.pointed.value}")
             BookmarkData(bookmarkData.toByteArray())
         }
