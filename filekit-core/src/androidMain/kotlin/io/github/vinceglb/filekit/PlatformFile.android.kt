@@ -109,24 +109,12 @@ public actual fun PlatformFile(base: PlatformFile, child: String): PlatformFile 
         }
 
         is AndroidFile.UriWrapper -> {
-            // For Uri-based directories, use DocumentFile API
-            val context = FileKit.context
-            val directoryDocument = DocumentFile.fromTreeUri(context, baseFile.uri)
-                ?: throw FileKitException("Could not access Uri as directory: ${baseFile.uri}")
-
-            // Find existing child
-            directoryDocument.findFile(child)?.let { existing ->
+            val childUri = baseFile.uri.buildChildDocumentUri(child)
+            childUri.findChildDocumentInfo()?.let { existing ->
                 return PlatformFile(existing.uri)
             }
 
-            // Create the file since it doesn't exist
-            // Android SAF requires files to be created via DocumentFile.createFile()
-            val extension = child.substringAfterLast('.', "")
-            val mimeType = getMimeTypeValueFromExtension(extension) ?: DEFAULT_STREAM_MIME_TYPE
-            val created = directoryDocument.createFile(mimeType, child)
-                ?: throw FileKitException("Could not create child file: $child")
-
-            PlatformFile(created.uri)
+            PlatformFile(childUri)
         }
     }
 }
@@ -175,11 +163,7 @@ public actual fun PlatformFile.isRegularFile(): Boolean = when (androidFile) {
     }
 
     is AndroidFile.UriWrapper -> {
-        DocumentFile
-            .fromSingleUri(
-                FileKit.context,
-                androidFile.uri,
-            )?.isFile == true
+        androidFile.uri.isRegularDocument()
     }
 }
 
@@ -187,15 +171,7 @@ public actual fun PlatformFile.isDirectory(): Boolean = when (androidFile) {
     is AndroidFile.FileWrapper -> SystemFileSystem.metadataOrNull(toKotlinxIoPath())?.isDirectory
         ?: false
 
-    is AndroidFile.UriWrapper -> try {
-        DocumentFile
-            .fromTreeUri(
-                FileKit.context,
-                androidFile.uri,
-            )?.isDirectory == true
-    } catch (_: Exception) {
-        false
-    }
+    is AndroidFile.UriWrapper -> androidFile.uri.isDirectoryDocument()
 }
 
 public actual fun PlatformFile.isAbsolute(): Boolean = when (androidFile) {
@@ -205,7 +181,7 @@ public actual fun PlatformFile.isAbsolute(): Boolean = when (androidFile) {
 
 public actual fun PlatformFile.exists(): Boolean = when (androidFile) {
     is AndroidFile.FileWrapper -> SystemFileSystem.exists(toKotlinxIoPath())
-    is AndroidFile.UriWrapper -> getDocumentFile(androidFile.uri)?.exists() == true
+    is AndroidFile.UriWrapper -> androidFile.uri.existsAsDocument()
 }
 
 public actual fun PlatformFile.size(): Long = when (androidFile) {
@@ -379,11 +355,12 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
     }
 
     is AndroidFile.UriWrapper -> {
+        val uri = androidFile.uri.ensureFileDocument()
         // Use "wt" (write+truncate) for overwrite, "wa" (write+append) for append
         // This ensures existing file content is properly truncated when overwriting
         val mode = if (append) "wa" else "wt"
         val fos = FileKit.context.contentResolver
-            .openFileDescriptor(androidFile.uri, mode)
+            .openFileDescriptor(uri, mode)
             ?.let { ParcelFileDescriptor.AutoCloseOutputStream(it) }
             ?: throw FileKitException("Could not open output stream for Uri")
 
@@ -402,6 +379,16 @@ public actual fun PlatformFile.sink(append: Boolean): RawSink = when (androidFil
     }
 }
 
+public actual fun PlatformFile.createDirectories(mustCreate: Boolean): Unit = when (val file = androidFile) {
+    is AndroidFile.FileWrapper -> {
+        SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
+    }
+
+    is AndroidFile.UriWrapper -> {
+        file.uri.ensureDirectoryDocument(mustCreate)
+    }
+}
+
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource() {}
@@ -414,10 +401,7 @@ public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit) 
         }
 
         is AndroidFile.UriWrapper -> {
-            val documentFile = DocumentFile.fromTreeUri(FileKit.context, androidFile.uri)
-                ?: throw FileKitException("Could not access Uri as DocumentFile")
-            val files = documentFile.listFiles().map { PlatformFile(it.uri) }
-            block(files)
+            block(androidFile.uri.listDocuments())
         }
     }
 }
@@ -428,9 +412,7 @@ public actual fun PlatformFile.list(): List<PlatformFile> = when (androidFile) {
     }
 
     is AndroidFile.UriWrapper -> {
-        val documentFile = DocumentFile.fromTreeUri(FileKit.context, androidFile.uri)
-            ?: throw FileKitException("Could not access Uri as DocumentFile")
-        documentFile.listFiles().map { PlatformFile(it.uri) }
+        androidFile.uri.listDocuments()
     }
 }
 
@@ -847,6 +829,254 @@ private fun Uri.toDocumentUriForMetadata(): Uri {
     return DocumentsContract.buildDocumentUriUsingTree(this, documentId)
 }
 
+private fun Uri.ensureDirectoryDocument(mustCreate: Boolean) {
+    findChildDocumentInfo()?.let { document ->
+        if (!document.isDirectory) {
+            throw FileKitException("Uri exists but is not a directory: $this")
+        }
+        if (mustCreate) {
+            throw FileKitException("Directory already exists: $this")
+        }
+        return
+    }
+
+    if (!isChildDocumentUri()) {
+        getDocumentFile(this)?.takeIf { it.exists() }?.let { documentFile ->
+            if (!documentFile.isDirectory) {
+                throw FileKitException("Uri exists but is not a directory: $this")
+            }
+            if (mustCreate) {
+                throw FileKitException("Directory already exists: $this")
+            }
+            return
+        }
+    }
+
+    ensureDirectoryPath(mustCreate)
+}
+
+private fun Uri.ensureFileDocument(): Uri {
+    findChildDocumentInfo()?.let { document ->
+        if (document.isDirectory) {
+            throw FileKitException("Uri exists but is a directory: $this")
+        }
+        return document.uri
+    }
+
+    if (!isChildDocumentUri()) {
+        getDocumentFile(this)?.takeIf { it.exists() }?.let { documentFile ->
+            if (documentFile.isDirectory) {
+                throw FileKitException("Uri exists but is a directory: $this")
+            }
+            return documentFile.uri
+        }
+    }
+
+    val (parentUri, childName) = parentDocumentUriAndName()
+    val extension = childName.substringAfterLast('.', "")
+    val mimeType = getMimeTypeValueFromExtension(extension) ?: DEFAULT_STREAM_MIME_TYPE
+
+    return DocumentsContract.createDocument(
+        FileKit.context.contentResolver,
+        parentUri,
+        mimeType,
+        childName,
+    )
+        ?: throw FileKitException("Could not create file: $childName")
+}
+
+private fun Uri.buildChildDocumentUri(child: String): Uri {
+    val parentDocumentId = documentId()
+    val childDocumentId = listOf(parentDocumentId, child)
+        .filter(String::isNotEmpty)
+        .joinToString("/")
+
+    return DocumentsContract.buildDocumentUriUsingTree(this, childDocumentId)
+}
+
+private fun Uri.existsAsDocument(): Boolean {
+    findChildDocumentInfo()?.let { return true }
+    if (isChildDocumentUri()) return false
+    return getDocumentFile(this)?.exists() == true
+}
+
+private fun Uri.isDirectoryDocument(): Boolean {
+    findChildDocumentInfo()?.let { return it.isDirectory }
+    if (isChildDocumentUri()) return false
+    return getDocumentFile(this)?.isDirectory == true
+}
+
+private fun Uri.isRegularDocument(): Boolean {
+    findChildDocumentInfo()?.let { return !it.isDirectory }
+    if (isChildDocumentUri()) return false
+    return getDocumentFile(this)?.isFile == true
+}
+
+@PublishedApi
+internal fun Uri.listDocuments(): List<PlatformFile> {
+    if (!isDirectoryDocument()) {
+        throw FileKitException("Uri is not a directory: $this")
+    }
+
+    val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(this, documentId())
+    return queryDocumentInfos(childrenUri).map { PlatformFile(it.uri) }
+}
+
+private fun Uri.findChildDocumentInfo(): AndroidDocumentInfo? {
+    val (parentDocumentId, childName) = parentDocumentIdAndNameOrNull() ?: return null
+
+    return findChildDocumentInfo(
+        parentDocumentId = parentDocumentId,
+        childName = childName,
+    )
+}
+
+private fun Uri.findChildDocumentInfo(
+    parentDocumentId: String,
+    childName: String,
+): AndroidDocumentInfo? {
+    val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(this, parentDocumentId)
+
+    return queryDocumentInfos(childrenUri).firstOrNull { it.name == childName }
+}
+
+private fun Uri.ensureDirectoryPath(mustCreate: Boolean) {
+    val treeDocumentId = treeDocumentId()
+    val targetDocumentId = documentId()
+
+    if (targetDocumentId == treeDocumentId) {
+        throw FileKitException("Directory is not accessible: $this")
+    }
+    if (!targetDocumentId.startsWith("$treeDocumentId/")) {
+        throw FileKitException("Uri is outside the granted tree: $this")
+    }
+
+    val relativeSegments = targetDocumentId
+        .removePrefix("$treeDocumentId/")
+        .split("/")
+        .filter(String::isNotEmpty)
+    var parentDocumentId = treeDocumentId
+    var parentUri = DocumentsContract.buildDocumentUriUsingTree(this, parentDocumentId)
+
+    relativeSegments.forEachIndexed { index, segment ->
+        val isTargetDirectory = index == relativeSegments.lastIndex
+        val existing = findChildDocumentInfo(
+            parentDocumentId = parentDocumentId,
+            childName = segment,
+        )
+
+        if (existing != null) {
+            if (!existing.isDirectory) {
+                throw FileKitException("Uri exists but is not a directory: ${existing.uri}")
+            }
+            if (isTargetDirectory && mustCreate) {
+                throw FileKitException("Directory already exists: ${existing.uri}")
+            }
+            parentDocumentId = existing.documentId
+            parentUri = existing.uri
+            return@forEachIndexed
+        }
+
+        val createdUri = DocumentsContract.createDocument(
+            FileKit.context.contentResolver,
+            parentUri,
+            DocumentsContract.Document.MIME_TYPE_DIR,
+            segment,
+        ) ?: throw FileKitException("Could not create directory: $segment")
+
+        parentDocumentId = createdUri.documentId()
+        parentUri = createdUri
+    }
+}
+
+private fun Uri.queryDocumentInfos(childrenUri: Uri): List<AndroidDocumentInfo> = try {
+    FileKit.context.contentResolver
+        .query(
+            childrenUri,
+            ANDROID_DOCUMENT_INFO_PROJECTION,
+            null,
+            null,
+            null,
+        )?.use { cursor ->
+            val documentIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            val mimeTypeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            val documents = mutableListOf<AndroidDocumentInfo>()
+
+            while (cursor.moveToNext()) {
+                val displayName = if (nameIndex == -1 || cursor.isNull(nameIndex)) {
+                    null
+                } else {
+                    cursor.getString(nameIndex)
+                }
+
+                val documentId = if (documentIdIndex == -1 || cursor.isNull(documentIdIndex)) {
+                    continue
+                } else {
+                    cursor.getString(documentIdIndex)
+                }
+                val mimeType = if (mimeTypeIndex == -1 || cursor.isNull(mimeTypeIndex)) {
+                    null
+                } else {
+                    cursor.getString(mimeTypeIndex)
+                }
+
+                documents += AndroidDocumentInfo(
+                    uri = DocumentsContract.buildDocumentUriUsingTree(
+                        this,
+                        documentId,
+                    ),
+                    documentId = documentId,
+                    name = displayName,
+                    mimeType = mimeType,
+                )
+            }
+
+            documents
+        } ?: emptyList()
+} catch (_: SecurityException) {
+    emptyList()
+} catch (_: IllegalArgumentException) {
+    emptyList()
+}
+
+private fun Uri.parentDocumentUriAndName(): Pair<Uri, String> {
+    val (parentDocumentId, childName) = parentDocumentIdAndNameOrNull()
+        ?: throw FileKitException("Uri does not describe a child document: $this")
+
+    return DocumentsContract.buildDocumentUriUsingTree(this, parentDocumentId) to childName
+}
+
+private fun Uri.parentDocumentIdAndNameOrNull(): Pair<String, String>? {
+    val documentId = try {
+        documentId()
+    } catch (_: IllegalArgumentException) {
+        return null
+    }
+    val parentDocumentId = documentId.substringBeforeLast('/', missingDelimiterValue = "")
+    val childName = documentId.substringAfterLast('/')
+
+    if (parentDocumentId.isEmpty() || childName.isEmpty() || childName == documentId) {
+        return null
+    }
+
+    return parentDocumentId to childName
+}
+
+private fun Uri.isChildDocumentUri(): Boolean {
+    val segments = pathSegments
+    return "tree" in segments && "document" in segments && parentDocumentIdAndNameOrNull() != null
+}
+
+private fun Uri.documentId(): String = try {
+    DocumentsContract.getDocumentId(this)
+} catch (_: IllegalArgumentException) {
+    DocumentsContract.getTreeDocumentId(this)
+}
+
+private fun Uri.treeDocumentId(): String =
+    DocumentsContract.getTreeDocumentId(this)
+
 private fun Uri.isTreeUriCompat(): Boolean {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         return DocumentsContract.isTreeUri(this)
@@ -873,6 +1103,21 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
         }
     }
 }
+
+private data class AndroidDocumentInfo(
+    val uri: Uri,
+    val documentId: String,
+    val name: String?,
+    val mimeType: String?,
+) {
+    val isDirectory: Boolean = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+}
+
+private val ANDROID_DOCUMENT_INFO_PROJECTION = arrayOf(
+    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+    DocumentsContract.Document.COLUMN_MIME_TYPE,
+)
 
 private fun Uri.toFileOrNull(): File? {
     if (!scheme.equals("file", ignoreCase = true)) {
