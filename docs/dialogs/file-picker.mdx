@@ -26,6 +26,55 @@ Button(onClick = { launcher.launch() }) {
 ```
 </CodeGroup>
 
+<Warning>
+On iOS with Compose Multiplatform 1.10+, launching a picker while a Compose modal surface
+such as `ModalBottomSheet`, dialog, or dropdown is closing can cause the native picker to
+open and immediately disappear. Dismiss the Compose surface first, then launch FileKit
+after the modal state is closed.
+</Warning>
+
+<details>
+<summary>Show workaround template</summary>
+
+```kotlin filekit-dialogs-compose
+var showSheet by remember { mutableStateOf(false) }
+var launchPickerAfterSheetDismiss by remember { mutableStateOf(false) }
+
+val sheetState = rememberModalBottomSheetState()
+val coroutineScope = rememberCoroutineScope()
+val launcher = rememberFilePickerLauncher { file ->
+    // Handle the file
+}
+
+LaunchedEffect(showSheet, launchPickerAfterSheetDismiss) {
+    if (!showSheet && launchPickerAfterSheetDismiss) {
+        launchPickerAfterSheetDismiss = false
+        launcher.launch()
+    }
+}
+
+if (showSheet) {
+    ModalBottomSheet(
+        sheetState = sheetState,
+        onDismissRequest = { showSheet = false },
+    ) {
+        Button(
+            onClick = {
+                launchPickerAfterSheetDismiss = true
+                coroutineScope.launch {
+                    sheetState.hide()
+                    showSheet = false
+                }
+            },
+        ) {
+            Text("Pick a file")
+        }
+    }
+}
+```
+
+</details>
+
 ## Selection mode
 
 Select one or multiple files using the `mode` parameter. FileKit provides four different selection modes:

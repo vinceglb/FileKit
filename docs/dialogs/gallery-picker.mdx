@@ -38,6 +38,12 @@ val launcher = rememberFilePickerLauncher(
 ```
 </CodeGroup>
 
+<Warning>
+On iOS with Compose Multiplatform 1.10+, avoid launching the gallery picker while a Compose
+modal surface is closing. Dismiss the modal first, then launch FileKit after the modal state
+is closed. [Read more in the file picker documentation.](/dialogs/file-picker)
+</Warning>
+
 ### Maximum number of items
 
 On both Android and iOS, you can set a limit on the number of items a user can select by passing the `maxItems` parameter to `FileKitMode.Multiple()`:
