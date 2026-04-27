@@ -214,7 +214,7 @@ public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
 public actual fun PlatformFile.stopAccessingSecurityScopedResource(): Unit =
     nsUrl.stopAccessingSecurityScopedResource()
 
-@OptIn(ExperimentalForeignApi::class, UnsafeNumber::class)
+@OptIn(ExperimentalForeignApi::class, UnsafeNumber::class, BetaInteropApi::class)
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
     withScopedAccess {
         memScoped {
