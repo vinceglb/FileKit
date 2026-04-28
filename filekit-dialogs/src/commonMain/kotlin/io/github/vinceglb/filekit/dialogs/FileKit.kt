@@ -55,3 +55,15 @@ internal expect suspend fun FileKit.platformOpenFilePicker(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>>
+
+/**
+ * Opens a directory picker dialog.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @return The picked directory as a [PlatformFile], or null if cancelled.
+ */
+public expect suspend fun FileKit.openDirectoryPicker(
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+): PlatformFile?

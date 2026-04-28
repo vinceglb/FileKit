@@ -36,6 +36,10 @@ kotlin {
             implementation(libs.kotlinx.browser)
         }
 
+        webMain.dependencies {
+            implementation(libs.kotlinx.browser)
+        }
+
         jvmMain.dependencies {
             implementation(libs.jna.platform)
         }

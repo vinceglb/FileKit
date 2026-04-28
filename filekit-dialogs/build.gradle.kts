@@ -41,7 +41,7 @@ kotlin {
             implementation(libs.dbus.java.transport.native.unixsocket)
         }
 
-        wasmJsMain.dependencies {
+        webMain.dependencies {
             implementation(libs.kotlinx.browser)
         }
     }

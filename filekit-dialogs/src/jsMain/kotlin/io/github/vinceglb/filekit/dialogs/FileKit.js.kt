@@ -1,27 +1,27 @@
 package io.github.vinceglb.filekit.dialogs
 
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.FileExt
+import io.github.vinceglb.filekit.FileHandleFile
 import kotlinx.browser.document
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.HTMLElement
 import org.w3c.dom.asList
+import org.w3c.files.FileList
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-internal actual suspend fun FileKit.platformOpenFilePicker(
+@OptIn(ExperimentalWasmJsInterop::class)
+internal actual suspend fun platformOpenFilePickerWeb(
     type: FileKitType,
-    mode: PickerMode,
-    directory: PlatformFile?,
-    dialogSettings: FileKitDialogSettings,
-): Flow<FileKitPickerState<List<PlatformFile>>> {
-    val files: List<PlatformFile>? = withContext(Dispatchers.Default) {
+    multipleMode: Boolean, // select multiple files
+    directoryMode: Boolean, // select a directory
+): List<FileHandleFile>? {
+    val files = withContext(Dispatchers.Default) {
         suspendCoroutine { continuation ->
             // Create input element
-            val input = document.createElement("input") as HTMLInputElement
+            val input = document.createElement("input") as HTMLInputElementExt
 
             // Visually hide the element
             input.style.display = "none"
@@ -46,7 +46,8 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                 }
 
                 // Set the multiple attribute
-                multiple = mode is PickerMode.Multiple
+                multiple = multipleMode
+                webkitdirectory = directoryMode
 
                 // max is not supported for file inputs
             }
@@ -56,12 +57,13 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                 try {
                     // Get the selected files
                     val files = event.target
-                        ?.unsafeCast<HTMLInputElement>()
+                        ?.unsafeCast<HTMLInputElementExt>()
                         ?.files
                         ?.asList()
+                        ?.map { it.unsafeCast<FileExt>() }
 
                     // Return the result
-                    val result = files?.map { PlatformFile(it) }
+                    val result = files?.map { FileHandleFile(it) }
                     continuation.resume(result)
                 } catch (e: Throwable) {
                     continuation.resumeWithException(e)
@@ -80,5 +82,15 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         }
     }
 
-    return files.toPickerStateFlow()
+    return files
+}
+
+@JsName("HTMLInputElement")
+public abstract external class HTMLInputElementExt : HTMLElement {
+    public open var accept: String
+    public open val files: FileList?
+    public open var multiple: Boolean
+    public open var webkitdirectory: Boolean
+    public open var type: String
+    public open var value: String
 }

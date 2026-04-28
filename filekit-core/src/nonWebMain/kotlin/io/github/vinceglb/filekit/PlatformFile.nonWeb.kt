@@ -48,18 +48,6 @@ public expect fun PlatformFile(base: PlatformFile, child: String): PlatformFile
 public expect fun PlatformFile.toKotlinxIoPath(): Path
 
 /**
- * Returns the path string of this file.
- */
-public expect val PlatformFile.path: String
-
-/**
- * Returns the parent of this file, or null if it does not have a parent.
- *
- * @return The parent [PlatformFile], or null.
- */
-public expect fun PlatformFile.parent(): PlatformFile?
-
-/**
  * Returns the absolute path string of this file.
  *
  * @return The absolute path string.
@@ -87,20 +75,6 @@ public expect fun PlatformFile.source(): RawSource
  * @return A [RawSink] for writing.
  */
 public expect fun PlatformFile.sink(append: Boolean = false): RawSink
-
-/**
- * Checks if this file is a regular file.
- *
- * @return `true` if it is a regular file, `false` otherwise.
- */
-public expect fun PlatformFile.isRegularFile(): Boolean
-
-/**
- * Checks if this file is a directory.
- *
- * @return `true` if it is a directory, `false` otherwise.
- */
-public expect fun PlatformFile.isDirectory(): Boolean
 
 /**
  * Checks if this file path is absolute.
@@ -230,20 +204,6 @@ internal expect suspend fun PlatformFile.prepareDestinationForWrite(source: Plat
  * @param mustCreate If `true`, fails if the directory already exists. Defaults to `false`.
  */
 public expect fun PlatformFile.createDirectories(mustCreate: Boolean = false)
-
-/**
- * Lists the files in this directory and passes them to the given block.
- *
- * @param block A callback function that receives a list of [PlatformFile]s.
- */
-public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
-
-/**
- * Lists the files in this directory.
- *
- * @return A list of [PlatformFile]s in this directory.
- */
-public expect fun PlatformFile.list(): List<PlatformFile>
 
 /**
  * Atomically moves this file to the destination.

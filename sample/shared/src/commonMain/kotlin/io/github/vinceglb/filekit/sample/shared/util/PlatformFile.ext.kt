@@ -6,8 +6,6 @@ import io.github.vinceglb.filekit.mimeType
 
 internal expect fun createPlatformFileForPreviews(name: String): PlatformFile
 
-internal expect fun PlatformFile.isDirectory(): Boolean
-
 internal fun PlatformFile.isImageFile(): Boolean {
     if (mimeType()?.primaryType?.lowercase() == "image") {
         return true
