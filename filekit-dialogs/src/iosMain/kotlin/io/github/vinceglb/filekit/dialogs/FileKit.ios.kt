@@ -35,6 +35,8 @@ import platform.Foundation.temporaryDirectory
 import platform.Foundation.writeToURL
 import platform.Photos.PHPhotoLibrary.Companion.sharedPhotoLibrary
 import platform.PhotosUI.PHPickerConfiguration
+import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeAutomatic
+import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeCompatible
 import platform.PhotosUI.PHPickerConfigurationAssetRepresentationModeCurrent
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
@@ -84,6 +86,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     -> callPhPicker(
         mode = mode,
         type = type,
+        dialogSettings = dialogSettings,
     )
 
     // Use UIDocumentPickerViewController for other types
@@ -404,6 +407,7 @@ private suspend fun callPicker(
 private suspend fun getPhPickerResults(
     mode: PickerMode,
     type: FileKitType,
+    dialogSettings: FileKitDialogSettings,
 ): List<PHPickerResult> = suspendCancellableCoroutine { continuation ->
     // Create a picker delegate
     phPickerDelegate = PhPickerDelegate(onFilesPicked = continuation::resume)
@@ -418,8 +422,11 @@ private suspend fun getPhPickerResults(
         PickerMode.Single -> 1
     }
 
-    // Use current mode per Apple documentation for faster file provider
-    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent
+    configuration.preferredAssetRepresentationMode = when (dialogSettings.assetRepresentationMode) {
+        FileKitAssetRepresentationMode.Automatic -> PHPickerConfigurationAssetRepresentationModeAutomatic
+        FileKitAssetRepresentationMode.Current -> PHPickerConfigurationAssetRepresentationModeCurrent
+        FileKitAssetRepresentationMode.Compatible -> PHPickerConfigurationAssetRepresentationModeCompatible
+    }
 
     // Filter configuration
     configuration.filter = when (type) {
@@ -454,10 +461,11 @@ private suspend fun getPhPickerResults(
 private fun callPhPicker(
     mode: PickerMode,
     type: FileKitType,
+    dialogSettings: FileKitDialogSettings,
 ): Flow<FileKitPickerState<List<PlatformFile>>> = channelFlow {
     // Fetch picker results on Main
     val pickerResults = withContext(Dispatchers.Main) {
-        getPhPickerResults(mode, type)
+        getPhPickerResults(mode, type, dialogSettings)
     }
 
     if (pickerResults.isEmpty()) {
