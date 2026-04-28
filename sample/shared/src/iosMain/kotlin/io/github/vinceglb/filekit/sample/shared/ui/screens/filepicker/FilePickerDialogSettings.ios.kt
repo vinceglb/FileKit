@@ -15,7 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.vinceglb.filekit.dialogs.FileKitAssetRepresentationMode
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdown
+import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdownItem
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppField
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppOutlinedTextField
 import io.github.vinceglb.filekit.sample.shared.ui.theme.geistMonoFontFamily
@@ -26,10 +29,14 @@ import io.github.vinceglb.filekit.sample.shared.ui.theme.geistMonoFontFamily
 internal class AppleFilePickerDialogSettingsState : FilePickerDialogSettingsState {
     var title: String by mutableStateOf("")
     var canCreateDirectories: Boolean by mutableStateOf(true)
+    var assetRepresentationMode: FileKitAssetRepresentationMode by mutableStateOf(
+        FileKitAssetRepresentationMode.Automatic,
+    )
 
     override fun build(): FileKitDialogSettings = FileKitDialogSettings(
         title = title.ifBlank { null },
         canCreateDirectories = canCreateDirectories,
+        assetRepresentationMode = assetRepresentationMode,
     )
 }
 
@@ -73,5 +80,29 @@ internal actual fun FilePickerDialogSettingsContent(state: FilePickerDialogSetti
                 onCheckedChange = { appleState.canCreateDirectories = it },
             )
         }
+
+        AppField(label = "Asset Representation") {
+            AppDropdown(
+                value = appleState.assetRepresentationMode,
+                onValueChange = { appleState.assetRepresentationMode = it },
+                options = assetRepresentationModeOptions,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
     }
 }
+
+private val assetRepresentationModeOptions = listOf(
+    AppDropdownItem.SimpleItem(
+        label = "Automatic",
+        value = FileKitAssetRepresentationMode.Automatic,
+    ),
+    AppDropdownItem.SimpleItem(
+        label = "Current",
+        value = FileKitAssetRepresentationMode.Current,
+    ),
+    AppDropdownItem.SimpleItem(
+        label = "Compatible",
+        value = FileKitAssetRepresentationMode.Compatible,
+    ),
+)

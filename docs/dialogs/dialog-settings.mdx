@@ -41,19 +41,29 @@ Window(onCloseRequest = ::exitApplication) {
 }
 ```
 
-### macOS Settings
+### iOS and macOS Settings
 
-On macOS, you can configure:
+On iOS and macOS, you can configure:
 
 - `title`: Set a custom title for the dialog
 - `canCreateDirectories`: Allow or prevent directory creation in dialogs (default: true)
+- `assetRepresentationMode`: Choose the iOS Photos picker asset representation mode (default: `Automatic`)
 
 ```kotlin
 val settings = FileKitDialogSettings(
     title = "Save document",
-    canCreateDirectories = true
+    canCreateDirectories = true,
+    assetRepresentationMode = FileKitAssetRepresentationMode.Automatic
 )
 ```
+
+The iOS Photos picker supports these asset representation modes:
+
+- `Automatic`: Let the system choose the best representation
+- `Current`: Prefer the original/current representation and avoid transcoding when possible
+- `Compatible`: Prefer a broadly compatible representation, even if transcoding is required
+
+Use `Compatible` when picked image bytes need to be decoded by libraries that may not support every Apple-native image format, such as HEIF/HEIC.
 
 ### Android, Web, and WASM
 
@@ -84,7 +94,14 @@ actual fun createDialogSettings(): FileKitDialogSettings {
     )
 }
 
-// androidMain, iosMain, jsMain
+// iosMain
+actual fun createDialogSettings(): FileKitDialogSettings {
+    return FileKitDialogSettings(
+        assetRepresentationMode = FileKitAssetRepresentationMode.Automatic
+    )
+}
+
+// androidMain, jsMain
 actual fun createDialogSettings(): FileKitDialogSettings {
     return FileKitDialogSettings.createDefault()
 }
