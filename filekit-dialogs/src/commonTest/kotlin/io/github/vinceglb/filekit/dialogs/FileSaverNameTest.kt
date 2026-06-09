@@ -55,4 +55,28 @@ class FileSaverNameTest {
         assertEquals("document.pdf", buildFileSaverSuggestedName("document", ".pdf"))
         assertEquals("document.pdf", buildFileSaverSuggestedName("document", " .pdf "))
     }
+
+    @Test
+    fun buildFileSaverAllowedFileTypes_whenNoExtensions_returnsNull() {
+        assertNull(buildFileSaverAllowedFileTypes(null, null))
+        assertNull(buildFileSaverAllowedFileTypes("", setOf("", ".")))
+    }
+
+    @Test
+    fun buildFileSaverAllowedFileTypes_whenOnlyDefaultExtension_returnsSingleNormalizedType() {
+        assertEquals(listOf("pdf"), buildFileSaverAllowedFileTypes(".pdf", null))
+    }
+
+    @Test
+    fun buildFileSaverAllowedFileTypes_whenNoDefault_returnsNormalizedAllowedExtensions() {
+        assertEquals(listOf("md", "txt"), buildFileSaverAllowedFileTypes(null, setOf("md", "txt")))
+    }
+
+    @Test
+    fun buildFileSaverAllowedFileTypes_putsDefaultExtensionFirstAndDeduplicates() {
+        assertEquals(
+            listOf("pdf", "md", "txt"),
+            buildFileSaverAllowedFileTypes("pdf", setOf("md", "pdf", "txt")),
+        )
+    }
 }
