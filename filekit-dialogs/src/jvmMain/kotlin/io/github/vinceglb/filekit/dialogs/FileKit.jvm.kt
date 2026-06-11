@@ -13,7 +13,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     mode: PickerMode,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): Flow<FileKitPickerState<List<PlatformFile>>> {
+): Flow<FileKitPickerState<List<PlatformFile>>> = withContext(Dispatchers.IO) {
     // Filter by extension
     val extensions = when (type) {
         FileKitType.Image -> imageExtensions
@@ -42,7 +42,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         }
     }
 
-    return files.toPickerStateFlow()
+    files.toPickerStateFlow()
 }
 
 /**
