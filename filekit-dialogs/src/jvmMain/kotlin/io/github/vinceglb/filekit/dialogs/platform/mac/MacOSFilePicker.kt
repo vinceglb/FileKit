@@ -3,7 +3,7 @@ package io.github.vinceglb.filekit.dialogs.platform.mac
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
-import io.github.vinceglb.filekit.dialogs.buildFileSaverSuggestedName
+import io.github.vinceglb.filekit.dialogs.buildFileSaverAllowedFileTypes
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
@@ -73,18 +73,15 @@ internal class MacOSFilePicker : PlatformFilePicker {
                     Foundation.invoke(savePanel, "setDirectoryURL:", Foundation.nsURL(it.path))
                 }
 
+                // Set the file name without extension, NSSavePanel appends it from allowedFileTypes
                 Foundation.invoke(
                     savePanel,
                     "setNameFieldStringValue:",
-                    Foundation.nsString(
-                        buildFileSaverSuggestedName(
-                            suggestedName = suggestedName,
-                            extension = defaultExtension,
-                        ),
-                    ),
+                    Foundation.nsString(suggestedName),
                 )
 
-                val fileTypes = allowedExtensions ?: defaultExtension?.let { setOf(it) }
+                // Default extension first so it is the one appended
+                val fileTypes = buildFileSaverAllowedFileTypes(defaultExtension, allowedExtensions)
                 savePanel.setAllowedFileTypes(fileTypes)
 
                 Foundation.invoke(

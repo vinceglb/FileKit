@@ -20,3 +20,15 @@ internal fun buildFileSaverSuggestedName(
         else -> "$suggestedName.$normalizedExtension"
     }
 }
+
+internal fun buildFileSaverAllowedFileTypes(
+    defaultExtension: String?,
+    allowedExtensions: Set<String>?,
+): List<String>? {
+    val normalizedDefault = normalizeFileSaverExtension(defaultExtension)
+    val normalizedAllowed = normalizeFileSaverExtensions(allowedExtensions).orEmpty()
+    return buildList {
+        normalizedDefault?.let { add(it) }
+        normalizedAllowed.forEach { if (it != normalizedDefault) add(it) }
+    }.takeIf { it.isNotEmpty() }
+}
