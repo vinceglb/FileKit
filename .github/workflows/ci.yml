@@ -34,7 +34,7 @@ jobs:
     needs: build
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - name: 🛎️ Check out repository
@@ -75,7 +75,7 @@ jobs:
   test-ios:
     name: 🍎 Test iOS
     needs: build
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
         uses: actions/checkout@v6
@@ -95,7 +95,7 @@ jobs:
   test-watchos:
     name: ⌚️ Test watchOS
     needs: build
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
         uses: actions/checkout@v6
@@ -115,7 +115,7 @@ jobs:
   test-macos:
     name: 🍏 Test macOS
     needs: build
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
         uses: actions/checkout@v6
