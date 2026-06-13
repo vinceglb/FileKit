@@ -24,7 +24,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: 🔨 Build project
         run: ./gradlew assemble
@@ -47,7 +47,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: 🧪 Run JVM Tests
         run: ./gradlew jvmTest
@@ -67,7 +67,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: 🧪 Run Android Unit Tests
         run: ./gradlew testAndroidHostTest
@@ -87,7 +87,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: 🧪 Run iOS Tests
         run: ./gradlew iosSimulatorArm64Test
@@ -107,7 +107,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
 
       - name: 🧪 Run watchOS Tests
         run: ./gradlew watchosSimulatorArm64Test
@@ -127,7 +127,7 @@ jobs:
           java-version: '21'
 
       - name: 🐘 Setup Gradle
-        uses: gradle/actions/setup-gradle@v5
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-disabled: true
 
@@ -154,7 +154,7 @@ jobs:
           sudo mv ktlint /usr/local/bin/
 
       - name: 👮 Download ktlint-compose rules
-        run: curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.4.28/ktlint-compose-0.4.28-all.jar
+        run: curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.6.0/ktlint-compose-0.6.0-all.jar
 
       - name: 🚨 Run ktlint
-        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.4.28-all.jar
+        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.0-all.jar
