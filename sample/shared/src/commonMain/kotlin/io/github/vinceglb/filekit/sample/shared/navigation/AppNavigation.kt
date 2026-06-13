@@ -91,7 +91,9 @@ internal fun AppNavigation(
             rememberSaveableStateHolderNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
         ),
-        sceneStrategy = bottomSheetStrategy,
+        sceneStrategies = listOf(
+            bottomSheetStrategy,
+        ),
         entryProvider = entryProvider {
             entry<Home> {
                 HomeRoute(
