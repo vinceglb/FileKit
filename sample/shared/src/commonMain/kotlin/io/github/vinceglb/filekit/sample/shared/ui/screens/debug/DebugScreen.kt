@@ -85,6 +85,8 @@ private fun DebugScreen(
                 debugPlatformTest(folder)
                 // bookmarkFolder(folder)
             }
+
+            buttonState = AppScreenHeaderButtonState.Enabled
         }
     }
 
@@ -121,7 +123,7 @@ private fun DebugScreen(
                     title = "Debug",
                     subtitle = "Debug page for testing FileKit features",
                     documentationUrl = "",
-                    primaryButtonText = "Pick File",
+                    primaryButtonText = "Pick Folder",
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = {
                         buttonState = AppScreenHeaderButtonState.Loading
