@@ -64,14 +64,14 @@ private fun DebugScreen(
 
     val scope = rememberCoroutineScope()
     val pickerReproSheetState = rememberModalBottomSheetState()
-    val picker = rememberFilePickerLauncher { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = file?.let(::listOf) ?: emptyList()
-
-        scope.launch {
-            file?.let { debugPlatformTest(it) }
-        }
-    }
+//    val picker = rememberFilePickerLauncher { file ->
+//        buttonState = AppScreenHeaderButtonState.Enabled
+//        files = file?.let(::listOf) ?: emptyList()
+//
+//        scope.launch {
+//            file?.let { debugPlatformTest(it) }
+//        }
+//    }
     val imagePicker = rememberFilePickerLauncher(
         type = FileKitType.Image,
         mode = FileKitMode.Multiple(),
