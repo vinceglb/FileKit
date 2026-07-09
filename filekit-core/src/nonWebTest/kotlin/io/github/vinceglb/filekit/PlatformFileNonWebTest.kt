@@ -105,6 +105,11 @@ class PlatformFileNonWebTest {
     }
 
     @Test
+    fun PlatformFile_deleteEmptyPathWithMustExistFalse_doesNothing() = runTest {
+        PlatformFile("").delete(mustExist = false)
+    }
+
+    @Test
     fun testPlatformFileReadBytes() = runTest {
         val textFileContent = textFile.readString()
         assertEquals(expected = "Hello, World!", actual = textFileContent)

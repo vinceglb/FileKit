@@ -6,4 +6,7 @@ import platform.Foundation.NSURL
 
 public fun NSURL.toKotlinxPath(): Path = this.path
     ?.let(::Path)
+    ?: absoluteString
+        ?.takeIf(String::isEmpty)
+        ?.let(::Path)
     ?: throw FileKitNSURLNullPathException()
