@@ -11,6 +11,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class PlatformFileMacOsBookmarkTest {
     @Test
@@ -74,7 +75,27 @@ class PlatformFileMacOsBookmarkTest {
 
         assertEquals(expected = file.path, actual = resolution.file.path)
         assertFalse(resolution.isStale)
-        kotlin.test.assertTrue(resolution.shouldRefresh)
+        assertTrue(resolution.shouldRefresh)
+    }
+
+    @Test
+    fun PlatformFile_resolveStaleBookmarkData_recommendsRefresh() {
+        val file = FileKit.projectDir / "src/nonWebTest/resources/hello.txt"
+        val resolution = appleBookmarkResolution(
+            payload = AppleBookmarkPayload(
+                bytes = byteArrayOf(1, 2, 3),
+                resolutionOptions = 0u,
+                isLegacy = false,
+            ),
+            nativeResolution = AppleBookmarkNativeResolution(
+                url = file.nsUrl,
+                isStale = true,
+            ),
+        )
+
+        assertEquals(expected = file.path, actual = resolution.file.path)
+        assertTrue(resolution.isStale)
+        assertTrue(resolution.shouldRefresh)
     }
 
     @Test

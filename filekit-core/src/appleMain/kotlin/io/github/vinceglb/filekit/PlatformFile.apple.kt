@@ -292,24 +292,48 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
 public actual fun PlatformFile.Companion.resolveBookmarkData(
     bookmarkData: BookmarkData,
-): BookmarkResolution = memScoped {
+): BookmarkResolution {
     val payload = decodeAppleBookmarkPayload(bookmarkData.bytes)
-    val nsData = payload.bytes.toNSData()
+    val nativeResolution = resolveAppleBookmark(
+        payload.bytes,
+        payload.resolutionOptions,
+    )
+    return appleBookmarkResolution(payload, nativeResolution)
+}
+
+internal fun appleBookmarkResolution(
+    payload: AppleBookmarkPayload,
+    nativeResolution: AppleBookmarkNativeResolution,
+): BookmarkResolution =
+    BookmarkResolution(
+        file = PlatformFile(nativeResolution.url),
+        isStale = nativeResolution.isStale,
+        shouldRefresh = nativeResolution.isStale || payload.isLegacy,
+    )
+
+internal data class AppleBookmarkNativeResolution(
+    val url: NSURL,
+    val isStale: Boolean,
+)
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
+private fun resolveAppleBookmark(
+    bytes: ByteArray,
+    resolutionOptions: ULong,
+): AppleBookmarkNativeResolution = memScoped {
     val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
     val isStale = alloc<BooleanVar>()
-
     val restoredUrl = NSURL.URLByResolvingBookmarkData(
-        bookmarkData = nsData,
-        options = payload.resolutionOptions.convert(),
+        bookmarkData = bytes.toNSData(),
+        options = resolutionOptions.convert(),
         relativeToURL = null,
         bookmarkDataIsStale = isStale.ptr,
         error = error,
     ) ?: throw error.pointed.value.toBookmarkResolutionException()
 
-    BookmarkResolution(
-        file = PlatformFile(restoredUrl),
+    AppleBookmarkNativeResolution(
+        url = restoredUrl,
         isStale = isStale.value,
-        shouldRefresh = isStale.value || payload.isLegacy,
     )
 }
 
