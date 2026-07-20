@@ -1,11 +1,14 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toByteArray
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import io.github.vinceglb.filekit.utils.toNSData
 import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.BooleanVar
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -13,6 +16,7 @@ import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.UnsafeNumber
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArray
+import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
@@ -53,10 +57,33 @@ import kotlin.time.Instant
  * @property nsUrl The underlying [NSURL] object.
  */
 @Serializable(with = PlatformFileSerializer::class)
-public actual data class PlatformFile(
-    val nsUrl: NSURL,
+public actual class PlatformFile internal constructor(
+    public val nsUrl: NSURL,
+    internal val securityScopeUrl: NSURL,
+    internal val securityScopeRootPath: String,
 ) {
+    public constructor(nsUrl: NSURL) : this(
+        nsUrl = nsUrl,
+        securityScopeUrl = nsUrl,
+        securityScopeRootPath = nsUrl.standardizedPath,
+    )
+
     public actual override fun toString(): String = path
+
+    public operator fun component1(): NSURL = nsUrl
+
+    public fun copy(nsUrl: NSURL = this.nsUrl): PlatformFile {
+        val candidatePath = nsUrl.standardizedPath
+        return if (candidatePath.isWithin(securityScopeRootPath)) {
+            PlatformFile(
+                nsUrl = nsUrl,
+                securityScopeUrl = securityScopeUrl,
+                securityScopeRootPath = securityScopeRootPath,
+            )
+        } else {
+            PlatformFile(nsUrl)
+        }
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -80,6 +107,26 @@ public actual fun PlatformFile(path: Path): PlatformFile =
 public actual fun PlatformFile.toKotlinxIoPath(): Path =
     nsUrl.toKotlinxPath()
 
+@PublishedApi
+internal actual fun PlatformFile.withPath(path: Path): PlatformFile = copy(PlatformFile(path).nsUrl)
+
+private fun String.isWithin(rootPath: String): Boolean {
+    val root = rootPath.trimEnd('/')
+    return when {
+        root.isEmpty() && rootPath.startsWith('/') -> startsWith('/')
+        this == root -> true
+        root.isNotEmpty() -> startsWith("$root/")
+        else -> false
+    }
+}
+
+private val NSURL.standardizedPath: String
+    get() = runCatching {
+        SystemFileSystem.resolve(toKotlinxPath()).toString()
+    }.getOrElse {
+        URLByStandardizingPath?.path.orEmpty()
+    }
+
 public actual val PlatformFile.extension: String
     get() = nsUrl.pathExtension ?: ""
 
@@ -93,7 +140,7 @@ public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit):
     withScopedAccess {
         val directoryFiles = SystemFileSystem
             .list(toKotlinxIoPath())
-            .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
+            .map(::withPath)
         block(directoryFiles)
     }
 
@@ -101,7 +148,7 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     withScopedAccess {
         SystemFileSystem
             .list(toKotlinxIoPath())
-            .map { PlatformFile(NSURL.fileURLWithPath(it.toString())) }
+            .map(::withPath)
     }
 
 @OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
@@ -209,23 +256,29 @@ private fun cfStringToKString(cfString: CFStringRef?): String? {
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
-    nsUrl.startAccessingSecurityScopedResource()
+    securityScopeUrl.startAccessingSecurityScopedResource()
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource(): Unit =
-    nsUrl.stopAccessingSecurityScopedResource()
+    securityScopeUrl.stopAccessingSecurityScopedResource()
 
 @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class, BetaInteropApi::class)
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
     withScopedAccess {
         memScoped {
+            val configuration = appleBookmarkCreationConfiguration()
             val errorPtr = alloc<ObjCObjectVar<NSError?>>()
             val bookmarkData = nsUrl.bookmarkDataWithOptions(
-                options = 0u,
+                options = configuration.options.convert(),
                 includingResourceValuesForKeys = null,
                 relativeToURL = null,
                 error = errorPtr.ptr,
             ) ?: throw FileKitException("Failed to create bookmark data: ${errorPtr.ptr.pointed.value}")
-            BookmarkData(bookmarkData.toByteArray())
+            BookmarkData(
+                encodeAppleBookmarkPayload(
+                    payload = bookmarkData.toByteArray(),
+                    configuration = configuration,
+                ),
+            )
         }
     }
 }
@@ -235,17 +288,31 @@ public actual fun PlatformFile.releaseBookmark() {}
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
-): PlatformFile = memScoped {
-    val nsData = bookmarkData.bytes.toNSData()
+): PlatformFile = resolveBookmarkData(bookmarkData).file
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
+public actual fun PlatformFile.Companion.resolveBookmarkData(
+    bookmarkData: BookmarkData,
+): BookmarkResolution = memScoped {
+    val payload = decodeAppleBookmarkPayload(bookmarkData.bytes)
+    val nsData = payload.bytes.toNSData()
     val error: CPointer<ObjCObjectVar<NSError?>> = alloc<ObjCObjectVar<NSError?>>().ptr
+    val isStale = alloc<BooleanVar>()
 
     val restoredUrl = NSURL.URLByResolvingBookmarkData(
         bookmarkData = nsData,
-        options = 0u,
+        options = payload.resolutionOptions.convert(),
         relativeToURL = null,
-        bookmarkDataIsStale = null,
+        bookmarkDataIsStale = isStale.ptr,
         error = error,
-    ) ?: throw FileKitException("Failed to resolve bookmark data: ${error.pointed.value}")
+    ) ?: throw BookmarkResolutionException(
+        reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+        message = "Failed to resolve bookmark data: ${error.pointed.value}",
+    )
 
-    PlatformFile(restoredUrl)
+    BookmarkResolution(
+        file = PlatformFile(restoredUrl),
+        isStale = isStale.value,
+        shouldRefresh = isStale.value || payload.isLegacy,
+    )
 }

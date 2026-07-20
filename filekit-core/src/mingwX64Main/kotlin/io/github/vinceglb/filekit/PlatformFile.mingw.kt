@@ -68,6 +68,9 @@ public actual fun PlatformFile(path: Path): PlatformFile =
 public actual fun PlatformFile.toKotlinxIoPath(): Path =
     windowsPath.path
 
+@PublishedApi
+internal actual fun PlatformFile.withPath(path: Path): PlatformFile = PlatformFile(path)
+
 public actual val PlatformFile.extension: String
     get() = name.substringAfterLast('.', "")
 
@@ -193,9 +196,17 @@ public actual fun PlatformFile.releaseBookmark() {}
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
-): PlatformFile {
+): PlatformFile = resolveBookmarkData(bookmarkData).file
+
+public actual fun PlatformFile.Companion.resolveBookmarkData(
+    bookmarkData: BookmarkData,
+): BookmarkResolution {
     val restoredPath = bookmarkData.bytes.decodeToString()
-    return PlatformFile(windowsPath = WindowsPath(Path(restoredPath)))
+    return BookmarkResolution(
+        file = PlatformFile(windowsPath = WindowsPath(Path(restoredPath))),
+        isStale = false,
+        shouldRefresh = false,
+    )
 }
 
 @OptIn(ExperimentalForeignApi::class)

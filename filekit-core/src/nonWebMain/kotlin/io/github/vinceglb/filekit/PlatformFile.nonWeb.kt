@@ -260,6 +260,11 @@ public expect fun PlatformFile.releaseBookmark()
 public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: BookmarkData): PlatformFile
 
 /**
+ * Resolves [bookmarkData] and reports whether the persisted representation should be refreshed.
+ */
+public expect fun PlatformFile.Companion.resolveBookmarkData(bookmarkData: BookmarkData): BookmarkResolution
+
+/**
  * Creates a [PlatformFile] from a byte array representing bookmark data.
  *
  * @param bytes The byte array containing bookmark data.
@@ -267,3 +272,7 @@ public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: Bookmark
  */
 public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFile =
     fromBookmarkData(BookmarkData(bytes))
+
+/** Resolves bookmark data stored as a byte array. */
+public fun PlatformFile.Companion.resolveBookmarkData(bytes: ByteArray): BookmarkResolution =
+    resolveBookmarkData(BookmarkData(bytes))

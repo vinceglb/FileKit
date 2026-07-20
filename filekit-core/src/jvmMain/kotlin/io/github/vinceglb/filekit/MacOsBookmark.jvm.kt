@@ -1,0 +1,277 @@
+package io.github.vinceglb.filekit
+
+import com.sun.jna.Library
+import com.sun.jna.Memory
+import com.sun.jna.Native
+import com.sun.jna.NativeLong
+import com.sun.jna.Platform
+import com.sun.jna.Pointer
+import com.sun.jna.PointerType
+import com.sun.jna.platform.mac.CoreFoundation
+import com.sun.jna.ptr.ByteByReference
+import com.sun.jna.ptr.PointerByReference
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
+import java.io.File
+import java.lang.ref.Cleaner
+
+internal data class ResolvedMacOsBookmark(
+    val file: File,
+    val isStale: Boolean,
+    val access: MacOsBookmarkAccess?,
+)
+
+internal interface MacOsBookmarkAccess {
+    fun covers(file: File): Boolean
+
+    fun start(): Boolean
+
+    fun stop()
+}
+
+private class NativeMacOsBookmarkAccess(
+    root: File,
+    private val url: CFUrlRef,
+) : MacOsBookmarkAccess {
+    private val rootPath = root.canonicalFile.toPath()
+
+    @Suppress("unused")
+    private val cleanable = cleaner.register(this, NativeUrlReleaser(url))
+
+    override fun covers(file: File): Boolean = file.canonicalFile.toPath().startsWith(rootPath)
+
+    override fun start(): Boolean =
+        CoreFoundationBookmarkApi.instance.CFURLStartAccessingSecurityScopedResource(url) != 0.toByte()
+
+    override fun stop() {
+        CoreFoundationBookmarkApi.instance.CFURLStopAccessingSecurityScopedResource(url)
+    }
+
+    companion object {
+        private val cleaner = Cleaner.create()
+    }
+
+    private class NativeUrlReleaser(
+        private val url: CFUrlRef,
+    ) : Runnable {
+        override fun run() {
+            url.release()
+        }
+    }
+}
+
+internal object MacOsSandbox {
+    internal var entitlementReader: () -> Boolean = ::readAppSandboxEntitlement
+
+    fun isSandboxed(): Boolean = entitlementReader()
+
+    private fun readAppSandboxEntitlement(): Boolean {
+        check(Platform.isMac())
+        val task = SecurityApi.instance.SecTaskCreateFromSelf(null) ?: return false
+        try {
+            val entitlement = CoreFoundation.CFStringRef.createCFString(APP_SANDBOX_ENTITLEMENT)
+            try {
+                val value = SecurityApi.instance.SecTaskCopyValueForEntitlement(task, entitlement, null) ?: return false
+                try {
+                    if (!value.isTypeID(CoreFoundation.BOOLEAN_TYPE_ID)) return false
+                    return CoreFoundation.INSTANCE.CFBooleanGetValue(
+                        CoreFoundation.CFBooleanRef(value.pointer),
+                    ) != 0.toByte()
+                } finally {
+                    value.release()
+                }
+            } finally {
+                entitlement.release()
+            }
+        } finally {
+            task.release()
+        }
+    }
+}
+
+internal fun macOsBookmarkKindForCurrentProcess(): MacOsBookmarkKind = if (MacOsSandbox.isSandboxed()) {
+    MacOsBookmarkKind.SecurityScoped
+} else {
+    MacOsBookmarkKind.Regular
+}
+
+internal object MacOsBookmarks {
+    fun create(file: File, kind: MacOsBookmarkKind): ByteArray {
+        check(Platform.isMac())
+        val path = CoreFoundation.CFStringRef.createCFString(file.canonicalPath)
+        try {
+            val url = CoreFoundationBookmarkApi.instance.CFURLCreateWithFileSystemPath(
+                allocator = null,
+                filePath = path,
+                pathStyle = POSIX_PATH_STYLE,
+                isDirectory = if (file.isDirectory) 1 else 0,
+            ) ?: throw BookmarkResolutionException(
+                reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+                message = "Could not create a native URL for ${file.path}",
+            )
+            try {
+                val bookmark = CoreFoundationBookmarkApi.instance.CFURLCreateBookmarkData(
+                    allocator = null,
+                    url = url,
+                    options = NativeLong(kind.creationOptions),
+                    resourcePropertiesToInclude = null,
+                    relativeToUrl = null,
+                    error = null,
+                ) ?: throw BookmarkResolutionException(
+                    reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+                    message = "Could not create bookmark data for ${file.path}",
+                )
+                try {
+                    return bookmark.bytePtr.getByteArray(0, bookmark.length)
+                } finally {
+                    bookmark.release()
+                }
+            } finally {
+                url.release()
+            }
+        } finally {
+            path.release()
+        }
+    }
+
+    fun resolve(payload: ByteArray, kind: MacOsBookmarkKind): ResolvedMacOsBookmark {
+        check(Platform.isMac())
+        val payloadMemory = Memory(payload.size.toLong()).apply { write(0, payload, 0, payload.size) }
+        val bookmarkData = CoreFoundation.INSTANCE.CFDataCreate(
+            null,
+            payloadMemory,
+            CoreFoundation.CFIndex(payload.size.toLong()),
+        )
+        try {
+            val isStale = ByteByReference()
+            val url = CoreFoundationBookmarkApi.instance.CFURLCreateByResolvingBookmarkData(
+                allocator = null,
+                bookmark = bookmarkData,
+                options = NativeLong(kind.resolutionOptions),
+                relativeToUrl = null,
+                resourcePropertiesToInclude = null,
+                isStale = isStale,
+                error = null,
+            ) ?: throw BookmarkResolutionException(
+                reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+                message = "Could not resolve macOS bookmark data",
+            )
+            var releaseUrl = true
+            try {
+                val path = CoreFoundationBookmarkApi.instance.CFURLCopyFileSystemPath(url, POSIX_PATH_STYLE)
+                    ?: throw BookmarkResolutionException(
+                        reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+                        message = "The resolved macOS bookmark has no file-system path",
+                    )
+                try {
+                    val file = File(path.stringValue())
+                    val access = if (kind == MacOsBookmarkKind.SecurityScoped) {
+                        releaseUrl = false
+                        NativeMacOsBookmarkAccess(file, url)
+                    } else {
+                        null
+                    }
+                    return ResolvedMacOsBookmark(
+                        file = file,
+                        isStale = isStale.value != 0.toByte(),
+                        access = access,
+                    )
+                } finally {
+                    path.release()
+                }
+            } finally {
+                if (releaseUrl) url.release()
+            }
+        } finally {
+            bookmarkData.release()
+        }
+    }
+}
+
+private val MacOsBookmarkKind.creationOptions: Long
+    get() = when (this) {
+        MacOsBookmarkKind.Regular -> 0
+        MacOsBookmarkKind.SecurityScoped -> 1L shl 11
+    }
+
+private val MacOsBookmarkKind.resolutionOptions: Long
+    get() = when (this) {
+        MacOsBookmarkKind.Regular -> 0
+        MacOsBookmarkKind.SecurityScoped -> 1L shl 10
+    }
+
+private const val POSIX_PATH_STYLE = 0
+
+internal class CFUrlRef : PointerType {
+    constructor() : super()
+    constructor(pointer: Pointer) : super(pointer)
+
+    fun release() {
+        CoreFoundation.INSTANCE.CFRelease(CoreFoundation.CFTypeRef(pointer))
+    }
+}
+
+@Suppress("ktlint:standard:function-naming", "FunctionName")
+internal interface CoreFoundationBookmarkApi : Library {
+    fun CFURLCreateWithFileSystemPath(
+        allocator: CoreFoundation.CFAllocatorRef?,
+        filePath: CoreFoundation.CFStringRef,
+        pathStyle: Int,
+        isDirectory: Byte,
+    ): CFUrlRef?
+
+    fun CFURLCreateBookmarkData(
+        allocator: CoreFoundation.CFAllocatorRef?,
+        url: CFUrlRef,
+        options: NativeLong,
+        resourcePropertiesToInclude: CoreFoundation.CFArrayRef?,
+        relativeToUrl: CFUrlRef?,
+        error: PointerByReference?,
+    ): CoreFoundation.CFDataRef?
+
+    fun CFURLCreateByResolvingBookmarkData(
+        allocator: CoreFoundation.CFAllocatorRef?,
+        bookmark: CoreFoundation.CFDataRef,
+        options: NativeLong,
+        relativeToUrl: CFUrlRef?,
+        resourcePropertiesToInclude: CoreFoundation.CFArrayRef?,
+        isStale: ByteByReference,
+        error: PointerByReference?,
+    ): CFUrlRef?
+
+    fun CFURLCopyFileSystemPath(url: CFUrlRef, pathStyle: Int): CoreFoundation.CFStringRef?
+
+    fun CFURLStartAccessingSecurityScopedResource(url: CFUrlRef): Byte
+
+    fun CFURLStopAccessingSecurityScopedResource(url: CFUrlRef)
+
+    companion object {
+        val instance: CoreFoundationBookmarkApi = Native.load("CoreFoundation", CoreFoundationBookmarkApi::class.java)
+    }
+}
+
+internal class SecTaskRef : PointerType {
+    constructor() : super()
+    constructor(pointer: Pointer) : super(pointer)
+
+    fun release() {
+        CoreFoundation.INSTANCE.CFRelease(CoreFoundation.CFTypeRef(pointer))
+    }
+}
+
+@Suppress("ktlint:standard:function-naming", "FunctionName")
+internal interface SecurityApi : Library {
+    fun SecTaskCreateFromSelf(allocator: CoreFoundation.CFAllocatorRef?): SecTaskRef?
+
+    fun SecTaskCopyValueForEntitlement(
+        task: SecTaskRef,
+        entitlement: CoreFoundation.CFStringRef,
+        error: PointerByReference?,
+    ): CoreFoundation.CFTypeRef?
+
+    companion object {
+        val instance: SecurityApi = Native.load("Security", SecurityApi::class.java)
+    }
+}
+
+private const val APP_SANDBOX_ENTITLEMENT = "com.apple.security.app-sandbox"

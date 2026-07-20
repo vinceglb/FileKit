@@ -1,5 +1,8 @@
 package io.github.vinceglb.filekit
 
+import com.sun.jna.Platform
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
@@ -20,12 +23,40 @@ import kotlin.time.Instant
  * @property file The underlying [java.io.File] object.
  */
 @Serializable(with = PlatformFileSerializer::class)
-public actual data class PlatformFile(
-    val file: File,
+public actual class PlatformFile private constructor(
+    public val file: File,
+    private val macOsBookmarkAccess: MacOsBookmarkAccess?,
 ) {
+    public constructor(file: File) : this(file, null)
+
     public actual override fun toString(): String = path
 
-    public actual companion object
+    public operator fun component1(): File = file
+
+    public fun copy(file: File = this.file): PlatformFile = PlatformFile(
+        file = file,
+        macOsBookmarkAccess = macOsBookmarkAccess?.takeIf { it.covers(file) },
+    )
+
+    override fun equals(other: Any?): Boolean = this === other || (other is PlatformFile && file == other.file)
+
+    override fun hashCode(): Int = file.hashCode()
+
+    @JvmSynthetic
+    internal fun startMacOsBookmarkAccess(): Boolean = macOsBookmarkAccess?.start() ?: true
+
+    @JvmSynthetic
+    internal fun stopMacOsBookmarkAccess() {
+        macOsBookmarkAccess?.stop()
+    }
+
+    public actual companion object {
+        @JvmSynthetic
+        internal fun withMacOsBookmarkAccess(
+            file: File,
+            access: MacOsBookmarkAccess,
+        ): PlatformFile = PlatformFile(file, access)
+    }
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
@@ -33,6 +64,9 @@ public actual fun PlatformFile(path: Path): PlatformFile =
 
 public actual fun PlatformFile.toKotlinxIoPath(): Path =
     file.toKotlinxIoPath()
+
+@PublishedApi
+internal actual fun PlatformFile.withPath(path: Path): PlatformFile = copy(path.toFile())
 
 public actual val PlatformFile.extension: String
     get() = file.extension
@@ -45,13 +79,13 @@ public actual fun PlatformFile.absolutePath(): String =
 
 public actual inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit): Unit =
     withScopedAccess {
-        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+        val directoryFiles = SystemFileSystem.list(toKotlinxIoPath()).map(::withPath)
         block(directoryFiles)
     }
 
 public actual fun PlatformFile.list(): List<PlatformFile> =
     withScopedAccess {
-        SystemFileSystem.list(toKotlinxIoPath()).map(::PlatformFile)
+        SystemFileSystem.list(toKotlinxIoPath()).map(::withPath)
     }
 
 @OptIn(ExperimentalTime::class)
@@ -77,19 +111,63 @@ public actual fun PlatformFile.mimeType(): MimeType? {
     return mimeTypeValue?.let(MimeType::parse)
 }
 
-public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = true
+public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = startMacOsBookmarkAccess()
 
-public actual fun PlatformFile.stopAccessingSecurityScopedResource() {}
+public actual fun PlatformFile.stopAccessingSecurityScopedResource() {
+    stopMacOsBookmarkAccess()
+}
 
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
-    BookmarkData(file.path.encodeToByteArray())
+    if (Platform.isMac()) {
+        val kind = macOsBookmarkKindForCurrentProcess()
+        BookmarkData(
+            MacOsBookmarkEnvelope(
+                kind = kind,
+                payload = MacOsBookmarks.create(file, kind),
+            ).encode(),
+        )
+    } else {
+        BookmarkData(file.path.encodeToByteArray())
+    }
 }
 
 public actual fun PlatformFile.releaseBookmark() {}
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
-): PlatformFile {
-    val path = bookmarkData.bytes.decodeToString()
-    return PlatformFile(Path(path))
+): PlatformFile = resolveBookmarkData(bookmarkData).file
+
+public actual fun PlatformFile.Companion.resolveBookmarkData(
+    bookmarkData: BookmarkData,
+): BookmarkResolution {
+    val envelope = MacOsBookmarkEnvelope.decodeOrNull(bookmarkData.bytes)
+    if (envelope != null) {
+        if (!Platform.isMac()) {
+            throw BookmarkResolutionException(
+                reason = BookmarkResolutionFailure.INCOMPATIBLE_PLATFORM,
+                message = "macOS bookmark data cannot be resolved on this platform",
+            )
+        }
+        val resolved = MacOsBookmarks.resolve(envelope.payload, envelope.kind)
+        return BookmarkResolution(
+            file = resolved.access?.let { PlatformFile.withMacOsBookmarkAccess(resolved.file, it) }
+                ?: PlatformFile(resolved.file),
+            isStale = resolved.isStale,
+            shouldRefresh = resolved.isStale,
+        )
+    }
+    val path = try {
+        bookmarkData.bytes.decodeToString(throwOnInvalidSequence = true)
+    } catch (cause: CharacterCodingException) {
+        throw BookmarkResolutionException(
+            reason = BookmarkResolutionFailure.INVALID_DATA,
+            message = "Legacy JVM bookmark data is not a valid UTF-8 path",
+            cause = cause,
+        )
+    }
+    return BookmarkResolution(
+        file = PlatformFile(Path(path)),
+        isStale = false,
+        shouldRefresh = true,
+    )
 }
