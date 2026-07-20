@@ -49,6 +49,7 @@ FileKit is trusted by developers building amazing cross-platform applications:
 - **[Authmeister](https://monoroh.com/authmeister)** - Multiplatform OTP authenticator supporting TOTP and HOTP, available on [Android](https://play.google.com/store/apps/details?id=com.kopylovis.authmeister) and [iOS](https://apps.apple.com/us/app/authmeister/id6742833866)
 - **[Dancing Decibels](https://www.dancingdecibels.com)** - Multi-platform app for music festivals and live entertainment experiences, using FileKit for image imports and schedule import/export
 - **[Kai](https://github.com/SimonSchubert/Kai)** - OpenClaw alternative in your pocket, using FileKit in production across Android, iOS, desktop, and web
+- **[Hammer Editor](https://github.com/Wavesonics/hammer-editor)** - Multi-platform tool for writing stories and novels, using FileKit to select project directories and images
 
 *Using FileKit in your project? [Let us know!](https://github.com/vinceglb/FileKit/discussions/343)*
 
