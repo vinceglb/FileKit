@@ -1,0 +1,66 @@
+Issue #590 JVM PlatformFile ABI baseline
+========================================
+
+Source commit: 8fd0730f
+Parent production commit: 941c90b5
+Build command: ./gradlew :filekit-core:jvmJar --no-daemon
+Artifact: filekit-core/build/libs/filekit-core-jvm.jar
+Artifact SHA-256: 22c502c0dafc22bcd03ea52dc2e6fe3bc792b23c54c37d05d8a8bc79b0b115ca
+PlatformFile.class SHA-256: 57e82d716a93e27d946eac8357d7157d1363a3e2ecf001cb95c8a956a9596f45
+
+Captured with:
+
+    javap -classpath filekit-core/build/libs/filekit-core-jvm.jar -p -s \
+      io.github.vinceglb.filekit.PlatformFile \
+      'io.github.vinceglb.filekit.PlatformFile$Companion' \
+      io.github.vinceglb.filekit.PlatformFile_jvmKt
+
+Compiled from "PlatformFile.jvm.kt"
+public final class io.github.vinceglb.filekit.PlatformFile {
+  public static final io.github.vinceglb.filekit.PlatformFile$Companion Companion;
+    descriptor: Lio/github/vinceglb/filekit/PlatformFile$Companion;
+  private final java.io.File file;
+    descriptor: Ljava/io/File;
+  public io.github.vinceglb.filekit.PlatformFile(java.io.File);
+    descriptor: (Ljava/io/File;)V
+  public final java.io.File getFile();
+    descriptor: ()Ljava/io/File;
+  public java.lang.String toString();
+    descriptor: ()Ljava/lang/String;
+  public final java.io.File component1();
+    descriptor: ()Ljava/io/File;
+  public final io.github.vinceglb.filekit.PlatformFile copy(java.io.File);
+    descriptor: (Ljava/io/File;)Lio/github/vinceglb/filekit/PlatformFile;
+  public static io.github.vinceglb.filekit.PlatformFile copy$default(io.github.vinceglb.filekit.PlatformFile, java.io.File, int, java.lang.Object);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile;Ljava/io/File;ILjava/lang/Object;)Lio/github/vinceglb/filekit/PlatformFile;
+  public int hashCode();
+    descriptor: ()I
+  public boolean equals(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Z
+  static {};
+    descriptor: ()V
+}
+
+Compiled from "PlatformFile.jvm.kt"
+public final class io.github.vinceglb.filekit.PlatformFile$Companion {
+  private io.github.vinceglb.filekit.PlatformFile$Companion();
+    descriptor: ()V
+  public final kotlinx.serialization.KSerializer<io.github.vinceglb.filekit.PlatformFile> serializer();
+    descriptor: ()Lkotlinx/serialization/KSerializer;
+  public io.github.vinceglb.filekit.PlatformFile$Companion(kotlin.jvm.internal.DefaultConstructorMarker);
+    descriptor: (Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+Compiled from "PlatformFile.jvm.kt"
+public final class io.github.vinceglb.filekit.PlatformFile_jvmKt {
+  public static final boolean startAccessingSecurityScopedResource(io.github.vinceglb.filekit.PlatformFile);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile;)Z
+  public static final void stopAccessingSecurityScopedResource(io.github.vinceglb.filekit.PlatformFile);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile;)V
+  public static final java.lang.Object bookmarkData(io.github.vinceglb.filekit.PlatformFile, kotlin.coroutines.Continuation<? super io.github.vinceglb.filekit.BookmarkData>);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+  public static final void releaseBookmark(io.github.vinceglb.filekit.PlatformFile);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile;)V
+  public static final io.github.vinceglb.filekit.PlatformFile fromBookmarkData(io.github.vinceglb.filekit.PlatformFile$Companion, io.github.vinceglb.filekit.BookmarkData);
+    descriptor: (Lio/github/vinceglb/filekit/PlatformFile$Companion;Lio/github/vinceglb/filekit/BookmarkData;)Lio/github/vinceglb/filekit/PlatformFile;
+}
