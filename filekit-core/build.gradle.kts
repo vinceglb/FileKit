@@ -6,8 +6,8 @@ plugins {
 
 kotlin {
     sourceSets {
-        val desktopMain by creating { dependsOn(nonWebMain.get()) }
-        val jvmAndNativeMain by creating { dependsOn(nonWebMain.get()) }
+        val desktopMain = create("desktopMain") { dependsOn(nonWebMain.get()) }
+        val jvmAndNativeMain = create("jvmAndNativeMain") { dependsOn(nonWebMain.get()) }
         jvmMain.get().dependsOn(desktopMain)
         macosMain.get().dependsOn(desktopMain)
         mingwX64Main.get().dependsOn(desktopMain)

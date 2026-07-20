@@ -13,7 +13,7 @@ kotlin {
     }
 
     sourceSets {
-        val mingwX64Main by getting {
+        getByName("mingwX64Main") {
             dependencies {
                 implementation(projects.filekitCore)
                 implementation(projects.filekitDialogs)

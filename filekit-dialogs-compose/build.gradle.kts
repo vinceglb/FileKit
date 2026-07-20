@@ -5,8 +5,8 @@ plugins {
 
 kotlin {
     sourceSets {
-        val jvmAndNativeMain by creating { dependsOn(nonWebMain.get()) }
-        val nonAndroidMain by creating { dependsOn(commonMain.get()) }
+        val jvmAndNativeMain = create("jvmAndNativeMain") { dependsOn(nonWebMain.get()) }
+        val nonAndroidMain = create("nonAndroidMain") { dependsOn(commonMain.get()) }
         jvmMain {
             dependsOn(nonAndroidMain)
             dependsOn(jvmAndNativeMain)

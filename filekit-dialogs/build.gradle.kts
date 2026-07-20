@@ -13,7 +13,7 @@ kotlin {
     mingwX64 {
         compilations.getByName("main") {
             cinterops {
-                val comdialogs by creating {
+                create("comdialogs") {
                     defFile(project.file("src/mingwX64Main/cinterop/comdialogs.def"))
                 }
             }
