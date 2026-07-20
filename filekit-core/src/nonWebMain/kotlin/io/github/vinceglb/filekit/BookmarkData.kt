@@ -21,3 +21,7 @@ public class BookmarkResolution(
     public val isStale: Boolean,
     public val shouldRefresh: Boolean,
 )
+
+internal const val APP_SANDBOX_ENTITLEMENT: String = "com.apple.security.app-sandbox"
+internal const val COCOA_ERROR_DOMAIN: String = "NSCocoaErrorDomain"
+internal const val NS_FILE_READ_CORRUPT_ERROR_CODE: Long = 259

@@ -1,7 +1,6 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
-import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.toByteArray
@@ -88,11 +87,11 @@ public actual class PlatformFile internal constructor(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PlatformFile) return false
-        if (nsUrl.path != other.nsUrl.path) return false
+        if (nsUrl != other.nsUrl) return false
         return true
     }
 
-    override fun hashCode(): Int = nsUrl.path.hashCode()
+    override fun hashCode(): Int = nsUrl.hashCode()
 
     public actual companion object
 }
@@ -152,17 +151,17 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     }
 
 @OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
-public actual fun PlatformFile.createdAt(): Instant? {
-    val values = this.nsUrl.resourceValuesForKeys(listOf(NSURLCreationDateKey), null)
+public actual fun PlatformFile.createdAt(): Instant? = withScopedAccess {
+    val values = nsUrl.resourceValuesForKeys(listOf(NSURLCreationDateKey), null)
     val date = values?.get(NSURLCreationDateKey) as? NSDate
-    return Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
+    Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
 }
 
 @OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
-public actual fun PlatformFile.lastModified(): Instant {
-    val values = this.nsUrl.resourceValuesForKeys(listOf(NSURLContentModificationDateKey), null)
+public actual fun PlatformFile.lastModified(): Instant = withScopedAccess {
+    val values = nsUrl.resourceValuesForKeys(listOf(NSURLContentModificationDateKey), null)
     val date = values?.get(NSURLContentModificationDateKey) as? NSDate
-    return Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
+    Instant.fromEpochSeconds(date?.timeIntervalSince1970?.toLong() ?: 0L)
 }
 
 public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess { file ->
@@ -305,10 +304,7 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
         relativeToURL = null,
         bookmarkDataIsStale = isStale.ptr,
         error = error,
-    ) ?: throw BookmarkResolutionException(
-        reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
-        message = "Failed to resolve bookmark data: ${error.pointed.value}",
-    )
+    ) ?: throw error.pointed.value.toBookmarkResolutionException()
 
     BookmarkResolution(
         file = PlatformFile(restoredUrl),
@@ -316,3 +312,8 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
         shouldRefresh = isStale.value || payload.isLegacy,
     )
 }
+
+private fun NSError?.toBookmarkResolutionException(): BookmarkResolutionException = BookmarkResolutionException(
+    reason = classifyAppleBookmarkResolutionError(this),
+    message = "Failed to resolve bookmark data: $this",
+)

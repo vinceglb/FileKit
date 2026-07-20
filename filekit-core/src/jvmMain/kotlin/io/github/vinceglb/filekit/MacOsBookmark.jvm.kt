@@ -144,6 +144,7 @@ internal object MacOsBookmarks {
         )
         try {
             val isStale = ByteByReference()
+            val error = PointerByReference()
             val url = CoreFoundationBookmarkApi.instance.CFURLCreateByResolvingBookmarkData(
                 allocator = null,
                 bookmark = bookmarkData,
@@ -151,11 +152,8 @@ internal object MacOsBookmarks {
                 relativeToUrl = null,
                 resourcePropertiesToInclude = null,
                 isStale = isStale,
-                error = null,
-            ) ?: throw BookmarkResolutionException(
-                reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
-                message = "Could not resolve macOS bookmark data",
-            )
+                error = error,
+            ) ?: throw error.toBookmarkResolutionException()
             var releaseUrl = true
             try {
                 val path = CoreFoundationBookmarkApi.instance.CFURLCopyFileSystemPath(url, POSIX_PATH_STYLE)
@@ -185,6 +183,34 @@ internal object MacOsBookmarks {
         } finally {
             bookmarkData.release()
         }
+    }
+}
+
+private fun PointerByReference.toBookmarkResolutionException(): BookmarkResolutionException {
+    val errorPointer = value ?: return BookmarkResolutionException(
+        reason = BookmarkResolutionFailure.RESOURCE_UNAVAILABLE,
+        message = "Could not resolve macOS bookmark data",
+    )
+    val error = CoreFoundation.CFTypeRef(errorPointer)
+    try {
+        val domain = CoreFoundationBookmarkApi.instance.CFErrorGetDomain(error)?.stringValue()
+        val code = CoreFoundationBookmarkApi.instance.CFErrorGetCode(error).toLong()
+        val description = CoreFoundationBookmarkApi.instance.CFErrorCopyDescription(error)
+        val message = try {
+            description?.stringValue() ?: "Could not resolve macOS bookmark data"
+        } finally {
+            description?.release()
+        }
+        return BookmarkResolutionException(
+            reason = if (domain == COCOA_ERROR_DOMAIN && code == NS_FILE_READ_CORRUPT_ERROR_CODE) {
+                BookmarkResolutionFailure.INVALID_DATA
+            } else {
+                BookmarkResolutionFailure.RESOURCE_UNAVAILABLE
+            },
+            message = message,
+        )
+    } finally {
+        error.release()
     }
 }
 
@@ -245,6 +271,12 @@ internal interface CoreFoundationBookmarkApi : Library {
 
     fun CFURLStopAccessingSecurityScopedResource(url: CFUrlRef)
 
+    fun CFErrorGetCode(error: CoreFoundation.CFTypeRef): CoreFoundation.CFIndex
+
+    fun CFErrorGetDomain(error: CoreFoundation.CFTypeRef): CoreFoundation.CFStringRef?
+
+    fun CFErrorCopyDescription(error: CoreFoundation.CFTypeRef): CoreFoundation.CFStringRef?
+
     companion object {
         val instance: CoreFoundationBookmarkApi = Native.load("CoreFoundation", CoreFoundationBookmarkApi::class.java)
     }
@@ -273,5 +305,3 @@ internal interface SecurityApi : Library {
         val instance: SecurityApi = Native.load("Security", SecurityApi::class.java)
     }
 }
-
-private const val APP_SANDBOX_ENTITLEMENT = "com.apple.security.app-sandbox"

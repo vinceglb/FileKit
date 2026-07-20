@@ -9,6 +9,7 @@ import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import java.io.File
+import kotlin.coroutines.Continuation
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -96,19 +97,6 @@ class PlatformFileJvmTest {
     }
 
     @Test
-    fun MacOsBookmarkEnvelope_encodeAndDecode_roundTripsPayload() {
-        val expected = MacOsBookmarkEnvelope(
-            kind = MacOsBookmarkKind.SecurityScoped,
-            payload = byteArrayOf(1, 2, 3),
-        )
-
-        val actual = requireNotNull(MacOsBookmarkEnvelope.decodeOrNull(expected.encode()))
-
-        assertEquals(expected = expected.kind, actual = actual.kind)
-        assertTrue(expected.payload.contentEquals(actual.payload))
-    }
-
-    @Test
     fun PlatformFile_resolveEmptyBookmarkEnvelope_throwsTypedFailure() {
         val emptyEnvelope = byteArrayOf('F'.code.toByte(), 'K'.code.toByte(), 'B'.code.toByte(), 'K'.code.toByte(), 1, 1)
 
@@ -129,6 +117,21 @@ class PlatformFileJvmTest {
     }
 
     @Test
+    fun PlatformFile_resolveCorruptNativeBookmark_throwsInvalidDataFailure() {
+        if (!Platform.isMac()) return
+        val corruptBookmark = MacOsBookmarkEnvelope(
+            kind = MacOsBookmarkKind.Regular,
+            payload = byteArrayOf(1, 2, 3),
+        ).encode()
+
+        val error = assertFailsWith<BookmarkResolutionException> {
+            PlatformFile.resolveBookmarkData(corruptBookmark)
+        }
+
+        assertEquals(expected = BookmarkResolutionFailure.INVALID_DATA, actual = error.reason)
+    }
+
+    @Test
     fun PlatformFile_copy_preservesJvmDataClassSurface() {
         val original = PlatformFile(textFile.file)
 
@@ -136,6 +139,35 @@ class PlatformFileJvmTest {
 
         assertEquals(expected = original, actual = copied)
         assertEquals(expected = original.file, actual = copied.component1())
+    }
+
+    @Test
+    fun PlatformFile_preservesCapturedJvmAbi() {
+        val platformFileClass = PlatformFile::class.java
+        platformFileClass.getConstructor(File::class.java)
+        platformFileClass.getMethod("getFile")
+        platformFileClass.getMethod("toString")
+        platformFileClass.getMethod("component1")
+        platformFileClass.getMethod("copy", File::class.java)
+        platformFileClass.getMethod(
+            "copy\$default",
+            platformFileClass,
+            File::class.java,
+            Int::class.javaPrimitiveType,
+            Any::class.java,
+        )
+        platformFileClass.getMethod("hashCode")
+        platformFileClass.getMethod("equals", Any::class.java)
+
+        val companionClass = Class.forName("io.github.vinceglb.filekit.PlatformFile\$Companion")
+        companionClass.getMethod("serializer")
+
+        val facadeClass = Class.forName("io.github.vinceglb.filekit.PlatformFile_jvmKt")
+        facadeClass.getMethod("startAccessingSecurityScopedResource", platformFileClass)
+        facadeClass.getMethod("stopAccessingSecurityScopedResource", platformFileClass)
+        facadeClass.getMethod("bookmarkData", platformFileClass, Continuation::class.java)
+        facadeClass.getMethod("releaseBookmark", platformFileClass)
+        facadeClass.getMethod("fromBookmarkData", companionClass, BookmarkData::class.java)
     }
 
     @Test
@@ -201,6 +233,26 @@ class PlatformFileJvmTest {
             sink.close()
             sink.close()
             assertEquals(expected = 2, actual = access.stopCount)
+        } finally {
+            directory.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun PlatformFile_metadataAndBookmarkOperations_balanceScopedAccess() = runTest {
+        val directory = createTempDirectory("filekit-bookmark-metadata").toFile()
+        try {
+            val nativeFile = File(directory, "content.txt").apply { writeText("hello") }
+            val access = RecordingBookmarkAccess(directory)
+            val platformFile = PlatformFile.withMacOsBookmarkAccess(nativeFile, access)
+
+            platformFile.createdAt()
+            platformFile.lastModified()
+            platformFile.mimeType()
+            platformFile.bookmarkData()
+
+            assertEquals(expected = 4, actual = access.startCount)
+            assertEquals(expected = 4, actual = access.stopCount)
         } finally {
             directory.deleteRecursively()
         }

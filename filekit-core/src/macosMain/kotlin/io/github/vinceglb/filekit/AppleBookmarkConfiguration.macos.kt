@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.reinterpret
 import platform.CoreFoundation.CFBooleanGetValue
@@ -7,6 +8,7 @@ import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFStringCreateWithCString
 import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFStringEncodingUTF8
+import platform.Foundation.NSError
 import platform.Foundation.NSURLBookmarkCreationWithSecurityScope
 import platform.Foundation.NSURLBookmarkResolutionWithSecurityScope
 import platform.Security.SecTaskCopyValueForEntitlement
@@ -50,6 +52,13 @@ internal actual fun decodeAppleBookmarkPayload(bytes: ByteArray): AppleBookmarkP
     )
 }
 
+internal actual fun classifyAppleBookmarkResolutionError(error: NSError?): BookmarkResolutionFailure =
+    if (error?.domain == COCOA_ERROR_DOMAIN && error.code == NS_FILE_READ_CORRUPT_ERROR_CODE) {
+        BookmarkResolutionFailure.INVALID_DATA
+    } else {
+        BookmarkResolutionFailure.RESOURCE_UNAVAILABLE
+    }
+
 private val MacOsBookmarkKind?.resolutionOptions: ULong
     get() = when (this) {
         MacOsBookmarkKind.SecurityScoped -> NSURLBookmarkResolutionWithSecurityScope
@@ -86,5 +95,3 @@ private fun readAppSandboxEntitlement(): Boolean {
         CFRelease(task)
     }
 }
-
-private const val APP_SANDBOX_ENTITLEMENT = "com.apple.security.app-sandbox"

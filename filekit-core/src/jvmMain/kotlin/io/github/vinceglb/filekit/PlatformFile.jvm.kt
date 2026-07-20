@@ -89,26 +89,26 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     }
 
 @OptIn(ExperimentalTime::class)
-public actual fun PlatformFile.createdAt(): Instant? = runCatching {
-    val attributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
-    val timestamp = attributes.creationTime().toMillis()
-    return Instant.fromEpochMilliseconds(timestamp)
-}.getOrNull()
-
-@OptIn(ExperimentalTime::class)
-public actual fun PlatformFile.lastModified(): Instant {
-    val timestamp = this.file.lastModified()
-    return Instant.fromEpochMilliseconds(timestamp)
+public actual fun PlatformFile.createdAt(): Instant? = withScopedAccess {
+    runCatching {
+        val attributes = Files.readAttributes(file.toPath(), BasicFileAttributes::class.java)
+        Instant.fromEpochMilliseconds(attributes.creationTime().toMillis())
+    }.getOrNull()
 }
 
-public actual fun PlatformFile.mimeType(): MimeType? {
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.lastModified(): Instant = withScopedAccess {
+    Instant.fromEpochMilliseconds(file.lastModified())
+}
+
+public actual fun PlatformFile.mimeType(): MimeType? = withScopedAccess {
     val mimeTypeValue = try {
         Files.probeContentType(file.toPath())
     } catch (_: Exception) {
         null
     }
 
-    return mimeTypeValue?.let(MimeType::parse)
+    mimeTypeValue?.let(MimeType::parse)
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean = startMacOsBookmarkAccess()
@@ -118,16 +118,18 @@ public actual fun PlatformFile.stopAccessingSecurityScopedResource() {
 }
 
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
-    if (Platform.isMac()) {
-        val kind = macOsBookmarkKindForCurrentProcess()
-        BookmarkData(
-            MacOsBookmarkEnvelope(
-                kind = kind,
-                payload = MacOsBookmarks.create(file, kind),
-            ).encode(),
-        )
-    } else {
-        BookmarkData(file.path.encodeToByteArray())
+    withScopedAccess {
+        if (Platform.isMac()) {
+            val kind = macOsBookmarkKindForCurrentProcess()
+            BookmarkData(
+                MacOsBookmarkEnvelope(
+                    kind = kind,
+                    payload = MacOsBookmarks.create(file, kind),
+                ).encode(),
+            )
+        } else {
+            BookmarkData(file.path.encodeToByteArray())
+        }
     }
 }
 

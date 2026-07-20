@@ -8,9 +8,9 @@ import io.github.vinceglb.filekit.delete
 import io.github.vinceglb.filekit.div
 import io.github.vinceglb.filekit.exists
 import io.github.vinceglb.filekit.filesDir
-import io.github.vinceglb.filekit.fromBookmarkData
 import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.releaseBookmark
+import io.github.vinceglb.filekit.resolveBookmarkData
 import io.github.vinceglb.filekit.write
 
 internal actual class BookmarkStorage actual constructor() {
@@ -28,7 +28,13 @@ internal actual class BookmarkStorage actual constructor() {
 
         return try {
             val bytes = bookmarkFile.readBytes()
-            PlatformFile.fromBookmarkData(bytes)
+            val resolution = PlatformFile.resolveBookmarkData(bytes)
+            if (resolution.shouldRefresh) {
+                runCatching {
+                    bookmarkFile write resolution.file.bookmarkData().bytes
+                }
+            }
+            resolution.file
         } catch (_: Throwable) {
             bookmarkFile.delete(mustExist = false)
             null
@@ -54,10 +60,10 @@ internal actual class BookmarkStorage actual constructor() {
 
         try {
             val bytes = bookmarkFile.readBytes()
-            val bookmarkedFile = PlatformFile.fromBookmarkData(bytes)
+            val bookmarkedFile = PlatformFile.resolveBookmarkData(bytes).file
             bookmarkedFile.releaseBookmark()
         } catch (_: Throwable) {
-            // Ignore failures from stale bookmarks.
+            // Ignore failures from invalid or unavailable bookmarks.
         }
 
         bookmarkFile.delete(mustExist = false)

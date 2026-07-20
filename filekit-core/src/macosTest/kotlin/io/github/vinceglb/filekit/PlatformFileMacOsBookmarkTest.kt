@@ -2,11 +2,14 @@
 
 package io.github.vinceglb.filekit
 
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
+import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.utils.toByteArray
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 
 class PlatformFileMacOsBookmarkTest {
@@ -72,5 +75,19 @@ class PlatformFileMacOsBookmarkTest {
         assertEquals(expected = file.path, actual = resolution.file.path)
         assertFalse(resolution.isStale)
         kotlin.test.assertTrue(resolution.shouldRefresh)
+    }
+
+    @Test
+    fun PlatformFile_resolveCorruptNativeBookmark_throwsInvalidDataFailure() {
+        val corruptBookmark = MacOsBookmarkEnvelope(
+            kind = MacOsBookmarkKind.Regular,
+            payload = byteArrayOf(1, 2, 3),
+        ).encode()
+
+        val error = assertFailsWith<BookmarkResolutionException> {
+            PlatformFile.resolveBookmarkData(corruptBookmark)
+        }
+
+        assertEquals(expected = BookmarkResolutionFailure.INVALID_DATA, actual = error.reason)
     }
 }
