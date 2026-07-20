@@ -2,11 +2,9 @@ package io.github.vinceglb.filekit.dialogs.platform.windows
 
 import com.sun.jna.Native
 import com.sun.jna.WString
-import com.sun.jna.platform.win32.COM.COMUtils
 import com.sun.jna.platform.win32.COM.COMUtils.FAILED
 import com.sun.jna.platform.win32.Guid
 import com.sun.jna.platform.win32.Ole32
-import com.sun.jna.platform.win32.Ole32.COINIT_APARTMENTTHREADED
 import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.platform.win32.Win32Exception
 import com.sun.jna.platform.win32.WinDef
@@ -35,12 +33,12 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItemArray
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 import io.github.vinceglb.filekit.path
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.awt.Window
 import java.io.File
 
-internal class WindowsFilePicker : PlatformFilePicker {
+internal class WindowsFilePicker(
+    private val dialogExecutor: WindowsDialogExecutor = WindowsDialogExecutor(JnaWindowsComRuntime),
+) : PlatformFilePicker {
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
@@ -152,12 +150,9 @@ internal class WindowsFilePicker : PlatformFilePicker {
     private suspend fun <FD : FileDialog, T> useFileDialog(
         type: FileDialogType<FD>,
         block: (FD) -> T,
-    ): T = withContext(Dispatchers.IO) {
+    ): T = dialogExecutor.execute {
         var fileDialog: FD? = null
         try {
-            // Initialize COM
-            initCom()
-
             // Create FileOpenDialog
             val pbrFileDialog = PointerByReference()
             fileDialog = Ole32.INSTANCE
@@ -174,7 +169,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
             block(fileDialog)
         } finally {
             fileDialog?.Release()
-            Ole32.INSTANCE.CoUninitialize()
         }
     }
 
@@ -196,19 +190,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
             IFileSaveDialog.IID_IFILESAVEDIALOG,
         ) {
             override fun build(pbr: PointerByReference) = FileSaveDialog(pbr.value)
-        }
-    }
-
-    private fun initCom() {
-        Ole32.INSTANCE
-            .CoInitializeEx(
-                null,
-                COINIT_APARTMENTTHREADED or Ole32.COINIT_DISABLE_OLE1DDE,
-            ).verify("CoInitializeEx failed")
-
-        val isInit = COMUtils.comIsInitialized()
-        if (!isInit) {
-            throw RuntimeException("COM initialization failed")
         }
     }
 
