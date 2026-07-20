@@ -60,40 +60,37 @@ private class NativeMacOsBookmarkAccess(
     }
 }
 
-internal object MacOsSandbox {
-    internal var entitlementReader: () -> Boolean = ::readAppSandboxEntitlement
-
-    fun isSandboxed(): Boolean = entitlementReader()
-
-    private fun readAppSandboxEntitlement(): Boolean {
-        check(Platform.isMac())
-        val task = SecurityApi.instance.SecTaskCreateFromSelf(null) ?: return false
+private fun readAppSandboxEntitlement(): Boolean {
+    check(Platform.isMac())
+    val task = SecurityApi.instance.SecTaskCreateFromSelf(null) ?: return false
+    try {
+        val entitlement = CoreFoundation.CFStringRef.createCFString(APP_SANDBOX_ENTITLEMENT)
         try {
-            val entitlement = CoreFoundation.CFStringRef.createCFString(APP_SANDBOX_ENTITLEMENT)
+            val value = SecurityApi.instance.SecTaskCopyValueForEntitlement(task, entitlement, null) ?: return false
             try {
-                val value = SecurityApi.instance.SecTaskCopyValueForEntitlement(task, entitlement, null) ?: return false
-                try {
-                    if (!value.isTypeID(CoreFoundation.BOOLEAN_TYPE_ID)) return false
-                    return CoreFoundation.INSTANCE.CFBooleanGetValue(
-                        CoreFoundation.CFBooleanRef(value.pointer),
-                    ) != 0.toByte()
-                } finally {
-                    value.release()
-                }
+                if (!value.isTypeID(CoreFoundation.BOOLEAN_TYPE_ID)) return false
+                return CoreFoundation.INSTANCE.CFBooleanGetValue(
+                    CoreFoundation.CFBooleanRef(value.pointer),
+                ) != 0.toByte()
             } finally {
-                entitlement.release()
+                value.release()
             }
         } finally {
-            task.release()
+            entitlement.release()
         }
+    } finally {
+        task.release()
     }
 }
 
-internal fun macOsBookmarkKindForCurrentProcess(): MacOsBookmarkKind = if (MacOsSandbox.isSandboxed()) {
+internal fun macOsBookmarkKind(isSandboxed: Boolean): MacOsBookmarkKind = if (isSandboxed) {
     MacOsBookmarkKind.SecurityScoped
 } else {
     MacOsBookmarkKind.Regular
 }
+
+internal fun macOsBookmarkKindForCurrentProcess(): MacOsBookmarkKind =
+    macOsBookmarkKind(isSandboxed = readAppSandboxEntitlement())
 
 internal object MacOsBookmarks {
     fun create(file: File, kind: MacOsBookmarkKind): ByteArray {

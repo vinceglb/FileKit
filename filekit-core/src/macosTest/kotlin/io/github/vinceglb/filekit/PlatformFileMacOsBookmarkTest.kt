@@ -7,6 +7,7 @@ import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.utils.toByteArray
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
+import platform.Foundation.NSURL
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -15,23 +16,25 @@ import kotlin.test.assertTrue
 
 class PlatformFileMacOsBookmarkTest {
     @Test
-    fun AppleBookmarkConfiguration_usesInjectedSandboxEntitlement() {
-        val originalReader = AppleBookmarkEnvironment.entitlementReader
-        try {
-            AppleBookmarkEnvironment.entitlementReader = { true }
-            assertEquals(
-                expected = MacOsBookmarkKind.SecurityScoped,
-                actual = appleBookmarkCreationConfiguration().kind,
-            )
+    fun AppleBookmarkConfiguration_selectsUsingSandboxEntitlement() {
+        assertEquals(
+            expected = MacOsBookmarkKind.SecurityScoped,
+            actual = appleBookmarkCreationConfiguration(isAppSandboxEnabled = true).kind,
+        )
+        assertEquals(
+            expected = MacOsBookmarkKind.Regular,
+            actual = appleBookmarkCreationConfiguration(isAppSandboxEnabled = false).kind,
+        )
+    }
 
-            AppleBookmarkEnvironment.entitlementReader = { false }
-            assertEquals(
-                expected = MacOsBookmarkKind.Regular,
-                actual = appleBookmarkCreationConfiguration().kind,
-            )
-        } finally {
-            AppleBookmarkEnvironment.entitlementReader = originalReader
-        }
+    @Test
+    fun PlatformFile_equality_usesUrlPath() {
+        val first = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=1")))
+        val second = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=2")))
+
+        assertEquals(expected = first.nsUrl.path, actual = second.nsUrl.path)
+        assertEquals(expected = first, actual = second)
+        assertEquals(expected = first.hashCode(), actual = second.hashCode())
     }
 
     @Test

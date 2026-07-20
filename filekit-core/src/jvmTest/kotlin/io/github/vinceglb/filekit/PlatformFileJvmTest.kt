@@ -49,7 +49,7 @@ class PlatformFileJvmTest {
     }
 
     @Test
-    fun PlatformFile_resolveLegacyBookmarkData_recommendsRefresh() {
+    fun PlatformFile_resolveLegacyBookmarkData_recommendsRefreshOnlyOnMacos() {
         val legacyPath = "src/nonWebTest/resources/hello.txt"
         val bookmarkData = BookmarkData(legacyPath.encodeToByteArray())
 
@@ -57,7 +57,7 @@ class PlatformFileJvmTest {
 
         assertEquals(expected = legacyPath, actual = resolution.file.path)
         assertFalse(resolution.isStale)
-        assertTrue(resolution.shouldRefresh)
+        assertEquals(expected = Platform.isMac(), actual = resolution.shouldRefresh)
         assertEquals(expected = resolution.file, actual = PlatformFile.fromBookmarkData(bookmarkData))
     }
 
@@ -76,7 +76,9 @@ class PlatformFileJvmTest {
 
     @Test
     fun PlatformFile_resolveUnknownBookmarkVersion_throwsTypedFailure() {
-        val unknownVersion = byteArrayOf('F'.code.toByte(), 'K'.code.toByte(), 'B'.code.toByte(), 'K'.code.toByte(), 99, 1)
+        val unknownVersion = bookmarkEnvelopeHeader().apply {
+            this[lastIndex - 1] = 99
+        }
 
         val error = assertFailsWith<BookmarkResolutionException> {
             PlatformFile.resolveBookmarkData(unknownVersion)
@@ -87,7 +89,9 @@ class PlatformFileJvmTest {
 
     @Test
     fun PlatformFile_resolveUnknownBookmarkKind_throwsTypedFailure() {
-        val unknownKind = byteArrayOf('F'.code.toByte(), 'K'.code.toByte(), 'B'.code.toByte(), 'K'.code.toByte(), 1, 99, 1)
+        val unknownKind = bookmarkEnvelopeHeader().apply {
+            this[lastIndex] = 99
+        }
 
         val error = assertFailsWith<BookmarkResolutionException> {
             PlatformFile.resolveBookmarkData(unknownKind)
@@ -98,7 +102,7 @@ class PlatformFileJvmTest {
 
     @Test
     fun PlatformFile_resolveEmptyBookmarkEnvelope_throwsTypedFailure() {
-        val emptyEnvelope = byteArrayOf('F'.code.toByte(), 'K'.code.toByte(), 'B'.code.toByte(), 'K'.code.toByte(), 1, 1)
+        val emptyEnvelope = bookmarkEnvelopeHeader()
 
         val error = assertFailsWith<BookmarkResolutionException> {
             PlatformFile.resolveBookmarkData(emptyEnvelope)
@@ -259,17 +263,17 @@ class PlatformFileJvmTest {
     }
 
     @Test
-    fun MacOsBookmarkKind_usesInjectedSandboxEntitlement() {
-        val originalReader = MacOsSandbox.entitlementReader
-        try {
-            MacOsSandbox.entitlementReader = { true }
-            assertEquals(expected = MacOsBookmarkKind.SecurityScoped, actual = macOsBookmarkKindForCurrentProcess())
+    fun MacOsBookmarkKind_selectsUsingSandboxEntitlement() {
+        assertEquals(expected = MacOsBookmarkKind.SecurityScoped, actual = macOsBookmarkKind(isSandboxed = true))
+        assertEquals(expected = MacOsBookmarkKind.Regular, actual = macOsBookmarkKind(isSandboxed = false))
+    }
 
-            MacOsSandbox.entitlementReader = { false }
-            assertEquals(expected = MacOsBookmarkKind.Regular, actual = macOsBookmarkKindForCurrentProcess())
-        } finally {
-            MacOsSandbox.entitlementReader = originalReader
-        }
+    private fun bookmarkEnvelopeHeader(): ByteArray {
+        val envelope = MacOsBookmarkEnvelope(
+            kind = MacOsBookmarkKind.Regular,
+            payload = byteArrayOf(1),
+        ).encode()
+        return envelope.copyOf(envelope.size - 1)
     }
 
     private class RecordingBookmarkAccess(

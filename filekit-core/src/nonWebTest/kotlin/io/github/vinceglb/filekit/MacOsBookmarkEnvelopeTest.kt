@@ -4,6 +4,7 @@ package io.github.vinceglb.filekit
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MacOsBookmarkEnvelopeTest {
@@ -18,5 +19,12 @@ class MacOsBookmarkEnvelopeTest {
 
         assertEquals(expected = expected.kind, actual = actual.kind)
         assertTrue(expected.payload.contentEquals(actual.payload))
+    }
+
+    @Test
+    fun MacOsBookmarkEnvelope_decodeLegacyPathStartingWithOldMagic_returnsNull() {
+        val legacyPath = "FKBK-project/file.txt".encodeToByteArray()
+
+        assertNull(MacOsBookmarkEnvelope.decodeOrNull(legacyPath))
     }
 }

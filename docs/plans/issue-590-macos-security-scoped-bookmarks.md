@@ -111,7 +111,7 @@ Add automated coverage for:
 - Unknown versions and incompatible payload kinds.
 - Both JVM-path and Kotlin/Native Foundation legacy formats.
 - Current, stale, and legacy resolution metadata.
-- Automatic sandbox-mode selection through an injectable entitlement reader.
+- Automatic sandbox-mode selection through pure selectors fed by the platform entitlement readers.
 - Balanced and nested capability access.
 - Capability propagation within a directory and rejection outside it.
 - `RawSource` and `RawSink` lifetime behavior.

@@ -22,9 +22,9 @@ internal data class MacOsBookmarkEnvelope(
     fun encode(): ByteArray = MAGIC + byteArrayOf(VERSION, kind.encodedValue) + payload
 
     companion object {
-        private val MAGIC = byteArrayOf('F'.code.toByte(), 'K'.code.toByte(), 'B'.code.toByte(), 'K'.code.toByte())
+        private val MAGIC = byteArrayOf(0) + "FileKitBookmark".encodeToByteArray()
         private const val VERSION: Byte = 1
-        private const val HEADER_SIZE = 6
+        private val HEADER_SIZE = MAGIC.size + 2
 
         fun decodeOrNull(bytes: ByteArray): MacOsBookmarkEnvelope? {
             if (bytes.size < MAGIC.size || !bytes.copyOfRange(0, MAGIC.size).contentEquals(MAGIC)) {

@@ -170,6 +170,6 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
     return BookmarkResolution(
         file = PlatformFile(Path(path)),
         isStale = false,
-        shouldRefresh = true,
+        shouldRefresh = Platform.isMac(),
     )
 }

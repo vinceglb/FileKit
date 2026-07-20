@@ -87,11 +87,11 @@ public actual class PlatformFile internal constructor(
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PlatformFile) return false
-        if (nsUrl != other.nsUrl) return false
+        if (nsUrl.path != other.nsUrl.path) return false
         return true
     }
 
-    override fun hashCode(): Int = nsUrl.hashCode()
+    override fun hashCode(): Int = nsUrl.path.hashCode()
 
     public actual companion object
 }

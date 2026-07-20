@@ -16,7 +16,10 @@ import platform.Security.SecTaskCreateFromSelf
 
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun appleBookmarkCreationConfiguration(): AppleBookmarkCreationConfiguration =
-    if (AppleBookmarkEnvironment.isAppSandboxEnabled()) {
+    appleBookmarkCreationConfiguration(isAppSandboxEnabled = readAppSandboxEntitlement())
+
+internal fun appleBookmarkCreationConfiguration(isAppSandboxEnabled: Boolean): AppleBookmarkCreationConfiguration =
+    if (isAppSandboxEnabled) {
         AppleBookmarkCreationConfiguration(
             options = NSURLBookmarkCreationWithSecurityScope,
             kind = MacOsBookmarkKind.SecurityScoped,
@@ -64,13 +67,6 @@ private val MacOsBookmarkKind?.resolutionOptions: ULong
         MacOsBookmarkKind.SecurityScoped -> NSURLBookmarkResolutionWithSecurityScope
         MacOsBookmarkKind.Regular, null -> 0u
     }
-
-@OptIn(ExperimentalForeignApi::class)
-internal object AppleBookmarkEnvironment {
-    internal var entitlementReader: () -> Boolean = ::readAppSandboxEntitlement
-
-    fun isAppSandboxEnabled(): Boolean = entitlementReader()
-}
 
 @OptIn(ExperimentalForeignApi::class)
 private fun readAppSandboxEntitlement(): Boolean {
