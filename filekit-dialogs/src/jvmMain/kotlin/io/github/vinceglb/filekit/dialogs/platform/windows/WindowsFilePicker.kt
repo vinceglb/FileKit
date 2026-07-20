@@ -27,6 +27,7 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IFileSaveDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.COMDLG_FILTERSPEC
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_ALLOWMULTISELECT
+import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_FORCEFILESYSTEM
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_PICKFOLDERS
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.SIGDN.Companion.SIGDN_DESKTOPABSOLUTEPARSING
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.SIGDN.Companion.SIGDN_FILESYSPATH
@@ -170,6 +171,8 @@ internal class WindowsFilePicker : PlatformFilePicker {
                 ).verify("CoCreateInstance failed")
                 .let { type.build(pbrFileDialog) }
 
+            fileDialog.updateOptions(::requiredFileDialogOptions)
+
             // Run the block
             block(fileDialog)
         } finally {
@@ -263,12 +266,16 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     private fun FileDialog.setFlag(flag: Int) {
+        updateOptions { options -> options or flag }
+    }
+
+    private fun FileDialog.updateOptions(transform: (Int) -> Int) {
         // Get the dialog options
         val ref = IntByReference()
         this.GetOptions(ref).verify("GetOptions failed")
 
         // Set the dialog options
-        this.SetOptions(ref.value or flag).verify("SetOptions failed")
+        this.SetOptions(transform(ref.value)).verify("SetOptions failed")
     }
 
     private fun <FD : FileDialog, T> FD.show(
@@ -398,3 +405,5 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 }
+
+internal fun requiredFileDialogOptions(options: Int): Int = options or FOS_FORCEFILESYSTEM
