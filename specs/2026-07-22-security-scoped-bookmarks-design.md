@@ -1,7 +1,10 @@
 # Security-Scoped Bookmarks for macOS (Apple-native + JVM)
 
-**Date:** 2026-07-22 (revised after spec review)
+**Date:** 2026-07-22 (revision 2, after two spec reviews)
 **Issue:** [#590](https://github.com/vinceglb/FileKit/issues/590) — BUG: MacOS App Sandbox security-scoped bookmarks (JVM + Apple-native)
+**Reference implementation:** branch `vinceglb/issue-590-security-scoped-bookmarks`
+(this spec aligns with and validates that branch's approach; the implementation
+plan should start from it rather than from scratch)
 
 ## Problem
 
@@ -13,9 +16,8 @@ access across launches:
    `URLByResolvingBookmarkData` both pass `options = 0u`, and
    `bookmarkDataIsStale = null` discards staleness. On macOS this creates a
    plain (non-security-scoped) bookmark. On iOS/watchOS `0u` is correct:
-   bookmarks there are implicitly security-scoped and the
-   `NSURLBookmarkCreationWithSecurityScope` /
-   `NSURLBookmarkResolutionWithSecurityScope` constants do not exist.
+   bookmarks there are implicitly security-scoped and the security-scope
+   option constants do not exist.
 2. **JVM** (`PlatformFile.jvm.kt`): `bookmarkData()` stores raw path bytes and
    `fromBookmarkData()` decodes them back into a path. This grants no access in
    a sandboxed macOS JVM app. `startAccessingSecurityScopedResource()` /
@@ -32,231 +34,233 @@ itself is fixed (see "Access lifecycle" below).
   of a bookmarked directory.
 - Never report bookmark-creation success in a sandboxed process unless the
   data is actually security-scoped.
-- Surface "this bookmark should be re-created and re-persisted" to callers.
-- Existing persisted bookmarks (old formats) keep resolving after upgrade.
-- No new dependencies, no bundled dylib, no JDK version bump, no
-  binary-incompatible change to the `PlatformFile` data classes.
+- Surface staleness and a refresh recommendation to callers.
+- Existing persisted bookmarks (old formats) keep resolving after upgrade,
+  without perpetual-refresh loops for unsandboxed apps.
+- No new dependencies, no bundled dylib, no JDK version bump. The JVM and
+  Apple `PlatformFile` ABIs are preserved **manually** (see below) even though
+  the classes stop being `data class`es.
 - No behavior change on iOS, watchOS, Android, Windows, Linux, or web.
 
 ## Public API changes
 
-New rich result type and resolve function in `nonWebMain`; the existing
+New result type and resolve function in `nonWebMain`; the existing
 `fromBookmarkData` keeps its signature and delegates:
 
 ```kotlin
-public class ResolvedBookmark(
+public class BookmarkResolution(
     public val file: PlatformFile,
-    public val isStale: Boolean,
+    public val isStale: Boolean,        // factual platform result (bookmarkDataIsStale)
+    public val shouldRefresh: Boolean,  // FileKit's recommendation to re-create + re-persist
 )
 
-// New API — surfaces staleness.
-public expect fun PlatformFile.Companion.resolveBookmark(
+// New API.
+public expect fun PlatformFile.Companion.resolveBookmarkData(
     bookmarkData: BookmarkData,
-): ResolvedBookmark
+): BookmarkResolution
 
-// Existing API — unchanged signature; delegates to resolveBookmark and
-// drops the staleness flag.
+// Existing API — unchanged signature; delegates and drops the flags.
 public expect fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
 ): PlatformFile
 ```
 
-**`isStale` semantics:** "the bookmark data should be re-created via
-`bookmarkData()` and re-persisted." It is set when:
+- `isStale` is exactly what the OS reported; never synthesized by FileKit.
+- `shouldRefresh` is `isStale || legacyFormat` — set when the data came
+  through a legacy decoder (pre-fix path bytes on macOS JVM, unwrapped raw
+  bookmark bytes on Apple native). Docs must note that refreshing legacy data
+  in a sandboxed app can fail (the legacy data carries no access grant); the
+  user must then re-select the resource.
+- A typed `BookmarkResolutionException` carries a reason enum
+  (`INVALID_DATA`, `UNSUPPORTED_VERSION`, `INCOMPATIBLE_PLATFORM`, …) for
+  diagnosable failures.
+- On platforms with no staleness/legacy concept (Android, Windows, Linux,
+  non-macOS JVM), both flags are `false`.
 
-- the OS reports the bookmark as stale (`bookmarkDataIsStale`), or
-- the data was resolved through a **legacy-format** decoder (pre-fix path
-  bytes on macOS JVM, or a non-security-scoped bookmark on macOS native).
+### PlatformFile ABI preservation
 
-This single flag deliberately folds "system-stale" and "legacy format"
-together because the caller's action is identical in both cases. On platforms
-with neither concept (Android, Windows, Linux, non-macOS JVM),
-`resolveBookmark` returns `isStale = false`.
+Carrying per-resolution access state requires state inside `PlatformFile`, so
+the JVM (and Apple) `PlatformFile` change from `data class` to regular classes
+that **hand-implement the previous ABI surface**: public primary-shaped
+constructor, `component1()`, `copy()` with default, `equals`/`hashCode` on the
+underlying `File`/`NSURL`. A `javap` baseline of the current published class
+is captured in-repo, and the implementation must diff the new class against it
+(the reference branch already does this in
+`docs/plans/issue-590-platform-file-jvm-abi.txt` — relocate under `specs/` or
+similar, since `docs/` is the Mintlify site).
 
-`PlatformFile` (JVM and Apple `data class`es) gains **no new properties** —
-constructor, `copy()`, and `componentN()` signatures are unchanged. All
-capability state lives in an internal side-table (below).
+## Access lifecycle
 
-## Access lifecycle (shared design, both targets)
+Security-scope capabilities attach to the *resolved root* URL. Derived files
+(`PlatformFile(base, child)`, `list()`, `parent()`, `absoluteFile()`) are fresh
+path-backed instances. macOS grants subtree access while a bookmarked
+directory root is actively accessed. Design:
 
-Security-scope capabilities attach to the *resolved root* (the URL that came
-out of bookmark resolution). Derived files — `PlatformFile(base, child)`,
-`list()` results, `parent()`, `absoluteFile()` — are fresh path-backed
-instances and carry no capability. Access to them requires the **root's**
-capability to be active. macOS grants subtree access while a bookmarked
-directory root is actively accessed, so the design is:
+**Per-resolution lease, carried inside `PlatformFile`.** Each successful
+resolution creates one internal access controller (retained root URL + access
+refcount). The resolved `PlatformFile` holds a reference to *its* controller:
 
-**An internal, refcounted capability table** (per target):
-
-- Key: normalized absolute path of the resolved bookmark root.
-- Value: the retained root capability (resolved `NSURL` on Apple native;
-  retained `CFURL` pointer on JVM) + an access refcount.
-- Resolving the same path twice increments a resolve-count on the existing
-  entry instead of overwriting it — no orphaned retained pointers.
-- `startAccessingSecurityScopedResource()`: find the entry for the file's
-  path **or its nearest ancestor** (longest-prefix match on normalized
-  paths). If found, start access on the root capability (balanced,
-  refcounted — the native stop is only called when the count returns to
-  zero). If not found, fall back to current behavior (direct `nsUrl` call on
+- **Descendant propagation:** internal derivation paths (`withPath`/`copy`,
+  child construction, `list()` results) propagate the controller **only when
+  the controller's root covers the new path** (normalized-path prefix on path
+  *components*, so `/foo` does not cover `/foobar`). Parents and out-of-root
+  paths get no controller.
+- **Per-access binding:** `startAccessing…()` starts access on the instance's
+  own controller and `stopAccessing…()` stops it on the same controller — no
+  table lookup at stop time, so overlapping or later-registered roots cannot
+  change which capability a balanced pair targets.
+- **Idempotent, owned release:** `releaseBookmark()` releases the *instance's*
+  lease exactly once (subsequent calls are no-ops). Instances that never came
+  from a resolution — including fresh equal-path instances — hold no lease and
+  cannot release someone else's.
+- **Deferred final release:** the controller only performs the native
+  stop/`CFRelease` when both its lease count *and* its active-access count
+  reach zero. Releasing a bookmark while a source/sink is still open defers
+  teardown until that handle closes.
+- Files without a controller keep current behavior (direct `nsUrl` call on
   Apple; `true` no-op on JVM).
-- `stopAccessingSecurityScopedResource()`: decrement; balanced with
-  successful starts only.
-- `releaseBookmark()`: decrement the entry's resolve-count; on zero, stop any
-  remaining access, release the retained capability, remove the entry.
-  Idempotent — releasing an already-released or never-bookmarked file is a
-  no-op.
-
-This gives child files access "for free" through the existing
-`withScopedAccess` call sites, works for equal-by-path `PlatformFile`
-instances, and requires no change to the public `PlatformFile` classes.
 
 **Filesystem entry-point audit.** `withScopedAccess` coverage is currently
 incomplete and, for handles, incorrect:
 
 - `source()` / `sink()` stop access immediately after *constructing* the
-  handle, before it is read/written
-  (`PlatformFile.jvmAndNative.kt`). They must return wrapping
-  `RawSource`/`RawSink` implementations that hold access until `close()`.
+  handle (`PlatformFile.jvmAndNative.kt`). They must return wrapping
+  `RawSource`/`RawSink` implementations that acquire access on creation and
+  hold it until `close()`.
 - `exists()` and `createDirectories()` are not scoped at all; the
   implementation plan must audit **every** filesystem entry point
   (jvmAndNativeMain, jvmMain, appleMain, desktopMain) and scope each one.
 
+## BookmarkData format on macOS: shared versioned envelope
+
+**Both macOS backends** (native and JVM) wrap new bookmark bytes in the same
+envelope, defined once in `nonWebMain`:
+
+```
+magic ("\0FileKitBookmark") + version (1 byte) + kind (1 byte) + payload
+```
+
+`kind` records whether the payload is a **regular** or **security-scoped**
+bookmark. This matters on both backends:
+
+- Old regular native bookmarks and new security-scoped native bookmarks are
+  both opaque raw Foundation data — "try scoped resolution and fall back" is
+  not a documented format discriminator, and would flag every unsandboxed
+  app's bookmarks as needing refresh forever (perpetual refresh loop).
+- A JVM envelope created while unsandboxed contains a regular bookmark and
+  must stay distinguishable if the app later adopts App Sandbox.
+
+Resolution logic (macOS, both backends):
+
+1. Envelope present, known version → resolve payload with the options implied
+   by `kind`; `isStale` from the OS out-parameter; `shouldRefresh = isStale`.
+2. Envelope present, unknown version or kind →
+   `BookmarkResolutionException(UNSUPPORTED_VERSION / INCOMPATIBLE_PLATFORM)`.
+3. No envelope → **legacy**:
+   - *Apple native:* treat as raw legacy bookmark data, resolve without
+     security scope; `shouldRefresh = true`.
+   - *JVM:* strictly decode as UTF-8 (invalid sequences →
+     `BookmarkResolutionException(INVALID_DATA)`) and treat as a legacy path;
+     `shouldRefresh = true`. **Known limitation:** corrupt data that happens
+     to be valid UTF-8 is indistinguishable from a legacy path; strict
+     decoding narrows, but cannot close, that window.
+
+iOS/watchOS and Windows/Linux formats are unchanged (raw OS bookmark data and
+bare path bytes respectively; both flags `false`).
+
 ## Part 1 — Apple-native fix
 
-**Where:** `appleMain` with per-platform actuals.
+**Where:** `appleMain` with per-platform actuals (reference branch:
+`AppleBookmarkConfiguration.{apple,macos,ios,watchos}.kt`).
 
-- Replace the hardcoded `0u` with internal expect properties:
-
-  ```kotlin
-  // appleMain
-  internal expect val bookmarkCreationOptions: NSURLBookmarkCreationOptions
-  internal expect val bookmarkResolutionOptions: NSURLBookmarkResolutionOptions
-  ```
-
-  - `macosMain` actuals: `NSURLBookmarkCreationWithSecurityScope` and
-    `NSURLBookmarkResolutionWithSecurityScope`.
-  - `iosMain` and `watchosMain` actuals: `0u`.
-
-- Resolution passes a real `bookmarkDataIsStale` pointer, registers the
-  resolved URL in the capability table, and returns `ResolvedBookmark`.
-
-- **Sandbox detection (macOS):** check the
-  `com.apple.security.app-sandbox` entitlement via
-  `SecTaskCopyValueForEntitlement(SecTaskCreateFromSelf(...), ...)`.
-  - *Creation, sandboxed:* security-scoped creation only; on error, **throw
-    `FileKitException`** — never silently downgrade to unscoped data that
-    would fail after relaunch.
-  - *Creation, unsandboxed:* create a regular (non-scoped) bookmark with
-    `0u` — security scope is meaningless there and this matches current
-    behavior.
-  - *Resolution:* try with the security-scope option first; on failure retry
-    with `0u` (legacy bookmark from an older FileKit) and set
-    `isStale = true` so callers migrate.
+- Internal expect/actual configuration supplies creation/resolution options:
+  security-scoped on macOS, `0u` on iOS/watchOS.
+- Creation on macOS wraps the result in the envelope with the correct `kind`;
+  resolution follows the envelope logic above and registers the resolved URL
+  with a new access controller.
+- **Sandbox detection (macOS):** check the `com.apple.security.app-sandbox`
+  entitlement via `SecTaskCopyValueForEntitlement`.
+  - *Sandboxed creation:* security-scoped only; on error **throw** — never
+    silently downgrade to data that fails after relaunch.
+  - *Unsandboxed creation:* regular bookmark, `kind = Regular` — resolves
+    without refresh loops.
 
 ## Part 2 — JVM bridge on macOS
 
-**Where:** `jvmMain`, gated on `os.name` containing "mac". Windows/Linux keep
-the current path-bytes behavior unchanged.
+**Where:** `jvmMain` (reference branch: `MacOsBookmark.jvm.kt`), gated on the
+platform being macOS. Windows/Linux keep path-bytes behavior unchanged.
 
-### Native bridge: CoreFoundation C API via JNA
+**CoreFoundation C API via JNA** (already a dependency) — plain C functions,
+not `objc_msgSend` (typed `objc_msgSend` variants are ABI-sensitive and crash
+the JVM on mistakes):
 
-New internal object (e.g. `MacSecurityScopedBookmarks`) using JNA — already a
-`filekit-core` JVM dependency (`libs.jna.platform`) — binding **plain C
-functions**, not `objc_msgSend` (typed `objc_msgSend` variants are
-ABI-sensitive and crash the JVM on mistakes; the CF API removes selectors and
-calling-convention risk entirely):
-
-- `CFURLCreateWithFileSystemPath` — build the CFURL.
-- `CFURLCreateBookmarkData` with
-  `kCFURLBookmarkCreationWithSecurityScope` (`1 << 11`).
-- `CFURLCreateByResolvingBookmarkData` with
-  `kCFURLBookmarkResolutionWithSecurityScope` (`1 << 10`) and a real
-  `isStale` out-parameter.
-- `CFURLStartAccessingSecurityScopedResource` /
+- `CFURLCreateWithFileSystemPath`, `CFURLCreateBookmarkData`
+  (`kCFURLBookmarkCreationWithSecurityScope`, `1 << 11`),
+  `CFURLCreateByResolvingBookmarkData`
+  (`kCFURLBookmarkResolutionWithSecurityScope`, `1 << 10`, real `isStale`
+  out-parameter), `CFURLStartAccessingSecurityScopedResource` /
   `CFURLStopAccessingSecurityScopedResource`.
-- `SecTaskCreateFromSelf` + `SecTaskCopyValueForEntitlement` (Security
-  framework) for sandbox detection.
-- `CFRetain` / `CFRelease` with explicit ownership: resolved CFURLs are
-  retained, stored in the capability table, and released only via
-  `releaseBookmark()`. Standard CF create/copy-rule discipline for
-  everything else.
+- `SecTaskCreateFromSelf` + `SecTaskCopyValueForEntitlement` for sandbox
+  detection.
+- `CFRetain`/`CFRelease` confined to the access controller; standard CF
+  create/copy-rule discipline elsewhere.
 
-### BookmarkData format on macOS JVM: versioned envelope
-
-New bookmark bytes are wrapped in a small FileKit envelope:
-`"FKBK"` magic + 1 version byte + payload (the raw CF bookmark data).
-Resolution logic:
-
-1. Envelope magic present, known version → unwrap, resolve via CF API;
-   `isStale` from the OS out-parameter.
-2. Envelope magic present, **unknown** version → throw `FileKitException`
-   (data from a future FileKit; corrupting it silently is worse than failing).
-3. No envelope → legacy path bytes: decode as path string, return with
-   `isStale = true` so callers re-create a real bookmark.
-
-This distinguishes legacy, current, corrupt, and future formats without
-guess-based "try one decoder, then the other" resolution. The envelope is
-macOS-JVM-only: Windows/Linux keep bare path bytes (their current format, not
-legacy — `isStale = false`), and Apple-native bytes stay raw OS bookmark data
-(no ambiguity exists there; legacy detection uses the resolution fallback in
-Part 1).
-
-### Behavior on macOS JVM
-
-- `bookmarkData()`: sandboxed → security-scoped CF bookmark in envelope, or
-  **throw** on failure (no silent path-bytes downgrade); unsandboxed →
-  regular CF bookmark in envelope (falling back to path bytes only if the CF
-  call fails, which cannot lose access rights outside the sandbox).
-- `resolveBookmark()` / `fromBookmarkData()`: per the envelope rules above;
-  successful CF resolutions register the retained CFURL in the capability
-  table.
-- `startAccessing` / `stopAccessing` / `releaseBookmark()`: capability-table
-  semantics from "Access lifecycle" above.
+Behavior mirrors Part 1: sandboxed creation throws on failure; unsandboxed
+creates `kind = Regular`; resolution follows the shared envelope logic and
+attaches a `MacOsBookmarkAccess` controller to the returned `PlatformFile`.
 
 ## Part 3 — Documentation
 
-Update the bookmark documentation to call out the entitlements required for
-sandboxed macOS apps:
+Bookmark docs must cover:
 
-- `com.apple.security.app-sandbox`
-- `com.apple.security.files.user-selected.read-write` (initial pick access)
-- `com.apple.security.files.bookmarks.app-scope` (persistence across launches)
-
-Document the contract: check `ResolvedBookmark.isStale` and re-persist a fresh
-bookmark when set; call `releaseBookmark()` when done with a resolved file;
-children of a bookmarked directory are accessible while working through
-FileKit's file operations.
+- Required entitlements: `com.apple.security.app-sandbox`,
+  `com.apple.security.files.user-selected.read-write`,
+  `com.apple.security.files.bookmarks.app-scope`.
+- The contract: check `shouldRefresh` and re-persist; refresh of legacy data
+  can fail in a sandbox → prompt the user to re-select; call
+  `releaseBookmark()` when done; children of a bookmarked directory work
+  through FileKit operations while the resolution is alive.
+- Release notes: sandboxed creation now throws where it previously
+  "succeeded" with broken data (intentional).
 
 ## Testing
 
-Automated (CI is not sandboxed; these validate the mechanics, which also work
-in non-sandboxed processes):
+Automated (CI is unsandboxed; these validate mechanics that work there too):
 
-- `macosArm64`: create → resolve round-trip (`isStale = false`); legacy
-  (options `0u`) bookmark resolves via fallback with `isStale = true`;
-  child-file access resolves the root capability via ancestor lookup;
-  double-resolve + release is balanced (no crash, no premature release);
-  `releaseBookmark()` is idempotent.
-- JVM-on-macOS: same round-trip through the CF bridge; envelope encode/decode;
-  legacy path-bytes resolve with `isStale = true`; unknown envelope version
-  throws; registry refcounting and idempotent release; `source()`/`sink()`
-  hold access until close.
-- JVM-on-Linux/Windows: path-bytes behavior unchanged, `isStale = false`.
-- iOS simulator: existing bookmark round-trip still passes (options stay `0u`).
+- **Envelope:** encode/decode round-trip; unknown version throws; unknown
+  kind throws; truncated header throws; empty payload throws.
+- **Legacy:** unwrapped native bookmark resolves with `shouldRefresh = true`;
+  JVM path bytes resolve with `shouldRefresh = true`; invalid UTF-8 throws
+  `INVALID_DATA`; regular-kind envelope resolves with `shouldRefresh = false`
+  (no refresh loop).
+- **Lifecycle:**
+  - duplicate `releaseBookmark()` on the same instance is a no-op the second
+    time;
+  - release through an unrelated equal-path instance does not affect the
+    resolution's access;
+  - two resolutions of the same path are independent leases;
+  - releasing while a `source()` is open defers native release until close;
+  - overlapping bookmarked roots: access started before a more-specific root
+    is registered stops against the same controller it started on;
+  - path-component coverage: `/foo` does not cover `/foobar`;
+  - child of a bookmarked directory gets access via the propagated controller.
+- **ABI:** `javap` diff of `PlatformFile` against the captured baseline —
+  constructor, `component1`, `copy`, `copy$default` signatures unchanged.
+- **Cross-platform:** JVM-on-Linux/Windows path-bytes unchanged; iOS simulator
+  round-trip unchanged.
 
-Manual: verify true sandbox behavior (access across app relaunch, including
-reading a *child* of a bookmarked directory) with the sample app's Bookmarks
-screen in a sandboxed, signed build on macOS — both Kotlin/Native and JVM.
+Manual: sandboxed, signed sample-app build on macOS (Kotlin/Native and JVM):
+access across relaunch, including reading a *child* of a bookmarked directory.
 
 ## Risks
 
-- The JNA → CoreFoundation bridge still crosses into native code; CF
-  create/copy-rule mistakes leak or crash. Mitigations: plain C bindings
-  (no `objc_msgSend`), explicit retain/release confined to the capability
-  table, everything `internal` and macOS-gated.
-- Sandboxed creation now throws where it previously "succeeded" with broken
-  data. This is intentional (silent downgrade reproduces the reported bug),
-  but is a behavior change worth calling out in release notes.
-- The longest-prefix ancestor lookup assumes normalized absolute paths;
-  symlinked paths inside a bookmarked root may miss the capability. Documented
-  limitation; ops still work when the caller holds the root access open.
+- The JNA → CoreFoundation bridge crosses into native code; CF create/copy
+  mistakes leak or crash. Mitigations: plain C bindings, retain/release
+  confined to the controller, everything `internal` and macOS-gated.
+- Hand-rolled ABI preservation replaces compiler-generated data-class members;
+  the `javap` baseline diff is the safety net and must run in CI or at least
+  in the release checklist.
+- Sandboxed creation now throws where it previously returned broken data —
+  intentional behavior change, called out in release notes.
+- Symlinked paths inside a bookmarked root may not match component-prefix
+  coverage. Documented limitation.
