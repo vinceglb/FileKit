@@ -64,14 +64,14 @@ private fun DebugScreen(
 
     val scope = rememberCoroutineScope()
     val pickerReproSheetState = rememberModalBottomSheetState()
-    val picker = rememberFilePickerLauncher { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = file?.let(::listOf) ?: emptyList()
-
-        scope.launch {
-            file?.let { debugPlatformTest(it) }
-        }
-    }
+//    val picker = rememberFilePickerLauncher { file ->
+//        buttonState = AppScreenHeaderButtonState.Enabled
+//        files = file?.let(::listOf) ?: emptyList()
+//
+//        scope.launch {
+//            file?.let { debugPlatformTest(it) }
+//        }
+//    }
     val imagePicker = rememberFilePickerLauncher(
         type = FileKitType.Image,
         mode = FileKitMode.Multiple(),
@@ -85,6 +85,8 @@ private fun DebugScreen(
                 debugPlatformTest(folder)
                 // bookmarkFolder(folder)
             }
+
+            buttonState = AppScreenHeaderButtonState.Enabled
         }
     }
 
@@ -121,7 +123,7 @@ private fun DebugScreen(
                     title = "Debug",
                     subtitle = "Debug page for testing FileKit features",
                     documentationUrl = "",
-                    primaryButtonText = "Pick File",
+                    primaryButtonText = "Pick Folder",
                     primaryButtonState = buttonState,
                     onPrimaryButtonClick = {
                         buttonState = AppScreenHeaderButtonState.Loading
