@@ -4,6 +4,7 @@ import com.sun.jna.platform.win32.Ole32
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
+import java.util.concurrent.ThreadFactory
 
 internal interface WindowsComRuntime {
     fun initializeSta(): Int
@@ -23,15 +24,21 @@ internal object JnaWindowsComRuntime : WindowsComRuntime {
     }
 }
 
+internal object WindowsDialogThreadFactory : ThreadFactory {
+    override fun newThread(runnable: Runnable): Thread = Thread(runnable, THREAD_NAME).apply {
+        isDaemon = true
+    }
+
+    private const val THREAD_NAME = "FileKit-Windows-Dialog"
+}
+
 internal class WindowsDialogExecutor(
     private val comRuntime: WindowsComRuntime,
+    threadFactory: ThreadFactory = WindowsDialogThreadFactory,
 ) : AutoCloseable {
     private val dispatcher = Executors
-        .newSingleThreadExecutor { runnable ->
-            Thread(runnable, THREAD_NAME).apply {
-                isDaemon = true
-            }
-        }.asCoroutineDispatcher()
+        .newSingleThreadExecutor(threadFactory)
+        .asCoroutineDispatcher()
 
     suspend fun <T> execute(block: () -> T): T = withContext(dispatcher) {
         val initializationResult = comRuntime.initializeSta()
@@ -53,7 +60,6 @@ internal class WindowsDialogExecutor(
     }
 
     private companion object {
-        const val THREAD_NAME = "FileKit-Windows-Dialog"
         const val S_OK = 0
         const val S_FALSE = 1
     }

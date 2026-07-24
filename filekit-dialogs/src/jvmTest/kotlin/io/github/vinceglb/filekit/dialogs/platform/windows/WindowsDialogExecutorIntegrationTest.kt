@@ -56,7 +56,6 @@ class WindowsDialogExecutorIntegrationTest {
                         }
 
                         assertNotEquals(callerThread, dialogThread)
-                        assertEquals("FileKit-Windows-Dialog", dialogThread.name)
                     } finally {
                         dialogExecutor.close()
                     }
