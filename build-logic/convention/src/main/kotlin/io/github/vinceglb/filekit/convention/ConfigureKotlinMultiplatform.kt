@@ -14,6 +14,7 @@ internal fun Project.configureKotlinMultiplatform(
     addMacosTargets: Boolean,
     addWatchosTargets: Boolean,
     addMingwTargets: Boolean = false,
+    addLinuxTargets: Boolean = false,
 ) = extension.apply {
     // Force visibility of public API
     explicitApi()
@@ -45,6 +46,12 @@ internal fun Project.configureKotlinMultiplatform(
     // Windows native target
     if (addMingwTargets) {
         mingwX64()
+    }
+
+    // Linux native targets
+    if (addLinuxTargets) {
+        linuxX64()
+        linuxArm64()
     }
 
     // If one day we need to disable watchOS tests
