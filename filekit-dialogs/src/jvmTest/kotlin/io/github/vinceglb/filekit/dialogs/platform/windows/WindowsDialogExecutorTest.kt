@@ -7,11 +7,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadFactory
 import java.util.concurrent.TimeUnit
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @Suppress("ktlint:standard:function-naming", "FunctionName")
@@ -49,15 +51,23 @@ class WindowsDialogExecutorTest {
     }
 
     @Test
-    fun WindowsDialogExecutor_execute_usesNamedDaemonThread() = runBlocking {
+    fun WindowsDialogThreadFactory_newThread_usesStableDaemonIdentity() {
+        val worker = WindowsDialogThreadFactory.newThread {}
+
+        assertEquals("FileKit-Windows-Dialog", worker.name)
+        assertTrue(worker.isDaemon)
+    }
+
+    @Test
+    fun WindowsDialogExecutor_execute_usesFactoryCreatedThread() = runBlocking {
         val comRuntime = FakeWindowsComRuntime(initializationResult = S_OK)
-        val executor = WindowsDialogExecutor(comRuntime)
+        val threadFactory = RecordingThreadFactory(WindowsDialogThreadFactory)
+        val executor = WindowsDialogExecutor(comRuntime, threadFactory)
 
         try {
             val worker = executor.execute { Thread.currentThread() }
 
-            assertEquals("FileKit-Windows-Dialog", worker.name)
-            assertTrue(worker.isDaemon)
+            assertSame(threadFactory.createdThread, worker)
         } finally {
             executor.close()
         }
@@ -179,6 +189,17 @@ class WindowsDialogExecutorTest {
         } finally {
             releaseFirst.countDown()
             executor.close()
+        }
+    }
+
+    private class RecordingThreadFactory(
+        private val delegate: ThreadFactory,
+    ) : ThreadFactory {
+        lateinit var createdThread: Thread
+            private set
+
+        override fun newThread(runnable: Runnable): Thread = delegate.newThread(runnable).also {
+            createdThread = it
         }
     }
 
