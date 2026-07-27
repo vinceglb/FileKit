@@ -2,19 +2,20 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.value
 import platform.CoreFoundation.CFBooleanGetValue
 import platform.CoreFoundation.CFBooleanGetTypeID
+import platform.CoreFoundation.CFErrorRefVar
 import platform.CoreFoundation.CFGetTypeID
 import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFStringCreateWithCString
 import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFStringEncodingUTF8
-import platform.CoreFoundation.__CFError
 import platform.Foundation.NSError
 import platform.Foundation.NSURLBookmarkCreationWithSecurityScope
 import platform.Foundation.NSURLBookmarkResolutionWithSecurityScope
@@ -86,7 +87,7 @@ private fun readAppSandboxEntitlement(): Boolean = memScoped {
         encoding = kCFStringEncodingUTF8,
     ) ?: throw IllegalStateException("Could not create the App Sandbox entitlement name")
     return try {
-        val error = alloc<CPointerVar<__CFError>>()
+        val error = alloc<CFErrorRefVar>()
         val value = SecTaskCopyValueForEntitlement(task, entitlement, error.ptr)
         if (value == null) {
             error.value?.let { failure ->
