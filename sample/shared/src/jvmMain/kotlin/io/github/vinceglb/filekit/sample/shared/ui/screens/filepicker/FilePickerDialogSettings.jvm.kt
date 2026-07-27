@@ -31,7 +31,7 @@ internal class JvmFilePickerDialogSettingsState : FilePickerDialogSettingsState 
 
     override fun build(): FileKitDialogSettings = FileKitDialogSettings(
         title = title.ifBlank { null },
-        parentWindow = null,
+        parent = null,
         macOS = FileKitMacOSSettings(
             resolvesAliases = resolvesAliases,
             canCreateDirectories = canCreateDirectories,

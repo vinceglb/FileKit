@@ -5,6 +5,7 @@ package io.github.vinceglb.filekit.dialogs.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -62,5 +63,5 @@ private fun injectDialogSettings(
     dialogSettings: FileKitDialogSettings?,
     window: Window,
 ): FileKitDialogSettings = dialogSettings
-    ?.copy(parentWindow = window)
-    ?: FileKitDialogSettings(parentWindow = window)
+    ?.copy(parent = FileKitDialogParent.awt(window))
+    ?: FileKitDialogSettings(parent = FileKitDialogParent.awt(window))

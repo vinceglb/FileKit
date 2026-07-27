@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.dialogs.platform.awt
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.dialogs.requireAwtWindowOrNull
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
@@ -25,7 +26,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = false,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow,
+        parentWindow = dialogSettings.parent.requireAwtWindowOrNull("The Linux AWT fallback"),
     )?.firstOrNull()
 
     override suspend fun openFilesPicker(
@@ -37,7 +38,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow,
+        parentWindow = dialogSettings.parent.requireAwtWindowOrNull("The Linux AWT fallback"),
     )
 
     override suspend fun openDirectoryPicker(

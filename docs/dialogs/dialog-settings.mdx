@@ -11,20 +11,20 @@ FileKit allows you to customize dialog behavior with platform-specific settings.
 On JVM platforms (Windows, macOS, Linux), you can customize:
 
 - `title`: Set a custom title for the dialog
-- `parentWindow`: Set the parent window for the dialog (useful for modal behavior)
+- `parent`: Set the typed parent for the dialog
 - `macOS`: Configure macOS-specific settings
 
 ```kotlin
-// Basic settings with title and parent window
+// Basic settings with an AWT parent window
 val settings = FileKitDialogSettings(
     title = "Select a file",
-    parentWindow = window
+    parent = FileKitDialogParent.awt(window)
 )
 
 // With macOS-specific settings
 val settings = FileKitDialogSettings(
     title = "Select a file",
-    parentWindow = window,
+    parent = FileKitDialogParent.awt(window),
     macOS = FileKitMacOSSettings(
         resolvesAliases = false,
         canCreateDirectories = true
@@ -36,10 +36,55 @@ For desktop applications, it's recommended to pass the window reference:
 
 ```kotlin
 Window(onCloseRequest = ::exitApplication) {
-    val dialogSettings = FileKitDialogSettings(this.window)
+    val dialogSettings = FileKitDialogSettings(
+        parent = FileKitDialogParent.awt(this.window)
+    )
     App(dialogSettings)
 }
 ```
+
+### JVM parent types
+
+`FileKitDialogParent` makes platform-native ownership explicit. Use only the
+factory matching the integration that owns the window:
+
+```kotlin
+val windowsSettings = FileKitDialogSettings(
+    parent = FileKitDialogParent.windows(hwnd),
+)
+val x11Settings = FileKitDialogSettings(
+    parent = FileKitDialogParent.x11(xid),
+)
+val waylandSettings = FileKitDialogSettings(
+    parent = FileKitDialogParent.wayland(xdgForeignPortalToken),
+)
+```
+
+Windows dialogs accept AWT windows and native HWNDs. Linux's XDG portal accepts
+AWT windows (converted to `x11:<lowercase-hex-XID>`), X11 XIDs, and Wayland
+portal tokens. If the portal is unavailable, FileKit's AWT/Swing fallback accepts
+only an AWT parent; supplying an X11 or Wayland parent fails rather than silently
+showing an unparented dialog.
+
+`windows(0)` and invalid X11 XIDs are rejected. `wayland(...)` accepts a nonblank,
+whitespace-free opaque xdg-portal/xdg-foreign token only. Do not pass a raw
+`wl_surface*`, a decimal pointer, or a `0x...` pointer value: FileKit does not
+acquire or dereference Wayland surfaces.
+
+On macOS JVM, FileKit keeps the existing `NSOpenPanel`/`NSSavePanel.runModal()`
+implementation. An AWT parent is accepted for API consistency, but FileKit does
+not currently bridge it to an `NSWindow` or create an owned sheet; `parent` does
+not change that behavior.
+
+### Migrating from `parentWindow`
+
+`parentWindow` is deprecated for one release. It remains available as an AWT-only
+source-compatibility adapter and normalizes directly into `parent`; there is never
+a second stored parent value. Replace it with `parent =
+FileKitDialogParent.awt(parentWindow)`. The deprecated `parentWindow` getter
+returns a window only when `parent` is an AWT parent; it returns `null` for native
+parents. A single constructor or `copy` call accepts either `parent` or
+`parentWindow`, never both, so there is no precedence rule to learn.
 
 ### iOS and macOS Settings
 
@@ -91,7 +136,7 @@ expect fun createDialogSettings(): FileKitDialogSettings
 actual fun createDialogSettings(): FileKitDialogSettings {
     return FileKitDialogSettings(
         title = "Select a file",
-        parentWindow = window,
+        parent = FileKitDialogParent.awt(window),
         macOS = FileKitMacOSSettings(
             canCreateDirectories = true
         )

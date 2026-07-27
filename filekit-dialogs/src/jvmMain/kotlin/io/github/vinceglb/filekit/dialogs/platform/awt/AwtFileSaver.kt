@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.dialogs.platform.awt
 
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.requireAwtWindowOrNull
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.awt.Dialog
@@ -25,16 +26,17 @@ internal object AwtFileSaver {
             }
         }
 
+        val parentWindow = dialogSettings?.parent.requireAwtWindowOrNull("The Linux AWT fallback")
         // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (dialogSettings?.parentWindow) {
-            is Dialog -> object : FileDialog(dialogSettings.parentWindow, "Save dialog", SAVE) {
+        val dialog = when (parentWindow) {
+            is Dialog -> object : FileDialog(parentWindow, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)
                 }
             }
 
-            else -> object : FileDialog(dialogSettings?.parentWindow as? Frame, "Save dialog", SAVE) {
+            else -> object : FileDialog(parentWindow as? Frame, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)

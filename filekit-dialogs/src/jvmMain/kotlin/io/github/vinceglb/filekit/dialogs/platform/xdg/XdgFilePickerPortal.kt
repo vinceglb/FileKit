@@ -2,8 +2,10 @@ package io.github.vinceglb.filekit.dialogs.platform.xdg
 
 import com.sun.jna.Native
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.dialogs.resolveXdgPortalParent
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.CompletableDeferred
 import org.freedesktop.dbus.DBusMatchRule
@@ -21,7 +23,6 @@ import org.freedesktop.dbus.interfaces.Properties
 import org.freedesktop.dbus.messages.DBusSignal
 import org.freedesktop.dbus.types.UInt32
 import org.freedesktop.dbus.types.Variant
-import java.awt.Window
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.net.URI
@@ -54,7 +55,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         directory = directory,
         fileExtensions = fileExtensions,
         title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
+        parent = dialogSettings.parent,
         multiple = false,
         openDirectory = false,
     )?.firstOrNull()
@@ -67,7 +68,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         directory = directory,
         fileExtensions = fileExtensions,
         title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
+        parent = dialogSettings.parent,
         multiple = true,
         openDirectory = false,
     )
@@ -79,7 +80,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         directory = directory,
         fileExtensions = null,
         title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
+        parent = dialogSettings.parent,
         multiple = false,
         openDirectory = true,
     )?.firstOrNull()
@@ -88,7 +89,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         directory: PlatformFile?,
         fileExtensions: Set<String>?,
         title: String?,
-        parentWindow: Window?,
+        parent: FileKitDialogParent?,
         multiple: Boolean,
         openDirectory: Boolean,
     ): List<File>? {
@@ -103,7 +104,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).OpenFile(
-                parentWindow = getWindowIdentifier(parentWindow) ?: "",
+                parentWindow = parent.resolveXdgPortalParent(Native::getWindowID),
                 title = title ?: "",
                 options = options,
             )
@@ -135,7 +136,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).SaveFile(
-                parentWindow = getWindowIdentifier(dialogSettings.parentWindow) ?: "",
+                parentWindow = dialogSettings.parent.resolveXdgPortalParent(Native::getWindowID),
                 title = "",
                 options = options,
             )
@@ -227,10 +228,6 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
             // Signal handler may already be removed; ignore cleanup failures.
         }
     }
-
-    // awt only supports X11
-    private fun getWindowIdentifier(parentWindow: Window?) =
-        parentWindow?.let { "X11:${Native.getWindowID(it)}" }
 
     private fun getFileChooserObject(connection: DBusConnection) = connection.getRemoteObject(
         "org.freedesktop.portal.Desktop",

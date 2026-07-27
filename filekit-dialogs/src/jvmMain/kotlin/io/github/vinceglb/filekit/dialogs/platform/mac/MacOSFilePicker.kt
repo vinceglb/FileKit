@@ -7,6 +7,7 @@ import io.github.vinceglb.filekit.dialogs.buildFileSaverAllowedFileTypes
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
+import io.github.vinceglb.filekit.dialogs.requireAwtWindowOrNull
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -17,36 +18,45 @@ internal class MacOSFilePicker : PlatformFilePicker {
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = callNativeMacOSPicker(
-        mode = MacOSFilePickerMode.SingleFile,
-        directory = directory,
-        fileExtensions = fileExtensions,
-        title = dialogSettings.title,
-        macOSSettings = dialogSettings.macOS,
-    )
+    ): File? {
+        dialogSettings.parent.requireAwtWindowOrNull("macOS JVM dialogs")
+        return callNativeMacOSPicker(
+            mode = MacOSFilePickerMode.SingleFile,
+            directory = directory,
+            fileExtensions = fileExtensions,
+            title = dialogSettings.title,
+            macOSSettings = dialogSettings.macOS,
+        )
+    }
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? = callNativeMacOSPicker(
-        mode = MacOSFilePickerMode.MultipleFiles,
-        directory = directory,
-        fileExtensions = fileExtensions,
-        title = dialogSettings.title,
-        macOSSettings = dialogSettings.macOS,
-    )
+    ): List<File>? {
+        dialogSettings.parent.requireAwtWindowOrNull("macOS JVM dialogs")
+        return callNativeMacOSPicker(
+            mode = MacOSFilePickerMode.MultipleFiles,
+            directory = directory,
+            fileExtensions = fileExtensions,
+            title = dialogSettings.title,
+            macOSSettings = dialogSettings.macOS,
+        )
+    }
 
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = callNativeMacOSPicker(
-        mode = MacOSFilePickerMode.Directories,
-        directory = directory,
-        fileExtensions = null,
-        title = dialogSettings.title,
-        macOSSettings = dialogSettings.macOS,
-    )
+    ): File? {
+        dialogSettings.parent.requireAwtWindowOrNull("macOS JVM dialogs")
+        return callNativeMacOSPicker(
+            mode = MacOSFilePickerMode.Directories,
+            directory = directory,
+            fileExtensions = null,
+            title = dialogSettings.title,
+            macOSSettings = dialogSettings.macOS,
+        )
+    }
 
     override suspend fun openFileSaver(
         suggestedName: String,
@@ -55,6 +65,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
     ): File? = withContext(Dispatchers.IO) {
+        dialogSettings.parent.requireAwtWindowOrNull("macOS JVM dialogs")
         val pool = Foundation.NSAutoreleasePool()
         try {
             var response: File? = null
