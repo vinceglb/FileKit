@@ -27,8 +27,15 @@ internal data class MacOsBookmarkEnvelope(
         private val HEADER_SIZE = MAGIC.size + 2
 
         fun decodeOrNull(bytes: ByteArray): MacOsBookmarkEnvelope? {
-            if (bytes.size < MAGIC.size || !bytes.copyOfRange(0, MAGIC.size).contentEquals(MAGIC)) {
+            val magicPrefixSize = minOf(bytes.size, MAGIC.size)
+            if (!bytes.copyOfRange(0, magicPrefixSize).contentEquals(MAGIC.copyOfRange(0, magicPrefixSize))) {
                 return null
+            }
+            if (bytes.size < MAGIC.size) {
+                throw BookmarkResolutionException(
+                    reason = BookmarkResolutionFailure.INVALID_DATA,
+                    message = "The FileKit bookmark envelope is incomplete",
+                )
             }
             if (bytes.size < HEADER_SIZE) {
                 throw BookmarkResolutionException(

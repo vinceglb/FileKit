@@ -133,7 +133,9 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
     }
 }
 
-public actual fun PlatformFile.releaseBookmark() {}
+public actual fun PlatformFile.releaseBookmark() {
+    macOsBookmarkAccess?.release()
+}
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,

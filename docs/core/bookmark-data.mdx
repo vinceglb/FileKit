@@ -182,6 +182,8 @@ restoredFile.withScopedAccess { file ->
 }
 ```
 
+Call `releaseBookmark()` when the restored bookmark is no longer needed. It prevents new scoped operations while allowing already-open sources and sinks to close cleanly.
+
 ## Handling Invalid and Legacy Bookmarks
 
 A bookmark is not a guarantee. It can become invalid if the original file is deleted, moved, or if permissions change. A stale bookmark is different: it resolved successfully but should be recreated. Legacy bookmark data is also different: FileKit resolved an older representation and recommends replacing it.

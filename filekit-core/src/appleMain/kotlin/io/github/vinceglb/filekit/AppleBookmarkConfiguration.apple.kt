@@ -12,6 +12,7 @@ internal data class AppleBookmarkPayload(
     val bytes: ByteArray,
     val resolutionOptions: ULong,
     val isLegacy: Boolean,
+    val kind: MacOsBookmarkKind? = null,
 )
 
 internal expect fun appleBookmarkCreationConfiguration(): AppleBookmarkCreationConfiguration

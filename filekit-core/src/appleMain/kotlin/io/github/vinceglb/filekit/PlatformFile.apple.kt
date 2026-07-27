@@ -56,44 +56,58 @@ import kotlin.time.Instant
  * @property nsUrl The underlying [NSURL] object.
  */
 @Serializable(with = PlatformFileSerializer::class)
-public actual class PlatformFile internal constructor(
+public actual data class PlatformFile(
     public val nsUrl: NSURL,
-    internal val securityScopeUrl: NSURL,
-    internal val securityScopeRootPath: String,
 ) {
-    public constructor(nsUrl: NSURL) : this(
-        nsUrl = nsUrl,
-        securityScopeUrl = nsUrl,
-        securityScopeRootPath = nsUrl.standardizedPath,
-    )
+    internal var macOsBookmarkLease: MacOsBookmarkLease? = null
 
     public actual override fun toString(): String = path
 
-    public operator fun component1(): NSURL = nsUrl
-
-    public fun copy(nsUrl: NSURL = this.nsUrl): PlatformFile {
-        val candidatePath = nsUrl.standardizedPath
-        return if (candidatePath.isWithin(securityScopeRootPath)) {
-            PlatformFile(
-                nsUrl = nsUrl,
-                securityScopeUrl = securityScopeUrl,
-                securityScopeRootPath = securityScopeRootPath,
-            )
-        } else {
-            PlatformFile(nsUrl)
+    public actual companion object {
+        internal fun withMacOsBookmarkLease(url: NSURL): PlatformFile = PlatformFile(url).also {
+            it.macOsBookmarkLease = MacOsBookmarkLease(url)
         }
     }
+}
 
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is PlatformFile) return false
-        if (nsUrl.path != other.nsUrl.path) return false
-        return true
+@OptIn(ExperimentalForeignApi::class)
+internal class MacOsBookmarkLease(
+    url: NSURL,
+) {
+    private val rootPath = url.standardizedPath
+    private var scopeUrl: NSURL? = url
+    private var activeAccesses = 0
+    private var released = false
+
+    fun covers(url: NSURL): Boolean = url.standardizedPath.isWithin(rootPath)
+
+    fun start(): Boolean {
+        check(!released) { "This security-scoped bookmark has been released" }
+        val granted = requireNotNull(scopeUrl).startAccessingSecurityScopedResource()
+        if (granted) {
+            activeAccesses += 1
+        }
+        return granted
     }
 
-    override fun hashCode(): Int = nsUrl.path.hashCode()
+    fun stop() {
+        if (activeAccesses == 0) return
+        requireNotNull(scopeUrl).stopAccessingSecurityScopedResource()
+        activeAccesses -= 1
+        releaseNativeUrlIfDrained()
+    }
 
-    public actual companion object
+    fun release() {
+        if (released) return
+        released = true
+        releaseNativeUrlIfDrained()
+    }
+
+    private fun releaseNativeUrlIfDrained() {
+        if (released && activeAccesses == 0) {
+            scopeUrl = null
+        }
+    }
 }
 
 public actual fun PlatformFile(path: Path): PlatformFile =
@@ -107,7 +121,12 @@ public actual fun PlatformFile.toKotlinxIoPath(): Path =
     nsUrl.toKotlinxPath()
 
 @PublishedApi
-internal actual fun PlatformFile.withPath(path: Path): PlatformFile = copy(PlatformFile(path).nsUrl)
+internal actual fun PlatformFile.withPath(path: Path): PlatformFile =
+    PlatformFile(path).copyMacOsBookmarkLeaseFrom(this)
+
+private fun PlatformFile.copyMacOsBookmarkLeaseFrom(source: PlatformFile): PlatformFile = apply {
+    macOsBookmarkLease = source.macOsBookmarkLease?.takeIf { it.covers(nsUrl) }
+}
 
 private fun String.isWithin(rootPath: String): Boolean {
     val root = rootPath.trimEnd('/')
@@ -255,10 +274,10 @@ private fun cfStringToKString(cfString: CFStringRef?): String? {
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
-    securityScopeUrl.startAccessingSecurityScopedResource()
+    macOsBookmarkLease?.start() ?: nsUrl.startAccessingSecurityScopedResource()
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource(): Unit =
-    securityScopeUrl.stopAccessingSecurityScopedResource()
+    macOsBookmarkLease?.stop() ?: nsUrl.stopAccessingSecurityScopedResource()
 
 @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class, BetaInteropApi::class)
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
@@ -282,7 +301,9 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
     }
 }
 
-public actual fun PlatformFile.releaseBookmark() {}
+public actual fun PlatformFile.releaseBookmark() {
+    macOsBookmarkLease?.release()
+}
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
 public actual fun PlatformFile.Companion.fromBookmarkData(
@@ -304,12 +325,18 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
 internal fun appleBookmarkResolution(
     payload: AppleBookmarkPayload,
     nativeResolution: AppleBookmarkNativeResolution,
-): BookmarkResolution =
-    BookmarkResolution(
-        file = PlatformFile(nativeResolution.url),
+): BookmarkResolution {
+    val file = if (payload.kind == MacOsBookmarkKind.SecurityScoped) {
+        PlatformFile.withMacOsBookmarkLease(nativeResolution.url)
+    } else {
+        PlatformFile(nativeResolution.url)
+    }
+    return BookmarkResolution(
+        file = file,
         isStale = nativeResolution.isStale,
         shouldRefresh = nativeResolution.isStale || payload.isLegacy,
     )
+}
 
 internal data class AppleBookmarkNativeResolution(
     val url: NSURL,

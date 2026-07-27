@@ -12,6 +12,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class PlatformFileMacOsBookmarkTest {
@@ -28,24 +30,35 @@ class PlatformFileMacOsBookmarkTest {
     }
 
     @Test
-    fun PlatformFile_equality_usesUrlPath() {
+    fun PlatformFile_equality_preservesUrlIdentity() {
         val first = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=1")))
         val second = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=2")))
 
         assertEquals(expected = first.nsUrl.path, actual = second.nsUrl.path)
-        assertEquals(expected = first, actual = second)
-        assertEquals(expected = first.hashCode(), actual = second.hashCode())
+        assertNotEquals(illegal = first, actual = second)
     }
 
     @Test
     fun PlatformFile_derivedPaths_inheritScopeOnlyWithinRoot() {
-        val root = FileKit.projectDir.absoluteFile()
+        val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
 
         val child = root / "child"
         val escaped = root / "../outside"
 
-        assertEquals(expected = root.securityScopeUrl, actual = child.securityScopeUrl)
-        assertEquals(expected = escaped.nsUrl, actual = escaped.securityScopeUrl)
+        assertEquals(expected = root.macOsBookmarkLease, actual = child.macOsBookmarkLease)
+        assertNull(actual = escaped.macOsBookmarkLease)
+    }
+
+    @Test
+    fun PlatformFile_releaseBookmark_rejectsNewScopedAccessForDerivedFiles() {
+        val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
+        val child = root / "child"
+
+        root.releaseBookmark()
+
+        assertFailsWith<IllegalStateException> {
+            child.startAccessingSecurityScopedResource()
+        }
     }
 
     @Test

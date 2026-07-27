@@ -27,6 +27,8 @@ internal interface MacOsBookmarkAccess {
     fun start(): Boolean
 
     fun stop()
+
+    fun release()
 }
 
 private class NativeMacOsBookmarkAccess(
@@ -34,17 +36,40 @@ private class NativeMacOsBookmarkAccess(
     private val url: CFUrlRef,
 ) : MacOsBookmarkAccess {
     private val rootPath = root.canonicalFile.toPath()
+    private var activeAccesses = 0
+    private var released = false
 
     @Suppress("unused")
     private val cleanable = cleaner.register(this, NativeUrlReleaser(url))
 
     override fun covers(file: File): Boolean = file.canonicalFile.toPath().startsWith(rootPath)
 
-    override fun start(): Boolean =
-        CoreFoundationBookmarkApi.instance.CFURLStartAccessingSecurityScopedResource(url) != 0.toByte()
+    override fun start(): Boolean = synchronized(this) {
+        check(!released) { "This security-scoped bookmark has been released" }
+        val granted = CoreFoundationBookmarkApi.instance.CFURLStartAccessingSecurityScopedResource(url) != 0.toByte()
+        if (granted) {
+            activeAccesses += 1
+        }
+        granted
+    }
 
-    override fun stop() {
+    override fun stop() = synchronized(this) {
+        if (activeAccesses == 0) return
         CoreFoundationBookmarkApi.instance.CFURLStopAccessingSecurityScopedResource(url)
+        activeAccesses -= 1
+        releaseNativeUrlIfDrained()
+    }
+
+    override fun release() = synchronized(this) {
+        if (released) return
+        released = true
+        releaseNativeUrlIfDrained()
+    }
+
+    private fun releaseNativeUrlIfDrained() {
+        if (released && activeAccesses == 0) {
+            cleanable.clean()
+        }
     }
 
     companion object {
@@ -62,13 +87,22 @@ private class NativeMacOsBookmarkAccess(
 
 private fun readAppSandboxEntitlement(): Boolean {
     check(Platform.isMac())
-    val task = SecurityApi.instance.SecTaskCreateFromSelf(null) ?: return false
+    val task = SecurityApi.instance.SecTaskCreateFromSelf(null)
+        ?: throw IllegalStateException("Could not inspect the App Sandbox entitlement")
     try {
         val entitlement = CoreFoundation.CFStringRef.createCFString(APP_SANDBOX_ENTITLEMENT)
+            ?: throw IllegalStateException("Could not create the App Sandbox entitlement name")
         try {
-            val value = SecurityApi.instance.SecTaskCopyValueForEntitlement(task, entitlement, null) ?: return false
+            val error = PointerByReference()
+            val value = SecurityApi.instance.SecTaskCopyValueForEntitlement(task, entitlement, error)
+            if (value == null) {
+                error.value?.let { throw CoreFoundation.CFTypeRef(it).toEntitlementException() }
+                return false
+            }
             try {
-                if (!value.isTypeID(CoreFoundation.BOOLEAN_TYPE_ID)) return false
+                if (!value.isTypeID(CoreFoundation.BOOLEAN_TYPE_ID)) {
+                    throw IllegalStateException("The App Sandbox entitlement is not a Boolean")
+                }
                 return CoreFoundation.INSTANCE.CFBooleanGetValue(
                     CoreFoundation.CFBooleanRef(value.pointer),
                 ) != 0.toByte()
@@ -80,6 +114,20 @@ private fun readAppSandboxEntitlement(): Boolean {
         }
     } finally {
         task.release()
+    }
+}
+
+private fun CoreFoundation.CFTypeRef.toEntitlementException(): IllegalStateException {
+    try {
+        val description = CoreFoundationBookmarkApi.instance.CFErrorCopyDescription(this)
+        val message = try {
+            description?.stringValue() ?: "Could not inspect the App Sandbox entitlement"
+        } finally {
+            description?.release()
+        }
+        return IllegalStateException(message)
+    } finally {
+        release()
     }
 }
 

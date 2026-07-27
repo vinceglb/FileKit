@@ -243,6 +243,33 @@ class PlatformFileJvmTest {
     }
 
     @Test
+    fun PlatformFile_releaseBookmark_waitsForOpenStreamsAndRejectsNewAccess() {
+        val directory = createTempDirectory("filekit-bookmark-release").toFile()
+        try {
+            val nativeFile = File(directory, "content.txt").apply { writeText("hello") }
+            val access = RecordingBookmarkAccess(directory)
+            val platformFile = PlatformFile.withMacOsBookmarkAccess(nativeFile, access)
+
+            val source = platformFile.source()
+            platformFile.releaseBookmark()
+
+            assertEquals(expected = 0, actual = access.releaseCount)
+            assertFailsWith<IllegalStateException> {
+                platformFile.startAccessingSecurityScopedResource()
+            }
+
+            source.close()
+
+            assertEquals(expected = 1, actual = access.stopCount)
+            assertEquals(expected = 1, actual = access.releaseCount)
+            platformFile.releaseBookmark()
+            assertEquals(expected = 1, actual = access.releaseCount)
+        } finally {
+            directory.deleteRecursively()
+        }
+    }
+
+    @Test
     fun PlatformFile_metadataAndBookmarkOperations_balanceScopedAccess() = runTest {
         val directory = createTempDirectory("filekit-bookmark-metadata").toFile()
         try {
@@ -287,15 +314,37 @@ class PlatformFileJvmTest {
         var stopCount: Int = 0
             private set
 
+        var releaseCount: Int = 0
+            private set
+
+        private var released = false
+        private var activeAccesses = 0
+
         override fun covers(file: File): Boolean = file.canonicalFile.toPath().startsWith(rootPath)
 
         override fun start(): Boolean {
+            check(!released) { "This security-scoped bookmark has been released" }
             startCount += 1
+            activeAccesses += 1
             return true
         }
 
         override fun stop() {
             stopCount += 1
+            activeAccesses -= 1
+            releaseIfDrained()
+        }
+
+        override fun release() {
+            if (released) return
+            released = true
+            releaseIfDrained()
+        }
+
+        private fun releaseIfDrained() {
+            if (released && activeAccesses == 0) {
+                releaseCount += 1
+            }
         }
     }
 }

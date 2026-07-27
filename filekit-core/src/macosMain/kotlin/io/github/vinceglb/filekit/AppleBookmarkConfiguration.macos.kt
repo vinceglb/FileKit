@@ -2,12 +2,19 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.CPointerVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
 import platform.CoreFoundation.CFBooleanGetValue
+import platform.CoreFoundation.CFBooleanGetTypeID
+import platform.CoreFoundation.CFGetTypeID
 import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFStringCreateWithCString
 import platform.CoreFoundation.kCFAllocatorDefault
 import platform.CoreFoundation.kCFStringEncodingUTF8
+import platform.CoreFoundation.__CFError
 import platform.Foundation.NSError
 import platform.Foundation.NSURLBookmarkCreationWithSecurityScope
 import platform.Foundation.NSURLBookmarkResolutionWithSecurityScope
@@ -52,6 +59,7 @@ internal actual fun decodeAppleBookmarkPayload(bytes: ByteArray): AppleBookmarkP
         bytes = envelope.payload,
         resolutionOptions = envelope.kind.resolutionOptions,
         isLegacy = false,
+        kind = envelope.kind,
     )
 }
 
@@ -69,19 +77,28 @@ private val MacOsBookmarkKind?.resolutionOptions: ULong
     }
 
 @OptIn(ExperimentalForeignApi::class)
-private fun readAppSandboxEntitlement(): Boolean {
-    val task = SecTaskCreateFromSelf(kCFAllocatorDefault) ?: return false
+private fun readAppSandboxEntitlement(): Boolean = memScoped {
+    val task = SecTaskCreateFromSelf(kCFAllocatorDefault)
+        ?: throw IllegalStateException("Could not inspect the App Sandbox entitlement")
     val entitlement = CFStringCreateWithCString(
         alloc = kCFAllocatorDefault,
         cStr = APP_SANDBOX_ENTITLEMENT,
         encoding = kCFStringEncodingUTF8,
-    ) ?: run {
-        CFRelease(task)
-        return false
-    }
+    ) ?: throw IllegalStateException("Could not create the App Sandbox entitlement name")
     return try {
-        val value = SecTaskCopyValueForEntitlement(task, entitlement, null) ?: return false
+        val error = alloc<CPointerVar<__CFError>>()
+        val value = SecTaskCopyValueForEntitlement(task, entitlement, error.ptr)
+        if (value == null) {
+            error.value?.let { failure ->
+                CFRelease(failure.reinterpret())
+                throw IllegalStateException("Could not inspect the App Sandbox entitlement")
+            }
+            return false
+        }
         try {
+            if (CFGetTypeID(value) != CFBooleanGetTypeID()) {
+                throw IllegalStateException("The App Sandbox entitlement is not a Boolean")
+            }
             CFBooleanGetValue(value.reinterpret())
         } finally {
             CFRelease(value)
