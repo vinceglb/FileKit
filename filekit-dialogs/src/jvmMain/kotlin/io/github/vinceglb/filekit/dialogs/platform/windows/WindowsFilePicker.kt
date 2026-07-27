@@ -265,7 +265,7 @@ internal class WindowsFilePicker(
         block: (FD) -> T,
     ): T? {
         // Show the dialog to the user
-        val openDialogResult = this.Show(parentHandle?.let(::toHwnd))
+        val openDialogResult = showWindowsDialog(parentHandle, this::Show)
 
         // Valid error code: User canceled the dialog
         val userCanceledException = Win32Exception(ERROR_CANCELLED)
@@ -378,8 +378,13 @@ internal class WindowsFilePicker(
     private fun FileKitDialogSettings.resolveWindowsHandle(): Long? = parent.resolveWindowsHandle { window ->
         Pointer.nativeValue(Native.getWindowPointer(window))
     }
-
-    private fun toHwnd(handle: Long): WinDef.HWND = WinDef.HWND(Pointer(handle))
 }
+
+internal fun <T> showWindowsDialog(
+    parentHandle: Long?,
+    show: (WinDef.HWND?) -> T,
+): T = show(parentHandle?.let(::toWindowsHwnd))
+
+internal fun toWindowsHwnd(handle: Long): WinDef.HWND = WinDef.HWND(Pointer(handle))
 
 internal fun requiredFileDialogOptions(options: Int): Int = options or FOS_FORCEFILESYSTEM

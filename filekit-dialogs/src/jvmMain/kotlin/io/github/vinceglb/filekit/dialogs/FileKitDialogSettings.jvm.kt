@@ -38,6 +38,24 @@ public actual data class FileKitDialogSettings(
     )
 
     /**
+     * Compatibility adapter for the former positional AWT constructor call.
+     *
+     * The parameter is intentionally named [window] so existing named
+     * `parentWindow = ...` calls continue to select the adapter above.
+     */
+    @Deprecated(
+        message = "Use parent = FileKitDialogParent.awt(window) instead.",
+        replaceWith = ReplaceWith("FileKitDialogSettings(parent = FileKitDialogParent.awt(window))"),
+    )
+    public constructor(
+        window: Window?,
+        macOS: FileKitMacOSSettings = FileKitMacOSSettings(),
+    ) : this(
+        parent = window?.let(FileKitDialogParent::awt),
+        macOS = macOS,
+    )
+
+    /**
      * The AWT window represented by [parent], if any.
      *
      * Native [FileKitDialogParent] values return `null`; callers should migrate to

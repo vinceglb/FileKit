@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class FileKitDialogParentTest {
@@ -54,7 +55,16 @@ class FileKitDialogParentTest {
 
     @Test
     fun FileKitDialogParent_wayland_rejectsUnsafeTokens() {
-        listOf("", "token with spaces", "wayland:already-prefixed", "12345", "0xdeadbeef").forEach { token ->
+        listOf(
+            "",
+            "token with spaces",
+            "wayland:already-prefixed",
+            "12345",
+            "-42",
+            "+42",
+            "0xdeadbeef",
+            "0XDEADBEEF",
+        ).forEach { token ->
             assertFailsWith<IllegalArgumentException> {
                 FileKitDialogParent.wayland(token)
             }
@@ -93,6 +103,18 @@ class FileKitDialogParentTest {
         assertNull(legacy.parentWindow)
         assertNull(native.parentWindow)
         assertNull(legacyCopy.parent)
+    }
+
+    @Test
+    fun FileKitDialogSettings_deprecatedSourceSnippetsCompile() {
+        val positionalConstructor: (Window) -> FileKitDialogSettings = { window -> FileKitDialogSettings(window) }
+        val namedConstructor = FileKitDialogSettings(title = "Choose", parentWindow = null)
+        val legacyCopy = namedConstructor.copy(parentWindow = null)
+        val recommendedReplacement = FileKitDialogSettings(parent = null).copy(parent = null)
+
+        assertNotNull(positionalConstructor)
+        assertNull(legacyCopy.parent)
+        assertNull(recommendedReplacement.parent)
     }
 
     @Test

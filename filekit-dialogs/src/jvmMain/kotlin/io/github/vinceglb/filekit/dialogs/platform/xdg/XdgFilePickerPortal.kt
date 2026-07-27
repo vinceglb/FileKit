@@ -104,7 +104,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).OpenFile(
-                parentWindow = parent.resolveXdgPortalParent(Native::getWindowID),
+                parentWindow = xdgFileChooserParent(parent),
                 title = title ?: "",
                 options = options,
             )
@@ -136,7 +136,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
             val deferredResult = registerResponseHandler(connection, handleToken)
             getFileChooserObject(connection).SaveFile(
-                parentWindow = dialogSettings.parent.resolveXdgPortalParent(Native::getWindowID),
+                parentWindow = xdgFileChooserParent(dialogSettings.parent),
                 title = "",
                 options = options,
             )
@@ -288,3 +288,6 @@ internal fun String.toURI(): URI =
         .replace("[", "%5B")
         .replace("]", "%5D")
         .let { URI(it) }
+
+internal fun xdgFileChooserParent(parent: FileKitDialogParent?): String =
+    parent.resolveXdgPortalParent(Native::getWindowID)

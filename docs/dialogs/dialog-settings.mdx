@@ -83,7 +83,8 @@ source-compatibility adapter and normalizes directly into `parent`; there is nev
 a second stored parent value. Replace it with `parent =
 FileKitDialogParent.awt(parentWindow)`. The deprecated `parentWindow` getter
 returns a window only when `parent` is an AWT parent; it returns `null` for native
-parents. A single constructor or `copy` call accepts either `parent` or
+parents. Existing positional `FileKitDialogSettings(window)` calls also compile
+during this deprecation window. A single constructor or `copy` call accepts either `parent` or
 `parentWindow`, never both, so there is no precedence rule to learn.
 
 ### iOS and macOS Settings

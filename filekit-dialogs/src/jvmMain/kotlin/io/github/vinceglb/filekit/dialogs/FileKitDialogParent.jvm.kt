@@ -27,7 +27,7 @@ public sealed class FileKitDialogParent private constructor() {
     ) : FileKitDialogParent()
 
     public companion object {
-        private val POINTER_SHAPED_TOKEN: Regex = Regex("(?:0x[0-9a-fA-F]+|[0-9]+)")
+        private val POINTER_SHAPED_TOKEN: Regex = Regex("[+-]?(?:0[xX][0-9a-fA-F]+|[0-9]+)")
 
         /** Uses an AWT window as the dialog parent. */
         public fun awt(window: Window): FileKitDialogParent = Awt(window)
