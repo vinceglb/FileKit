@@ -50,6 +50,11 @@ public actual class PlatformFile private constructor(
         macOsBookmarkAccess?.stop()
     }
 
+    @JvmSynthetic
+    internal fun releaseMacOsBookmarkAccess() {
+        macOsBookmarkAccess?.release()
+    }
+
     public actual companion object {
         @JvmSynthetic
         internal fun withMacOsBookmarkAccess(
@@ -134,7 +139,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
 }
 
 public actual fun PlatformFile.releaseBookmark() {
-    macOsBookmarkAccess?.release()
+    releaseMacOsBookmarkAccess()
 }
 
 public actual fun PlatformFile.Companion.fromBookmarkData(

@@ -53,17 +53,21 @@ private class NativeMacOsBookmarkAccess(
         granted
     }
 
-    override fun stop() = synchronized(this) {
-        if (activeAccesses == 0) return
-        CoreFoundationBookmarkApi.instance.CFURLStopAccessingSecurityScopedResource(url)
-        activeAccesses -= 1
-        releaseNativeUrlIfDrained()
+    override fun stop() {
+        synchronized(this) {
+            if (activeAccesses == 0) return
+            CoreFoundationBookmarkApi.instance.CFURLStopAccessingSecurityScopedResource(url)
+            activeAccesses -= 1
+            releaseNativeUrlIfDrained()
+        }
     }
 
-    override fun release() = synchronized(this) {
-        if (released) return
-        released = true
-        releaseNativeUrlIfDrained()
+    override fun release() {
+        synchronized(this) {
+            if (released) return
+            released = true
+            releaseNativeUrlIfDrained()
+        }
     }
 
     private fun releaseNativeUrlIfDrained() {
