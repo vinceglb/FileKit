@@ -2,11 +2,9 @@ package io.github.vinceglb.filekit.dialogs.platform.windows
 
 import com.sun.jna.Native
 import com.sun.jna.WString
-import com.sun.jna.platform.win32.COM.COMUtils
 import com.sun.jna.platform.win32.COM.COMUtils.FAILED
 import com.sun.jna.platform.win32.Guid
 import com.sun.jna.platform.win32.Ole32
-import com.sun.jna.platform.win32.Ole32.COINIT_APARTMENTTHREADED
 import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.platform.win32.Win32Exception
 import com.sun.jna.platform.win32.WinDef
@@ -27,6 +25,7 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IFileSaveDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.COMDLG_FILTERSPEC
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_ALLOWMULTISELECT
+import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_FORCEFILESYSTEM
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.FILEOPENDIALOGOPTIONS.Companion.FOS_PICKFOLDERS
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.SIGDN.Companion.SIGDN_DESKTOPABSOLUTEPARSING
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShTypes.SIGDN.Companion.SIGDN_FILESYSPATH
@@ -35,12 +34,12 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItemArray
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
 import io.github.vinceglb.filekit.path
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.awt.Window
 import java.io.File
 
-internal class WindowsFilePicker : PlatformFilePicker {
+internal class WindowsFilePicker(
+    private val dialogExecutor: WindowsDialogExecutor = WindowsDialogExecutor(JnaWindowsComRuntime),
+) : PlatformFilePicker {
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
@@ -152,12 +151,9 @@ internal class WindowsFilePicker : PlatformFilePicker {
     private suspend fun <FD : FileDialog, T> useFileDialog(
         type: FileDialogType<FD>,
         block: (FD) -> T,
-    ): T = withContext(Dispatchers.IO) {
+    ): T = dialogExecutor.execute {
         var fileDialog: FD? = null
         try {
-            // Initialize COM
-            initCom()
-
             // Create FileOpenDialog
             val pbrFileDialog = PointerByReference()
             fileDialog = Ole32.INSTANCE
@@ -170,11 +166,12 @@ internal class WindowsFilePicker : PlatformFilePicker {
                 ).verify("CoCreateInstance failed")
                 .let { type.build(pbrFileDialog) }
 
+            fileDialog.updateOptions(::requiredFileDialogOptions)
+
             // Run the block
             block(fileDialog)
         } finally {
             fileDialog?.Release()
-            Ole32.INSTANCE.CoUninitialize()
         }
     }
 
@@ -196,19 +193,6 @@ internal class WindowsFilePicker : PlatformFilePicker {
             IFileSaveDialog.IID_IFILESAVEDIALOG,
         ) {
             override fun build(pbr: PointerByReference) = FileSaveDialog(pbr.value)
-        }
-    }
-
-    private fun initCom() {
-        Ole32.INSTANCE
-            .CoInitializeEx(
-                null,
-                COINIT_APARTMENTTHREADED or Ole32.COINIT_DISABLE_OLE1DDE,
-            ).verify("CoInitializeEx failed")
-
-        val isInit = COMUtils.comIsInitialized()
-        if (!isInit) {
-            throw RuntimeException("COM initialization failed")
         }
     }
 
@@ -263,12 +247,16 @@ internal class WindowsFilePicker : PlatformFilePicker {
     }
 
     private fun FileDialog.setFlag(flag: Int) {
+        updateOptions { options -> options or flag }
+    }
+
+    private fun FileDialog.updateOptions(transform: (Int) -> Int) {
         // Get the dialog options
         val ref = IntByReference()
         this.GetOptions(ref).verify("GetOptions failed")
 
         // Set the dialog options
-        this.SetOptions(ref.value or flag).verify("SetOptions failed")
+        this.SetOptions(transform(ref.value)).verify("SetOptions failed")
     }
 
     private fun <FD : FileDialog, T> FD.show(
@@ -398,3 +386,5 @@ internal class WindowsFilePicker : PlatformFilePicker {
         }
     }
 }
+
+internal fun requiredFileDialogOptions(options: Int): Int = options or FOS_FORCEFILESYSTEM
