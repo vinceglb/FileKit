@@ -46,6 +46,7 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIDevice
 import platform.UIKit.UIDocumentInteractionController
 import platform.UIKit.UIDocumentPickerViewController
+import platform.UIKit.UIImage
 import platform.UIKit.UIImageJPEGRepresentation
 import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerCameraDevice
@@ -225,55 +226,57 @@ public actual suspend fun FileKit.openCameraPicker(
     cameraFacing: FileKitCameraFacing,
     destinationFile: PlatformFile,
     openCameraSettings: FileKitOpenCameraSettings,
-): PlatformFile? = withContext(Dispatchers.Main) {
-    suspendCancellableCoroutine { continuation ->
-        cameraControllerDelegate = CameraControllerDelegate(
-            onImagePicked = { image ->
-                if (image != null) {
-                    // Convert UIImage to NSData (JPEG format with compression quality 1.0)
-                    val imageData = UIImageJPEGRepresentation(image, 1.0)
+): PlatformFile? {
+    val image = withContext(Dispatchers.Main) {
+        suspendCancellableCoroutine<UIImage?> { continuation ->
+            cameraControllerDelegate = CameraControllerDelegate(
+                onImagePicked = { image ->
+                    continuation.resume(image)
+                },
+            )
 
-                    // Create an NSURL for the file path
-                    val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
+            val pickerController = UIImagePickerController()
+            pickerController.sourceType =
+                UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+            pickerController.delegate = cameraControllerDelegate
 
-                    // Write the NSData to the file
-                    if (imageData?.writeToURL(fileUrl, true) == true) {
-                        // Return the NSURL of the saved image file
-                        continuation.resume(destinationFile)
-                    } else {
-                        // If saving fails, return null
-                        continuation.resume(null)
-                    }
-                } else {
-                    continuation.resume(null)
+            when (cameraFacing) {
+                FileKitCameraFacing.Front -> {
+                    pickerController.cameraDevice =
+                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
                 }
-            },
-        )
 
-        val pickerController = UIImagePickerController()
-        pickerController.sourceType =
-            UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
-        pickerController.delegate = cameraControllerDelegate
+                FileKitCameraFacing.Back -> {
+                    pickerController.cameraDevice =
+                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
+                }
 
-        when (cameraFacing) {
-            FileKitCameraFacing.Front -> {
-                pickerController.cameraDevice =
-                    UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
+                FileKitCameraFacing.System -> {}
             }
 
-            FileKitCameraFacing.Back -> {
-                pickerController.cameraDevice =
-                    UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
-            }
-
-            FileKitCameraFacing.System -> {}
+            openCameraSettings.presenterViewController()?.presentViewController(
+                pickerController,
+                animated = true,
+                completion = null,
+            )
         }
+    } ?: return null
 
-        openCameraSettings.presenterViewController()?.presentViewController(
-            pickerController,
-            animated = true,
-            completion = null,
-        )
+    // Encode and write off the main thread: JPEG encoding a full-resolution photo
+    // at quality 1.0 is expensive and used to freeze the UI right after the capture
+    return withContext(Dispatchers.IO) {
+        // Convert UIImage to NSData (JPEG format with compression quality 1.0)
+        val imageData = UIImageJPEGRepresentation(image, 1.0)
+
+        // Create an NSURL for the file path
+        val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
+
+        // Write the NSData to the file, returning the saved file on success
+        if (imageData?.writeToURL(fileUrl, true) == true) {
+            destinationFile
+        } else {
+            null
+        }
     }
 }
 

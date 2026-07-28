@@ -17,12 +17,16 @@ internal class CameraControllerDelegate(
         didFinishPickingMediaWithInfo: Map<Any?, *>,
     ) {
         val image = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
-        onImagePicked.invoke(image)
-        picker.dismissViewControllerAnimated(true, null)
+        // Deliver the result only once the picker is fully dismissed, so client reactions
+        // (navigation, closing dialogs, ...) can't race the UIKit dismissal transition
+        picker.dismissViewControllerAnimated(true) {
+            onImagePicked.invoke(image)
+        }
     }
 
     override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
-        picker.dismissViewControllerAnimated(true, null)
-        onImagePicked.invoke(null)
+        picker.dismissViewControllerAnimated(true) {
+            onImagePicked.invoke(null)
+        }
     }
 }
