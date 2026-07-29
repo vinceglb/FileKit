@@ -134,6 +134,26 @@ jobs:
       - name: 🧪 Run macOS Tests
         run: ./gradlew macosArm64Test --no-daemon
 
+  test-linux:
+    name: 🐧 Test Linux
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v6
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: 🧪 Run Linux Native Tests
+        run: ./gradlew linuxX64Test
+
   lint:
     name: 🚨 Lint
     runs-on: ubuntu-latest
