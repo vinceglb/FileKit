@@ -3,13 +3,11 @@ package io.github.vinceglb.filekit
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.runSuspendCatchingFileKit
 import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.coroutines.withContext
-import kotlinx.io.Source
+import kotlinx.cinterop.toKString
 import kotlinx.io.buffered
-import kotlinx.io.readString
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.cinterop.toKString
+import kotlinx.io.readString
 import platform.posix.getenv
 
 public actual object FileKit {
@@ -50,7 +48,7 @@ public actual object FileKit {
 public actual val FileKit.filesDir: PlatformFile
     get() {
         val folder = FileKit.customFilesDir
-            ?: (getEnv("XDG_DATA_HOME")?.let { Path(it) } ?: (getEnv("HOME")?.let { Path(it, ".local/share") } ?: Path(".local/share"))) / FileKit.appId
+            ?: (xdgBaseDirectory(envKey = "XDG_DATA_HOME", homeRelativeFallback = ".local/share") / FileKit.appId)
         folder.assertExists()
         return PlatformFile(folder)
     }
@@ -58,7 +56,7 @@ public actual val FileKit.filesDir: PlatformFile
 public actual val FileKit.cacheDir: PlatformFile
     get() {
         val folder = FileKit.customCacheDir
-            ?: (getEnv("XDG_CACHE_HOME")?.let { Path(it) } ?: (getEnv("HOME")?.let { Path(it, ".cache") } ?: Path(".cache"))) / FileKit.appId
+            ?: (xdgBaseDirectory(envKey = "XDG_CACHE_HOME", homeRelativeFallback = ".cache") / FileKit.appId)
         folder.assertExists()
         return PlatformFile(folder)
     }
@@ -69,9 +67,8 @@ public actual val FileKit.databasesDir: PlatformFile
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
 
-@OptIn(ExperimentalForeignApi::class)
 internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirectory): PlatformFile? {
-    val home = getEnv("HOME") ?: return null
+    val home = getEnv("HOME")?.takeIf(String::isNotBlank) ?: return null
 
     val envKey = when (type) {
         FileKitUserDirectory.Downloads -> "XDG_DOWNLOAD_DIR"
@@ -89,28 +86,27 @@ internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirecto
         FileKitUserDirectory.Documents -> "Documents"
     }
 
-    val envValue = getEnv(envKey)?.takeIf(String::isNotBlank)?.let { expandHomeVariable(it, home) }
+    // Primary: the XDG user directory environment variable
+    val envValue = getEnv(envKey)
+        ?.takeIf(String::isNotBlank)
+        ?.let { expandHomeVariable(it, home) }
     if (envValue != null) {
         val path = Path(envValue)
         path.assertExists()
         return PlatformFile(path)
     }
 
-    // Try reading ~/.config/user-dirs.dirs for the actual config (simplistic parsing)
-    val configHome = getEnv("XDG_CONFIG_HOME")?.takeIf(String::isNotBlank) ?: "$home/.config"
-    val configFile = Path(configHome, "user-dirs.dirs")
-    if (SystemFileSystem.exists(configFile)) {
-        val content = runCatching { SystemFileSystem.source(configFile).buffered().use { it.readString() } }.getOrNull()
-        if (content != null) {
-            val configuredValue = parseXdgUserDirsConfig(content)[envKey]?.takeIf(String::isNotBlank)?.let { expandHomeVariable(it, home) }
-            if (configuredValue != null) {
-                val path = Path(configuredValue)
-                path.assertExists()
-                return PlatformFile(path)
-            }
-        }
+    // Fallback: the xdg-user-dirs configuration file written by xdg-user-dirs-update
+    val configuredValue = readXdgUserDirsConfig(home)[envKey]
+        ?.takeIf(String::isNotBlank)
+        ?.let { expandHomeVariable(it, home) }
+    if (configuredValue != null) {
+        val path = Path(configuredValue)
+        path.assertExists()
+        return PlatformFile(path)
     }
 
+    // Last resort: the default English folder name inside HOME (same as JVM)
     val fallbackPath = Path(home, fallbackName)
     fallbackPath.assertExists()
     return PlatformFile(fallbackPath)
@@ -143,6 +139,20 @@ public actual suspend fun FileKit.compressImage(
 private fun getEnv(key: String): String? =
     getenv(key)?.toKString()
 
+private fun xdgBaseDirectory(
+    envKey: String,
+    homeRelativeFallback: String,
+): Path {
+    // The XDG Base Directory spec requires the variable to be ignored unless it holds an absolute path
+    getEnv(envKey)
+        ?.takeIf { it.startsWith("/") }
+        ?.let { return Path(it) }
+
+    val home = getEnv("HOME")?.takeIf(String::isNotBlank)
+        ?: return Path(homeRelativeFallback)
+    return Path(home, homeRelativeFallback)
+}
+
 private operator fun Path.div(child: String): Path = Path(this, child)
 
 private fun Path.assertExists() {
@@ -155,6 +165,18 @@ private fun expandHomeVariable(path: String, home: String): String =
     path
         .replace("\${HOME}", home)
         .replace("\$HOME", home)
+
+private fun readXdgUserDirsConfig(home: String): Map<String, String> {
+    val configHome = getEnv("XDG_CONFIG_HOME")?.takeIf { it.startsWith("/") } ?: "$home/.config"
+    val configFile = Path(configHome, "user-dirs.dirs")
+    if (!SystemFileSystem.exists(configFile)) return emptyMap()
+
+    val content = runCatching {
+        SystemFileSystem.source(configFile).buffered().use { it.readString() }
+    }.getOrNull() ?: return emptyMap()
+
+    return parseXdgUserDirsConfig(content)
+}
 
 private fun parseXdgUserDirsConfig(config: String): Map<String, String> =
     buildMap {
@@ -179,5 +201,3 @@ private fun parseXdgUserDirsConfig(config: String): Map<String, String> =
                 put(key, value)
             }
     }
-
-
