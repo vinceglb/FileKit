@@ -254,6 +254,9 @@ public expect fun PlatformFile.releaseBookmark()
 /**
  * Creates a [PlatformFile] from [BookmarkData].
  *
+ * This remains the convenience API for callers that only need the restored file. Use
+ * [resolveBookmarkData] when the application also needs staleness and refresh metadata.
+ *
  * @param bookmarkData The [BookmarkData] to resolve.
  * @return A [PlatformFile] instance resolved from the bookmark.
  */

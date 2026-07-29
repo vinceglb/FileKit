@@ -37,7 +37,7 @@ if (savedBytes != null) {
 }
 ```
 
-`fromBookmarkData()` remains the simplest restoration API. When your application can update its stored bookmark, use `resolveBookmarkData()` to inspect the persisted representation:
+`fromBookmarkData()` remains a supported, non-deprecated convenience API when you only need the restored file. Use `resolveBookmarkData()` when your application also needs refresh metadata or can update its stored bookmark:
 
 ```kotlin
 val resolution = PlatformFile.resolveBookmarkData(savedBytes)
@@ -182,7 +182,7 @@ restoredFile.withScopedAccess { file ->
 }
 ```
 
-Call `releaseBookmark()` when the restored bookmark is no longer needed. It prevents new scoped operations while allowing already-open sources and sinks to close cleanly.
+Call `releaseBookmark()` when the restored bookmark is no longer needed. It prevents new scoped operations, which then fail with `FileKitException`, while allowing already-open sources and sinks to close cleanly.
 
 ## Handling Invalid and Legacy Bookmarks
 

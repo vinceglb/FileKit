@@ -5,6 +5,7 @@ package io.github.vinceglb.filekit
 import com.sun.jna.Platform
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
@@ -254,7 +255,7 @@ class PlatformFileJvmTest {
             platformFile.releaseBookmark()
 
             assertEquals(expected = 0, actual = access.releaseCount)
-            assertFailsWith<IllegalStateException> {
+            assertFailsWith<FileKitException> {
                 platformFile.startAccessingSecurityScopedResource()
             }
 
@@ -323,7 +324,9 @@ class PlatformFileJvmTest {
         override fun covers(file: File): Boolean = file.canonicalFile.toPath().startsWith(rootPath)
 
         override fun start(): Boolean {
-            check(!released) { "This security-scoped bookmark has been released" }
+            if (released) {
+                throw FileKitException("This security-scoped bookmark has been released")
+            }
             startCount += 1
             activeAccesses += 1
             return true

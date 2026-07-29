@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -80,12 +81,12 @@ private val MacOsBookmarkKind?.resolutionOptions: ULong
 @OptIn(ExperimentalForeignApi::class)
 private fun readAppSandboxEntitlement(): Boolean = memScoped {
     val task = SecTaskCreateFromSelf(kCFAllocatorDefault)
-        ?: throw IllegalStateException("Could not inspect the App Sandbox entitlement")
+        ?: throw FileKitException("Could not inspect the App Sandbox entitlement")
     val entitlement = CFStringCreateWithCString(
         alloc = kCFAllocatorDefault,
         cStr = APP_SANDBOX_ENTITLEMENT,
         encoding = kCFStringEncodingUTF8,
-    ) ?: throw IllegalStateException("Could not create the App Sandbox entitlement name")
+    ) ?: throw FileKitException("Could not create the App Sandbox entitlement name")
     return try {
         val error = alloc<CFErrorRefVar>()
         error.value = null
@@ -93,13 +94,13 @@ private fun readAppSandboxEntitlement(): Boolean = memScoped {
         if (value == null) {
             error.value?.let { failure ->
                 CFRelease(failure.reinterpret())
-                throw IllegalStateException("Could not inspect the App Sandbox entitlement")
+                throw FileKitException("Could not inspect the App Sandbox entitlement")
             }
             return false
         }
         try {
             if (CFGetTypeID(value) != CFBooleanGetTypeID()) {
-                throw IllegalStateException("The App Sandbox entitlement is not a Boolean")
+                throw FileKitException("The App Sandbox entitlement is not a Boolean")
             }
             CFBooleanGetValue(value.reinterpret())
         } finally {

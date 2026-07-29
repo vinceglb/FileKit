@@ -4,6 +4,7 @@ package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
+import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.toByteArray
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
@@ -59,13 +60,24 @@ class PlatformFileMacOsBookmarkTest {
     }
 
     @Test
+    fun PlatformFile_nonExistingPath_cannotEscapeScopeThroughParentSegments() {
+        val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath("/tmp/filekit-bookmark-root"))
+
+        val escaped = root.copy(
+            NSURL.fileURLWithPath("/tmp/filekit-bookmark-root/missing/../../outside"),
+        )
+
+        assertNull(actual = escaped.macOsBookmarkLease)
+    }
+
+    @Test
     fun PlatformFile_releaseBookmark_rejectsNewScopedAccessForDerivedFiles() {
         val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
         val child = root / "child"
 
         root.releaseBookmark()
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<FileKitException> {
             child.startAccessingSecurityScopedResource()
         }
     }
@@ -82,7 +94,7 @@ class PlatformFileMacOsBookmarkTest {
         assertEquals(expected = original.nsUrl, actual = copied.component1())
         assertEquals(expected = original.macOsBookmarkLease, actual = child.macOsBookmarkLease)
         assertNull(actual = escaped.macOsBookmarkLease)
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<FileKitException> {
             copied.startAccessingSecurityScopedResource()
         }
     }

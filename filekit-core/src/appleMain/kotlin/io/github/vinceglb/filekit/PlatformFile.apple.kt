@@ -99,7 +99,9 @@ internal class MacOsBookmarkLease(
     fun covers(url: NSURL): Boolean = url.standardizedPath.isWithin(rootPath)
 
     fun start(): Boolean = lock.withLock {
-        check(!released) { "This security-scoped bookmark has been released" }
+        if (released) {
+            throw FileKitException("This security-scoped bookmark has been released")
+        }
         val granted = requireNotNull(scopeUrl).startAccessingSecurityScopedResource()
         if (granted) {
             activeAccesses += 1
@@ -161,22 +163,10 @@ private fun String.isWithin(rootPath: String): Boolean {
 }
 
 private val NSURL.standardizedPath: String
-    get() {
-        val unresolvedSegments = mutableListOf<String>()
-        var candidate: Path? = toKotlinxPath()
-        while (candidate != null) {
-            val resolved = runCatching { SystemFileSystem.resolve(candidate) }.getOrNull()
-            if (resolved != null) {
-                return unresolvedSegments
-                    .asReversed()
-                    .fold(resolved) { path, segment -> Path(path, segment) }
-                    .toString()
-            }
-            unresolvedSegments += candidate.name
-            candidate = candidate.parent
-        }
-        return URLByStandardizingPath?.path.orEmpty()
-    }
+    get() = URLByStandardizingPath
+        ?.URLByResolvingSymlinksInPath
+        ?.path
+        .orEmpty()
 
 public actual val PlatformFile.extension: String
     get() = nsUrl.pathExtension ?: ""
