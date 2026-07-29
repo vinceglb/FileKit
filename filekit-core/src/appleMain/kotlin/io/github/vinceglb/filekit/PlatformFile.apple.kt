@@ -48,6 +48,8 @@ import platform.Foundation.NSURLResourceKey
 import platform.Foundation.NSURLTypeIdentifierKey
 import platform.Foundation.timeIntervalSince1970
 import platform.UniformTypeIdentifiers.UTType
+import platform.posix.free
+import platform.posix.realpath
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -162,11 +164,42 @@ private fun String.isWithin(rootPath: String): Boolean {
     }
 }
 
+@OptIn(ExperimentalForeignApi::class)
 private val NSURL.standardizedPath: String
-    get() = URLByStandardizingPath
-        ?.URLByResolvingSymlinksInPath
-        ?.path
-        .orEmpty()
+    get() {
+        val unresolvedSegments = mutableListOf<String>()
+        var candidate = path?.trimEnd('/').orEmpty().ifEmpty { "/" }
+        while (true) {
+            realpath(candidate, null)?.let { resolved ->
+                val canonicalPath = try {
+                    resolved.toKString()
+                } finally {
+                    free(resolved)
+                }
+                return unresolvedSegments
+                    .asReversed()
+                    .fold(canonicalPath) { current, segment -> "$current/$segment" }
+                    .normalizePosixPath()
+            }
+            if (candidate == "/") break
+            val separator = candidate.lastIndexOf('/')
+            unresolvedSegments += candidate.substring(separator + 1)
+            candidate = if (separator <= 0) "/" else candidate.substring(0, separator)
+        }
+        return URLByStandardizingPath?.path.orEmpty()
+    }
+
+private fun String.normalizePosixPath(): String {
+    val normalizedSegments = mutableListOf<String>()
+    for (segment in split('/')) {
+        when (segment) {
+            "", "." -> Unit
+            ".." -> if (normalizedSegments.isNotEmpty()) normalizedSegments.removeAt(normalizedSegments.lastIndex)
+            else -> normalizedSegments += segment
+        }
+    }
+    return normalizedSegments.joinToString(separator = "/", prefix = "/")
+}
 
 public actual val PlatformFile.extension: String
     get() = nsUrl.pathExtension ?: ""

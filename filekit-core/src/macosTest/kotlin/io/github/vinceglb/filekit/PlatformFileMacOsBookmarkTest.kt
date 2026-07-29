@@ -8,7 +8,12 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.toByteArray
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 import platform.Foundation.NSURL
+import platform.posix.symlink
+import platform.posix.unlink
+import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -68,6 +73,31 @@ class PlatformFileMacOsBookmarkTest {
         )
 
         assertNull(actual = escaped.macOsBookmarkLease)
+    }
+
+    @OptIn(ExperimentalForeignApi::class)
+    @Test
+    fun PlatformFile_parentSegment_afterSymlink_cannotEscapeScope() {
+        val testDirectory = Path("/tmp/filekit-bookmark-symlink-${Random.nextInt(0, Int.MAX_VALUE)}")
+        val rootPath = Path(testDirectory, "root")
+        val outsidePath = Path(testDirectory, "outside")
+        val linkPath = Path(rootPath, "link")
+        SystemFileSystem.createDirectories(rootPath)
+        SystemFileSystem.createDirectories(outsidePath)
+        assertEquals(expected = 0, actual = symlink(outsidePath.toString(), linkPath.toString()))
+        try {
+            val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath(rootPath.toString()))
+            val escaped = root.copy(
+                NSURL.fileURLWithPath("$linkPath/../secret"),
+            )
+
+            assertNull(actual = escaped.macOsBookmarkLease)
+        } finally {
+            unlink(linkPath.toString())
+            SystemFileSystem.delete(rootPath)
+            SystemFileSystem.delete(outsidePath)
+            SystemFileSystem.delete(testDirectory)
+        }
     }
 
     @Test
