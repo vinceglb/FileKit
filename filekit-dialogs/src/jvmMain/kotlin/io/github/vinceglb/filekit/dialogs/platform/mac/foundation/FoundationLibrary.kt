@@ -14,6 +14,8 @@ internal interface FoundationLibrary : Library {
 
     fun objc_registerClassPair(cls: ID?)
 
+    fun objc_disposeClassPair(cls: ID?)
+
     fun CFStringCreateWithBytes(
         allocator: Pointer?,
         bytes: ByteArray?,

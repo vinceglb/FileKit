@@ -17,6 +17,27 @@ import java.util.Arrays
 import java.util.Collections
 import java.util.UUID
 
+internal fun registerObjcRunnableClass(
+    className: String,
+    allocate: (String) -> ID?,
+    addMethod: (ID) -> Boolean,
+    register: (ID) -> Unit,
+    dispose: (ID) -> Unit,
+): ID {
+    val runnableClass = allocate(className)
+    if (runnableClass == null || runnableClass == ID.NIL) {
+        throw IllegalStateException("Unable to allocate Objective-C runnable adapter class '$className'")
+    }
+
+    if (!addMethod(runnableClass)) {
+        dispose(runnableClass)
+        throw IllegalStateException("Unable to add run: method to Objective-C runnable adapter class '$className'")
+    }
+
+    register(runnableClass)
+    return runnableClass
+}
+
 /**
  * see [Documentation](http://developer.apple.com/documentation/Cocoa/Reference/ObjCRuntimeRef/Reference/reference.html)
  */
@@ -125,6 +146,10 @@ internal object Foundation {
 
     fun registerObjcClassPair(cls: ID?) {
         myFoundationLibrary.objc_registerClassPair(cls)
+    }
+
+    fun disposeObjcClassPair(cls: ID?) {
+        myFoundationLibrary.objc_disposeClassPair(cls)
     }
 
     fun isClassRespondsToSelector(cls: ID?, selectorName: Pointer?): Boolean = myFoundationLibrary.class_respondsToSelector(
@@ -283,7 +308,7 @@ internal object Foundation {
     val isMainThread: Boolean
         get() = invoke("NSThread", "isMainThread").booleanValue()
 
-    private var ourRunnableCallback: Callback? = null
+    private var ourRunnableSupport: RunnableSupport? = null
     private val ourMainThreadRunnables: MutableMap<String?, RunnableInfo> = HashMap()
     private var ourCurrentRunnableCount: Long = 0
     private val RUNNABLE_LOCK = Any()
@@ -293,9 +318,10 @@ internal object Foundation {
         waitUntilDone: Boolean,
         runnable: Runnable,
     ) {
+        val runnableSupport: RunnableSupport
         var runnableCountString: String?
         synchronized(RUNNABLE_LOCK) {
-            initRunnableSupport()
+            runnableSupport = initRunnableSupport()
             runnableCountString = (++ourCurrentRunnableCount).toString()
             ourMainThreadRunnables.put(
                 runnableCountString,
@@ -304,8 +330,7 @@ internal object Foundation {
         }
 
         // fixme: Use Grand Central Dispatch instead?
-        val ideaRunnable = getObjcClass("IdeaRunnable")
-        val runnableObject = invoke(invoke(ideaRunnable, "alloc"), "init")
+        val runnableObject = invoke(invoke(runnableSupport.runnableClass, "alloc"), "init")
         val keyObject = invoke(nsString(runnableCountString), "retain")
         invoke(
             runnableObject,
@@ -318,48 +343,56 @@ internal object Foundation {
     }
 
     /**
-     * Registers idea runnable adapter class in ObjC runtime, if not registered yet.
+     * Registers the FileKit-owned runnable adapter class in the Objective-C runtime, if not registered yet.
      *
      *
-     * Warning: NOT THREAD-SAFE! Must be called under lock. Danger of segmentation fault.
+     * Warning: NOT THREAD-SAFE! Must be called under [RUNNABLE_LOCK].
      */
-    private fun initRunnableSupport() {
-        if (ourRunnableCallback == null) {
-            val runnableClass = allocateObjcClassPair(getObjcClass("NSObject"), "IdeaRunnable")
-            registerObjcClassPair(runnableClass)
+    private fun initRunnableSupport(): RunnableSupport {
+        ourRunnableSupport?.let { return it }
 
-            val callback: Callback = object : Callback {
-                fun callback(self: ID?, selector: String?, keyObject: ID?) {
-                    val key = toStringViaUTF8(keyObject)
-                    invoke(keyObject, "release")
+        val callback: Callback = object : Callback {
+            fun callback(self: ID?, selector: String?, keyObject: ID?) {
+                val key = toStringViaUTF8(keyObject)
+                invoke(keyObject, "release")
 
-                    var info: RunnableInfo?
-                    synchronized(RUNNABLE_LOCK) {
-                        info = ourMainThreadRunnables.remove(key)
+                var info: RunnableInfo?
+                synchronized(RUNNABLE_LOCK) {
+                    info = ourMainThreadRunnables.remove(key)
+                }
+
+                if (info == null) {
+                    return
+                }
+
+                var pool: ID? = null
+                try {
+                    if (info.myUseAutoreleasePool) {
+                        pool = invoke("NSAutoreleasePool", "new")
                     }
 
-                    if (info == null) {
-                        return
-                    }
-
-                    var pool: ID? = null
-                    try {
-                        if (info.myUseAutoreleasePool) {
-                            pool = invoke("NSAutoreleasePool", "new")
-                        }
-
-                        info.myRunnable.run()
-                    } finally {
-                        if (pool != null) {
-                            invoke(pool, "release")
-                        }
+                    info.myRunnable.run()
+                } finally {
+                    if (pool != null) {
+                        invoke(pool, "release")
                     }
                 }
             }
-            if (!addMethod(runnableClass, createSelector("run:"), callback, "v@:*")) {
-                throw RuntimeException("Unable to add method to objective-c runnableClass class!")
-            }
-            ourRunnableCallback = callback
+        }
+
+        val runnableClass = registerObjcRunnableClass(
+            className = RUNNABLE_ADAPTER_CLASS_NAME,
+            allocate = { className ->
+                allocateObjcClassPair(getObjcClass("NSObject"), className)
+            },
+            addMethod = { allocatedClass ->
+                addMethod(allocatedClass, createSelector("run:"), callback, "v@:*")
+            },
+            register = ::registerObjcClassPair,
+            dispose = ::disposeObjcClassPair,
+        )
+        return RunnableSupport(runnableClass, callback).also {
+            ourRunnableSupport = it
         }
     }
 
@@ -448,6 +481,13 @@ internal object Foundation {
             return invoke(initializedNsString, autoreleaseSel)
         }
     }
+
+    private class RunnableSupport(
+        val runnableClass: ID,
+        val runnableCallback: Callback,
+    )
+
+    private const val RUNNABLE_ADAPTER_CLASS_NAME = "FileKitMainThreadRunnable"
 
     internal class RunnableInfo(
         var myRunnable: Runnable,
