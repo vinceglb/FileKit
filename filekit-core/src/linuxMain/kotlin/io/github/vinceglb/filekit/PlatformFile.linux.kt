@@ -57,6 +57,9 @@ public actual fun PlatformFile(path: Path): PlatformFile =
 public actual fun PlatformFile.toKotlinxIoPath(): Path =
     linuxPath.path
 
+@PublishedApi
+internal actual fun PlatformFile.withPath(path: Path): PlatformFile = PlatformFile(path)
+
 public actual val PlatformFile.extension: String
     get() = name.substringAfterLast('.', "")
 
@@ -100,19 +103,17 @@ public actual fun PlatformFile.list(): List<PlatformFile> =
     }
 
 /**
- * Linux has no portable way to read a file's birth time: `statx(STATX_BTIME)` is not exposed by
- * Kotlin/Native and is unsupported by several filesystems. The inode change time (`st_ctim`) is
- * used as a best-effort approximation, which is what most Linux tooling reports as well.
+ * Always returns null on Linux.
+ *
+ * `stat` exposes no creation time. Its `st_ctim` field is the inode *status change* time, which is
+ * updated by writes and metadata changes, so reporting it as a creation time would be wrong.
+ * Birth time is only available through `statx(STATX_BTIME)`, which Kotlin/Native does not expose
+ * and which several filesystems do not support, so null is the honest answer here.
+ *
+ * See https://man7.org/linux/man-pages/man7/inode.7.html
  */
-@OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
-public actual fun PlatformFile.createdAt(): Instant? = memScoped {
-    val statBuf = alloc<stat>()
-    if (stat(absolutePath(), statBuf.ptr) == 0) {
-        Instant.fromEpochSeconds(statBuf.st_ctim.tv_sec, statBuf.st_ctim.tv_nsec)
-    } else {
-        null
-    }
-}
+@OptIn(ExperimentalTime::class)
+public actual fun PlatformFile.createdAt(): Instant? = null
 
 @OptIn(ExperimentalForeignApi::class, ExperimentalTime::class)
 public actual fun PlatformFile.lastModified(): Instant = memScoped {
@@ -124,74 +125,110 @@ public actual fun PlatformFile.lastModified(): Instant = memScoped {
     }
 }
 
-public actual fun PlatformFile.mimeType(): MimeType? {
-    val ext = extension.lowercase()
-    if (ext.isBlank()) return null
-    return systemMimeTypesByExtension[ext]
-}
+public actual fun PlatformFile.mimeType(): MimeType? =
+    systemMimeTypes.find(extension)
 
 private const val SHARED_MIME_INFO_GLOBS = "/usr/share/mime/globs2"
 private const val MIME_TYPES_DATABASE = "/etc/mime.types"
 
 /**
- * Extension to MIME type mapping read once from the system MIME databases.
+ * Extension to MIME type lookup, split by whether the source entry demanded a case sensitive match.
+ *
+ * shared-mime-info marks entries such as `*.C` (C++ source) with the `cs` flag to distinguish them
+ * from their case insensitive counterparts like `*.c` (C source), so the two cannot share a map.
+ */
+internal class SystemMimeTypes(
+    private val caseSensitive: Map<String, MimeType>,
+    private val caseInsensitive: Map<String, MimeType>,
+) {
+    fun find(extension: String): MimeType? {
+        if (extension.isBlank()) return null
+        return caseSensitive[extension] ?: caseInsensitive[extension.lowercase()]
+    }
+
+    fun isEmpty(): Boolean = caseSensitive.isEmpty() && caseInsensitive.isEmpty()
+}
+
+/**
+ * MIME type mapping read once from the system MIME databases.
  *
  * The freedesktop.org shared-mime-info database is preferred and the Apache style `mime.types`
  * file is used as a fallback. Both are absent on minimal systems, in which case the mapping is
  * empty and [mimeType] returns null.
  */
-private val systemMimeTypesByExtension: Map<String, MimeType> by lazy {
-    parseSharedMimeInfoGlobs()
-        .takeIf { it.isNotEmpty() }
-        ?: parseMimeTypesDatabase()
+private val systemMimeTypes: SystemMimeTypes by lazy {
+    readSystemFileOrNull(SHARED_MIME_INFO_GLOBS)
+        ?.let(::parseSharedMimeInfoGlobs)
+        ?.takeIf { !it.isEmpty() }
+        ?: readSystemFileOrNull(MIME_TYPES_DATABASE)
+            ?.let(::parseMimeTypesDatabase)
+        ?: SystemMimeTypes(caseSensitive = emptyMap(), caseInsensitive = emptyMap())
 }
 
 /**
  * Parses the freedesktop.org shared-mime-info database.
  *
- * `globs2` lines look like `50:text/plain:*.txt`, ordered by descending weight.
+ * `globs2` lines look like `weight:mime/type:glob[:flags]`, ordered by descending weight, for
+ * example `50:text/plain:*.txt` and `50:text/x-c++src:*.C:cs`.
+ *
+ * See https://specifications.freedesktop.org/shared-mime-info/latest-single/
  */
-private fun parseSharedMimeInfoGlobs(): Map<String, MimeType> =
-    buildMap {
-        readSystemFileOrNull(SHARED_MIME_INFO_GLOBS)
-            ?.lineSequence()
-            ?.filterNot { it.isBlank() || it.startsWith("#") }
-            ?.forEach { line ->
-                val parts = line.split(':')
-                if (parts.size < 3) return@forEach
+internal fun parseSharedMimeInfoGlobs(content: String): SystemMimeTypes {
+    val caseSensitive = mutableMapOf<String, MimeType>()
+    val caseInsensitive = mutableMapOf<String, MimeType>()
 
-                val glob = parts[2].trim()
-                // Only simple `*.ext` globs map to a single extension
-                if (!glob.startsWith("*.") || glob.count { it == '.' } != 1) return@forEach
+    content
+        .lineSequence()
+        .filterNot { it.isBlank() || it.startsWith("#") }
+        .forEach { line ->
+            val parts = line.split(':')
+            if (parts.size < 3) return@forEach
 
-                val extension = glob.removePrefix("*.").lowercase()
-                val mimeType = parseMimeTypeOrNull(parts[1].trim()) ?: return@forEach
+            val glob = parts[2].trim()
 
-                // Entries are weight ordered, so the first match wins
-                getOrPut(extension) { mimeType }
+            // Only single suffix `*.ext` globs are usable here. `extension` is the segment after
+            // the last dot, so a compound glob such as `*.tar.gz` can never be addressed by it and
+            // would shadow the correct `*.gz` entry if it were registered under "gz".
+            if (!glob.startsWith("*.") || glob.count { it == '.' } != 1) return@forEach
+
+            val extension = glob.removePrefix("*.")
+            val mimeType = parseMimeTypeOrNull(parts[1].trim()) ?: return@forEach
+            val flags = parts.drop(3).map { it.trim() }
+
+            // Entries are weight ordered, so the first one wins
+            if (flags.contains("cs")) {
+                caseSensitive.getOrPut(extension) { mimeType }
+            } else {
+                caseInsensitive.getOrPut(extension.lowercase()) { mimeType }
             }
-    }
+        }
+
+    return SystemMimeTypes(caseSensitive = caseSensitive, caseInsensitive = caseInsensitive)
+}
 
 /**
- * Parses an Apache style `mime.types` database.
+ * Parses an Apache style `mime.types` database, which has no case sensitive entries.
  *
  * Lines look like `text/plain    txt text`.
  */
-private fun parseMimeTypesDatabase(): Map<String, MimeType> =
-    buildMap {
-        readSystemFileOrNull(MIME_TYPES_DATABASE)
-            ?.lineSequence()
-            ?.filterNot { it.isBlank() || it.startsWith("#") }
-            ?.forEach { line ->
-                val tokens = line.split(' ', '\t').filter(String::isNotBlank)
-                if (tokens.size < 2) return@forEach
+internal fun parseMimeTypesDatabase(content: String): SystemMimeTypes {
+    val caseInsensitive = mutableMapOf<String, MimeType>()
 
-                val mimeType = parseMimeTypeOrNull(tokens[0]) ?: return@forEach
-                tokens.drop(1).forEach { extension ->
-                    getOrPut(extension.lowercase()) { mimeType }
-                }
+    content
+        .lineSequence()
+        .filterNot { it.isBlank() || it.startsWith("#") }
+        .forEach { line ->
+            val tokens = line.split(' ', '\t').filter(String::isNotBlank)
+            if (tokens.size < 2) return@forEach
+
+            val mimeType = parseMimeTypeOrNull(tokens[0]) ?: return@forEach
+            tokens.drop(1).forEach { extension ->
+                caseInsensitive.getOrPut(extension.lowercase()) { mimeType }
             }
-    }
+        }
+
+    return SystemMimeTypes(caseSensitive = emptyMap(), caseInsensitive = caseInsensitive)
+}
 
 private fun parseMimeTypeOrNull(value: String): MimeType? =
     runCatching { MimeType.parse(value) }.getOrNull()
@@ -217,7 +254,15 @@ public actual fun PlatformFile.releaseBookmark() {}
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
-): PlatformFile {
+): PlatformFile = resolveBookmarkData(bookmarkData).file
+
+public actual fun PlatformFile.Companion.resolveBookmarkData(
+    bookmarkData: BookmarkData,
+): BookmarkResolution {
     val restoredPath = bookmarkData.bytes.decodeToString()
-    return PlatformFile(linuxPath = LinuxPath(Path(restoredPath)))
+    return BookmarkResolution(
+        file = PlatformFile(linuxPath = LinuxPath(Path(restoredPath))),
+        isStale = false,
+        shouldRefresh = false,
+    )
 }

@@ -3,12 +3,15 @@ package io.github.vinceglb.filekit
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.utils.runSuspendCatchingFileKit
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.pointed
 import kotlinx.cinterop.toKString
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readString
 import platform.posix.getenv
+import platform.posix.getpwuid
+import platform.posix.getuid
 
 public actual object FileKit {
     private var _appId: String? = null
@@ -67,10 +70,12 @@ public actual val FileKit.databasesDir: PlatformFile
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
 
-internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirectory): PlatformFile? {
-    val home = getEnv("HOME")?.takeIf(String::isNotBlank) ?: return null
-
-    val envKey = when (type) {
+/**
+ * The XDG variable name and default folder name for each user directory, kept together so the two
+ * cannot drift apart.
+ */
+private val FileKitUserDirectory.xdgEnvKey: String
+    get() = when (this) {
         FileKitUserDirectory.Downloads -> "XDG_DOWNLOAD_DIR"
         FileKitUserDirectory.Pictures -> "XDG_PICTURES_DIR"
         FileKitUserDirectory.Videos -> "XDG_VIDEOS_DIR"
@@ -78,13 +83,19 @@ internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirecto
         FileKitUserDirectory.Documents -> "XDG_DOCUMENTS_DIR"
     }
 
-    val fallbackName = when (type) {
+private val FileKitUserDirectory.defaultFolderName: String
+    get() = when (this) {
         FileKitUserDirectory.Downloads -> "Downloads"
         FileKitUserDirectory.Pictures -> "Pictures"
         FileKitUserDirectory.Videos -> "Videos"
         FileKitUserDirectory.Music -> "Music"
         FileKitUserDirectory.Documents -> "Documents"
     }
+
+internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirectory): PlatformFile? {
+    val home = homeDirectoryOrNull() ?: return null
+    val envKey = type.xdgEnvKey
+    val fallbackName = type.defaultFolderName
 
     // Primary: the XDG user directory environment variable
     val envValue = getEnv(envKey)
@@ -148,9 +159,28 @@ private fun xdgBaseDirectory(
         ?.takeIf { it.startsWith("/") }
         ?.let { return Path(it) }
 
-    val home = getEnv("HOME")?.takeIf(String::isNotBlank)
-        ?: return Path(homeRelativeFallback)
+    val home = homeDirectoryOrNull() ?: throw FileKitException(
+        "Could not resolve the home directory. Set HOME or call FileKit.init(appId, filesDir, cacheDir) " +
+            "with explicit directories.",
+    )
     return Path(home, homeRelativeFallback)
+}
+
+/**
+ * Resolves the user's home directory from `HOME`, falling back to the passwd database so that
+ * daemons and containers with an unset environment still get an absolute path.
+ */
+@OptIn(ExperimentalForeignApi::class)
+private fun homeDirectoryOrNull(): String? {
+    getEnv("HOME")
+        ?.takeIf { it.startsWith("/") }
+        ?.let { return it }
+
+    return getpwuid(getuid())
+        ?.pointed
+        ?.pw_dir
+        ?.toKString()
+        ?.takeIf { it.startsWith("/") }
 }
 
 private operator fun Path.div(child: String): Path = Path(this, child)
