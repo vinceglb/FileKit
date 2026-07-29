@@ -9,7 +9,7 @@ FileKit Core provides a consistent API for reading files across all platforms. T
 
 ## Reading as ByteArray
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+<Check>Supported on Android, iOS, macOS, JVM, Kotlin/Native Linux, JS and WASM targets</Check>
 
 The most common way to read a file is to use the `readBytes()` suspend function, which returns the file contents as a `ByteArray`:
 
@@ -22,7 +22,7 @@ val bytes: ByteArray = file.readBytes()
 
 ## Reading as String
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+<Check>Supported on Android, iOS, macOS, JVM, Kotlin/Native Linux, JS and WASM targets</Check>
 
 For text files, you can use the `readString()` suspend function, which returns the file contents as a `String`:
 
@@ -36,7 +36,7 @@ println(text)
 
 ## Using Source
 
-<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
 
 For more advanced use cases or when working with large files, you can use the `source()` method from [kotlinx-io](https://github.com/Kotlin/kotlinx-io) to get a raw source:
 

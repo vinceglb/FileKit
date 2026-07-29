@@ -155,7 +155,7 @@ FileKit abstracts away the details, but here's what happens on each platform:
 
 - **JVM macOS**: Uses the same versioned native bookmark format through CoreFoundation. A `PlatformFile` restored from a security-scoped bookmark retains its access capability, including for children inside a bookmarked directory.
 
-- **JVM Linux and Windows**: Stores the file path. These platforms keep their existing bookmark representation.
+- **Kotlin/Native Linux, JVM Linux, and Windows**: Stores the file path. These platforms use a path-based bookmark representation.
 
 New macOS bookmark data is wrapped in a versioned FileKit format. Existing unwrapped Kotlin/Native bookmarks and JVM path bytes remain readable. Bookmark bytes are platform-specific and must not be treated as portable between operating systems or applications.
 
