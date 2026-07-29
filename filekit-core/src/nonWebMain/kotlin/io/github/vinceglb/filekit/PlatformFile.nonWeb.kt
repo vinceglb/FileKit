@@ -254,10 +254,18 @@ public expect fun PlatformFile.releaseBookmark()
 /**
  * Creates a [PlatformFile] from [BookmarkData].
  *
+ * This remains the convenience API for callers that only need the restored file. Use
+ * [resolveBookmarkData] when the application also needs staleness and refresh metadata.
+ *
  * @param bookmarkData The [BookmarkData] to resolve.
  * @return A [PlatformFile] instance resolved from the bookmark.
  */
 public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: BookmarkData): PlatformFile
+
+/**
+ * Resolves [bookmarkData] and reports whether the persisted representation should be refreshed.
+ */
+public expect fun PlatformFile.Companion.resolveBookmarkData(bookmarkData: BookmarkData): BookmarkResolution
 
 /**
  * Creates a [PlatformFile] from a byte array representing bookmark data.
@@ -267,3 +275,7 @@ public expect fun PlatformFile.Companion.fromBookmarkData(bookmarkData: Bookmark
  */
 public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFile =
     fromBookmarkData(BookmarkData(bytes))
+
+/** Resolves bookmark data stored as a byte array. */
+public fun PlatformFile.Companion.resolveBookmarkData(bytes: ByteArray): BookmarkResolution =
+    resolveBookmarkData(BookmarkData(bytes))

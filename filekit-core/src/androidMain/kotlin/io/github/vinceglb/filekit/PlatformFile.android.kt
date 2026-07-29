@@ -533,7 +533,11 @@ private fun Uri.getUriToRelease(isDirectory: Boolean): Uri = if (isDirectory) {
 
 public actual fun PlatformFile.Companion.fromBookmarkData(
     bookmarkData: BookmarkData,
-): PlatformFile {
+): PlatformFile = resolveBookmarkData(bookmarkData).file
+
+public actual fun PlatformFile.Companion.resolveBookmarkData(
+    bookmarkData: BookmarkData,
+): BookmarkResolution {
     val str = bookmarkData.bytes.decodeToString()
 
     val platformFile = when {
@@ -575,7 +579,11 @@ public actual fun PlatformFile.Companion.fromBookmarkData(
         throw FileKitException("Bookmark target is no longer accessible")
     }
 
-    return platformFile
+    return BookmarkResolution(
+        file = platformFile,
+        isStale = false,
+        shouldRefresh = false,
+    )
 }
 
 private fun getUriFileSize(uri: Uri): Long? = UriMetadataResolver.size(uri)
