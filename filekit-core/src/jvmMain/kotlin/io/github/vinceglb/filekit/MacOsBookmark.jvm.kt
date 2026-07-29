@@ -275,7 +275,7 @@ private val MacOsBookmarkKind.resolutionOptions: Long
         MacOsBookmarkKind.SecurityScoped -> 1L shl 10
     }
 
-private const val POSIX_PATH_STYLE = 0
+private val POSIX_PATH_STYLE = CoreFoundation.CFIndex(0)
 
 internal class CFUrlRef : PointerType {
     constructor() : super()
@@ -291,7 +291,7 @@ internal interface CoreFoundationBookmarkApi : Library {
     fun CFURLCreateWithFileSystemPath(
         allocator: CoreFoundation.CFAllocatorRef?,
         filePath: CoreFoundation.CFStringRef,
-        pathStyle: Int,
+        pathStyle: CoreFoundation.CFIndex,
         isDirectory: Byte,
     ): CFUrlRef?
 
@@ -314,7 +314,10 @@ internal interface CoreFoundationBookmarkApi : Library {
         error: PointerByReference?,
     ): CFUrlRef?
 
-    fun CFURLCopyFileSystemPath(url: CFUrlRef, pathStyle: Int): CoreFoundation.CFStringRef?
+    fun CFURLCopyFileSystemPath(
+        url: CFUrlRef,
+        pathStyle: CoreFoundation.CFIndex,
+    ): CoreFoundation.CFStringRef?
 
     fun CFURLStartAccessingSecurityScopedResource(url: CFUrlRef): Byte
 

@@ -39,6 +39,7 @@ import platform.CoreServices.UTTypeCopyPreferredTagWithClass
 import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSDate
 import platform.Foundation.NSError
+import platform.Foundation.NSLock
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLContentModificationDateKey
 import platform.Foundation.NSURLContentTypeKey
@@ -56,17 +57,32 @@ import kotlin.time.Instant
  * @property nsUrl The underlying [NSURL] object.
  */
 @Serializable(with = PlatformFileSerializer::class)
-public actual data class PlatformFile(
+public actual class PlatformFile private constructor(
     public val nsUrl: NSURL,
+    internal val macOsBookmarkLease: MacOsBookmarkLease?,
 ) {
-    internal var macOsBookmarkLease: MacOsBookmarkLease? = null
+    public constructor(nsUrl: NSURL) : this(nsUrl, null)
 
     public actual override fun toString(): String = path
 
+    public operator fun component1(): NSURL = nsUrl
+
+    public fun copy(nsUrl: NSURL = this.nsUrl): PlatformFile = PlatformFile(
+        nsUrl = nsUrl,
+        macOsBookmarkLease = macOsBookmarkLease?.takeIf { it.covers(nsUrl) },
+    )
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is PlatformFile) return false
+        return nsUrl.path == other.nsUrl.path
+    }
+
+    override fun hashCode(): Int = nsUrl.path.hashCode()
+
     public actual companion object {
-        internal fun withMacOsBookmarkLease(url: NSURL): PlatformFile = PlatformFile(url).also {
-            it.macOsBookmarkLease = MacOsBookmarkLease(url)
-        }
+        internal fun withMacOsBookmarkLease(url: NSURL): PlatformFile =
+            PlatformFile(url, MacOsBookmarkLease(url))
     }
 }
 
@@ -74,6 +90,7 @@ public actual data class PlatformFile(
 internal class MacOsBookmarkLease(
     url: NSURL,
 ) {
+    private val lock = NSLock()
     private val rootPath = url.standardizedPath
     private var scopeUrl: NSURL? = url
     private var activeAccesses = 0
@@ -81,7 +98,7 @@ internal class MacOsBookmarkLease(
 
     fun covers(url: NSURL): Boolean = url.standardizedPath.isWithin(rootPath)
 
-    fun start(): Boolean {
+    fun start(): Boolean = lock.withLock {
         check(!released) { "This security-scoped bookmark has been released" }
         val granted = requireNotNull(scopeUrl).startAccessingSecurityScopedResource()
         if (granted) {
@@ -90,15 +107,15 @@ internal class MacOsBookmarkLease(
         return granted
     }
 
-    fun stop() {
-        if (activeAccesses == 0) return
+    fun stop(): Unit = lock.withLock {
+        if (activeAccesses == 0) return@withLock
         requireNotNull(scopeUrl).stopAccessingSecurityScopedResource()
         activeAccesses -= 1
         releaseNativeUrlIfDrained()
     }
 
-    fun release() {
-        if (released) return
+    fun release(): Unit = lock.withLock {
+        if (released) return@withLock
         released = true
         releaseNativeUrlIfDrained()
     }
@@ -107,6 +124,15 @@ internal class MacOsBookmarkLease(
         if (released && activeAccesses == 0) {
             scopeUrl = null
         }
+    }
+}
+
+private inline fun <T> NSLock.withLock(block: () -> T): T {
+    lock()
+    return try {
+        block()
+    } finally {
+        unlock()
     }
 }
 
@@ -122,11 +148,7 @@ public actual fun PlatformFile.toKotlinxIoPath(): Path =
 
 @PublishedApi
 internal actual fun PlatformFile.withPath(path: Path): PlatformFile =
-    PlatformFile(path).copyMacOsBookmarkLeaseFrom(this)
-
-private fun PlatformFile.copyMacOsBookmarkLeaseFrom(source: PlatformFile): PlatformFile = apply {
-    macOsBookmarkLease = source.macOsBookmarkLease?.takeIf { it.covers(nsUrl) }
-}
+    copy(PlatformFile(path).nsUrl)
 
 private fun String.isWithin(rootPath: String): Boolean {
     val root = rootPath.trimEnd('/')
@@ -139,10 +161,21 @@ private fun String.isWithin(rootPath: String): Boolean {
 }
 
 private val NSURL.standardizedPath: String
-    get() = runCatching {
-        SystemFileSystem.resolve(toKotlinxPath()).toString()
-    }.getOrElse {
-        URLByStandardizingPath?.path.orEmpty()
+    get() {
+        val unresolvedSegments = mutableListOf<String>()
+        var candidate: Path? = toKotlinxPath()
+        while (candidate != null) {
+            val resolved = runCatching { SystemFileSystem.resolve(candidate) }.getOrNull()
+            if (resolved != null) {
+                return unresolvedSegments
+                    .asReversed()
+                    .fold(resolved) { path, segment -> Path(path, segment) }
+                    .toString()
+            }
+            unresolvedSegments += candidate.name
+            candidate = candidate.parent
+        }
+        return URLByStandardizingPath?.path.orEmpty()
     }
 
 public actual val PlatformFile.extension: String

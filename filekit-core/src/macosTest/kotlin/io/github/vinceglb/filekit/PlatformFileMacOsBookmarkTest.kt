@@ -12,7 +12,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -30,12 +29,13 @@ class PlatformFileMacOsBookmarkTest {
     }
 
     @Test
-    fun PlatformFile_equality_preservesUrlIdentity() {
+    fun PlatformFile_equality_usesUrlPath() {
         val first = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=1")))
         val second = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=2")))
 
         assertEquals(expected = first.nsUrl.path, actual = second.nsUrl.path)
-        assertNotEquals(illegal = first, actual = second)
+        assertEquals(expected = first, actual = second)
+        assertEquals(expected = first.hashCode(), actual = second.hashCode())
     }
 
     @Test
@@ -50,6 +50,15 @@ class PlatformFileMacOsBookmarkTest {
     }
 
     @Test
+    fun PlatformFile_nonExistingDescendant_underSymlinkedPrefix_inheritsScope() {
+        val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath("/tmp"))
+
+        val child = root / "filekit-non-existing-descendant"
+
+        assertEquals(expected = root.macOsBookmarkLease, actual = child.macOsBookmarkLease)
+    }
+
+    @Test
     fun PlatformFile_releaseBookmark_rejectsNewScopedAccessForDerivedFiles() {
         val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
         val child = root / "child"
@@ -58,6 +67,23 @@ class PlatformFileMacOsBookmarkTest {
 
         assertFailsWith<IllegalStateException> {
             child.startAccessingSecurityScopedResource()
+        }
+    }
+
+    @Test
+    fun PlatformFile_copy_preservesCapabilityOnlyWithinRoot() {
+        val original = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
+        val child = original.copy((original / "child").nsUrl)
+        val escaped = original.copy((original / "../outside").nsUrl)
+
+        original.releaseBookmark()
+        val copied = original.copy()
+
+        assertEquals(expected = original.nsUrl, actual = copied.component1())
+        assertEquals(expected = original.macOsBookmarkLease, actual = child.macOsBookmarkLease)
+        assertNull(actual = escaped.macOsBookmarkLease)
+        assertFailsWith<IllegalStateException> {
+            copied.startAccessingSecurityScopedResource()
         }
     }
 

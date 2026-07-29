@@ -55,7 +55,7 @@ class PlatformFileJvmTest {
 
         val resolution = PlatformFile.resolveBookmarkData(bookmarkData)
 
-        assertEquals(expected = legacyPath, actual = resolution.file.path)
+        assertEquals(expected = Path(legacyPath).toString(), actual = resolution.file.path)
         assertFalse(resolution.isStale)
         assertEquals(expected = Platform.isMac(), actual = resolution.shouldRefresh)
         assertEquals(expected = resolution.file, actual = PlatformFile.fromBookmarkData(bookmarkData))

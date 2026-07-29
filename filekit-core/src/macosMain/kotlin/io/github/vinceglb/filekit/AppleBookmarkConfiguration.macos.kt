@@ -8,8 +8,8 @@ import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.value
-import platform.CoreFoundation.CFBooleanGetValue
 import platform.CoreFoundation.CFBooleanGetTypeID
+import platform.CoreFoundation.CFBooleanGetValue
 import platform.CoreFoundation.CFErrorRefVar
 import platform.CoreFoundation.CFGetTypeID
 import platform.CoreFoundation.CFRelease
@@ -88,6 +88,7 @@ private fun readAppSandboxEntitlement(): Boolean = memScoped {
     ) ?: throw IllegalStateException("Could not create the App Sandbox entitlement name")
     return try {
         val error = alloc<CFErrorRefVar>()
+        error.value = null
         val value = SecTaskCopyValueForEntitlement(task, entitlement, error.ptr)
         if (value == null) {
             error.value?.let { failure ->
