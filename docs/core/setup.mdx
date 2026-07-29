@@ -37,6 +37,18 @@ class MainActivity : ComponentActivity() {
 
 <SetupJVMCore/>
 
+### Linux Native setup
+
+For `linuxX64` and `linuxArm64`, initialize FileKit with your application ID before accessing the standard application directories:
+
+```kotlin
+fun main() {
+    FileKit.init(appId = "my.application.id")
+}
+```
+
+FileKit uses the XDG data and cache directories by default. You can instead pass explicit `PlatformFile` values for `filesDir` and `cacheDir`.
+
 ### iOS, macOS, JS, WASM setup
 
 No additional setup is needed for iOS, macOS, JS, and WASM targets. FileKit Core works out of the box on these platforms.

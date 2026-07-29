@@ -17,6 +17,7 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readString
 import kotlinx.serialization.Serializable
+import platform.posix.fnmatch
 import platform.posix.getcwd
 import platform.posix.stat
 import kotlin.time.ExperimentalTime
@@ -126,28 +127,48 @@ public actual fun PlatformFile.lastModified(): Instant = memScoped {
 }
 
 public actual fun PlatformFile.mimeType(): MimeType? =
-    systemMimeTypes.find(extension)
+    systemMimeTypes.find(name)
 
 private const val SHARED_MIME_INFO_GLOBS = "/usr/share/mime/globs2"
 private const val MIME_TYPES_DATABASE = "/etc/mime.types"
 
-/**
- * Extension to MIME type lookup, split by whether the source entry demanded a case sensitive match.
- *
- * shared-mime-info marks entries such as `*.C` (C++ source) with the `cs` flag to distinguish them
- * from their case insensitive counterparts like `*.c` (C source), so the two cannot share a map.
- */
+/** Filename glob rules loaded from the system MIME database. */
 internal class SystemMimeTypes(
-    private val caseSensitive: Map<String, MimeType>,
-    private val caseInsensitive: Map<String, MimeType>,
+    private val rules: List<MimeGlobRule>,
 ) {
-    fun find(extension: String): MimeType? {
-        if (extension.isBlank()) return null
-        return caseSensitive[extension] ?: caseInsensitive[extension.lowercase()]
+    fun find(fileName: String): MimeType? {
+        if (fileName.isBlank()) return null
+        val matches = rules.filter { it.matches(fileName) }
+        val literalMatches = matches.filter { it.pattern.isLiteralGlob() }
+        val candidates = literalMatches.ifEmpty { matches }
+        return candidates
+            .maxWithOrNull(
+                compareBy<MimeGlobRule> { it.weight }
+                    .thenBy { it.pattern.length }
+                    .thenBy { -it.order },
+            )?.mimeType
     }
 
-    fun isEmpty(): Boolean = caseSensitive.isEmpty() && caseInsensitive.isEmpty()
+    fun isEmpty(): Boolean = rules.isEmpty()
 }
+
+internal data class MimeGlobRule(
+    val weight: Int,
+    val mimeType: MimeType,
+    val pattern: String,
+    val caseSensitive: Boolean,
+    val order: Int,
+) {
+    @OptIn(ExperimentalForeignApi::class)
+    fun matches(fileName: String): Boolean {
+        val matchPattern = if (caseSensitive) pattern else pattern.lowercase()
+        val matchFileName = if (caseSensitive) fileName else fileName.lowercase()
+        return fnmatch(matchPattern, matchFileName, 0) == 0
+    }
+}
+
+private fun String.isLiteralGlob(): Boolean =
+    none { it == '*' || it == '?' || it == '[' }
 
 /**
  * MIME type mapping read once from the system MIME databases.
@@ -162,7 +183,7 @@ private val systemMimeTypes: SystemMimeTypes by lazy {
         ?.takeIf { !it.isEmpty() }
         ?: readSystemFileOrNull(MIME_TYPES_DATABASE)
             ?.let(::parseMimeTypesDatabase)
-        ?: SystemMimeTypes(caseSensitive = emptyMap(), caseInsensitive = emptyMap())
+        ?: SystemMimeTypes(rules = emptyList())
 }
 
 /**
@@ -174,8 +195,7 @@ private val systemMimeTypes: SystemMimeTypes by lazy {
  * See https://specifications.freedesktop.org/shared-mime-info/latest-single/
  */
 internal fun parseSharedMimeInfoGlobs(content: String): SystemMimeTypes {
-    val caseSensitive = mutableMapOf<String, MimeType>()
-    val caseInsensitive = mutableMapOf<String, MimeType>()
+    val rules = mutableListOf<MimeGlobRule>()
 
     content
         .lineSequence()
@@ -184,26 +204,29 @@ internal fun parseSharedMimeInfoGlobs(content: String): SystemMimeTypes {
             val parts = line.split(':')
             if (parts.size < 3) return@forEach
 
-            val glob = parts[2].trim()
-
-            // Only single suffix `*.ext` globs are usable here. `extension` is the segment after
-            // the last dot, so a compound glob such as `*.tar.gz` can never be addressed by it and
-            // would shadow the correct `*.gz` entry if it were registered under "gz".
-            if (!glob.startsWith("*.") || glob.count { it == '.' } != 1) return@forEach
-
-            val extension = glob.removePrefix("*.")
+            val weight = parts[0].toIntOrNull()?.takeIf { it in 0..100 } ?: return@forEach
             val mimeType = parseMimeTypeOrNull(parts[1].trim()) ?: return@forEach
-            val flags = parts.drop(3).map { it.trim() }
-
-            // Entries are weight ordered, so the first one wins
-            if (flags.contains("cs")) {
-                caseSensitive.getOrPut(extension) { mimeType }
-            } else {
-                caseInsensitive.getOrPut(extension.lowercase()) { mimeType }
+            val pattern = parts[2]
+            if (pattern == "__NOGLOBS__") {
+                rules.removeAll { it.mimeType == mimeType }
+                return@forEach
             }
+
+            val flags = parts
+                .getOrNull(3)
+                ?.split(',')
+                ?.map(String::trim)
+                .orEmpty()
+            rules += MimeGlobRule(
+                weight = weight,
+                mimeType = mimeType,
+                pattern = pattern,
+                caseSensitive = "cs" in flags,
+                order = rules.size,
+            )
         }
 
-    return SystemMimeTypes(caseSensitive = caseSensitive, caseInsensitive = caseInsensitive)
+    return SystemMimeTypes(rules)
 }
 
 /**
@@ -212,7 +235,7 @@ internal fun parseSharedMimeInfoGlobs(content: String): SystemMimeTypes {
  * Lines look like `text/plain    txt text`.
  */
 internal fun parseMimeTypesDatabase(content: String): SystemMimeTypes {
-    val caseInsensitive = mutableMapOf<String, MimeType>()
+    val rules = mutableListOf<MimeGlobRule>()
 
     content
         .lineSequence()
@@ -223,11 +246,17 @@ internal fun parseMimeTypesDatabase(content: String): SystemMimeTypes {
 
             val mimeType = parseMimeTypeOrNull(tokens[0]) ?: return@forEach
             tokens.drop(1).forEach { extension ->
-                caseInsensitive.getOrPut(extension.lowercase()) { mimeType }
+                rules += MimeGlobRule(
+                    weight = 50,
+                    mimeType = mimeType,
+                    pattern = "*.$extension",
+                    caseSensitive = false,
+                    order = rules.size,
+                )
             }
         }
 
-    return SystemMimeTypes(caseSensitive = emptyMap(), caseInsensitive = caseInsensitive)
+    return SystemMimeTypes(rules)
 }
 
 private fun parseMimeTypeOrNull(value: String): MimeType? =

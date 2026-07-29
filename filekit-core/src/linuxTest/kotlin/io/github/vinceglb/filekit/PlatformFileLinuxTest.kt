@@ -155,17 +155,30 @@ class PlatformFileLinuxTest {
             """.trimIndent(),
         )
 
-        assertEquals(expected = MimeType.parse("text/x-c++src"), actual = mimeTypes.find("C"))
-        assertEquals(expected = MimeType.parse("text/x-csrc"), actual = mimeTypes.find("c"))
+        assertEquals(expected = MimeType.parse("text/x-c++src"), actual = mimeTypes.find("main.C"))
+        assertEquals(expected = MimeType.parse("text/x-csrc"), actual = mimeTypes.find("main.c"))
     }
 
     @Test
     fun SystemMimeTypes_find_caseInsensitiveEntry_matchesAnyCase() {
         val mimeTypes = parseSharedMimeInfoGlobs("50:text/plain:*.txt")
 
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("txt"))
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("TXT"))
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("Txt"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.txt"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.TXT"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.Txt"))
+    }
+
+    @Test
+    fun SystemMimeTypes_find_commaSeparatedCaseSensitiveFlag_isHonored() {
+        val mimeTypes = parseSharedMimeInfoGlobs(
+            """
+            50:text/x-c++src:*.C:cs,newflag:future-field
+            50:text/x-csrc:*.c
+            """.trimIndent(),
+        )
+
+        assertEquals(expected = MimeType.parse("text/x-c++src"), actual = mimeTypes.find("main.C"))
+        assertEquals(expected = MimeType.parse("text/x-csrc"), actual = mimeTypes.find("main.c"))
     }
 
     @Test
@@ -178,12 +191,11 @@ class PlatformFileLinuxTest {
             """.trimIndent(),
         )
 
-        assertEquals(expected = MimeType.parse("application/gzip"), actual = mimeTypes.find("gz"))
+        assertEquals(expected = MimeType.parse("application/gzip"), actual = mimeTypes.find("archive.gz"))
     }
 
     @Test
-    fun SystemMimeTypes_find_compoundGlob_doesNotShadowSingleSuffix() {
-        // `*.tar.gz` must not be registered under "gz", since `extension` is only the last segment
+    fun SystemMimeTypes_find_sameWeightCompoundGlob_prefersLongestPattern() {
         val mimeTypes = parseSharedMimeInfoGlobs(
             """
             50:application/x-compressed-tar:*.tar.gz
@@ -191,8 +203,35 @@ class PlatformFileLinuxTest {
             """.trimIndent(),
         )
 
-        assertEquals(expected = MimeType.parse("application/gzip"), actual = mimeTypes.find("gz"))
-        assertNull(mimeTypes.find("tar.gz"))
+        assertEquals(
+            expected = MimeType.parse("application/x-compressed-tar"),
+            actual = mimeTypes.find("archive.tar.gz"),
+        )
+        assertEquals(expected = MimeType.parse("application/gzip"), actual = mimeTypes.find("archive.gz"))
+    }
+
+    @Test
+    fun SystemMimeTypes_find_higherWeightWinsBeforePatternLength() {
+        val mimeTypes = parseSharedMimeInfoGlobs(
+            """
+            60:application/gzip:*.gz
+            50:application/x-compressed-tar:*.tar.gz
+            """.trimIndent(),
+        )
+
+        assertEquals(expected = MimeType.parse("application/gzip"), actual = mimeTypes.find("archive.tar.gz"))
+    }
+
+    @Test
+    fun SystemMimeTypes_find_literalPatternWinsBeforeWildcard() {
+        val mimeTypes = parseSharedMimeInfoGlobs(
+            """
+            10:text/x-makefile:Makefile
+            100:text/plain:*
+            """.trimIndent(),
+        )
+
+        assertEquals(expected = MimeType.parse("text/x-makefile"), actual = mimeTypes.find("Makefile"))
     }
 
     @Test
@@ -208,8 +247,8 @@ class PlatformFileLinuxTest {
             """.trimIndent(),
         )
 
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("txt"))
-        assertNull(mimeTypes.find("bad"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.txt"))
+        assertNull(mimeTypes.find("notes.bad"))
     }
 
     @Test
@@ -231,9 +270,9 @@ class PlatformFileLinuxTest {
             """.trimIndent(),
         )
 
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("txt"))
-        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("text"))
-        assertEquals(expected = MimeType.parse("image/png"), actual = mimeTypes.find("PNG"))
-        assertNull(mimeTypes.find("unknown"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.txt"))
+        assertEquals(expected = MimeType.parse("text/plain"), actual = mimeTypes.find("notes.text"))
+        assertEquals(expected = MimeType.parse("image/png"), actual = mimeTypes.find("image.PNG"))
+        assertNull(mimeTypes.find("file.unknown"))
     }
 }

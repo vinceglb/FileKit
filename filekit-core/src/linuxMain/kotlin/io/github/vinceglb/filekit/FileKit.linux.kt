@@ -70,57 +70,16 @@ public actual val FileKit.databasesDir: PlatformFile
 public actual val FileKit.projectDir: PlatformFile
     get() = PlatformFile(".")
 
-/**
- * The XDG variable name and default folder name for each user directory, kept together so the two
- * cannot drift apart.
- */
-private val FileKitUserDirectory.xdgEnvKey: String
-    get() = when (this) {
-        FileKitUserDirectory.Downloads -> "XDG_DOWNLOAD_DIR"
-        FileKitUserDirectory.Pictures -> "XDG_PICTURES_DIR"
-        FileKitUserDirectory.Videos -> "XDG_VIDEOS_DIR"
-        FileKitUserDirectory.Music -> "XDG_MUSIC_DIR"
-        FileKitUserDirectory.Documents -> "XDG_DOCUMENTS_DIR"
-    }
-
-private val FileKitUserDirectory.defaultFolderName: String
-    get() = when (this) {
-        FileKitUserDirectory.Downloads -> "Downloads"
-        FileKitUserDirectory.Pictures -> "Pictures"
-        FileKitUserDirectory.Videos -> "Videos"
-        FileKitUserDirectory.Music -> "Music"
-        FileKitUserDirectory.Documents -> "Documents"
-    }
-
 internal actual fun FileKit.platformUserDirectoryOrNull(type: FileKitUserDirectory): PlatformFile? {
     val home = homeDirectoryOrNull() ?: return null
-    val envKey = type.xdgEnvKey
-    val fallbackName = type.defaultFolderName
-
-    // Primary: the XDG user directory environment variable
-    val envValue = getEnv(envKey)
-        ?.takeIf(String::isNotBlank)
-        ?.let { expandHomeVariable(it, home) }
-    if (envValue != null) {
-        val path = Path(envValue)
-        path.assertExists()
-        return PlatformFile(path)
-    }
-
-    // Fallback: the xdg-user-dirs configuration file written by xdg-user-dirs-update
-    val configuredValue = readXdgUserDirsConfig(home)[envKey]
-        ?.takeIf(String::isNotBlank)
-        ?.let { expandHomeVariable(it, home) }
-    if (configuredValue != null) {
-        val path = Path(configuredValue)
-        path.assertExists()
-        return PlatformFile(path)
-    }
-
-    // Last resort: the default English folder name inside HOME (same as JVM)
-    val fallbackPath = Path(home, fallbackName)
-    fallbackPath.assertExists()
-    return PlatformFile(fallbackPath)
+    val path = resolveLinuxUserDirectoryPath(
+        type = type,
+        home = home,
+        envProvider = ::getEnv,
+        linuxUserDirsConfigProvider = { readXdgUserDirsConfig(home) },
+    ) ?: return null
+    path.assertExists()
+    return PlatformFile(path)
 }
 
 public actual suspend fun FileKit.saveImageToGallery(
@@ -191,43 +150,12 @@ private fun Path.assertExists() {
     }
 }
 
-private fun expandHomeVariable(path: String, home: String): String =
-    path
-        .replace("\${HOME}", home)
-        .replace("\$HOME", home)
-
-private fun readXdgUserDirsConfig(home: String): Map<String, String> {
+private fun readXdgUserDirsConfig(home: String): String? {
     val configHome = getEnv("XDG_CONFIG_HOME")?.takeIf { it.startsWith("/") } ?: "$home/.config"
     val configFile = Path(configHome, "user-dirs.dirs")
-    if (!SystemFileSystem.exists(configFile)) return emptyMap()
+    if (!SystemFileSystem.exists(configFile)) return null
 
-    val content = runCatching {
+    return runCatching {
         SystemFileSystem.source(configFile).buffered().use { it.readString() }
-    }.getOrNull() ?: return emptyMap()
-
-    return parseXdgUserDirsConfig(content)
+    }.getOrNull()
 }
-
-private fun parseXdgUserDirsConfig(config: String): Map<String, String> =
-    buildMap {
-        config
-            .lineSequence()
-            .map(String::trim)
-            .filter(String::isNotBlank)
-            .filterNot { it.startsWith("#") }
-            .forEach { line ->
-                val key = line.substringBefore("=", missingDelimiterValue = "").trim()
-                val rawValue = line.substringAfter("=", missingDelimiterValue = "").trim()
-
-                if (key.isBlank() || rawValue.isBlank()) {
-                    return@forEach
-                }
-
-                val value = rawValue
-                    .removeSurrounding("\"")
-                    .replace("\\\"", "\"")
-                    .replace("\\\\", "\\")
-
-                put(key, value)
-            }
-    }

@@ -7,7 +7,7 @@ import DownloadFilesWeb from '/snippets/download-files-web.mdx'
 
 ## Standard Directories
 
-<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+<Check>Supported on Android, iOS, macOS, JVM, and Kotlin/Native Linux targets</Check>
 
 FileKit provides access to standard platform-specific directories:
 
@@ -54,13 +54,18 @@ Each platform maps these standard directories to different locations according t
   - Windows: `%LOCALAPPDATA%/<app-id>/Cache/`
 - **databasesDir**: Maps to a `databases` subdirectory within filesDir
 
+**Kotlin/Native Linux (`linuxX64`, `linuxArm64`)**
+- **filesDir**: Maps to `$XDG_DATA_HOME/<app-id>/`, or `~/.local/share/<app-id>/` when `XDG_DATA_HOME` is unset
+- **cacheDir**: Maps to `$XDG_CACHE_HOME/<app-id>/`, or `~/.cache/<app-id>/` when `XDG_CACHE_HOME` is unset
+- **databasesDir**: Maps to a `databases` subdirectory within filesDir
+
 <Note>
-On JVM and macOS platforms, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
+On JVM, macOS, and Kotlin/Native Linux platforms, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
 </Note>
 
 ### Additional Directories
 
-On desktop platforms (JVM and macOS), FileKit provides access to common user directories:
+On desktop platforms (JVM, macOS, and Kotlin/Native Linux), FileKit provides access to common user directories:
 
 ```kotlin
 // Typed API
