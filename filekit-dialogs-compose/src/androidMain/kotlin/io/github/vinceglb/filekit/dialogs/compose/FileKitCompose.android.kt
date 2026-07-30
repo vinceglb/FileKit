@@ -34,6 +34,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.TakePictureWithCameraFacing
@@ -68,11 +69,13 @@ private fun InitializeAndroidFileKit() {
 }
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLauncher(
     type: FileKitType,
     mode: FileKitMode<PickerResult, ConsumedResult>,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
+    onError: (FileKitPickerException) -> Unit,
     onResult: (ConsumedResult) -> Unit,
 ): PickerResultLauncher {
     InitializeAndroidFileKit()

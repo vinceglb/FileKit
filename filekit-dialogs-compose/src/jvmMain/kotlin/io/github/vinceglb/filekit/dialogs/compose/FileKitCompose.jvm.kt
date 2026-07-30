@@ -7,6 +7,7 @@ import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import java.awt.Window
 
@@ -26,6 +27,23 @@ public fun <PickerResult, ConsumedResult> WindowScope.rememberFilePickerLauncher
 )
 
 @Composable
+public fun <PickerResult, ConsumedResult> WindowScope.rememberFilePickerLauncher(
+    type: FileKitType = FileKitType.File(),
+    mode: FileKitMode<PickerResult, ConsumedResult>,
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings? = null,
+    onError: (FileKitPickerException) -> Unit,
+    onResult: (ConsumedResult?) -> Unit,
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
+    type = type,
+    mode = mode,
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onError = onError,
+    onResult = onResult,
+)
+
+@Composable
 public fun WindowScope.rememberFilePickerLauncher(
     type: FileKitType = FileKitType.File(),
     directory: PlatformFile? = null,
@@ -35,6 +53,21 @@ public fun WindowScope.rememberFilePickerLauncher(
     type = type,
     directory = directory,
     dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onResult = onResult,
+)
+
+@Composable
+public fun WindowScope.rememberFilePickerLauncher(
+    type: FileKitType = FileKitType.File(),
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings? = null,
+    onError: (FileKitPickerException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
+    type = type,
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    onError = onError,
     onResult = onResult,
 )
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -76,23 +77,34 @@ private fun GalleryPickerScreen(
     var pickerDirectory: PlatformFile? by remember { mutableStateOf(null) }
 
     var files: List<PlatformFile> by remember { mutableStateOf(emptyList()) }
+    var pickerError: String? by remember { mutableStateOf(null) }
+
+    val onPickerError: (FileKitPickerException) -> Unit = { failure ->
+        buttonState = AppScreenHeaderButtonState.Enabled
+        files = emptyList()
+        pickerError = failure.message
+    }
 
     val gallerySinglePicker = rememberFilePickerLauncher(
         type = pickerType,
         mode = FileKitMode.Single,
         directory = pickerDirectory,
+        onError = onPickerError,
     ) { selectedFile ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = selectedFile?.let(::listOf) ?: emptyList()
+        pickerError = null
     }
 
     val galleryMultiplePicker = rememberFilePickerLauncher(
         type = pickerType,
         mode = FileKitMode.Multiple(maxItems = pickerMaxItems),
         directory = pickerDirectory,
+        onError = onPickerError,
     ) { selectedFiles ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = selectedFiles ?: emptyList()
+        pickerError = null
     }
 
     val gallerySingleWithStatePicker = rememberFilePickerLauncher(
@@ -101,6 +113,7 @@ private fun GalleryPickerScreen(
         directory = pickerDirectory,
     ) { state ->
         buttonState = AppScreenHeaderButtonState.Enabled
+        pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
         files = when (state) {
             FileKitPickerState.Cancelled -> emptyList()
             is FileKitPickerState.Failed -> emptyList()
@@ -116,6 +129,7 @@ private fun GalleryPickerScreen(
         directory = pickerDirectory,
     ) { state ->
         buttonState = AppScreenHeaderButtonState.Enabled
+        pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
         files = when (state) {
             FileKitPickerState.Cancelled -> emptyList()
             is FileKitPickerState.Failed -> emptyList()
@@ -231,7 +245,7 @@ private fun GalleryPickerScreen(
             item {
                 AppPickerResultsCard(
                     files = files,
-                    emptyText = "No files selected",
+                    emptyText = pickerError ?: "No files selected",
                     emptyIcon = LucideIcons.Camera,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

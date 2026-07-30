@@ -9,6 +9,7 @@ import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import io.github.vinceglb.filekit.dialogs.openFilePicker
@@ -54,6 +55,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
     mode: FileKitMode<PickerResult, ConsumedResult>,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
+    onError: (FileKitPickerException) -> Unit,
     onResult: (ConsumedResult) -> Unit,
 ): PickerResultLauncher {
     val coroutineScope = rememberCoroutineScope()
@@ -63,18 +65,25 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
     val currentMode by rememberUpdatedState(mode)
     val currentDirectory by rememberUpdatedState(directory)
     val currentDialogSettings by rememberUpdatedState(stableDialogSettings)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnConsumed by rememberUpdatedState(onResult)
 
     return remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = FileKit.openFilePicker(
-                    type = currentType,
+                runFilePickerLauncher(
                     mode = currentMode,
-                    directory = currentDirectory,
-                    dialogSettings = currentDialogSettings,
+                    openPicker = {
+                        FileKit.openFilePicker(
+                            type = currentType,
+                            mode = currentMode,
+                            directory = currentDirectory,
+                            dialogSettings = currentDialogSettings,
+                        )
+                    },
+                    onError = currentOnError,
+                    onResult = currentOnConsumed,
                 )
-                currentMode.consumeResult(result, currentOnConsumed)
             }
         }
     }
