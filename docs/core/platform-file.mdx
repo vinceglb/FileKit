@@ -3,7 +3,7 @@ title: 'PlatformFile'
 description: 'Cross-platform file representation for Kotlin Multiplatform'
 ---
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+<Check>Supported on Android, iOS, macOS, JVM, Kotlin/Native Linux, JS and WASM targets</Check>
 
 ## Introduction
 
@@ -165,7 +165,8 @@ Use `mimeType()` to ask the underlying platform for the best-known media type. I
 
 - **Apple platforms**: FileKit first queries provider metadata (e.g., from the Files app or iCloud Drive) and falls back to the filename extension when needed, so even extension-less documents can resolve to a MIME type.
 - **Android**: The resolver consults the `ContentResolver` for `content://` URIs and then falls back to `MimeTypeMap` if necessary.
-- **Desktop & Web**: The lookup is derived from the file extension.
+- **JVM Desktop & Web**: The lookup is derived from the file extension or the desktop platform's MIME registry.
+- **Kotlin/Native Linux**: FileKit matches the filename against the system shared MIME database, with `/etc/mime.types` as a fallback.
 
 This utility is helpful when you need to validate file types, populate upload headers, or customise previews based on content.
 
