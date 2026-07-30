@@ -8,10 +8,11 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher as r
 
 @Composable
 internal actual fun rememberFileSaverLauncher(
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
 ): FileSaverLauncher {
     val launcher = rememberFileKitSaverLauncher(
-        dialogSettings = FileKitDialogSettings.createDefault(),
+        dialogSettings = dialogSettings,
         onResult = onResult,
     )
 

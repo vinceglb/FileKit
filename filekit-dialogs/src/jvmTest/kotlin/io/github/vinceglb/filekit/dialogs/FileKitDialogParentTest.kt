@@ -5,12 +5,14 @@ package io.github.vinceglb.filekit.dialogs
 import org.junit.Assume.assumeFalse
 import java.awt.Frame
 import java.awt.GraphicsEnvironment
+import java.lang.reflect.Modifier
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class FileKitDialogParentTest {
     @Test
@@ -76,6 +78,18 @@ class FileKitDialogParentTest {
         assertEquals("FileKitDialogParent.Windows", FileKitDialogParent.windows(0x1234).toString())
         assertEquals("FileKitDialogParent.X11", FileKitDialogParent.x11(0x5678).toString())
         assertEquals("FileKitDialogParent.Wayland", FileKitDialogParent.wayland("secret-token").toString())
+    }
+
+    @Test
+    fun FileKitDialogParent_concreteVariants_arePrivateInJvmBytecode() {
+        val variantNames = setOf("Awt", "Windows", "X11", "Wayland")
+        val variants = FileKitDialogParent::class.java.declaredClasses
+            .filter { it.simpleName in variantNames }
+
+        assertEquals(variantNames, variants.map { it.simpleName }.toSet())
+        variants.forEach { variant ->
+            assertTrue(Modifier.isPrivate(variant.modifiers), "${variant.simpleName} must remain private")
+        }
     }
 
     @Test

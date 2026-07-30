@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.sample.shared.ui.screens.filesaver
 
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 internal interface FileSaverLauncher {
     val isSupported: Boolean
@@ -16,5 +17,6 @@ internal interface FileSaverLauncher {
 
 @Composable
 internal expect fun rememberFileSaverLauncher(
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
 ): FileSaverLauncher

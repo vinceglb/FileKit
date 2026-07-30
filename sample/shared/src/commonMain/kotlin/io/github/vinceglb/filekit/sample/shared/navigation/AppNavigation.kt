@@ -156,6 +156,7 @@ internal fun AppNavigation(
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
                     },
+                    dialogSettingsTransform = dialogSettingsTransform,
                 )
             }
             entry<FileSaver> {
@@ -164,6 +165,7 @@ internal fun AppNavigation(
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
                     },
+                    dialogSettingsTransform = dialogSettingsTransform,
                 )
             }
             entry<ShareFile> {

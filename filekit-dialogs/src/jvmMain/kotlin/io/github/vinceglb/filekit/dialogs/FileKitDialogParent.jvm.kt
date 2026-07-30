@@ -13,25 +13,25 @@ import java.awt.Window
  * with an identifier from another window system.
  */
 public sealed class FileKitDialogParent {
-    internal data class Awt(
+    private data class Awt(
         internal val window: Window,
     ) : FileKitDialogParent() {
         override fun toString(): String = "FileKitDialogParent.Awt"
     }
 
-    internal data class Windows(
+    private data class Windows(
         internal val hwnd: Long,
     ) : FileKitDialogParent() {
         override fun toString(): String = "FileKitDialogParent.Windows"
     }
 
-    internal data class X11(
+    private data class X11(
         internal val xid: Long,
     ) : FileKitDialogParent() {
         override fun toString(): String = "FileKitDialogParent.X11"
     }
 
-    internal data class Wayland(
+    private data class Wayland(
         internal val exportedHandle: String,
     ) : FileKitDialogParent() {
         override fun toString(): String = "FileKitDialogParent.Wayland"
@@ -81,77 +81,97 @@ public sealed class FileKitDialogParent {
             return Wayland(exportedHandle)
         }
     }
+
+    internal fun resolveWindowsHandleValue(
+        awtWindowHandle: (Window) -> Long,
+    ): Long = when (this) {
+        is Awt -> resolveAwtNativeIdentifier("Windows HWND") {
+            awtWindowHandle(window)
+        }
+
+        is Windows -> hwnd
+
+        else -> unsupportedParent(
+            adapter = "Windows dialogs",
+            supported = "AWT or Windows",
+        )
+    }
+
+    internal fun resolveXdgPortalParentValue(
+        awtWindowXid: (Window) -> Long,
+    ): String = when (this) {
+        is Awt -> {
+            val xid = resolveAwtNativeIdentifier("X11 XID") {
+                awtWindowXid(window)
+            }
+            x11PortalParent(xid)
+        }
+
+        is X11 -> {
+            x11PortalParent(xid)
+        }
+
+        is Wayland -> {
+            "wayland:$exportedHandle"
+        }
+
+        else -> {
+            unsupportedParent(
+                adapter = "XDG portal dialogs",
+                supported = "AWT, X11, or Wayland",
+            )
+        }
+    }
+
+    internal fun requireAwtWindow(adapter: String): Window = when (this) {
+        is Awt -> window
+
+        else -> unsupportedParent(
+            adapter = adapter,
+            supported = "AWT",
+        )
+    }
+
+    internal fun requireMacOSCompatibility() {
+        when (this) {
+            is Awt -> Unit
+
+            else -> unsupportedParent(
+                adapter = "macOS dialogs",
+                supported = "AWT",
+            )
+        }
+    }
+
+    private fun unsupportedParent(
+        adapter: String,
+        supported: String,
+    ): Nothing = throw FileKitPickerException(
+        "$adapter does not support ${kindName()} dialog parents. Supported parents: $supported.",
+    )
+
+    private fun kindName(): String = when (this) {
+        is Awt -> "AWT"
+        is Windows -> "Windows"
+        is X11 -> "X11"
+        is Wayland -> "Wayland"
+    }
 }
 
 internal fun FileKitDialogParent?.resolveWindowsHandle(
     awtWindowHandle: (Window) -> Long,
-): Long? = when (this) {
-    null -> null
-
-    is FileKitDialogParent.Awt -> resolveAwtNativeIdentifier("Windows HWND") {
-        awtWindowHandle(window)
-    }
-
-    is FileKitDialogParent.Windows -> hwnd
-
-    else -> unsupportedParent(
-        adapter = "Windows dialogs",
-        supported = "AWT or Windows",
-    )
-}
+): Long? = this?.resolveWindowsHandleValue(awtWindowHandle)
 
 internal fun FileKitDialogParent?.resolveXdgPortalParent(
     awtWindowXid: (Window) -> Long,
-): String = when (this) {
-    null -> {
-        ""
-    }
-
-    is FileKitDialogParent.Awt -> {
-        val xid = resolveAwtNativeIdentifier("X11 XID") {
-            awtWindowXid(window)
-        }
-        x11PortalParent(xid)
-    }
-
-    is FileKitDialogParent.X11 -> {
-        x11PortalParent(xid)
-    }
-
-    is FileKitDialogParent.Wayland -> {
-        "wayland:$exportedHandle"
-    }
-
-    else -> {
-        unsupportedParent(
-            adapter = "XDG portal dialogs",
-            supported = "AWT, X11, or Wayland",
-        )
-    }
-}
+): String = this?.resolveXdgPortalParentValue(awtWindowXid) ?: ""
 
 internal fun FileKitDialogParent?.requireAwtWindowOrNull(
     adapter: String,
-): Window? = when (this) {
-    null -> null
-
-    is FileKitDialogParent.Awt -> window
-
-    else -> unsupportedParent(
-        adapter = adapter,
-        supported = "AWT",
-    )
-}
+): Window? = this?.requireAwtWindow(adapter)
 
 internal fun FileKitDialogParent?.requireMacOSCompatible() {
-    when (this) {
-        null, is FileKitDialogParent.Awt -> Unit
-
-        else -> unsupportedParent(
-            adapter = "macOS dialogs",
-            supported = "AWT",
-        )
-    }
+    this?.requireMacOSCompatibility()
 }
 
 internal fun resolveAwtNativeIdentifier(
@@ -177,19 +197,5 @@ internal fun resolveAwtNativeIdentifier(
 }
 
 private fun x11PortalParent(xid: Long): String = "x11:${xid.toString(16)}"
-
-private fun FileKitDialogParent.unsupportedParent(
-    adapter: String,
-    supported: String,
-): Nothing = throw FileKitPickerException(
-    "$adapter does not support ${kindName()} dialog parents. Supported parents: $supported.",
-)
-
-private fun FileKitDialogParent.kindName(): String = when (this) {
-    is FileKitDialogParent.Awt -> "AWT"
-    is FileKitDialogParent.Windows -> "Windows"
-    is FileKitDialogParent.X11 -> "X11"
-    is FileKitDialogParent.Wayland -> "Wayland"
-}
 
 private const val X11_XID_MAX: Long = 0xffff_ffffL

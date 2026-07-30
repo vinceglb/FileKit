@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
@@ -47,10 +48,12 @@ import io.github.vinceglb.filekit.sample.shared.util.plus
 internal fun DirectoryPickerRoute(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     DirectoryPickerScreen(
         onNavigateBack = onNavigateBack,
         onDisplayFileDetails = onDisplayFileDetails,
+        dialogSettingsTransform = dialogSettingsTransform,
     )
 }
 
@@ -59,14 +62,17 @@ internal fun DirectoryPickerRoute(
 private fun DirectoryPickerScreen(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var startDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var pickedDirectories by remember { mutableStateOf(emptyList<PlatformFile>()) }
     var selectedFile by remember { mutableStateOf<PlatformFile?>(null) }
+    val dialogSettings = dialogSettingsTransform(FileKitDialogSettings.createDefault())
 
     val directoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
+        dialogSettings = dialogSettings,
     ) { directory ->
         buttonState = AppScreenHeaderButtonState.Enabled
         if (directory != null) {
@@ -75,6 +81,7 @@ private fun DirectoryPickerScreen(
     }
     val startDirectoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
+        dialogSettings = dialogSettings,
     ) { directory ->
         if (directory != null) {
             startDirectory = directory
