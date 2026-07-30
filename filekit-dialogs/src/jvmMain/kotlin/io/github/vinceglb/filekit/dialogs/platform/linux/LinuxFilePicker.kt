@@ -15,11 +15,12 @@ import java.io.File
  * [SwingFilePicker] is used for [openDirectoryPicker] because [AwtFilePicker] doesn't support picking directories
  */
 internal class LinuxFilePicker(
-    private val xdgFilePickerPortal: XdgFilePickerPortal,
-    private val awtFilePicker: AwtFilePicker,
-    private val swingFilePicker: SwingFilePicker,
+    private val xdgFilePickerPortal: PlatformFilePicker,
+    private val awtFilePicker: PlatformFilePicker,
+    private val swingFilePicker: PlatformFilePicker,
+    isXdgFilePickerPortalAvailable: () -> Boolean,
 ) : PlatformFilePicker {
-    private val xdgFilePickerPortalAvailable by lazy { xdgFilePickerPortal.isAvailable() }
+    private val xdgFilePickerPortalAvailable by lazy(isXdgFilePickerPortalAvailable)
 
     override suspend fun openFilePicker(
         fileExtensions: Set<String>?,

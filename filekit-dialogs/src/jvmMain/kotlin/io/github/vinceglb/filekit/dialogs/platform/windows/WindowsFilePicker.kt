@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.dialogs.platform.windows
 
 import com.sun.jna.Native
+import com.sun.jna.Pointer
 import com.sun.jna.WString
 import com.sun.jna.platform.win32.COM.COMUtils.FAILED
 import com.sun.jna.platform.win32.Guid
@@ -33,8 +34,8 @@ import io.github.vinceglb.filekit.dialogs.platform.windows.jna.Shell32
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItem
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.ShellItemArray
 import io.github.vinceglb.filekit.dialogs.platform.windows.util.GuidFixed
+import io.github.vinceglb.filekit.dialogs.resolveWindowsHandle
 import io.github.vinceglb.filekit.path
-import java.awt.Window
 import java.io.File
 
 internal class WindowsFilePicker(
@@ -60,7 +61,7 @@ internal class WindowsFilePicker(
             ?.takeIf { it.isNotEmpty() }
             ?.let { fileOpenDialog.addFiltersToDialog(it) }
 
-        fileOpenDialog.show(dialogSettings.parentWindow) {
+        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
             it.getResult(SIGDN_FILESYSPATH)
         }
     }
@@ -88,7 +89,7 @@ internal class WindowsFilePicker(
         // Set a flag for multiple options
         fileOpenDialog.setFlag(FOS_ALLOWMULTISELECT)
 
-        fileOpenDialog.show(dialogSettings.parentWindow) {
+        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
             it.getResults()
         }
     }
@@ -111,7 +112,7 @@ internal class WindowsFilePicker(
         fileOpenDialog.setFlag(FOS_PICKFOLDERS)
 
         // Show the dialog to the user
-        fileOpenDialog.show(dialogSettings.parentWindow) {
+        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
             it.getResult(SIGDN_DESKTOPABSOLUTEPARSING)
         }
     }
@@ -143,7 +144,7 @@ internal class WindowsFilePicker(
         filterExtensions?.let { fileSaveDialog.addFiltersToDialog(it) }
 
         // Show the dialog to the user
-        fileSaveDialog.show(dialogSettings.parentWindow) {
+        fileSaveDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
             it.getResult(SIGDN_FILESYSPATH)
         }
     }
@@ -260,11 +261,11 @@ internal class WindowsFilePicker(
     }
 
     private fun <FD : FileDialog, T> FD.show(
-        parentWindow: Window?,
+        parentHandle: Long?,
         block: (FD) -> T,
     ): T? {
         // Show the dialog to the user
-        val openDialogResult = this.Show(parentWindow.toHwnd())
+        val openDialogResult = showWindowsDialog(parentHandle, this::Show)
 
         // Valid error code: User canceled the dialog
         val userCanceledException = Win32Exception(ERROR_CANCELLED)
@@ -374,17 +375,17 @@ internal class WindowsFilePicker(
         }
     }
 
-    private fun Window?.toHwnd(): WinDef.HWND? = when (this) {
-        null -> {
-            null
+    private fun FileKitDialogSettings.resolveWindowsDialogHandle(): Long? =
+        parent.resolveWindowsHandle { window ->
+            Pointer.nativeValue(Native.getWindowPointer(window))
         }
-
-        else -> {
-            Native
-                .getWindowPointer(this)
-                .let { WinDef.HWND(it) }
-        }
-    }
 }
+
+internal fun <T> showWindowsDialog(
+    parentHandle: Long?,
+    show: (WinDef.HWND?) -> T,
+): T = show(parentHandle?.let(::toWindowsHwnd))
+
+internal fun toWindowsHwnd(handle: Long): WinDef.HWND = WinDef.HWND(Pointer(handle))
 
 internal fun requiredFileDialogOptions(options: Int): Int = options or FOS_FORCEFILESYSTEM

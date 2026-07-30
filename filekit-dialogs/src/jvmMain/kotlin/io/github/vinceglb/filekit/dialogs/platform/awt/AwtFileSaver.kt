@@ -25,16 +25,18 @@ internal object AwtFileSaver {
             }
         }
 
+        val parentWindow = dialogSettings?.parent.resolveAwtFileDialogOwner()
+
         // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (dialogSettings?.parentWindow) {
-            is Dialog -> object : FileDialog(dialogSettings.parentWindow, "Save dialog", SAVE) {
+        val dialog = when (parentWindow) {
+            is Dialog -> object : FileDialog(parentWindow, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)
                 }
             }
 
-            else -> object : FileDialog(dialogSettings?.parentWindow as? Frame, "Save dialog", SAVE) {
+            else -> object : FileDialog(parentWindow as? Frame, "Save dialog", SAVE) {
                 override fun setVisible(value: Boolean) {
                     super.setVisible(value)
                     handleResult(value, files)

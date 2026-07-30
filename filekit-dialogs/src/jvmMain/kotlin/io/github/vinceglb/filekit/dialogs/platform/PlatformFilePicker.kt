@@ -49,9 +49,23 @@ internal interface PlatformFilePicker {
         val current: PlatformFilePicker by lazy { createPlatformFilePicker() }
 
         private fun createPlatformFilePicker(): PlatformFilePicker = when (PlatformUtil.current) {
-            Platform.MacOS -> MacOSFilePicker()
-            Platform.Windows -> WindowsFilePicker()
-            Platform.Linux -> LinuxFilePicker(XdgFilePickerPortal(), AwtFilePicker(), SwingFilePicker())
+            Platform.MacOS -> {
+                MacOSFilePicker()
+            }
+
+            Platform.Windows -> {
+                WindowsFilePicker()
+            }
+
+            Platform.Linux -> {
+                val xdgFilePickerPortal = XdgFilePickerPortal()
+                LinuxFilePicker(
+                    xdgFilePickerPortal = xdgFilePickerPortal,
+                    awtFilePicker = AwtFilePicker(),
+                    swingFilePicker = SwingFilePicker(),
+                    isXdgFilePickerPortalAvailable = xdgFilePickerPortal::isAvailable,
+                )
+            }
         }
     }
 }

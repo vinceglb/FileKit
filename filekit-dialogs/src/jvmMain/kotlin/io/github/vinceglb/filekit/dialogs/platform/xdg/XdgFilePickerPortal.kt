@@ -4,6 +4,7 @@ import com.sun.jna.Native
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.dialogs.resolveXdgPortalParent
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.CompletableDeferred
 import org.freedesktop.dbus.DBusMatchRule
@@ -21,7 +22,6 @@ import org.freedesktop.dbus.interfaces.Properties
 import org.freedesktop.dbus.messages.DBusSignal
 import org.freedesktop.dbus.types.UInt32
 import org.freedesktop.dbus.types.Variant
-import java.awt.Window
 import java.io.File
 import java.lang.reflect.InvocationTargetException
 import java.net.URI
@@ -29,8 +29,135 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
-internal class XdgFilePickerPortal : PlatformFilePicker {
-    fun isAvailable(): Boolean {
+internal class XdgFilePickerPortal(
+    private val transport: XdgFileChooserTransport = DbusXdgFileChooserTransport(),
+) : PlatformFilePicker {
+    fun isAvailable(): Boolean = transport.isAvailable()
+
+    override suspend fun openFilePicker(
+        fileExtensions: Set<String>?,
+        directory: PlatformFile?,
+        dialogSettings: FileKitDialogSettings,
+    ): File? = openFilesPicker(
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = dialogSettings.title,
+        parentWindow = dialogSettings.resolveXdgPortalParent(),
+        multiple = false,
+        openDirectory = false,
+    )?.firstOrNull()
+
+    override suspend fun openFilesPicker(
+        fileExtensions: Set<String>?,
+        directory: PlatformFile?,
+        dialogSettings: FileKitDialogSettings,
+    ): List<File>? = openFilesPicker(
+        directory = directory,
+        fileExtensions = fileExtensions,
+        title = dialogSettings.title,
+        parentWindow = dialogSettings.resolveXdgPortalParent(),
+        multiple = true,
+        openDirectory = false,
+    )
+
+    override suspend fun openDirectoryPicker(
+        directory: PlatformFile?,
+        dialogSettings: FileKitDialogSettings,
+    ): File? = openFilesPicker(
+        directory = directory,
+        fileExtensions = null,
+        title = dialogSettings.title,
+        parentWindow = dialogSettings.resolveXdgPortalParent(),
+        multiple = false,
+        openDirectory = true,
+    )?.firstOrNull()
+
+    private suspend fun openFilesPicker(
+        directory: PlatformFile?,
+        fileExtensions: Set<String>?,
+        title: String?,
+        parentWindow: String,
+        multiple: Boolean,
+        openDirectory: Boolean,
+    ): List<File>? {
+        val options: MutableMap<String, Variant<*>> = HashMap()
+        options["multiple"] = Variant(multiple)
+        options["directory"] = Variant(openDirectory)
+        fileExtensions?.let { options["filters"] = createFilterOption(it) }
+        directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
+
+        return transport
+            .openFile(
+                parentWindow = parentWindow,
+                title = title ?: "",
+                options = options,
+            )?.map { File(it) }
+    }
+
+    override suspend fun openFileSaver(
+        suggestedName: String,
+        defaultExtension: String?,
+        allowedExtensions: Set<String>?,
+        directory: PlatformFile?,
+        dialogSettings: FileKitDialogSettings,
+    ): File? {
+        val options: MutableMap<String, Variant<*>> = HashMap()
+        options["current_name"] = when {
+            defaultExtension != null -> Variant("$suggestedName.$defaultExtension")
+            else -> Variant(suggestedName)
+        }
+
+        val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
+        filterExtensions?.let { options["filters"] = createFilterOption(it) }
+        directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
+
+        return transport
+            .saveFile(
+                parentWindow = dialogSettings.resolveXdgPortalParent(),
+                title = "",
+                options = options,
+            )?.first()
+            ?.let { File(it) }
+    }
+
+    private fun FileKitDialogSettings.resolveXdgPortalParent(): String =
+        parent.resolveXdgPortalParent(Native::getWindowID)
+
+    private fun createFilterOption(extensions: Set<String>): Variant<*> {
+        val allExtensions = Pair("Supported files", extensions.map { extension -> Pair(0, "*.$extension") })
+        val individualExtensions = extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) }
+        return Variant(
+            listOf(allExtensions) + individualExtensions,
+            "a(sa(us))",
+        )
+    }
+
+    private fun createCurrentFolderOption(currentFolder: PlatformFile): Variant<*> {
+        val stringBytes = currentFolder.path.encodeToByteArray()
+        val nullTerminated = ByteArray(stringBytes.size + 1)
+        System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
+        return Variant(nullTerminated)
+    }
+}
+
+internal interface XdgFileChooserTransport {
+    fun isAvailable(): Boolean
+
+    suspend fun openFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>?
+
+    suspend fun saveFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>?
+}
+
+private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
+    override fun isAvailable(): Boolean {
         try {
             DBusConnectionBuilder.forSessionBus().build().use { connection ->
                 connection
@@ -46,102 +173,41 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         }
     }
 
-    override suspend fun openFilePicker(
-        fileExtensions: Set<String>?,
-        directory: PlatformFile?,
-        dialogSettings: FileKitDialogSettings,
-    ): File? = openFilesPicker(
-        directory = directory,
-        fileExtensions = fileExtensions,
-        title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
-        multiple = false,
-        openDirectory = false,
-    )?.firstOrNull()
-
-    override suspend fun openFilesPicker(
-        fileExtensions: Set<String>?,
-        directory: PlatformFile?,
-        dialogSettings: FileKitDialogSettings,
-    ): List<File>? = openFilesPicker(
-        directory = directory,
-        fileExtensions = fileExtensions,
-        title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
-        multiple = true,
-        openDirectory = false,
-    )
-
-    override suspend fun openDirectoryPicker(
-        directory: PlatformFile?,
-        dialogSettings: FileKitDialogSettings,
-    ): File? = openFilesPicker(
-        directory = directory,
-        fileExtensions = null,
-        title = dialogSettings.title,
-        parentWindow = dialogSettings.parentWindow,
-        multiple = false,
-        openDirectory = true,
-    )?.firstOrNull()
-
-    private suspend fun openFilesPicker(
-        directory: PlatformFile?,
-        fileExtensions: Set<String>?,
-        title: String?,
-        parentWindow: Window?,
-        multiple: Boolean,
-        openDirectory: Boolean,
-    ): List<File>? {
-        DBusConnectionBuilder.forSessionBus().build().use { connection ->
-            val handleToken = UUID.randomUUID().toString().replace("-", "")
-            val options: MutableMap<String, Variant<*>> = HashMap()
-            options["handle_token"] = Variant(handleToken)
-            options["multiple"] = Variant(multiple)
-            options["directory"] = Variant(openDirectory)
-            fileExtensions?.let { options["filters"] = createFilterOption(it) }
-            directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
-
-            val deferredResult = registerResponseHandler(connection, handleToken)
-            getFileChooserObject(connection).OpenFile(
-                parentWindow = getWindowIdentifier(parentWindow) ?: "",
-                title = title ?: "",
-                options = options,
-            )
-            val files = deferredResult.await()?.map { File(it) }
-            return files
-        }
+    override suspend fun openFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>? = executeRequest(options) { fileChooser, requestOptions ->
+        fileChooser.OpenFile(
+            parentWindow = parentWindow,
+            title = title,
+            options = requestOptions,
+        )
     }
 
-    override suspend fun openFileSaver(
-        suggestedName: String,
-        defaultExtension: String?,
-        allowedExtensions: Set<String>?,
-        directory: PlatformFile?,
-        dialogSettings: FileKitDialogSettings,
-    ): File? {
-        DBusConnectionBuilder.forSessionBus().build().use { connection ->
-            val handleToken = UUID.randomUUID().toString().replace("-", "")
-            val options: MutableMap<String, Variant<*>> = HashMap()
-            options["handle_token"] = Variant(handleToken)
+    override suspend fun saveFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>? = executeRequest(options) { fileChooser, requestOptions ->
+        fileChooser.SaveFile(
+            parentWindow = parentWindow,
+            title = title,
+            options = requestOptions,
+        )
+    }
 
-            options["current_name"] = when {
-                defaultExtension != null -> Variant("$suggestedName.$defaultExtension")
-                else -> Variant(suggestedName)
-            }
+    private suspend fun executeRequest(
+        options: MutableMap<String, Variant<*>>,
+        request: (FileChooserDbusInterface, MutableMap<String, Variant<*>>) -> Unit,
+    ): List<URI>? = DBusConnectionBuilder.forSessionBus().build().use { connection ->
+        val handleToken = UUID.randomUUID().toString().replace("-", "")
+        val requestOptions = HashMap(options)
+        requestOptions["handle_token"] = Variant(handleToken)
 
-            val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
-            filterExtensions?.let { options["filters"] = createFilterOption(it) }
-            directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
-
-            val deferredResult = registerResponseHandler(connection, handleToken)
-            getFileChooserObject(connection).SaveFile(
-                parentWindow = getWindowIdentifier(dialogSettings.parentWindow) ?: "",
-                title = "",
-                options = options,
-            )
-
-            return deferredResult.await()?.first()?.let { File(it) }
-        }
+        val deferredResult = registerResponseHandler(connection, handleToken)
+        request(getFileChooserObject(connection), requestOptions)
+        deferredResult.await()
     }
 
     // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Request.html
@@ -228,31 +294,11 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         }
     }
 
-    // awt only supports X11
-    private fun getWindowIdentifier(parentWindow: Window?) =
-        parentWindow?.let { "X11:${Native.getWindowID(it)}" }
-
     private fun getFileChooserObject(connection: DBusConnection) = connection.getRemoteObject(
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
         FileChooserDbusInterface::class.java,
     )
-
-    private fun createFilterOption(extensions: Set<String>): Variant<*> {
-        val allExtensions = Pair("Supported files", extensions.map { extension -> Pair(0, "*.$extension") })
-        val individualExtensions = extensions.map { extension -> Pair(extension, listOf(Pair(0, "*.$extension"))) }
-        return Variant(
-            listOf(allExtensions) + individualExtensions,
-            "a(sa(us))",
-        )
-    }
-
-    private fun createCurrentFolderOption(currentFolder: PlatformFile): Variant<*> {
-        val stringBytes = currentFolder.path.encodeToByteArray()
-        val nullTerminated = ByteArray(stringBytes.size + 1)
-        System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
-        return Variant(nullTerminated)
-    }
 }
 
 @DBusInterfaceName(value = "org.freedesktop.portal.FileChooser")
