@@ -11,20 +11,13 @@ FileKit allows you to customize dialog behavior with platform-specific settings.
 On JVM platforms (Windows, macOS, Linux), you can customize:
 
 - `title`: Set a custom title for the dialog
-- `parentWindow`: Set the parent window for the dialog (useful for modal behavior)
+- `parent`: Set the typed parent window identity used for modality and stacking
 - `macOS`: Configure macOS-specific settings
 
 ```kotlin
-// Basic settings with title and parent window
 val settings = FileKitDialogSettings(
     title = "Select a file",
-    parentWindow = window
-)
-
-// With macOS-specific settings
-val settings = FileKitDialogSettings(
-    title = "Select a file",
-    parentWindow = window,
+    parent = FileKitDialogParent.awt(window),
     macOS = FileKitMacOSSettings(
         resolvesAliases = false,
         canCreateDirectories = true
@@ -32,14 +25,95 @@ val settings = FileKitDialogSettings(
 )
 ```
 
-For desktop applications, it's recommended to pass the window reference:
+`FileKitDialogParent` represents one canonical parent, with factories for each
+supported JVM window system:
+
+```kotlin
+FileKitDialogParent.awt(window)
+FileKitDialogParent.windows(hwnd)
+FileKitDialogParent.x11(xid)
+FileKitDialogParent.wayland(exportedHandle)
+```
+
+The parent is borrowed. Keep the AWT window, HWND, X11 window, or Wayland export
+alive until the suspending picker call completes. FileKit never takes ownership
+or extends its lifetime.
+
+| Active JVM picker | Accepted parents | Notes |
+| --- | --- | --- |
+| Windows | AWT, Windows HWND, or no parent | An AWT window is resolved to an HWND when the dialog opens. |
+| Linux XDG portal | AWT, X11 XID, Wayland export, or no parent | X11 identifiers are sent as lowercase hexadecimal. |
+| Linux AWT fallback | AWT `Frame`/`Dialog`, or no parent | A native X11 or Wayland parent fails if the portal is unavailable; it is not silently dropped. |
+| Linux Swing directory fallback | Any AWT `Window`, or no parent | Native X11 and Wayland parents are not compatible. |
+| macOS on JVM | AWT, or no parent | The current `runModal()` implementation is application-modal and does not establish a window-modal sheet. |
+
+<Note>
+`wayland()` accepts the unprefixed opaque handle exported through
+`xdg_foreign`. FileKit adds the `wayland:` portal prefix without trimming or
+normalizing the value. A raw `wl_surface*`, a Tao handle, and a string that you
+invented from a pointer are not exported Wayland handles.
+</Note>
+
+Invalid factory arguments, such as a zero HWND, an out-of-range XID, or an empty
+Wayland handle, throw `IllegalArgumentException`. A valid parent that the active
+picker cannot use, or an AWT parent that cannot resolve to a native identifier,
+throws `FileKitPickerException` before opening the dialog.
+
+#### Compose Desktop
+
+The `WindowScope.remember*Launcher` extensions automatically use the scope's AWT
+window and replace any parent already present in the supplied settings. For a
+plain launcher or direct picker call, provide it explicitly:
 
 ```kotlin
 Window(onCloseRequest = ::exitApplication) {
-    val dialogSettings = FileKitDialogSettings(this.window)
+    val dialogSettings = FileKitDialogSettings(
+        parent = FileKitDialogParent.awt(this.window)
+    )
     App(dialogSettings)
 }
 ```
+
+#### Migrating from FileKit 0.14
+
+The JVM settings API intentionally changed in FileKit 0.15. Replace:
+
+```kotlin
+FileKitDialogSettings(parentWindow = window)
+```
+
+with:
+
+```kotlin
+FileKitDialogSettings(parent = FileKitDialogParent.awt(window))
+```
+
+There is no compatibility `parentWindow` property or constructor.
+
+#### Nucleus with the Tao backend
+
+Nucleus 2.1.10 exposes a native HWND for Tao windows on Windows. Adapt that
+framework-specific window locally and pass the resulting settings to a plain,
+non-`WindowScope` launcher:
+
+```kotlin
+val parent = when (Platform.Current) {
+    Platform.Windows -> nucleusWindow.unsafe.taoWindow
+        ?.nativeHandle
+        ?.takeIf { it != 0L }
+        ?.let(FileKitDialogParent::windows)
+    else -> null
+}
+
+val settings = FileKitDialogSettings(parent = parent)
+```
+
+Do not pass `nucleusWindow.unsafe.taoHandle`: it is an opaque Tao event-loop
+identity, not an operating-system dialog parent. Nucleus currently does not
+expose an X11 XID or `xdg_foreign` export for Tao on Linux. On macOS it exposes
+an NSView, while FileKit's JVM picker would need a separate NSWindow sheet
+implementation. Tao parenting is therefore currently supported through this
+adapter on Windows only.
 
 ### iOS and macOS Settings
 
@@ -91,7 +165,7 @@ expect fun createDialogSettings(): FileKitDialogSettings
 actual fun createDialogSettings(): FileKitDialogSettings {
     return FileKitDialogSettings(
         title = "Select a file",
-        parentWindow = window,
+        parent = FileKitDialogParent.awt(window),
         macOS = FileKitMacOSSettings(
             canCreateDirectories = true
         )

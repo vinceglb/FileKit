@@ -13,6 +13,7 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.sample.shared.ui.screens.bookmarks.BookmarksRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.debug.DebugRoute
@@ -63,6 +64,7 @@ private data class FileDetails(
 @Composable
 internal fun AppNavigation(
     modifier: Modifier = Modifier,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
@@ -113,6 +115,7 @@ internal fun AppNavigation(
                     onDisplayFileDetails = { file ->
                         backStack.add(FileDetails(file))
                     },
+                    dialogSettingsTransform = dialogSettingsTransform,
                 )
             }
             entry<GalleryPicker> {

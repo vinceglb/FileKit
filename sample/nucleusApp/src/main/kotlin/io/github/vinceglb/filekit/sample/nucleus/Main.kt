@@ -5,8 +5,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.rememberWindowState
 import dev.nucleusframework.application.DecoratedWindow
 import dev.nucleusframework.application.NucleusBackend
+import dev.nucleusframework.application.NucleusWindow
 import dev.nucleusframework.application.nucleusApplication
+import dev.nucleusframework.core.runtime.Platform
 import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.sample.shared.App
 
 fun main() = nucleusApplication(backend = NucleusBackend.Tao) {
@@ -19,6 +22,30 @@ fun main() = nucleusApplication(backend = NucleusBackend.Tao) {
         title = "FileKit Nucleus Sample",
         onCloseRequest = ::exitApplication,
     ) {
-        App()
+        val dialogParent = nucleusWindow.fileKitDialogParent()
+        App(
+            dialogSettingsTransform = { settings ->
+                settings.copy(parent = dialogParent)
+            },
+        )
+    }
+}
+
+private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
+    unsafe.awtWindow?.let { return FileKitDialogParent.awt(it) }
+
+    return when (Platform.Current) {
+        Platform.Windows -> {
+            unsafe.taoWindow
+                ?.nativeHandle
+                ?.takeIf { it != 0L }
+                ?.let(FileKitDialogParent::windows)
+        }
+
+        // Tao does not expose an XDG portal identifier on Linux, and its macOS
+        // handle is an NSView rather than the NSWindow required for a sheet.
+        else -> {
+            null
+        }
     }
 }

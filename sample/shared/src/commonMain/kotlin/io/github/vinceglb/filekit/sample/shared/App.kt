@@ -5,11 +5,15 @@ import androidx.compose.ui.Modifier
 import coil3.ImageLoader
 import coil3.compose.setSingletonImageLoaderFactory
 import io.github.vinceglb.filekit.coil.addPlatformFileSupport
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.sample.shared.navigation.AppNavigation
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 
 @Composable
-public fun App(modifier: Modifier = Modifier) {
+public fun App(
+    modifier: Modifier = Modifier,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
+) {
     setSingletonImageLoaderFactory { context ->
         ImageLoader
             .Builder(context)
@@ -21,6 +25,7 @@ public fun App(modifier: Modifier = Modifier) {
     AppTheme {
         AppNavigation(
             modifier = modifier,
+            dialogSettingsTransform = dialogSettingsTransform,
         )
     }
 }

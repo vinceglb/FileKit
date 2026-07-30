@@ -30,4 +30,5 @@ dependencies {
 
     // FileKit
     implementation(projects.filekitCore)
+    implementation(projects.filekitDialogs)
 }
