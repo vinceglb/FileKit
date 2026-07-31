@@ -96,6 +96,15 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun CameraLaunchSafely_whenActivityNotFound_returnsFalse() {
+        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw ActivityNotFoundException("No activity found")
+        }
+
+        assertFalse(launched)
+    }
+
+    @Test
     fun CameraLaunchSafely_whenNoError_returnsTrue() {
         val expectedUri = Uri.parse("content://example.provider/camera/photo.jpg")
         var launchedUri: Uri? = null

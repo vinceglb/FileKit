@@ -480,6 +480,8 @@ internal fun launchCameraSafely(
 ): Boolean = try {
     launch(uri)
     true
+} catch (_: ActivityNotFoundException) {
+    false
 } catch (_: SecurityException) {
     false
 }
