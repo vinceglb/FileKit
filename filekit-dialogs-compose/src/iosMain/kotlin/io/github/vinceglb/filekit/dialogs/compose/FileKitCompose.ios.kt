@@ -7,9 +7,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
 import io.github.vinceglb.filekit.dialogs.openCameraPicker
-import kotlinx.coroutines.launch
 
 /**
  * Creates and remembers a [PhotoResultLauncher] for taking a picture or video with the camera.
@@ -22,13 +22,26 @@ import kotlinx.coroutines.launch
 public actual fun rememberCameraPickerLauncher(
     openCameraSettings: FileKitOpenCameraSettings,
     onResult: (PlatformFile?) -> Unit,
+): PhotoResultLauncher = rememberCameraPickerLauncher(
+    openCameraSettings = openCameraSettings,
+    onError = legacyNullResultOnDialogFailure(onResult),
+    onResult = onResult,
+)
+
+@Composable
+public actual fun rememberCameraPickerLauncher(
+    openCameraSettings: FileKitOpenCameraSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PhotoResultLauncher {
     // Coroutine
     val coroutineScope = rememberCoroutineScope()
+    val pendingState = remember { LauncherPendingState("camera picker") }
     val stableOpenCameraSettings = rememberStableOpenCameraSettings(openCameraSettings)
 
     // Updated state
     val currentOpenCameraSettings by rememberUpdatedState(stableOpenCameraSettings)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     // FileKit
@@ -37,14 +50,19 @@ public actual fun rememberCameraPickerLauncher(
     // FileKit launcher
     val returnedLauncher = remember {
         PhotoResultLauncher { type, cameraFacing, destinationFile ->
-            coroutineScope.launch {
-                val result = fileKit.openCameraPicker(
-                    type = type,
-                    cameraFacing = cameraFacing,
-                    destinationFile = destinationFile,
-                    openCameraSettings = currentOpenCameraSettings,
+            coroutineScope.launchSinglePendingDialog(pendingState) {
+                runDialogLauncher(
+                    openDialog = {
+                        fileKit.openCameraPicker(
+                            type = type,
+                            cameraFacing = cameraFacing,
+                            destinationFile = destinationFile,
+                            openCameraSettings = currentOpenCameraSettings,
+                        )
+                    },
+                    onError = currentOnError,
+                    onResult = currentOnResult,
                 )
-                currentOnResult(result)
             }
         }
     }

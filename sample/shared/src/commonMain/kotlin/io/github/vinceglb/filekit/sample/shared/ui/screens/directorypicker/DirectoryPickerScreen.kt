@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
@@ -64,18 +65,28 @@ private fun DirectoryPickerScreen(
     var startDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var pickedDirectories by remember { mutableStateOf(emptyList<PlatformFile>()) }
     var selectedFile by remember { mutableStateOf<PlatformFile?>(null) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
+
+    val onPickerError: (FileKitDialogException) -> Unit = { failure ->
+        buttonState = AppScreenHeaderButtonState.Enabled
+        pickerError = failure.message
+    }
 
     val directoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
+        onError = onPickerError,
     ) { directory ->
         buttonState = AppScreenHeaderButtonState.Enabled
+        pickerError = null
         if (directory != null) {
             pickedDirectories = listOf(directory) + pickedDirectories
         }
     }
     val startDirectoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
+        onError = onPickerError,
     ) { directory ->
+        pickerError = null
         if (directory != null) {
             startDirectory = directory
         }
@@ -142,7 +153,7 @@ private fun DirectoryPickerScreen(
                 item {
                     AppPickerResultsCard(
                         files = pickedDirectories,
-                        emptyText = "No directory selected yet",
+                        emptyText = pickerError ?: "No directory selected yet",
                         emptyIcon = LucideIcons.Folder,
                         onFileClick = onDisplayFileDetails,
                         modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

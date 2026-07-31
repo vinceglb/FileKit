@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
@@ -65,8 +66,11 @@ private fun ShareFileScreen(
     val buttonState = AppScreenHeaderButtonState.Enabled
     var pickerMode by remember { mutableStateOf(ShareMode.Multiple) }
     var selectedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
 
-    val shareLauncher = rememberShareFileLauncher()
+    val shareLauncher = rememberShareFileLauncher { failure: FileKitDialogException ->
+        pickerError = failure.message
+    }
     val isSupported = shareLauncher.isSupported
     val primaryButtonText = when (selectedFiles.size) {
         0 -> "Share File"
@@ -99,6 +103,7 @@ private fun ShareFileScreen(
         if (!isSupported || selectedFiles.isEmpty()) {
             return
         }
+        pickerError = null
         shareLauncher.launch(selectedFiles)
     }
 
@@ -160,7 +165,7 @@ private fun ShareFileScreen(
             item {
                 AppPickerResultsCard(
                     files = selectedFiles,
-                    emptyText = "No files selected yet",
+                    emptyText = pickerError ?: "No files selected yet",
                     emptyIcon = LucideIcons.Share,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

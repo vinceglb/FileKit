@@ -4,10 +4,13 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Creates and remembers a [PickerResultLauncher] for picking files.
@@ -44,7 +47,7 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * @param mode The picking mode (e.g. Single, Multiple).
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected files.
+ * @param onError Callback invoked when FileKit cannot launch the picker or resolve the selected files.
  * @param onResult Callback invoked with the result.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
@@ -99,7 +102,7 @@ public fun rememberFilePickerLauncher(
  * @param type The type of files to pick. Defaults to [FileKitType.File].
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected file.
+ * @param onError Callback invoked when FileKit cannot launch the picker or resolve the selected file.
  * @param onResult Callback invoked with the picked file, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
@@ -144,6 +147,55 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
     mode.consumeResult(result, onResult)
 }
 
+internal suspend fun <Result> runDialogLauncher(
+    openDialog: suspend () -> Result,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (Result) -> Unit,
+) {
+    val result = try {
+        openDialog()
+    } catch (failure: FileKitDialogException) {
+        onError(failure)
+        return
+    }
+    onResult(result)
+}
+
+internal fun <Result> legacyNullResultOnDialogFailure(
+    onResult: (Result?) -> Unit,
+): (FileKitDialogException) -> Unit = { onResult(null) }
+
+internal fun legacyIgnoreDialogFailure(): (FileKitDialogException) -> Unit = {}
+
+internal class LauncherPendingState(
+    private val launcherName: String,
+) {
+    private var pending = false
+
+    fun begin() {
+        check(!pending) { "A $launcherName launch is already pending." }
+        pending = true
+    }
+
+    fun finish() {
+        pending = false
+    }
+}
+
+internal fun CoroutineScope.launchSinglePendingDialog(
+    pendingState: LauncherPendingState,
+    block: suspend () -> Unit,
+) {
+    pendingState.begin()
+    launch {
+        try {
+            block()
+        } finally {
+            pendingState.finish()
+        }
+    }
+}
+
 /**
  * Creates and remembers a [PickerResultLauncher] for picking a directory.
  *
@@ -151,10 +203,30 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
+ *
+ * Dialog failures are reported as `onResult(null)` by this compatibility overload.
+ * Use the overload with `onError` to distinguish failure from cancellation.
  */
 @Composable
 public expect fun rememberDirectoryPickerLauncher(
     directory: PlatformFile? = null,
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when the directory picker fails.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+public expect fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onError: (FileKitDialogException) -> Unit,
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher

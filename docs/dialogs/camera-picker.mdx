@@ -28,6 +28,25 @@ Button(onClick = { launcher.launch() }) {
 ```
 </CodeGroup>
 
+## Handle failures
+
+```kotlin
+val launcher = rememberCameraPickerLauncher(
+    onError = { error: FileKitDialogException ->
+        logger.error(error)
+    },
+    onResult = { file ->
+        if (file == null) {
+            // The user cancelled or denied the runtime camera permission.
+        }
+    },
+)
+```
+
+The compatibility overload without `onError` reports an operational failure as `onResult(null)`. Suspend callers receive `FileKitDialogException` directly. Android FileProvider configuration errors remain programmer/configuration errors and are not routed to `onError`.
+
+Only one launch may be pending from a launcher at a time. Starting another before the first completes is unsupported.
+
 The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 
 ## Android camera permission behavior

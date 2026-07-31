@@ -40,6 +40,20 @@ Button(onClick = {
 ```
 </CodeGroup>
 
+## Handle failures
+
+```kotlin
+val launcher = rememberShareFileLauncher(
+    onError = { error: FileKitDialogException ->
+        logger.error(error)
+    },
+)
+```
+
+The compatibility overload without `onError` ignores operational failures because it has no result callback. Suspend callers receive `FileKitDialogException` directly.
+
+Only one launch may be pending from a launcher at a time. Starting another before the first completes is unsupported.
+
 <Info>
 Ensure the file you are sharing exists and is accessible. Sharing a non-existent file will result in an error.
 </Info>

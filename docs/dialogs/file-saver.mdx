@@ -50,6 +50,26 @@ Button(onClick = {
 ```
 </CodeGroup>
 
+## Handle failures
+
+```kotlin
+val launcher = rememberFileSaverLauncher(
+    dialogSettings = FileKitDialogSettings.createDefault(),
+    onError = { error: FileKitDialogException ->
+        logger.error(error)
+    },
+    onResult = { file ->
+        if (file == null) {
+            // The user cancelled.
+        }
+    },
+)
+```
+
+The compatibility overload without `onError` reports an operational failure as `onResult(null)`. Suspend callers receive `FileKitDialogException` directly.
+
+Only one launch may be pending from a launcher at a time. Starting another before the first completes is unsupported.
+
 ## Parameters
 
 The file saver can be customized with several parameters:

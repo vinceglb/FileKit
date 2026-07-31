@@ -26,6 +26,31 @@ Button(onClick = { launcher.launch() }) {
 ```
 </CodeGroup>
 
+## Handle failures
+
+Compose launchers expose expected dialog failures through `onError`. `FileKitPickerException` extends `FileKitDialogException`, so one handler can be reused across file, directory, saver, camera, and share launchers:
+
+```kotlin
+val onDialogError: (FileKitDialogException) -> Unit = { error ->
+    logger.error(error)
+}
+
+val fileLauncher = rememberFilePickerLauncher(
+    type = FileKitType.Image,
+    onError = onDialogError,
+    onResult = ::handleResult,
+)
+
+val directoryLauncher = rememberDirectoryPickerLauncher(
+    onError = onDialogError,
+    onResult = ::handleDirectory,
+)
+```
+
+The compatibility file-picker overload without `onError` ignores launch failures. In state-tracking modes, failures after selection begins continue to arrive as `FileKitPickerState.Failed` rather than being reported twice.
+
+Only one launch may be pending from a launcher at a time. Starting another before the first completes is unsupported.
+
 <Warning>
 On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not
 inside transient surfaces such as `ModalBottomSheet`, dialogs, popups, or

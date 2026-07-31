@@ -7,13 +7,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.openDirectoryPicker
 import io.github.vinceglb.filekit.dialogs.openFilePicker
-import kotlinx.coroutines.launch
 
 /**
  * Creates and remembers a [PickerResultLauncher] for picking a directory.
@@ -28,22 +28,42 @@ public actual fun rememberDirectoryPickerLauncher(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = rememberDirectoryPickerLauncher(
+    directory = directory,
+    dialogSettings = dialogSettings,
+    onError = legacyNullResultOnDialogFailure(onResult),
+    onResult = onResult,
+)
+
+@Composable
+public actual fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     val coroutineScope = rememberCoroutineScope()
+    val pendingState = remember { LauncherPendingState("directory picker") }
     val stableDialogSettings = rememberStableDialogSettings(dialogSettings)
 
     val currentDirectory by rememberUpdatedState(directory)
     val currentDialogSettings by rememberUpdatedState(stableDialogSettings)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     return remember {
         PickerResultLauncher {
-            coroutineScope.launch {
-                val result = FileKit.openDirectoryPicker(
-                    directory = currentDirectory,
-                    dialogSettings = currentDialogSettings,
+            coroutineScope.launchSinglePendingDialog(pendingState) {
+                runDialogLauncher(
+                    openDialog = {
+                        FileKit.openDirectoryPicker(
+                            directory = currentDirectory,
+                            dialogSettings = currentDialogSettings,
+                        )
+                    },
+                    onError = currentOnError,
+                    onResult = currentOnResult,
                 )
-                currentOnResult(result)
             }
         }
     }
@@ -59,6 +79,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
     onResult: (ConsumedResult) -> Unit,
 ): PickerResultLauncher {
     val coroutineScope = rememberCoroutineScope()
+    val pendingState = remember { LauncherPendingState("file picker") }
     val stableDialogSettings = rememberStableDialogSettings(dialogSettings)
 
     val currentType by rememberUpdatedState(type)
@@ -70,7 +91,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
 
     return remember {
         PickerResultLauncher {
-            coroutineScope.launch {
+            coroutineScope.launchSinglePendingDialog(pendingState) {
                 runFilePickerLauncher(
                     mode = currentMode,
                     openPicker = {

@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdown
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDropdownItem
@@ -63,13 +64,21 @@ private fun CameraPickerScreen(
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var cameraFacing by remember { mutableStateOf(CameraFacingOption.System) }
     var capturedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
 
-    val cameraLauncher = rememberCameraPickerLauncher { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        if (file != null) {
-            capturedFiles = listOf(file) + capturedFiles
-        }
-    }
+    val cameraLauncher = rememberCameraPickerLauncher(
+        onError = { failure: FileKitDialogException ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = failure.message
+        },
+        onResult = { file ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = null
+            if (file != null) {
+                capturedFiles = listOf(file) + capturedFiles
+            }
+        },
+    )
     val isSupported = cameraLauncher.isSupported
     val primaryButtonText = if (isSupported) "Open Camera" else "Camera Unavailable"
 
@@ -130,7 +139,7 @@ private fun CameraPickerScreen(
             item {
                 AppPickerResultsCard(
                     files = capturedFiles,
-                    emptyText = "No photos captured yet",
+                    emptyText = pickerError ?: "No photos captured yet",
                     emptyIcon = LucideIcons.Camera,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
@@ -67,16 +68,28 @@ private fun FileSaverScreen(
     var allowedExtensions by remember { mutableStateOf("pdf, txt") }
     var saveDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var savedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
 
-    val fileSaverLauncher = rememberFileSaverLauncher { file ->
+    val onPickerError: (FileKitDialogException) -> Unit = { failure ->
         buttonState = AppScreenHeaderButtonState.Enabled
-        if (file != null) {
-            savedFiles = listOf(file) + savedFiles
-        }
+        pickerError = failure.message
     }
+
+    val fileSaverLauncher = rememberFileSaverLauncher(
+        onError = onPickerError,
+        onResult = { file ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = null
+            if (file != null) {
+                savedFiles = listOf(file) + savedFiles
+            }
+        },
+    )
     val directoryPickerLauncher = rememberDirectoryPickerLauncher(
         directory = saveDirectory,
+        onError = onPickerError,
     ) { directory ->
+        pickerError = null
         if (directory != null) {
             saveDirectory = directory
         }
@@ -165,7 +178,7 @@ private fun FileSaverScreen(
             item {
                 AppPickerResultsCard(
                     files = savedFiles,
-                    emptyText = "No save locations selected yet",
+                    emptyText = pickerError ?: "No save locations selected yet",
                     emptyIcon = LucideIcons.File,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

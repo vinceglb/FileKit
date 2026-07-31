@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved after independent design review. Implementation is complete and awaiting independent code review.
+Implemented and approved after independent specification and standards reviews. Local and hosted verification are complete.
 
 Baseline: `main` at `3380b8c8` (merge of PR #631).
 
