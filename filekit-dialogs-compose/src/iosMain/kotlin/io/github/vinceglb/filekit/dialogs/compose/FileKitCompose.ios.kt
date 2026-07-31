@@ -50,7 +50,7 @@ public actual fun rememberCameraPickerLauncher(
     // FileKit launcher
     val returnedLauncher = remember {
         PhotoResultLauncher { type, cameraFacing, destinationFile ->
-            coroutineScope.launchSinglePendingDialog(pendingState) {
+            coroutineScope.launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
                 runDialogLauncher(
                     openDialog = {
                         fileKit.openCameraPicker(
@@ -60,6 +60,7 @@ public actual fun rememberCameraPickerLauncher(
                             openCameraSettings = currentOpenCameraSettings,
                         )
                     },
+                    beforeCallback = finishPendingLaunch,
                     onError = currentOnError,
                     onResult = currentOnResult,
                 )

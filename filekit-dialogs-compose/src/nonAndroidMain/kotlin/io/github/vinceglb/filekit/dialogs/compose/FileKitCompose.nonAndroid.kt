@@ -53,7 +53,7 @@ public actual fun rememberDirectoryPickerLauncher(
 
     return remember {
         PickerResultLauncher {
-            coroutineScope.launchSinglePendingDialog(pendingState) {
+            coroutineScope.launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
                 runDialogLauncher(
                     openDialog = {
                         FileKit.openDirectoryPicker(
@@ -61,6 +61,7 @@ public actual fun rememberDirectoryPickerLauncher(
                             dialogSettings = currentDialogSettings,
                         )
                     },
+                    beforeCallback = finishPendingLaunch,
                     onError = currentOnError,
                     onResult = currentOnResult,
                 )
@@ -91,7 +92,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
 
     return remember {
         PickerResultLauncher {
-            coroutineScope.launchSinglePendingDialog(pendingState) {
+            coroutineScope.launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
                 runFilePickerLauncher(
                     mode = currentMode,
                     openPicker = {
@@ -102,6 +103,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
                             dialogSettings = currentDialogSettings,
                         )
                     },
+                    beforeCallback = finishPendingLaunch,
                     onError = currentOnError,
                     onResult = currentOnConsumed,
                 )

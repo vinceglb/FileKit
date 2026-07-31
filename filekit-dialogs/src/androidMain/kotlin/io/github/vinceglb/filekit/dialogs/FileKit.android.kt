@@ -371,7 +371,7 @@ private suspend fun callFilePicker(
 
             when {
                 mode is PickerMode.Single || (mode is PickerMode.Multiple && mode.maxItems == 1) -> {
-                    runPickerLaunchWithActivityNotFoundFallback(
+                    runPickerLaunchWithFallback(
                         primary = {
                             awaitActivityResult(
                                 registry = registry,
@@ -390,7 +390,7 @@ private suspend fun callFilePicker(
                 }
 
                 mode is PickerMode.Multiple -> {
-                    runPickerLaunchWithActivityNotFoundFallback(
+                    runPickerLaunchWithFallback(
                         primary = {
                             val contract = when {
                                 mode.maxItems != null -> PickMultipleVisualMedia(mode.maxItems)
@@ -421,7 +421,7 @@ private suspend fun callFilePicker(
         is FileKitType.File -> {
             when (mode) {
                 is PickerMode.Single -> {
-                    runPickerLaunchWithActivityNotFoundFallback(
+                    runPickerLaunchWithFallback(
                         primary = {
                             awaitActivityResult(
                                 registry = registry,
@@ -435,7 +435,7 @@ private suspend fun callFilePicker(
                 is PickerMode.Multiple -> {
                     // TODO there might be a way to limit the amount of documents, but
                     //  I haven't found it yet.
-                    runPickerLaunchWithActivityNotFoundFallback(
+                    runPickerLaunchWithFallback(
                         primary = {
                             awaitActivityResult(
                                 registry = registry,
@@ -450,18 +450,28 @@ private suspend fun callFilePicker(
     }
 }
 
-internal suspend fun <O> runPickerLaunchWithActivityNotFoundFallback(
+internal suspend fun <O> runPickerLaunchWithFallback(
     primary: suspend () -> O,
     fallback: (suspend () -> O)? = null,
-): O = try {
-    primary()
-} catch (primaryFailure: ActivityNotFoundException) {
-    val fallbackLaunch = fallback
-        ?: throw FileKitPickerException("Failed to launch the file picker.", primaryFailure)
-    try {
-        fallbackLaunch()
-    } catch (fallbackFailure: ActivityNotFoundException) {
-        throw FileKitPickerException("Failed to launch the file picker fallback.", fallbackFailure)
+): O {
+    suspend fun launchFallback(primaryFailure: RuntimeException): O {
+        val fallbackLaunch = fallback
+            ?: throw FileKitPickerException("Failed to launch the file picker.", primaryFailure)
+        return try {
+            fallbackLaunch()
+        } catch (fallbackFailure: ActivityNotFoundException) {
+            throw FileKitPickerException("Failed to launch the file picker fallback.", fallbackFailure)
+        } catch (fallbackFailure: SecurityException) {
+            throw FileKitPickerException("Failed to launch the file picker fallback.", fallbackFailure)
+        }
+    }
+
+    return try {
+        primary()
+    } catch (primaryFailure: ActivityNotFoundException) {
+        launchFallback(primaryFailure)
+    } catch (primaryFailure: SecurityException) {
+        launchFallback(primaryFailure)
     }
 }
 

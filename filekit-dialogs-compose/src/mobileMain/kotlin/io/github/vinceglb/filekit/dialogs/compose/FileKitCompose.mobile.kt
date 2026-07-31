@@ -63,9 +63,10 @@ public fun rememberShareFileLauncher(
     // FileKit launcher
     val returnedLauncher = remember {
         ShareResultLauncher { files ->
-            coroutineScope.launchSinglePendingDialog(pendingState) {
+            coroutineScope.launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
                 runDialogLauncher(
                     openDialog = { fileKit.shareFile(files, currentShareSettings) },
+                    beforeCallback = finishPendingLaunch,
                     onError = currentOnError,
                     onResult = {},
                 )

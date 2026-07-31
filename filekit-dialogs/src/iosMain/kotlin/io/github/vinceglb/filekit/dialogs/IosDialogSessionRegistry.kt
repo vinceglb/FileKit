@@ -24,12 +24,15 @@ internal class IosDialogContinuationSession<Session : Any, Result>(
     private val session: Session,
     private val registry: IosDialogSessionRegistry<Session>,
     private val continuation: CancellableContinuation<Result>,
+    private val onCancellation: (finishCleanup: () -> Unit) -> Unit = { finishCleanup ->
+        finishCleanup()
+    },
 ) {
     private var completed = false
 
     init {
         registry.retain(session)
-        continuation.invokeOnCancellation { release() }
+        continuation.invokeOnCancellation { onCancellation(::release) }
     }
 
     fun complete(result: Result) {

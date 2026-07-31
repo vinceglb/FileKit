@@ -147,4 +147,52 @@ class IosDialogSessionRegistryTest {
 
         assertEquals(0, sessions.size)
     }
+
+    @Test
+    fun IosDialogContinuationSession_cancellation_cleansUpBeforeReleasingSession() = runTest {
+        val sessions = IosDialogSessionRegistry<Any>()
+        var retainedDuringCleanup = false
+        val job = launch {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                IosDialogContinuationSession(
+                    session = Any(),
+                    registry = sessions,
+                    continuation = continuation,
+                    onCancellation = { finishCleanup ->
+                        retainedDuringCleanup = sessions.size == 1
+                        finishCleanup()
+                    },
+                )
+            }
+        }
+        yield()
+
+        job.cancelAndJoin()
+
+        assertTrue(retainedDuringCleanup)
+        assertEquals(0, sessions.size)
+    }
+
+    @Test
+    fun IosDialogContinuationSession_cancellation_canDeferReleaseUntilCleanupCompletes() = runTest {
+        val sessions = IosDialogSessionRegistry<Any>()
+        var finishCleanup: (() -> Unit)? = null
+        val job = launch {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                IosDialogContinuationSession(
+                    session = Any(),
+                    registry = sessions,
+                    continuation = continuation,
+                    onCancellation = { finishCleanup = it },
+                )
+            }
+        }
+        yield()
+
+        job.cancelAndJoin()
+
+        assertEquals(1, sessions.size)
+        finishCleanup?.invoke()
+        assertEquals(0, sessions.size)
+    }
 }

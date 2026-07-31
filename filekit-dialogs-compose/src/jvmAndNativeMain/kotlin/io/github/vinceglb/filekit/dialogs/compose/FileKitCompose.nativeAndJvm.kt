@@ -26,7 +26,7 @@ internal actual fun rememberPlatformFileSaverLauncher(
 
     return remember {
         SaverResultLauncher { suggestedName, defaultExtension, allowedExtensions, directory ->
-            coroutineScope.launchSinglePendingDialog(pendingState) {
+            coroutineScope.launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
                 runDialogLauncher(
                     openDialog = {
                         FileKit.openFileSaver(
@@ -37,6 +37,7 @@ internal actual fun rememberPlatformFileSaverLauncher(
                             dialogSettings = currentDialogSettings,
                         )
                     },
+                    beforeCallback = finishPendingLaunch,
                     onError = currentOnError,
                     onResult = currentOnResult,
                 )

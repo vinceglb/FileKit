@@ -135,29 +135,35 @@ internal expect fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
 internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
     mode: FileKitMode<PickerResult, ConsumedResult>,
     openPicker: suspend () -> PickerResult,
+    beforeCallback: () -> Unit = {},
     onError: (FileKitPickerException) -> Unit,
     onResult: (ConsumedResult) -> Unit,
 ) {
     val result = try {
         openPicker()
     } catch (failure: FileKitPickerException) {
+        beforeCallback()
         onError(failure)
         return
     }
+    beforeCallback()
     mode.consumeResult(result, onResult)
 }
 
 internal suspend fun <Result> runDialogLauncher(
     openDialog: suspend () -> Result,
+    beforeCallback: () -> Unit = {},
     onError: (FileKitDialogException) -> Unit,
     onResult: (Result) -> Unit,
 ) {
     val result = try {
         openDialog()
     } catch (failure: FileKitDialogException) {
+        beforeCallback()
         onError(failure)
         return
     }
+    beforeCallback()
     onResult(result)
 }
 
@@ -170,28 +176,31 @@ internal fun legacyIgnoreDialogFailure(): (FileKitDialogException) -> Unit = {}
 internal class LauncherPendingState(
     private val launcherName: String,
 ) {
-    private var pending = false
+    internal class LaunchToken
 
-    fun begin() {
-        check(!pending) { "A $launcherName launch is already pending." }
-        pending = true
+    private var pendingLaunch: LaunchToken? = null
+
+    fun begin(): LaunchToken {
+        check(pendingLaunch == null) { "A $launcherName launch is already pending." }
+        return LaunchToken().also { pendingLaunch = it }
     }
 
-    fun finish() {
-        pending = false
+    fun finish(launch: LaunchToken) {
+        if (pendingLaunch === launch) pendingLaunch = null
     }
 }
 
 internal fun CoroutineScope.launchSinglePendingDialog(
     pendingState: LauncherPendingState,
-    block: suspend () -> Unit,
+    block: suspend (finishPendingLaunch: () -> Unit) -> Unit,
 ) {
-    pendingState.begin()
+    val launch = pendingState.begin()
+    val finishPendingLaunch = { pendingState.finish(launch) }
     launch {
         try {
-            block()
+            block(finishPendingLaunch)
         } finally {
-            pendingState.finish()
+            finishPendingLaunch()
         }
     }
 }

@@ -59,6 +59,8 @@ import platform.UniformTypeIdentifiers.UTTypeFolder
 import platform.UniformTypeIdentifiers.UTTypeImage
 import platform.UniformTypeIdentifiers.UTTypeItem
 import platform.UniformTypeIdentifiers.UTTypeMovie
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -247,6 +249,9 @@ public actual suspend fun FileKit.openCameraPicker(
         suspendCancellableCoroutine<UIImage?> { continuation ->
             lateinit var delegate: CameraControllerDelegate
             lateinit var session: IosDialogContinuationSession<CameraControllerDelegate, UIImage?>
+            val pickerController = UIImagePickerController()
+            pickerController.sourceType =
+                UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
 
             delegate = CameraControllerDelegate(
                 onImagePicked = { image ->
@@ -257,11 +262,15 @@ public actual suspend fun FileKit.openCameraPicker(
                 session = delegate,
                 registry = FileKitDialog.cameraPickerSessions,
                 continuation = continuation,
+                onCancellation = { finishCleanup ->
+                    dispatch_async(dispatch_get_main_queue()) {
+                        pickerController.dismissViewControllerAnimated(true) {
+                            finishCleanup()
+                        }
+                    }
+                },
             )
             session.present {
-                val pickerController = UIImagePickerController()
-                pickerController.sourceType =
-                    UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
                 pickerController.delegate = delegate
 
                 when (cameraFacing) {
