@@ -20,11 +20,31 @@ internal class IosDialogSessionRegistry<Session : Any> {
     fun singleOrNull(): Session? = sessions.singleOrNull()
 }
 
+internal class IosDialogPresentationRegistry {
+    private class Presentation(
+        val presenter: Any,
+    )
+
+    private val presentations = mutableSetOf<Presentation>()
+
+    fun retain(
+        presenter: Any,
+        overlapFailure: () -> FileKitDialogException,
+    ): () -> Unit {
+        if (presentations.any { it.presenter === presenter }) throw overlapFailure()
+
+        val presentation = Presentation(presenter)
+        presentations.add(presentation)
+        return { presentations.remove(presentation) }
+    }
+}
+
 internal class IosDialogContinuationSession<Session : Any, Result>(
     private val session: Session,
     private val registry: IosDialogSessionRegistry<Session>,
     private val continuation: CancellableContinuation<Result>,
     private val onCancellation: (finishCleanup: () -> Unit) -> Unit,
+    private val releasePresentation: () -> Unit,
 ) {
     private var completed = false
 
@@ -51,6 +71,7 @@ internal class IosDialogContinuationSession<Session : Any, Result>(
 
     fun release() {
         registry.release(session)
+        releasePresentation()
     }
 }
 
@@ -58,13 +79,25 @@ internal fun <Session : Any, Result> createIosPresentedDialogSession(
     session: Session,
     registry: IosDialogSessionRegistry<Session>,
     continuation: CancellableContinuation<Result>,
+    presenter: Any,
+    presentations: IosDialogPresentationRegistry,
+    overlapFailure: () -> FileKitDialogException,
     dismiss: (finishDismissal: () -> Unit) -> Unit,
-): IosDialogContinuationSession<Session, Result> = IosDialogContinuationSession(
-    session = session,
-    registry = registry,
-    continuation = continuation,
-    onCancellation = dismiss,
-)
+): IosDialogContinuationSession<Session, Result> {
+    val releasePresentation = presentations.retain(presenter, overlapFailure)
+    return try {
+        IosDialogContinuationSession(
+            session = session,
+            registry = registry,
+            continuation = continuation,
+            onCancellation = dismiss,
+            releasePresentation = releasePresentation,
+        )
+    } catch (cause: Throwable) {
+        releasePresentation()
+        throw cause
+    }
+}
 
 internal inline fun <Presenter : Any> resolveIosDialogPresenter(
     configuredPresenter: Presenter?,

@@ -2,6 +2,7 @@
 
 package io.github.vinceglb.filekit.dialogs
 
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -107,7 +108,7 @@ class IosDialogSessionRegistryTest {
         val sessions = IosDialogSessionRegistry<Any>()
 
         val result = suspendCancellableCoroutine<String> { continuation ->
-            val session = IosDialogContinuationSession(Any(), sessions, continuation) { it() }
+            val session = createTestContinuationSession(Any(), sessions, continuation) { it() }
             session.complete("first")
             session.complete("second")
         }
@@ -123,7 +124,7 @@ class IosDialogSessionRegistryTest {
 
         val failure = assertFailsWith<IllegalStateException> {
             suspendCancellableCoroutine<Unit> { continuation ->
-                val session = IosDialogContinuationSession(Any(), sessions, continuation) { it() }
+                val session = createTestContinuationSession(Any(), sessions, continuation) { it() }
                 session.present { throw defect }
             }
         }
@@ -137,7 +138,7 @@ class IosDialogSessionRegistryTest {
         val sessions = IosDialogSessionRegistry<Any>()
         val job = launch {
             suspendCancellableCoroutine<Unit> { continuation ->
-                IosDialogContinuationSession(Any(), sessions, continuation) { it() }
+                createTestContinuationSession(Any(), sessions, continuation) { it() }
             }
         }
         yield()
@@ -154,7 +155,7 @@ class IosDialogSessionRegistryTest {
         var retainedDuringCleanup = false
         val job = launch {
             suspendCancellableCoroutine<Unit> { continuation ->
-                IosDialogContinuationSession(
+                createTestContinuationSession(
                     session = Any(),
                     registry = sessions,
                     continuation = continuation,
@@ -179,7 +180,7 @@ class IosDialogSessionRegistryTest {
         var finishCleanup: (() -> Unit)? = null
         val job = launch {
             suspendCancellableCoroutine<Unit> { continuation ->
-                IosDialogContinuationSession(
+                createTestContinuationSession(
                     session = Any(),
                     registry = sessions,
                     continuation = continuation,
@@ -199,6 +200,7 @@ class IosDialogSessionRegistryTest {
     @Test
     fun IosPresentedDialogSession_cancellation_dismissesBeforeReleasingSession() = runTest {
         val sessions = IosDialogSessionRegistry<Any>()
+        val presentations = IosDialogPresentationRegistry()
         var retainedDuringDismissal = false
         val job = launch {
             suspendCancellableCoroutine<Unit> { continuation ->
@@ -206,6 +208,9 @@ class IosDialogSessionRegistryTest {
                     session = Any(),
                     registry = sessions,
                     continuation = continuation,
+                    presenter = Any(),
+                    presentations = presentations,
+                    overlapFailure = { FileKitDialogException("Presenter is already occupied.") },
                     dismiss = { finishDismissal ->
                         retainedDuringDismissal = sessions.size == 1
                         finishDismissal()
@@ -220,4 +225,103 @@ class IosDialogSessionRegistryTest {
         assertTrue(retainedDuringDismissal)
         assertEquals(0, sessions.size)
     }
+
+    @Test
+    fun IosPresentedDialogSession_samePresenter_rejectsOverlapAcrossSessionRegistries() = runTest {
+        val presentations = IosDialogPresentationRegistry()
+        val firstSessions = IosDialogSessionRegistry<Any>()
+        val secondSessions = IosDialogSessionRegistry<Any>()
+        val presenter = Any()
+        val firstJob = launch {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                createIosPresentedDialogSession(
+                    session = Any(),
+                    registry = firstSessions,
+                    continuation = continuation,
+                    presenter = presenter,
+                    presentations = presentations,
+                    overlapFailure = { FileKitDialogException("Presenter is already occupied.") },
+                    dismiss = { it() },
+                )
+            }
+        }
+        yield()
+
+        assertFailsWith<FileKitDialogException> {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                createIosPresentedDialogSession(
+                    session = Any(),
+                    registry = secondSessions,
+                    continuation = continuation,
+                    presenter = presenter,
+                    presentations = presentations,
+                    overlapFailure = { FileKitDialogException("Presenter is already occupied.") },
+                    dismiss = { it() },
+                )
+            }
+        }
+
+        assertEquals(1, firstSessions.size)
+        assertEquals(0, secondSessions.size)
+        firstJob.cancelAndJoin()
+        assertEquals(0, firstSessions.size)
+
+        val result = suspendCancellableCoroutine<String> { continuation ->
+            val session = createIosPresentedDialogSession(
+                session = Any(),
+                registry = secondSessions,
+                continuation = continuation,
+                presenter = presenter,
+                presentations = presentations,
+                overlapFailure = { FileKitDialogException("Presenter is already occupied.") },
+                dismiss = { it() },
+            )
+            session.complete("completed")
+        }
+        assertEquals("completed", result)
+        assertEquals(0, secondSessions.size)
+    }
+
+    @Test
+    fun IosPresentedDialogSession_differentPresenters_allowConcurrentSessions() = runTest {
+        val presentations = IosDialogPresentationRegistry()
+        val sessions = IosDialogSessionRegistry<Any>()
+
+        fun launchSession(presenter: Any) = launch {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                createIosPresentedDialogSession(
+                    session = Any(),
+                    registry = sessions,
+                    continuation = continuation,
+                    presenter = presenter,
+                    presentations = presentations,
+                    overlapFailure = { FileKitDialogException("Presenter is already occupied.") },
+                    dismiss = { it() },
+                )
+            }
+        }
+
+        val firstJob = launchSession(Any())
+        val secondJob = launchSession(Any())
+        yield()
+        assertEquals(2, sessions.size)
+
+        firstJob.cancelAndJoin()
+        assertEquals(1, sessions.size)
+        secondJob.cancelAndJoin()
+        assertEquals(0, sessions.size)
+    }
 }
+
+private fun <Session : Any, Result> createTestContinuationSession(
+    session: Session,
+    registry: IosDialogSessionRegistry<Session>,
+    continuation: CancellableContinuation<Result>,
+    onCancellation: (finishCleanup: () -> Unit) -> Unit,
+): IosDialogContinuationSession<Session, Result> = IosDialogContinuationSession(
+    session = session,
+    registry = registry,
+    continuation = continuation,
+    onCancellation = onCancellation,
+    releasePresentation = {},
+)

@@ -69,6 +69,7 @@ private object FileKitDialog {
     val documentPickerSessions = IosDialogSessionRegistry<DocumentPickerDelegate>()
     val photoPickerSessions = IosDialogSessionRegistry<PhotoPickerSession>()
     val cameraPickerSessions = IosDialogSessionRegistry<CameraControllerDelegate>()
+    val presentations = IosDialogPresentationRegistry()
 }
 
 private class PhotoPickerSession(
@@ -105,6 +106,9 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
             missingPresenterFailure = {
                 FileKitPickerException("No view controller is available to present the file picker.")
             },
+            overlappingPresenterFailure = {
+                FileKitPickerException("The view controller is already presenting another FileKit dialog.")
+            },
         )?.map { PlatformFile(it) }
 
         if (picked.isNullOrEmpty()) {
@@ -132,6 +136,9 @@ public actual suspend fun FileKit.openDirectoryPicker(
     dialogSettings = dialogSettings,
     missingPresenterFailure = {
         FileKitDialogException("No view controller is available to present the directory picker.")
+    },
+    overlappingPresenterFailure = {
+        FileKitDialogException("The view controller is already presenting another FileKit dialog.")
     },
 )?.firstOrNull()?.let { PlatformFile(it) }
 
@@ -210,6 +217,11 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
             session = delegate,
             registry = FileKitDialog.documentPickerSessions,
             continuation = continuation,
+            presenter = presenter,
+            presentations = FileKitDialog.presentations,
+            overlapFailure = {
+                FileKitDialogException("The view controller is already presenting another FileKit dialog.")
+            },
             dismiss = pickerController::dismissOnCancellation,
         )
         session.present {
@@ -260,6 +272,11 @@ public actual suspend fun FileKit.openCameraPicker(
                 session = delegate,
                 registry = FileKitDialog.cameraPickerSessions,
                 continuation = continuation,
+                presenter = presenter,
+                presentations = FileKitDialog.presentations,
+                overlapFailure = {
+                    FileKitDialogException("The view controller is already presenting another FileKit dialog.")
+                },
                 dismiss = pickerController::dismissOnCancellation,
             )
             session.present {
@@ -436,6 +453,7 @@ private suspend fun callPicker(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     missingPresenterFailure: () -> FileKitDialogException,
+    overlappingPresenterFailure: () -> FileKitDialogException,
 ): List<NSURL>? = withContext(Dispatchers.Main) {
     val presenter = dialogSettings.presenterViewController(missingPresenterFailure)
 
@@ -455,6 +473,9 @@ private suspend fun callPicker(
             session = delegate,
             registry = FileKitDialog.documentPickerSessions,
             continuation = continuation,
+            presenter = presenter,
+            presentations = FileKitDialog.presentations,
+            overlapFailure = overlappingPresenterFailure,
             dismiss = pickerController::dismissOnCancellation,
         )
         session.present {
@@ -522,6 +543,11 @@ private suspend fun getPhPickerResults(
             session = pickerSession,
             registry = FileKitDialog.photoPickerSessions,
             continuation = continuation,
+            presenter = presenter,
+            presentations = FileKitDialog.presentations,
+            overlapFailure = {
+                FileKitPickerException("The view controller is already presenting another FileKit dialog.")
+            },
             dismiss = controller::dismissOnCancellation,
         )
         continuationSession.present {
