@@ -8,6 +8,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
+import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -146,8 +147,24 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
         onError(failure)
         return
     }
-    beforeCallback()
-    mode.consumeResult(result, onResult)
+    mode.consumeResult(result) { consumedResult ->
+        if (mode.isTerminalConsumedResult(consumedResult)) beforeCallback()
+        onResult(consumedResult)
+    }
+}
+
+private fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, ConsumedResult>.isTerminalConsumedResult(
+    result: ConsumedResult,
+): Boolean = when (this) {
+    FileKitMode.Single,
+    is FileKitMode.Multiple,
+    -> true
+
+    FileKitMode.SingleWithState,
+    is FileKitMode.MultipleWithState,
+    -> result is FileKitPickerState.Cancelled ||
+        result is FileKitPickerState.Failed ||
+        result is FileKitPickerState.Completed<*>
 }
 
 internal suspend fun <Result> runDialogLauncher(

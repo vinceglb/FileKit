@@ -7,6 +7,10 @@ import platform.darwin.NSObject
 
 internal class PhPickerDelegate(
     private val onFilesPicked: (List<PHPickerResult>) -> Unit,
+    private val dismiss: (PHPickerViewController, finishDismissal: () -> Unit) -> Unit =
+        { picker, finishDismissal ->
+            picker.dismissViewControllerAnimated(true, finishDismissal)
+        },
 ) : NSObject(),
     PHPickerViewControllerDelegateProtocol {
     private var hasFinished = false
@@ -15,11 +19,12 @@ internal class PhPickerDelegate(
         if (hasFinished) return
         hasFinished = true
 
-        // Dismiss the picker
-        picker.dismissViewControllerAnimated(true, null)
-
         // Map the results to PHPickerResult
         val res = didFinishPicking.mapNotNull { it as? PHPickerResult }
-        onFilesPicked(res)
+
+        // Keep the delegate and presenter reservation until the dismissal transition completes.
+        dismiss(picker) {
+            onFilesPicked(res)
+        }
     }
 }

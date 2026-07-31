@@ -4,11 +4,15 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerState
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class LauncherPendingStateTest {
     @Test
@@ -88,6 +92,41 @@ class LauncherPendingStateTest {
         yield()
 
         assertNull(retryFailure)
+    }
+
+    @Test
+    fun SinglePendingStateFilePicker_remainsPendingUntilTerminalCallback() = runTest {
+        val pendingState = LauncherPendingState("file picker")
+        val finishPicker = CompletableDeferred<Unit>()
+        val startedRetryFailure = CompletableDeferred<Throwable?>()
+        val terminalRetryFailure = CompletableDeferred<Throwable?>()
+
+        launchSinglePendingDialog(pendingState) { finishPendingLaunch ->
+            runFilePickerLauncher(
+                mode = FileKitMode.SingleWithState,
+                openPicker = {
+                    flow {
+                        emit(FileKitPickerState.Started(total = 1))
+                        finishPicker.await()
+                        emit(FileKitPickerState.Cancelled)
+                    }
+                },
+                beforeCallback = finishPendingLaunch,
+                onError = {},
+                onResult = { state ->
+                    val retryFailure = runCatching { pendingState.begin() }.exceptionOrNull()
+                    when (state) {
+                        is FileKitPickerState.Started -> startedRetryFailure.complete(retryFailure)
+                        is FileKitPickerState.Cancelled -> terminalRetryFailure.complete(retryFailure)
+                        else -> error("Unexpected picker state: $state")
+                    }
+                },
+            )
+        }
+
+        assertTrue(startedRetryFailure.await() is IllegalStateException)
+        finishPicker.complete(Unit)
+        assertNull(terminalRetryFailure.await())
     }
 
     @Test
