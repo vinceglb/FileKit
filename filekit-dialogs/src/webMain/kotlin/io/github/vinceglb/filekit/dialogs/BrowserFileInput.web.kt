@@ -11,24 +11,23 @@ import org.w3c.dom.asList
 import org.w3c.files.FileList
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.js.JsException
 
 @OptIn(ExperimentalWasmJsInterop::class)
 internal suspend fun openBrowserFileInput(
     type: FileKitType,
     multipleMode: Boolean,
     directoryMode: Boolean,
+    failure: (Throwable) -> FileKitDialogException,
 ): List<WebFile.FileWrapper>? = withContext(Dispatchers.Default) {
     suspendCancellableCoroutine { continuation ->
         val inputElement = document.createElement("input")
         val input = inputElement as BrowserFileInputElement
-        (inputElement as HTMLElement).style.display = "none"
-        document.body?.appendChild(inputElement)
 
-        input.apply {
-            this.type = "file"
-            accept = type.acceptAttribute
-            multiple = multipleMode
-            webkitdirectory = directoryMode
+        fun cleanup() {
+            input.onchange = null
+            input.oncancel = null
+            inputElement.parentNode?.removeChild(inputElement)
         }
 
         input.onchange = {
@@ -37,20 +36,37 @@ internal suspend fun openBrowserFileInput(
                     ?.asList()
                     ?.map { WebFile.FileWrapper(it.unsafeCast<BrowserFile>()) }
 
-                continuation.resume(result)
-            } catch (e: Throwable) {
-                continuation.resumeWithException(e)
+                if (continuation.isActive) continuation.resume(result)
+            } catch (cause: JsException) {
+                if (continuation.isActive) continuation.resumeWithException(failure(cause))
+            } catch (cause: Throwable) {
+                if (continuation.isActive) continuation.resumeWithException(cause)
             } finally {
-                document.body?.removeChild(inputElement)
+                cleanup()
             }
         }
 
         input.oncancel = {
-            continuation.resume(null)
-            document.body?.removeChild(inputElement)
+            if (continuation.isActive) continuation.resume(null)
+            cleanup()
         }
 
-        input.click()
+        continuation.invokeOnCancellation { cleanup() }
+
+        try {
+            (inputElement as HTMLElement).style.display = "none"
+            document.body?.appendChild(inputElement)
+            input.apply {
+                this.type = "file"
+                accept = type.acceptAttribute
+                multiple = multipleMode
+                webkitdirectory = directoryMode
+            }
+            input.click()
+        } catch (cause: JsException) {
+            cleanup()
+            if (continuation.isActive) continuation.resumeWithException(failure(cause))
+        }
     }
 }
 

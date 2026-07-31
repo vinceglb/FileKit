@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.dialogs.platform.xdg
 import com.sun.jna.Native
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.CompletableDeferred
@@ -15,6 +16,8 @@ import org.freedesktop.dbus.annotations.DBusProperty.Access
 import org.freedesktop.dbus.annotations.Position
 import org.freedesktop.dbus.connections.impl.DBusConnection
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder
+import org.freedesktop.dbus.exceptions.DBusException
+import org.freedesktop.dbus.exceptions.DBusExecutionException
 import org.freedesktop.dbus.interfaces.DBusInterface
 import org.freedesktop.dbus.interfaces.DBusSigHandler
 import org.freedesktop.dbus.interfaces.Properties
@@ -91,7 +94,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         parentWindow: Window?,
         multiple: Boolean,
         openDirectory: Boolean,
-    ): List<File>? {
+    ): List<File>? = runXdgPortalOperation {
         DBusConnectionBuilder.forSessionBus().build().use { connection ->
             val handleToken = UUID.randomUUID().toString().replace("-", "")
             val options: MutableMap<String, Variant<*>> = HashMap()
@@ -107,8 +110,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 title = title ?: "",
                 options = options,
             )
-            val files = deferredResult.await()?.map { File(it) }
-            return files
+            deferredResult.await()?.map { File(it) }
         }
     }
 
@@ -118,7 +120,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         allowedExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? {
+    ): File? = runXdgPortalOperation {
         DBusConnectionBuilder.forSessionBus().build().use { connection ->
             val handleToken = UUID.randomUUID().toString().replace("-", "")
             val options: MutableMap<String, Variant<*>> = HashMap()
@@ -140,7 +142,7 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 options = options,
             )
 
-            return deferredResult.await()?.first()?.let { File(it) }
+            deferredResult.await()?.firstOrNull()?.let { File(it) }
         }
     }
 
@@ -155,8 +157,11 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         val result = CompletableDeferred<List<URI>?>()
         val matchRule = DBusMatchRule("signal", "org.freedesktop.portal.Request", "Response")
         val registration = AtomicReference<AutoCloseable?>(null)
-        val handler = ResponseHandler(path) { uris ->
-            result.complete(uris)
+        val handler = ResponseHandler(path) { response ->
+            response.fold(
+                onSuccess = result::complete,
+                onFailure = result::completeExceptionally,
+            )
         }
         registration.set(
             addGenericSigHandlerCompat(
@@ -173,22 +178,25 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
 
     private class ResponseHandler(
         private val path: String,
-        private val onComplete: (result: List<URI>?) -> Unit,
+        private val onComplete: (result: Result<List<URI>?>) -> Unit,
     ) : DBusSigHandler<DBusSignal> {
         @Suppress("UNCHECKED_CAST")
         override fun handle(signal: DBusSignal) {
             if (path == signal.path) {
-                val params = signal.parameters
-                val response = params[0] as UInt32
-                val results = params[1] as Map<String, Variant<*>>
-
-                if (response.toInt() == 0) {
-                    val uris = (results["uris"]!!.value as List<String>).map { path ->
-                        path.toURI()
+                try {
+                    val params = signal.parameters
+                    val response = params.getOrNull(0) as? UInt32
+                        ?: throw JvmDialogOperationException("The XDG portal returned no response code")
+                    val results = params.getOrNull(1) as? Map<*, *>
+                    val uriValues = (results?.get("uris") as? Variant<*>)?.value as? List<*>
+                    val uris = uriValues?.map { value ->
+                        value as? String
+                            ?: throw JvmDialogOperationException("The XDG portal returned an invalid file URI")
                     }
-                    onComplete(uris)
-                } else {
-                    onComplete(null)
+                    onComplete(Result.success(resolveXdgPortalResponse(response.toInt(), uris)))
+                } catch (cause: Throwable) {
+                    // Forward asynchronous callback failures to the suspended caller unchanged.
+                    onComplete(Result.failure(cause))
                 }
             }
         }
@@ -209,14 +217,16 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
                 candidate.parameterTypes.size == 2 &&
                 candidate.parameterTypes[0].isAssignableFrom(matchRule.javaClass) &&
                 candidate.parameterTypes[1].isAssignableFrom(handler.javaClass)
-        } ?: error("No compatible DBusConnection signal-registration method found")
+        } ?: throw JvmDialogOperationException("No compatible DBusConnection signal-registration method found")
 
         try {
             val registration = method.invoke(connection, matchRule, handler)
             return registration as? AutoCloseable
-                ?: error("DBusConnection signal-registration method did not return AutoCloseable")
+                ?: throw JvmDialogOperationException(
+                    "DBusConnection signal-registration method did not return AutoCloseable",
+                )
         } catch (error: InvocationTargetException) {
-            throw error.targetException
+            throw JvmDialogOperationException("Failed to register the DBus response handler", error.targetException)
         }
     }
 
@@ -253,6 +263,38 @@ internal class XdgFilePickerPortal : PlatformFilePicker {
         System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
         return Variant(nullTerminated)
     }
+}
+
+internal fun resolveXdgPortalResponse(
+    responseCode: Int,
+    uris: List<String>?,
+): List<URI>? = when (responseCode) {
+    0 -> {
+        uris
+            ?.takeIf { it.isNotEmpty() }
+            ?.map(String::toURI)
+            ?: throw JvmDialogOperationException("The XDG portal returned no selected file")
+    }
+
+    1 -> {
+        null
+    }
+
+    else -> {
+        throw JvmDialogOperationException("The XDG portal failed with response code $responseCode")
+    }
+}
+
+internal suspend inline fun <Result> runXdgPortalOperation(
+    block: () -> Result,
+): Result = try {
+    block()
+} catch (cause: JvmDialogOperationException) {
+    throw cause
+} catch (cause: DBusExecutionException) {
+    throw JvmDialogOperationException("The XDG portal operation failed", cause)
+} catch (cause: DBusException) {
+    throw JvmDialogOperationException("The XDG portal connection failed", cause)
 }
 
 @DBusInterfaceName(value = "org.freedesktop.portal.FileChooser")

@@ -2,7 +2,9 @@ package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -13,36 +15,40 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
     mode: PickerMode,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): Flow<FileKitPickerState<List<PlatformFile>>> = withContext(Dispatchers.IO) {
-    // Filter by extension
-    val extensions = when (type) {
-        FileKitType.Image -> imageExtensions
-        FileKitType.Video -> videoExtensions
-        FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
-        is FileKitType.File -> type.extensions
-    }
-
-    val files = when (mode) {
-        PickerMode.Single -> {
-            PlatformFilePicker.current
-                .openFilePicker(
-                    directory = directory,
-                    fileExtensions = extensions,
-                    dialogSettings = dialogSettings,
-                )?.let { listOf(PlatformFile(it)) }
+): Flow<FileKitPickerState<List<PlatformFile>>> = runJvmDialogOperation(
+    failure = { FileKitPickerException("Failed to open the file picker.", it) },
+) {
+    withContext(Dispatchers.IO) {
+        // Filter by extension
+        val extensions = when (type) {
+            FileKitType.Image -> imageExtensions
+            FileKitType.Video -> videoExtensions
+            FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
+            is FileKitType.File -> type.extensions
         }
 
-        is PickerMode.Multiple -> {
-            PlatformFilePicker.current
-                .openFilesPicker(
-                    directory = directory,
-                    fileExtensions = extensions,
-                    dialogSettings = dialogSettings,
-                )?.map { PlatformFile(it) }
-        }
-    }
+        val files = when (mode) {
+            PickerMode.Single -> {
+                PlatformFilePicker.current
+                    .openFilePicker(
+                        directory = directory,
+                        fileExtensions = extensions,
+                        dialogSettings = dialogSettings,
+                    )?.let { listOf(PlatformFile(it)) }
+            }
 
-    files.toPickerStateFlow()
+            is PickerMode.Multiple -> {
+                PlatformFilePicker.current
+                    .openFilesPicker(
+                        directory = directory,
+                        fileExtensions = extensions,
+                        dialogSettings = dialogSettings,
+                    )?.map { PlatformFile(it) }
+            }
+        }
+
+        files.toPickerStateFlow()
+    }
 }
 
 /**
@@ -55,15 +61,19 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
 public actual suspend fun FileKit.openDirectoryPicker(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): PlatformFile? = withContext(Dispatchers.IO) {
-    // Open native file picker
-    val file = PlatformFilePicker.current.openDirectoryPicker(
-        directory = directory,
-        dialogSettings = dialogSettings,
-    )
+): PlatformFile? = runJvmDialogOperation(
+    failure = { FileKitDialogException("Failed to open the directory picker.", it) },
+) {
+    withContext(Dispatchers.IO) {
+        // Open native file picker
+        val file = PlatformFilePicker.current.openDirectoryPicker(
+            directory = directory,
+            dialogSettings = dialogSettings,
+        )
 
-    // Return result
-    file?.let { PlatformFile(it) }
+        // Return result
+        file?.let { PlatformFile(it) }
+    }
 }
 
 /**
@@ -81,17 +91,34 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     allowedExtensions: Set<String>?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): PlatformFile? = withContext(Dispatchers.IO) {
-    val normalizedDefaultExtension = normalizeFileSaverExtension(defaultExtension)
-    val normalizedAllowedExtensions = normalizeFileSaverExtensions(allowedExtensions)
-    val result = PlatformFilePicker.current.openFileSaver(
-        suggestedName = suggestedName,
-        defaultExtension = normalizedDefaultExtension,
-        allowedExtensions = normalizedAllowedExtensions,
-        directory = directory,
-        dialogSettings = dialogSettings,
-    )
-    result?.let { PlatformFile(result) }
+): PlatformFile? = runJvmDialogOperation(
+    failure = { FileKitDialogException("Failed to open the file saver.", it) },
+) {
+    withContext(Dispatchers.IO) {
+        val normalizedDefaultExtension = normalizeFileSaverExtension(defaultExtension)
+        val normalizedAllowedExtensions = normalizeFileSaverExtensions(allowedExtensions)
+        val result = PlatformFilePicker.current.openFileSaver(
+            suggestedName = suggestedName,
+            defaultExtension = normalizedDefaultExtension,
+            allowedExtensions = normalizedAllowedExtensions,
+            directory = directory,
+            dialogSettings = dialogSettings,
+        )
+        result?.let { PlatformFile(result) }
+    }
+}
+
+internal suspend fun <Result> runJvmDialogOperation(
+    failure: (Throwable) -> FileKitDialogException,
+    block: suspend () -> Result,
+): Result = try {
+    block()
+} catch (cause: CancellationException) {
+    throw cause
+} catch (cause: FileKitDialogException) {
+    throw cause
+} catch (cause: JvmDialogOperationException) {
+    throw failure(cause.cause ?: cause)
 }
 
 /**

@@ -2,12 +2,15 @@ package io.github.vinceglb.filekit.dialogs.platform.swing
 
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.dialogs.platform.awt.runAwtDialogOperation
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.UIManager
+import javax.swing.UnsupportedLookAndFeelException
 import javax.swing.filechooser.FileNameExtensionFilter
 import kotlin.coroutines.resume
 
@@ -15,7 +18,9 @@ internal class SwingFilePicker : PlatformFilePicker {
     init {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-        } catch (_: Throwable) {
+        } catch (_: ReflectiveOperationException) {
+            println("Failed to set native UI for JFileChooser")
+        } catch (_: UnsupportedLookAndFeelException) {
             println("Failed to set native UI for JFileChooser")
         }
     }
@@ -63,26 +68,55 @@ internal class SwingFilePicker : PlatformFilePicker {
         fileExtensions: Set<String>?,
         dialogSettings: FileKitDialogSettings,
     ): List<File>? = suspendCancellableCoroutine { continuation ->
-        val jFileChooser = JFileChooser(directory?.path)
-        jFileChooser.fileSelectionMode = mode
-        jFileChooser.isMultiSelectionEnabled = isMultiSelectionEnabled
+        val jFileChooser = runAwtDialogOperation("Failed to initialize the Swing file picker") {
+            JFileChooser(directory?.path).apply {
+                fileSelectionMode = mode
+                this.isMultiSelectionEnabled = isMultiSelectionEnabled
 
-        if (fileExtensions != null) {
-            val filter = FileNameExtensionFilter(null, *fileExtensions.toTypedArray())
-            jFileChooser.addChoosableFileFilter(filter)
-        }
+                if (fileExtensions != null) {
+                    val filter = FileNameExtensionFilter(null, *fileExtensions.toTypedArray())
+                    addChoosableFileFilter(filter)
+                }
 
-        if (dialogSettings.title != null) {
-            jFileChooser.dialogTitle = dialogSettings.title
-        }
-
-        val returnValue = jFileChooser.showOpenDialog(dialogSettings.parentWindow)
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            continuation.resume(
-                jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: jFileChooser.selectedFile?.let { listOf(it) },
-            )
+                if (dialogSettings.title != null) {
+                    dialogTitle = dialogSettings.title
+                }
+            }
         }
 
         continuation.invokeOnCancellation { jFileChooser.cancelSelection() }
+
+        val returnValue = runAwtDialogOperation("Failed to present the Swing file picker") {
+            jFileChooser.showOpenDialog(dialogSettings.parentWindow)
+        }
+        continuation.resume(
+            resolveSwingDialogResult(
+                returnValue = returnValue,
+                selectedFiles = jFileChooser.selectedFiles,
+                selectedFile = jFileChooser.selectedFile,
+            ),
+        )
+    }
+}
+
+internal fun resolveSwingDialogResult(
+    returnValue: Int,
+    selectedFiles: Array<File>,
+    selectedFile: File?,
+): List<File>? = when (returnValue) {
+    JFileChooser.CANCEL_OPTION -> {
+        null
+    }
+
+    JFileChooser.APPROVE_OPTION -> {
+        selectedFiles
+            .toList()
+            .takeIf { it.isNotEmpty() }
+            ?: selectedFile?.let(::listOf)
+            ?: throw JvmDialogOperationException("The Swing file picker returned no selection")
+    }
+
+    else -> {
+        throw JvmDialogOperationException("The Swing file picker failed with result code $returnValue")
     }
 }

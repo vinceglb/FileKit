@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.flow.Flow
+import platform.AppKit.NSModalResponseCancel
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
@@ -89,20 +90,11 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     nsSavePanel.canCreateDirectories = dialogSettings.canCreateDirectories
 
     // Run the NSSavePanel
-    val result = nsSavePanel.runModal()
-
-    // If the user canceled the operation, return null
-    if (result != NSModalResponseOK) {
-        return null
+    return resolveMacosDialogResponse(nsSavePanel.runModal()) {
+        nsSavePanel.URL?.let { nsUrl ->
+            PlatformFile(nsUrl)
+        }
     }
-
-    // Return the result
-    val platformFile = nsSavePanel.URL?.let { nsUrl ->
-        // Create the PlatformFile
-        PlatformFile(nsUrl)
-    }
-
-    return platformFile
 }
 
 /**
@@ -145,15 +137,21 @@ private fun callPicker(
     )
 
     // Run the NSOpenPanel
-    val result = nsOpenPanel.runModal()
-
-    // If the user canceled the operation, return null
-    if (result != NSModalResponseOK) {
-        return null
+    return resolveMacosDialogResponse(nsOpenPanel.runModal()) {
+        nsOpenPanel.URLs.mapNotNull { it as? NSURL }.takeIf { it.isNotEmpty() }
     }
+}
 
-    // Return the result
-    return nsOpenPanel.URLs.mapNotNull { it as? NSURL }
+internal inline fun <Result : Any> resolveMacosDialogResponse(
+    response: Long,
+    selection: () -> Result?,
+): Result? = when (response) {
+    NSModalResponseCancel -> null
+
+    NSModalResponseOK -> selection()
+        ?: throw FileKitDialogException("The macOS dialog completed without a selection.")
+
+    else -> throw FileKitDialogException("The macOS dialog failed with response code $response.")
 }
 
 private fun NSOpenPanel.configure(

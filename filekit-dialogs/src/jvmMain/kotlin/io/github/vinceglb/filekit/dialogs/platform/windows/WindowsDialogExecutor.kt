@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.dialogs.platform.windows
 
 import com.sun.jna.platform.win32.Ole32
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
@@ -43,7 +44,7 @@ internal class WindowsDialogExecutor(
     suspend fun <T> execute(block: () -> T): T = withContext(dispatcher) {
         val initializationResult = comRuntime.initializeSta()
         if (initializationResult != S_OK && initializationResult != S_FALSE) {
-            throw RuntimeException(
+            throw JvmDialogOperationException(
                 "CoInitializeEx failed with HRESULT 0x${initializationResult.toUInt().toString(16)}",
             )
         }

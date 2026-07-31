@@ -79,16 +79,23 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
         is FileKitType.File -> type.extensions
     }
-    return showOpenDialog(extensions, directory, dialogSettings.title, pickFolders = false, mode is PickerMode.Multiple)
-        .toPickerStateFlow()
+    return try {
+        showOpenDialog(extensions, directory, dialogSettings.title, pickFolders = false, mode is PickerMode.Multiple)
+            .toPickerStateFlow()
+    } catch (cause: IllegalStateException) {
+        throw FileKitPickerException("Failed to open the file picker.", cause)
+    }
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): PlatformFile? =
+): PlatformFile? = try {
     showOpenDialog(null, directory, dialogSettings.title, pickFolders = true, allowMultiple = false)
         ?.firstOrNull()
+} catch (cause: IllegalStateException) {
+    throw FileKitDialogException("Failed to open the directory picker.", cause)
+}
 
 internal actual suspend fun FileKit.platformOpenFileSaver(
     suggestedName: String,
@@ -99,7 +106,11 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
 ): PlatformFile? {
     val ext = normalizeFileSaverExtension(defaultExtension)
     val filters = normalizeFileSaverExtensions(allowedExtensions)
-    return showSaveDialog(buildFileSaverSuggestedName(suggestedName, ext), ext, filters, directory, dialogSettings.title)
+    return try {
+        showSaveDialog(buildFileSaverSuggestedName(suggestedName, ext), ext, filters, directory, dialogSettings.title)
+    } catch (cause: IllegalStateException) {
+        throw FileKitDialogException("Failed to open the file saver.", cause)
+    }
 }
 
 public actual fun FileKit.openFileWithDefaultApplication(

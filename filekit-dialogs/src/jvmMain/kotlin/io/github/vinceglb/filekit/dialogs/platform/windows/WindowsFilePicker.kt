@@ -16,6 +16,7 @@ import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileOpenDialog
@@ -221,7 +222,7 @@ internal class WindowsFilePicker(
 
         // Invalid error codes: throw exception
         if (FAILED(resultFolder)) {
-            throw RuntimeException("SHCreateItemFromParsingName failed")
+            throw JvmDialogOperationException("SHCreateItemFromParsingName failed")
         }
 
         // Create ShellItem from the folder
@@ -274,7 +275,7 @@ internal class WindowsFilePicker(
 
         // Invalid error codes: throw exception
         if (FAILED(openDialogResult)) {
-            throw RuntimeException("Show failed")
+            throw JvmDialogOperationException("Show failed")
         }
 
         return block(this)
@@ -368,7 +369,7 @@ internal class WindowsFilePicker(
 
     private fun HRESULT.verify(exceptionMessage: String): HRESULT {
         if (FAILED(this)) {
-            throw RuntimeException(exceptionMessage)
+            throw JvmDialogOperationException(exceptionMessage)
         } else {
             return this
         }

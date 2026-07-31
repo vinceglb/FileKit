@@ -17,6 +17,7 @@ import io.github.vinceglb.filekit.PlatformFile
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The path where the file should be saved as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When FileKit cannot open or prepare the file saver.
  */
 public suspend fun FileKit.openFileSaver(
     suggestedName: String,
@@ -40,6 +41,7 @@ public suspend fun FileKit.openFileSaver(
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The path where the file should be saved as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When FileKit cannot open or prepare the file saver.
  */
 @Deprecated(
     message = "Use defaultExtension. The extension parameter is a default extension hint, not a filter.",

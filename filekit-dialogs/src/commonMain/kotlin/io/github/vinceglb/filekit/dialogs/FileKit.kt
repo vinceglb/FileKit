@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The result of the picker, depending on the [mode].
- * @throws FileKitPickerException When the user selected files but FileKit could not resolve them.
+ * @throws FileKitPickerException When FileKit cannot open the picker or resolve the selected files.
  */
 public suspend fun <A, B> FileKit.openFilePicker(
     type: FileKitType = FileKitType.File(),
@@ -36,7 +36,7 @@ public suspend fun <A, B> FileKit.openFilePicker(
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked [PlatformFile], or null if cancelled.
- * @throws FileKitPickerException When the user selected a file but FileKit could not resolve it.
+ * @throws FileKitPickerException When FileKit cannot open the picker or resolve the selected file.
  */
 public suspend fun FileKit.openFilePicker(
     type: FileKitType = FileKitType.File(),
@@ -62,6 +62,7 @@ internal expect suspend fun FileKit.platformOpenFilePicker(
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The picked directory as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When FileKit cannot open or complete the directory picker.
  */
 public expect suspend fun FileKit.openDirectoryPicker(
     directory: PlatformFile? = null,

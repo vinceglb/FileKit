@@ -9,7 +9,9 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class AndroidPickerLaunchFallbackTest {
     @Test
@@ -31,28 +33,40 @@ class AndroidPickerLaunchFallbackTest {
     }
 
     @Test
-    fun PickerLaunch_primaryAndFallbackThrowActivityNotFound_returnsNull() = runBlocking {
-        val result = runPickerLaunchWithActivityNotFoundFallback(
-            primary = {
-                throw ActivityNotFoundException("No activity for visual picker")
-            },
-            fallback = {
-                throw ActivityNotFoundException("No activity for document picker")
-            },
-        )
+    fun PickerLaunch_primaryAndFallbackThrowActivityNotFound_throwsPickerFailure() {
+        val fallbackFailure = ActivityNotFoundException("No activity for document picker")
 
-        assertNull(result)
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw ActivityNotFoundException("No activity for visual picker")
+                    },
+                    fallback = {
+                        throw fallbackFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(fallbackFailure, failure.cause)
     }
 
     @Test
-    fun PickerLaunch_primaryThrowsActivityNotFoundWithoutFallback_returnsNull() = runBlocking {
-        val result = runPickerLaunchWithActivityNotFoundFallback(
-            primary = {
-                throw ActivityNotFoundException("No activity for document picker")
-            },
-        )
+    fun PickerLaunch_primaryThrowsActivityNotFoundWithoutFallback_throwsPickerFailure() {
+        val launchFailure = ActivityNotFoundException("No activity for document picker")
 
-        assertNull(result)
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw launchFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
     }
 
     @Test
@@ -85,6 +99,82 @@ class AndroidPickerLaunchFallbackTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun AndroidDialogLaunch_activityNotFound_wrapsCause() {
+        val launchFailure = ActivityNotFoundException("No directory picker")
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking {
+                runAndroidDialogLaunch("Failed to launch the directory picker.") {
+                    throw launchFailure
+                }
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun AndroidDialogLaunch_securityException_wrapsCause() {
+        val launchFailure = SecurityException("Camera launch denied")
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking {
+                runAndroidDialogLaunch("Failed to launch the camera picker.") {
+                    throw launchFailure
+                }
+            }
+        }
+
+        assertIs<SecurityException>(failure.cause)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun FileSaverLaunch_activityNotFound_wrapsCause() {
+        val launchFailure = ActivityNotFoundException("No file saver")
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking {
+                runAndroidDialogLaunch("Failed to launch the file saver.") {
+                    throw launchFailure
+                }
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun ShareLaunch_activityNotFound_wrapsCause() {
+        val launchFailure = ActivityNotFoundException("No share activity")
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking {
+                runAndroidDialogLaunch("Failed to launch the share sheet.") {
+                    throw launchFailure
+                }
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun AndroidDialogLaunch_unexpectedException_propagates() {
+        val unexpectedFailure = IllegalStateException("Broken registry")
+
+        val failure = assertFailsWith<IllegalStateException> {
+            runBlocking {
+                runAndroidDialogLaunch("Failed to launch the directory picker.") {
+                    throw unexpectedFailure
+                }
+            }
+        }
+
+        assertSame(unexpectedFailure, failure)
     }
 
     @Test

@@ -4,6 +4,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
 import io.github.vinceglb.filekit.dialogs.buildFileSaverAllowedFileTypes
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
@@ -93,6 +94,11 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 val result = Foundation.invoke(savePanel, "runModal")
                 if (result.toInt() == NS_MODAL_RESPONSE_OK) {
                     response = singlePath(savePanel)
+                        ?: throw JvmDialogOperationException("The macOS save dialog returned no selection")
+                } else if (result.toInt() != NS_MODAL_RESPONSE_CANCEL) {
+                    throw JvmDialogOperationException(
+                        "The macOS save dialog failed with response code ${result.toInt()}",
+                    )
                 }
             }
 
@@ -147,6 +153,11 @@ internal class MacOSFilePicker : PlatformFilePicker {
                 // Get the path(s) from the file picker if the user validated the selection
                 if (result.toInt() == 1) {
                     response = mode.getResult(openPanel)
+                        ?: throw JvmDialogOperationException("The macOS open dialog returned no selection")
+                } else if (result.toInt() != NS_MODAL_RESPONSE_CANCEL) {
+                    throw JvmDialogOperationException(
+                        "The macOS open dialog failed with response code ${result.toInt()}",
+                    )
                 }
             }
 
@@ -158,6 +169,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
     private companion object {
         const val NS_MODAL_RESPONSE_OK = 1
+        const val NS_MODAL_RESPONSE_CANCEL = 0
 
         fun Collection<String>.toNsStringArray(): ID? {
             if (isEmpty()) {

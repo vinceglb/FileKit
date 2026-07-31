@@ -8,6 +8,7 @@ import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.PointerType
 import com.sun.jna.ptr.PointerByReference
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import org.jetbrains.annotations.NonNls
 import java.io.File
 import java.lang.reflect.Proxy
@@ -26,12 +27,12 @@ internal fun registerObjcRunnableClass(
 ): ID {
     val runnableClass = allocate(className)
     if (runnableClass == null || runnableClass == ID.NIL) {
-        throw IllegalStateException("Unable to allocate Objective-C runnable adapter class '$className'")
+        throw JvmDialogOperationException("Unable to allocate Objective-C runnable adapter class '$className'")
     }
 
     if (!addMethod(runnableClass)) {
         dispose(runnableClass)
-        throw IllegalStateException("Unable to add run: method to Objective-C runnable adapter class '$className'")
+        throw JvmDialogOperationException("Unable to add run: method to Objective-C runnable adapter class '$className'")
     }
 
     register(runnableClass)
@@ -105,7 +106,7 @@ internal object Foundation {
         val cls = getObjcClass(stringCls)
         val selector = createSelector(stringSelector)
         if (!invoke(cls, "respondsToSelector:", selector).booleanValue()) {
-            throw RuntimeException(
+            throw JvmDialogOperationException(
                 String.format(
                     "Missing selector %s for %s",
                     stringSelector,
@@ -129,7 +130,7 @@ internal object Foundation {
     fun safeInvoke(id: ID, stringSelector: String?, vararg args: Any): ID {
         val selector = createSelector(stringSelector)
         if (id != ID.NIL && !invoke(id, "respondsToSelector:", selector).booleanValue()) {
-            throw RuntimeException(
+            throw JvmDialogOperationException(
                 String.format(
                     "Missing selector %s for %s",
                     stringSelector,
@@ -245,7 +246,7 @@ internal object Foundation {
             buffer.size,
             FoundationLibrary.kCFStringEncodingUTF8,
         )
-        if (ok.toInt() == 0) throw RuntimeException("Could not convert string")
+        if (ok.toInt() == 0) throw JvmDialogOperationException("Could not convert string")
         return Native.toString(buffer)
     }
 

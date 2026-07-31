@@ -81,15 +81,17 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         suggestedName = suggestedName,
         extension = normalizedDefaultExtension,
     )
-    val uri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = CreateDocumentInput(
-            mimeType = mimeType,
-            fileName = fileName,
-            allowedMimeTypes = allowedMimeTypes,
-        ),
-    )
+    val uri = runAndroidDialogLaunch("Failed to launch the file saver.") {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = CreateDocumentInput(
+                mimeType = mimeType,
+                fileName = fileName,
+                allowedMimeTypes = allowedMimeTypes,
+            ),
+        )
+    }
     return uri?.let(::PlatformFile)
 }
 
@@ -107,11 +109,13 @@ public actual suspend fun FileKit.openDirectoryPicker(
     val registry = FileKit.registry
     val contract = ActivityResultContracts.OpenDocumentTree()
     val initialUri = directory?.path?.toUri()
-    val treeUri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = initialUri,
-    )
+    val treeUri = runAndroidDialogLaunch("Failed to launch the directory picker.") {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = initialUri,
+        )
+    }
     return treeUri?.let(::PlatformFile)
 }
 
@@ -131,20 +135,21 @@ public actual suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? {
     val registry = FileKit.registry
-    if (!FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)) {
+    val hasCameraPermission = runAndroidDialogLaunch("Failed to request camera permission.") {
+        FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)
+    }
+    if (!hasCameraPermission) {
         return null
     }
 
     val contract = TakePictureWithCameraFacing(cameraFacing)
     val uri = destinationFile.toAndroidUri(openCameraSettings.authority)
-    val isSaved = try {
+    val isSaved = runAndroidDialogLaunch("Failed to launch the camera picker.") {
         awaitActivityResult(
             registry = registry,
             contract = contract,
             input = uri,
         )
-    } catch (_: SecurityException) {
-        return null
     }
     return if (isSaved) destinationFile else null
 }
@@ -316,13 +321,17 @@ public actual suspend fun FileKit.shareFile(
         }
     }
     intentShareSend.flags = FLAG_GRANT_READ_URI_PERMISSION
-    val chooseIntent = Intent.createChooser(intentShareSend, null).apply {
-        flags = FLAG_ACTIVITY_NEW_TASK
-        addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+    val chooseIntent = runAndroidDialogLaunch("Failed to create the share sheet.") {
+        Intent.createChooser(intentShareSend, null).apply {
+            flags = FLAG_ACTIVITY_NEW_TASK
+            addFlags(FLAG_GRANT_READ_URI_PERMISSION)
+        }
     }
     shareSettings.addOptionChooseIntent(chooseIntent)
 
-    context.startActivity(chooseIntent)
+    runAndroidDialogLaunch("Failed to launch the share sheet.") {
+        context.startActivity(chooseIntent)
+    }
 }
 
 /**
@@ -400,7 +409,7 @@ private suspend fun callFilePicker(
                                 input = type.toVisualFallbackMimeTypes(),
                             )
                         },
-                    )?.map(::PlatformFile)
+                    ).map(::PlatformFile)
                 }
 
                 else -> {
@@ -434,7 +443,7 @@ private suspend fun callFilePicker(
                                 input = FileKitAndroidDialogsInternal.getMimeTypes(type.extensions),
                             )
                         },
-                    )?.map(::PlatformFile)
+                    ).map(::PlatformFile)
                 }
             }
         }
@@ -444,15 +453,27 @@ private suspend fun callFilePicker(
 internal suspend fun <O> runPickerLaunchWithActivityNotFoundFallback(
     primary: suspend () -> O,
     fallback: (suspend () -> O)? = null,
-): O? = try {
+): O = try {
     primary()
-} catch (_: ActivityNotFoundException) {
-    val fallbackLaunch = fallback ?: return null
+} catch (primaryFailure: ActivityNotFoundException) {
+    val fallbackLaunch = fallback
+        ?: throw FileKitPickerException("Failed to launch the file picker.", primaryFailure)
     try {
         fallbackLaunch()
-    } catch (_: ActivityNotFoundException) {
-        null
+    } catch (fallbackFailure: ActivityNotFoundException) {
+        throw FileKitPickerException("Failed to launch the file picker fallback.", fallbackFailure)
     }
+}
+
+internal suspend fun <Result> runAndroidDialogLaunch(
+    failureMessage: String,
+    launch: suspend () -> Result,
+): Result = try {
+    launch()
+} catch (failure: ActivityNotFoundException) {
+    throw FileKitDialogException(failureMessage, failure)
+} catch (failure: SecurityException) {
+    throw FileKitDialogException(failureMessage, failure)
 }
 
 internal fun FileKitType.toVisualFallbackMimeTypes(): Array<String> = when (this) {

@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.dialogs.platform.awt
 
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.platform.JvmDialogOperationException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -14,6 +15,7 @@ import java.awt.Window
 import java.io.File
 import java.io.FilenameFilter
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
@@ -43,7 +45,7 @@ internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
+    ): File? = throw JvmDialogOperationException("Directory picker is not supported on Linux yet.")
 
     private suspend fun callAwtPicker(
         title: String?,
@@ -53,32 +55,41 @@ internal class AwtFilePicker : PlatformFilePicker {
         parentWindow: Window?,
     ): List<File>? = suspendCancellableCoroutine { continuation ->
         // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (parentWindow) {
-            is Dialog -> FileDialog(parentWindow, title, LOAD)
-            else -> FileDialog(parentWindow as? Frame, title, LOAD)
-        }
-
-        EventQueue.invokeLater {
-            // Set multiple mode
-            dialog.isMultipleMode = isMultipleMode
-
-            // Set mime types
-            dialog.filenameFilter = FilenameFilter { _, name ->
-                fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+        val dialog = runAwtDialogOperation("Failed to initialize the AWT file picker") {
+            when (parentWindow) {
+                is Dialog -> FileDialog(parentWindow, title, LOAD)
+                else -> FileDialog(parentWindow as? Frame, title, LOAD)
             }
-
-            // Set initial directory
-            directory?.let { dialog.directory = directory.path }
-
-            // Show the dialog
-            dialog.isVisible = true
-
-            val files = dialog.files.takeIf { it.isNotEmpty() }
-            val result = files ?: dialog.file?.let { arrayOf(File(it)) }
-
-            continuation.resume(value = result?.toList())
         }
 
         continuation.invokeOnCancellation { dialog.dispose() }
+
+        EventQueue.invokeLater {
+            dispatchAwtDialogOperation(
+                isActive = { continuation.isActive },
+                operation = {
+                    runAwtDialogOperation("Failed to present the AWT file picker") {
+                        // Set multiple mode
+                        dialog.isMultipleMode = isMultipleMode
+
+                        // Set mime types
+                        dialog.filenameFilter = FilenameFilter { _, name ->
+                            fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+                        }
+
+                        // Set initial directory
+                        directory?.let { dialog.directory = directory.path }
+
+                        // Show the dialog
+                        dialog.isVisible = true
+
+                        val files = dialog.files.takeIf { it.isNotEmpty() }
+                        files ?: dialog.file?.let { arrayOf(File(it)) }
+                    }?.toList()
+                },
+                onResult = continuation::resume,
+                onFailure = continuation::resumeWithException,
+            )
+        }
     }
 }

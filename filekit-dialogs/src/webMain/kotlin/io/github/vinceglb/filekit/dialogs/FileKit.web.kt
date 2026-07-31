@@ -15,6 +15,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         type = type,
         multipleMode = mode is PickerMode.Multiple,
         directoryMode = false,
+        failure = { FileKitPickerException("Failed to open the browser file picker.", it) },
     )?.map { PlatformFile(it) }.toPickerStateFlow()
 
 public actual suspend fun FileKit.openDirectoryPicker(
@@ -25,6 +26,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
         type = FileKitType.File(),
         multipleMode = false,
         directoryMode = true,
+        failure = { FileKitDialogException("Failed to open the browser directory picker.", it) },
     )
     return PlatformFile.fromWebDirectoryFiles(fileList.orEmpty())
 }
