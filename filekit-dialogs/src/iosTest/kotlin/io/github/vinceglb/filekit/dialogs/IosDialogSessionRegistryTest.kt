@@ -107,7 +107,7 @@ class IosDialogSessionRegistryTest {
         val sessions = IosDialogSessionRegistry<Any>()
 
         val result = suspendCancellableCoroutine<String> { continuation ->
-            val session = IosDialogContinuationSession(Any(), sessions, continuation)
+            val session = IosDialogContinuationSession(Any(), sessions, continuation) { it() }
             session.complete("first")
             session.complete("second")
         }
@@ -123,7 +123,7 @@ class IosDialogSessionRegistryTest {
 
         val failure = assertFailsWith<IllegalStateException> {
             suspendCancellableCoroutine<Unit> { continuation ->
-                val session = IosDialogContinuationSession(Any(), sessions, continuation)
+                val session = IosDialogContinuationSession(Any(), sessions, continuation) { it() }
                 session.present { throw defect }
             }
         }
@@ -137,7 +137,7 @@ class IosDialogSessionRegistryTest {
         val sessions = IosDialogSessionRegistry<Any>()
         val job = launch {
             suspendCancellableCoroutine<Unit> { continuation ->
-                IosDialogContinuationSession(Any(), sessions, continuation)
+                IosDialogContinuationSession(Any(), sessions, continuation) { it() }
             }
         }
         yield()
@@ -193,6 +193,31 @@ class IosDialogSessionRegistryTest {
 
         assertEquals(1, sessions.size)
         finishCleanup?.invoke()
+        assertEquals(0, sessions.size)
+    }
+
+    @Test
+    fun IosPresentedDialogSession_cancellation_dismissesBeforeReleasingSession() = runTest {
+        val sessions = IosDialogSessionRegistry<Any>()
+        var retainedDuringDismissal = false
+        val job = launch {
+            suspendCancellableCoroutine<Unit> { continuation ->
+                createIosPresentedDialogSession(
+                    session = Any(),
+                    registry = sessions,
+                    continuation = continuation,
+                    dismiss = { finishDismissal ->
+                        retainedDuringDismissal = sessions.size == 1
+                        finishDismissal()
+                    },
+                )
+            }
+        }
+        yield()
+
+        job.cancelAndJoin()
+
+        assertTrue(retainedDuringDismissal)
         assertEquals(0, sessions.size)
     }
 }

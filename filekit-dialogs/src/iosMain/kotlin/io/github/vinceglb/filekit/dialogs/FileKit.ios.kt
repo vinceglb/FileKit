@@ -180,6 +180,11 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     requireIosFileSaverWrite(emptyData.writeToURL(fileUrl, true))
 
     suspendCancellableCoroutine { continuation ->
+        val pickerController = UIDocumentPickerViewController(
+            forExportingURLs = listOf(fileUrl),
+        )
+        directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
+
         lateinit var delegate: DocumentPickerDelegate
         lateinit var session: IosDialogContinuationSession<DocumentPickerDelegate, PlatformFile?>
 
@@ -201,20 +206,13 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
                 session.complete(null)
             },
         )
-        session = IosDialogContinuationSession(
+        session = createIosPresentedDialogSession(
             session = delegate,
             registry = FileKitDialog.documentPickerSessions,
             continuation = continuation,
+            dismiss = pickerController::dismissOnCancellation,
         )
         session.present {
-            // Create a picker controller
-            val pickerController = UIDocumentPickerViewController(
-                forExportingURLs = listOf(fileUrl),
-            )
-
-            // Set the initial directory
-            directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
-
             // Assign the delegate to the picker controller
             pickerController.delegate = delegate
 
@@ -258,17 +256,11 @@ public actual suspend fun FileKit.openCameraPicker(
                     session.complete(image)
                 },
             )
-            session = IosDialogContinuationSession(
+            session = createIosPresentedDialogSession(
                 session = delegate,
                 registry = FileKitDialog.cameraPickerSessions,
                 continuation = continuation,
-                onCancellation = { finishCleanup ->
-                    dispatch_async(dispatch_get_main_queue()) {
-                        pickerController.dismissViewControllerAnimated(true) {
-                            finishCleanup()
-                        }
-                    }
-                },
+                dismiss = pickerController::dismissOnCancellation,
             )
             session.present {
                 pickerController.delegate = delegate
@@ -430,6 +422,14 @@ private fun FileKitShareSettings.presenterViewController(): UIViewController = r
     failure = { FileKitDialogException("No view controller is available to present the share sheet.") },
 )
 
+private fun UIViewController.dismissOnCancellation(finishDismissal: () -> Unit) {
+    dispatch_async(dispatch_get_main_queue()) {
+        dismissViewControllerAnimated(true) {
+            finishDismissal()
+        }
+    }
+}
+
 private suspend fun callPicker(
     mode: Mode,
     contentTypes: List<UTType>,
@@ -440,6 +440,10 @@ private suspend fun callPicker(
     val presenter = dialogSettings.presenterViewController(missingPresenterFailure)
 
     suspendCancellableCoroutine { continuation ->
+        val pickerController = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
+        directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
+        pickerController.allowsMultipleSelection = mode == Mode.Multiple
+
         lateinit var delegate: DocumentPickerDelegate
         lateinit var session: IosDialogContinuationSession<DocumentPickerDelegate, List<NSURL>?>
 
@@ -447,21 +451,13 @@ private suspend fun callPicker(
             onFilesPicked = { urls -> session.complete(urls) },
             onPickerCancelled = { session.complete(null) },
         )
-        session = IosDialogContinuationSession(
+        session = createIosPresentedDialogSession(
             session = delegate,
             registry = FileKitDialog.documentPickerSessions,
             continuation = continuation,
+            dismiss = pickerController::dismissOnCancellation,
         )
         session.present {
-            // Create a picker controller
-            val pickerController = UIDocumentPickerViewController(forOpeningContentTypes = contentTypes)
-
-            // Set the initial directory
-            directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
-
-            // Set up the picker mode
-            pickerController.allowsMultipleSelection = mode == Mode.Multiple
-
             // Assign the delegate to the picker controller
             pickerController.delegate = delegate
 
@@ -485,6 +481,31 @@ private suspend fun getPhPickerResults(
     )
 
     return suspendCancellableCoroutine { continuation ->
+        val configuration = PHPickerConfiguration(sharedPhotoLibrary())
+        configuration.selectionLimit = when (mode) {
+            is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
+            PickerMode.Single -> 1
+        }
+        configuration.preferredAssetRepresentationMode = when (dialogSettings.assetRepresentationMode) {
+            FileKitAssetRepresentationMode.Automatic -> PHPickerConfigurationAssetRepresentationModeAutomatic
+            FileKitAssetRepresentationMode.Current -> PHPickerConfigurationAssetRepresentationModeCurrent
+            FileKitAssetRepresentationMode.Compatible -> PHPickerConfigurationAssetRepresentationModeCompatible
+        }
+        configuration.filter = when (type) {
+            is FileKitType.Image -> PHPickerFilter.imagesFilter
+
+            is FileKitType.Video -> PHPickerFilter.videosFilter
+
+            is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
+                listOf(
+                    PHPickerFilter.imagesFilter,
+                    PHPickerFilter.videosFilter,
+                ),
+            )
+
+            else -> throw IllegalArgumentException("Unsupported type: $type")
+        }
+
         lateinit var pickerDelegate: PhPickerDelegate
         lateinit var dismissDelegate: PhPickerDismissDelegate
         lateinit var pickerSession: PhotoPickerSession
@@ -493,48 +514,17 @@ private suspend fun getPhPickerResults(
         pickerDelegate = PhPickerDelegate(onFilesPicked = { continuationSession.complete(it) })
         dismissDelegate = PhPickerDismissDelegate(onFilesPicked = { continuationSession.complete(it) })
         pickerSession = PhotoPickerSession(pickerDelegate, dismissDelegate)
-        continuationSession = IosDialogContinuationSession(
+        val controller = PHPickerViewController(configuration = configuration)
+        controller.delegate = pickerDelegate
+        controller.presentationController?.delegate = dismissDelegate
+
+        continuationSession = createIosPresentedDialogSession(
             session = pickerSession,
             registry = FileKitDialog.photoPickerSessions,
             continuation = continuation,
+            dismiss = controller::dismissOnCancellation,
         )
         continuationSession.present {
-            // Define configuration
-            val configuration = PHPickerConfiguration(sharedPhotoLibrary())
-
-            // Number of medias to select
-            configuration.selectionLimit = when (mode) {
-                is PickerMode.Multiple -> mode.maxItems?.toLong() ?: 0
-                PickerMode.Single -> 1
-            }
-
-            configuration.preferredAssetRepresentationMode = when (dialogSettings.assetRepresentationMode) {
-                FileKitAssetRepresentationMode.Automatic -> PHPickerConfigurationAssetRepresentationModeAutomatic
-                FileKitAssetRepresentationMode.Current -> PHPickerConfigurationAssetRepresentationModeCurrent
-                FileKitAssetRepresentationMode.Compatible -> PHPickerConfigurationAssetRepresentationModeCompatible
-            }
-
-            // Filter configuration
-            configuration.filter = when (type) {
-                is FileKitType.Image -> PHPickerFilter.imagesFilter
-
-                is FileKitType.Video -> PHPickerFilter.videosFilter
-
-                is FileKitType.ImageAndVideo -> PHPickerFilter.anyFilterMatchingSubfilters(
-                    listOf(
-                        PHPickerFilter.imagesFilter,
-                        PHPickerFilter.videosFilter,
-                    ),
-                )
-
-                else -> throw IllegalArgumentException("Unsupported type: $type")
-            }
-
-            // Create a picker controller
-            val controller = PHPickerViewController(configuration = configuration)
-            controller.delegate = pickerDelegate
-            controller.presentationController?.delegate = dismissDelegate
-
             // Present the picker controller
             presenter.presentViewController(
                 controller,

@@ -24,9 +24,7 @@ internal class IosDialogContinuationSession<Session : Any, Result>(
     private val session: Session,
     private val registry: IosDialogSessionRegistry<Session>,
     private val continuation: CancellableContinuation<Result>,
-    private val onCancellation: (finishCleanup: () -> Unit) -> Unit = { finishCleanup ->
-        finishCleanup()
-    },
+    private val onCancellation: (finishCleanup: () -> Unit) -> Unit,
 ) {
     private var completed = false
 
@@ -55,6 +53,18 @@ internal class IosDialogContinuationSession<Session : Any, Result>(
         registry.release(session)
     }
 }
+
+internal fun <Session : Any, Result> createIosPresentedDialogSession(
+    session: Session,
+    registry: IosDialogSessionRegistry<Session>,
+    continuation: CancellableContinuation<Result>,
+    dismiss: (finishDismissal: () -> Unit) -> Unit,
+): IosDialogContinuationSession<Session, Result> = IosDialogContinuationSession(
+    session = session,
+    registry = registry,
+    continuation = continuation,
+    onCancellation = dismiss,
+)
 
 internal inline fun <Presenter : Any> resolveIosDialogPresenter(
     configuredPresenter: Presenter?,
