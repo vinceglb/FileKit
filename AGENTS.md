@@ -16,3 +16,17 @@ Add unit tests in the closest `src/<target>Test` directory; default to `commonTe
 
 ## Commit & Pull Request Guidelines
 Commits are short, imperative statements and often begin with an emoji category (e.g., `✨ Add WASM picker`); keep related changes squashed together. Each PR should describe the change, note affected platforms, call out doc updates, and link issues or discussions when relevant. Attach screenshots or screen recordings when UI behaviour changes. Before requesting review, verify CI-critical tasks (`assemble`, `check`), update sample apps if behaviour shifts, and note any follow-up work in the description.
+
+## Agent skills
+
+### Issue tracker
+
+Private agent work is tracked as local Markdown under `.scratch/`. See `specs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Local issues use the canonical triage statuses. See `specs/agents/triage-labels.md`.
+
+### Domain docs
+
+FileKit uses a single-context domain model under `specs/`. See `specs/agents/domain.md`.

@@ -59,3 +59,7 @@ Tests are organized by platform with shared test resources in `nonWebTest/resour
 - Supports Android (minSdk 21), iOS, macOS, JVM, JS, and WASM
 - Version managed in `gradle.properties` (VERSION_NAME=0.14.2)
 - Uses Gradle version catalogs in `gradle/libs.versions.toml`
+
+## Shared agent guidance
+
+Read `AGENTS.md` before working in this repository. Its `## Agent skills` section is the shared source of truth for Codex and Claude.
