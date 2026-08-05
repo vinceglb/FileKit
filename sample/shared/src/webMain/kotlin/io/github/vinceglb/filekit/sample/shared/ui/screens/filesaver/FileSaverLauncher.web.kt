@@ -3,9 +3,11 @@ package io.github.vinceglb.filekit.sample.shared.ui.screens.filesaver
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 @Composable
 internal actual fun rememberFileSaverLauncher(
+    dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
 ): FileSaverLauncher = remember {
     object : FileSaverLauncher {

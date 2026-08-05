@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppDottedBorderCard
@@ -48,10 +49,12 @@ import io.github.vinceglb.filekit.sample.shared.util.plus
 internal fun FileSaverRoute(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     FileSaverScreen(
         onNavigateBack = onNavigateBack,
         onDisplayFileDetails = onDisplayFileDetails,
+        dialogSettingsTransform = dialogSettingsTransform,
     )
 }
 
@@ -60,6 +63,7 @@ internal fun FileSaverRoute(
 private fun FileSaverScreen(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var suggestedName by remember { mutableStateOf("document") }
@@ -67,8 +71,11 @@ private fun FileSaverScreen(
     var allowedExtensions by remember { mutableStateOf("pdf, txt") }
     var saveDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var savedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    val dialogSettings = dialogSettingsTransform(FileKitDialogSettings.createDefault())
 
-    val fileSaverLauncher = rememberFileSaverLauncher { file ->
+    val fileSaverLauncher = rememberFileSaverLauncher(
+        dialogSettings = dialogSettings,
+    ) { file ->
         buttonState = AppScreenHeaderButtonState.Enabled
         if (file != null) {
             savedFiles = listOf(file) + savedFiles
@@ -76,6 +83,7 @@ private fun FileSaverScreen(
     }
     val directoryPickerLauncher = rememberDirectoryPickerLauncher(
         directory = saveDirectory,
+        dialogSettings = dialogSettings,
     ) { directory ->
         if (directory != null) {
             saveDirectory = directory

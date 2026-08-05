@@ -1,17 +1,16 @@
 package io.github.vinceglb.filekit.dialogs
 
-import java.awt.Window
-
 /**
  * JVM implementation of [FileKitDialogSettings].
  *
  * @property title The title of the dialog.
- * @property parentWindow The parent window for the dialog.
+ * @property parent The borrowed window identity that owns the dialog. Keep it
+ * alive until the suspending picker call completes.
  * @property macOS Specific settings for macOS when running on JVM.
  */
 public actual data class FileKitDialogSettings(
     public val title: String? = null,
-    public val parentWindow: Window? = null,
+    public val parent: FileKitDialogParent? = null,
     public val macOS: FileKitMacOSSettings = FileKitMacOSSettings(),
 ) {
     public actual companion object {

@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit.dialogs.platform.swing
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
+import io.github.vinceglb.filekit.dialogs.requireAwtWindowOrNull
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
@@ -76,7 +77,8 @@ internal class SwingFilePicker : PlatformFilePicker {
             jFileChooser.dialogTitle = dialogSettings.title
         }
 
-        val returnValue = jFileChooser.showOpenDialog(dialogSettings.parentWindow)
+        val parentWindow = dialogSettings.parent.requireAwtWindowOrNull("Swing dialogs")
+        val returnValue = jFileChooser.showOpenDialog(parentWindow)
         if (returnValue == JFileChooser.APPROVE_OPTION) {
             continuation.resume(
                 jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: jFileChooser.selectedFile?.let { listOf(it) },

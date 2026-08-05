@@ -25,7 +25,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = false,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow,
+        parentWindow = dialogSettings.parent.resolveAwtFileDialogOwner(),
     )?.firstOrNull()
 
     override suspend fun openFilesPicker(
@@ -37,7 +37,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         isMultipleMode = true,
         fileExtensions = fileExtensions,
         directory = directory,
-        parentWindow = dialogSettings.parentWindow,
+        parentWindow = dialogSettings.parent.resolveAwtFileDialogOwner(),
     )
 
     override suspend fun openDirectoryPicker(

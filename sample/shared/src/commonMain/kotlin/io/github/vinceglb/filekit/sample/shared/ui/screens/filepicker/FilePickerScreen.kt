@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
@@ -56,10 +57,12 @@ import io.github.vinceglb.filekit.sample.shared.util.plus
 internal fun FilePickerRoute(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     FilePickerScreen(
         onNavigateBack = onNavigateBack,
         onDisplayFileDetails = onDisplayFileDetails,
+        dialogSettingsTransform = dialogSettingsTransform,
     )
 }
 
@@ -68,6 +71,7 @@ internal fun FilePickerRoute(
 private fun FilePickerScreen(
     onNavigateBack: () -> Unit,
     onDisplayFileDetails: (file: PlatformFile) -> Unit,
+    dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
 ) {
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var pickerMode by remember { mutableStateOf(Modes.Single) }
@@ -77,9 +81,11 @@ private fun FilePickerScreen(
     var files by remember { mutableStateOf(emptyList<PlatformFile>()) }
 
     val dialogSettingsState = rememberFilePickerDialogSettingsState()
+    val dialogSettings = dialogSettingsTransform(dialogSettingsState.build())
 
     val startDirectoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
+        dialogSettings = dialogSettings,
     ) { directory ->
         if (directory != null) {
             startDirectory = directory
@@ -92,7 +98,7 @@ private fun FilePickerScreen(
         type = resolvedType,
         mode = FileKitMode.Single,
         directory = startDirectory,
-        dialogSettings = dialogSettingsState.build(),
+        dialogSettings = dialogSettings,
     ) { selectedFile ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = selectedFile?.let(::listOf) ?: emptyList()
@@ -102,7 +108,7 @@ private fun FilePickerScreen(
         type = resolvedType,
         mode = FileKitMode.Multiple(maxItems = pickerMaxItems),
         directory = startDirectory,
-        dialogSettings = dialogSettingsState.build(),
+        dialogSettings = dialogSettings,
     ) { selectedFiles ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = selectedFiles ?: emptyList()
@@ -112,7 +118,7 @@ private fun FilePickerScreen(
         type = resolvedType,
         mode = FileKitMode.SingleWithState,
         directory = startDirectory,
-        dialogSettings = dialogSettingsState.build(),
+        dialogSettings = dialogSettings,
     ) { state ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = when (state) {
@@ -128,7 +134,7 @@ private fun FilePickerScreen(
         type = resolvedType,
         mode = FileKitMode.MultipleWithState(maxItems = pickerMaxItems),
         directory = startDirectory,
-        dialogSettings = dialogSettingsState.build(),
+        dialogSettings = dialogSettings,
     ) { state ->
         buttonState = AppScreenHeaderButtonState.Enabled
         files = when (state) {
