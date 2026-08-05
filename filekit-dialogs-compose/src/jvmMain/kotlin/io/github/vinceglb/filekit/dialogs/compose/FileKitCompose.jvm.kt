@@ -38,7 +38,7 @@ public fun <PickerResult, ConsumedResult> WindowScope.rememberFilePickerLauncher
     type = type,
     mode = mode,
     directory = directory,
-    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    dialogSettings = injectDialogSettings(dialogSettings, FileKitDialogParent.awt(this.window)),
     onError = onError,
     onResult = onResult,
 )
@@ -66,7 +66,7 @@ public fun WindowScope.rememberFilePickerLauncher(
 ): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher(
     type = type,
     directory = directory,
-    dialogSettings = injectDialogSettings(dialogSettings, this.window),
+    dialogSettings = injectDialogSettings(dialogSettings, FileKitDialogParent.awt(this.window)),
     onError = onError,
     onResult = onResult,
 )
