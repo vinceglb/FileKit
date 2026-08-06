@@ -113,10 +113,14 @@ file?.writeString(contentToSave)
 
 ```kotlin filekit-dialogs-compose
 // Create a file saver launcher
-val launcher = rememberFileSaverLauncher { file ->
-    // Handle the saved file
-    file?.let { saveFile(it) }
-}
+val launcher = rememberFileSaverLauncher(
+    dialogSettings = FileKitDialogSettings.createDefault(),
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Cancellation is reported as null, not as an error
+        file?.let { saveFile(it) }
+    },
+)
 
 // Display a button to open the file saver dialog
 Button(onClick = {

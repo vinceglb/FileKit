@@ -21,4 +21,10 @@ private fun WindowScope.CompileJvmPickerCallShapes() {
         onError = { _: FileKitDialogException -> },
         onResult = { _: PlatformFile? -> },
     )
+
+    val legacySaver = rememberFileSaverLauncher { _: PlatformFile? -> }
+    val explicitSaver = rememberFileSaverLauncher(
+        onError = { _: FileKitDialogException -> },
+        onResult = { _: PlatformFile? -> },
+    )
 }

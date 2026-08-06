@@ -231,3 +231,15 @@ internal suspend fun runDirectoryPickerLauncher(
         onResult = onResult,
     )
 }
+
+internal suspend fun runFileSaverLauncher(
+    openFileSaver: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openFileSaver,
+        onError = onError,
+        onResult = onResult,
+    )
+}

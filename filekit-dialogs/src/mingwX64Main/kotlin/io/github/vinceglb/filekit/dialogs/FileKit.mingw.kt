@@ -74,11 +74,15 @@ private class WindowsDialogOperationalException(
 private enum class WindowsDialogFailurePolicy {
     Legacy,
     Directory,
+    Saver,
     ;
 
     fun createFailure(message: String): RuntimeException = when (this) {
         Legacy -> IllegalStateException(message)
-        Directory -> WindowsDialogOperationalException(message)
+
+        Directory,
+        Saver,
+        -> WindowsDialogOperationalException(message)
     }
 }
 
@@ -123,10 +127,15 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     allowedExtensions: Set<String>?,
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
-): PlatformFile? {
+): PlatformFile? = try {
     val ext = normalizeFileSaverExtension(defaultExtension)
     val filters = normalizeFileSaverExtensions(allowedExtensions)
-    return showSaveDialog(buildFileSaverSuggestedName(suggestedName, ext), ext, filters, directory, dialogSettings.title)
+    showSaveDialog(buildFileSaverSuggestedName(suggestedName, ext), ext, filters, directory, dialogSettings.title)
+} catch (failure: WindowsDialogOperationalException) {
+    throw FileKitDialogException(
+        message = "The Windows file saver could not complete the operation.",
+        cause = failure,
+    )
 }
 
 public actual fun FileKit.openFileWithDefaultApplication(
@@ -216,30 +225,30 @@ private fun showSaveDialog(
     directory: PlatformFile?,
     title: String?,
 ): PlatformFile? = memScoped {
-    val failurePolicy = WindowsDialogFailurePolicy.Legacy
+    val failurePolicy = WindowsDialogFailurePolicy.Saver
     val comInitialized = initializeComForDialogs(failurePolicy)
     val ppDlg = alloc<ComPtrVar>()
     try {
         val createHr = fk_create_save_dialog(ppDlg.ptr.reinterpret())
         if (createHr != S_OK) {
-            throw IllegalStateException(
+            throw failurePolicy.createFailure(
                 "CoCreateInstance(IFileSaveDialog) failed with HRESULT 0x${createHr.toUInt().toString(16)}",
             )
         }
         val dlg = ppDlg.value
-            ?: throw IllegalStateException("CoCreateInstance(IFileSaveDialog) returned a null dialog pointer")
+            ?: throw failurePolicy.createFailure("CoCreateInstance(IFileSaveDialog) returned a null dialog pointer")
 
         val optsVar = alloc<DWORDVar>()
         val getOptionsHr = fk_dialog_get_options(dlg.reinterpret(), optsVar.ptr)
         if (getOptionsHr != S_OK) {
-            throw IllegalStateException(
+            throw failurePolicy.createFailure(
                 "IFileDialog::GetOptions failed with HRESULT 0x${getOptionsHr.toUInt().toString(16)}",
             )
         }
         val opts = optsVar.value.toInt() or FK_FOS_FORCEFILESYSTEM or FK_FOS_PATHMUSTEXIST or FK_FOS_OVERWRITEPROMPT
         val setOptionsHr = fk_dialog_set_options(dlg.reinterpret(), opts.toUInt())
         if (setOptionsHr != S_OK) {
-            throw IllegalStateException(
+            throw failurePolicy.createFailure(
                 "IFileDialog::SetOptions failed with HRESULT 0x${setOptionsHr.toUInt().toString(16)}",
             )
         }
@@ -247,21 +256,21 @@ private fun showSaveDialog(
         title?.let {
             val setTitleHr = fk_dialog_set_title(dlg.reinterpret(), it)
             if (setTitleHr != S_OK) {
-                throw IllegalStateException(
+                throw failurePolicy.createFailure(
                     "IFileDialog::SetTitle failed with HRESULT 0x${setTitleHr.toUInt().toString(16)}",
                 )
             }
         }
         val setFilenameHr = fk_dialog_set_filename(dlg.reinterpret(), suggestedName)
         if (setFilenameHr != S_OK) {
-            throw IllegalStateException(
+            throw failurePolicy.createFailure(
                 "IFileDialog::SetFileName failed with HRESULT 0x${setFilenameHr.toUInt().toString(16)}",
             )
         }
         defaultExtension?.let {
             val setDefaultExtensionHr = fk_dialog_set_default_extension(dlg.reinterpret(), it)
             if (setDefaultExtensionHr != S_OK) {
-                throw IllegalStateException(
+                throw failurePolicy.createFailure(
                     "IFileDialog::SetDefaultExtension failed with HRESULT 0x${setDefaultExtensionHr.toUInt().toString(16)}",
                 )
             }
@@ -275,7 +284,7 @@ private fun showSaveDialog(
             if (hr == ERROR_CANCELLED_HRESULT) {
                 return@memScoped null
             }
-            throw IllegalStateException(
+            throw failurePolicy.createFailure(
                 "IFileSaveDialog::Show failed with HRESULT 0x${hr.toUInt().toString(16)}",
             )
         }

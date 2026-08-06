@@ -183,22 +183,32 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
             extension = normalizedDefaultExtension,
         )
 
+        val presenter = requireAppleSaverResource(
+            resource = dialogSettings.presenterViewController(),
+            failureMessage = "No active view controller is available to present the file saver.",
+        )
+
         // Get the fileManager
         val fileManager = NSFileManager.defaultManager
 
         // Get the temporary directory
-        val fileComponents = fileManager.temporaryDirectory.pathComponents?.plus(fileName)
-            ?: throw IllegalStateException("Failed to get temporary directory")
+        val fileComponents = requireAppleSaverResource(
+            resource = fileManager.temporaryDirectory.pathComponents?.plus(fileName),
+            failureMessage = "Failed to prepare a temporary file path for saving.",
+        )
 
         // Create a file URL
-        val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
-            ?: throw IllegalStateException("Failed to create file URL")
+        val fileUrl = requireAppleSaverResource(
+            resource = NSURL.fileURLWithPathComponents(fileComponents),
+            failureMessage = "Failed to create a temporary file URL for saving.",
+        )
 
         // Write an empty string to the file to ensure it exists
         val emptyData = NSData()
-        if (!emptyData.writeToURL(fileUrl, true)) {
-            throw IllegalStateException("Failed to write to file URL")
-        }
+        requireAppleSaverPreparation(
+            successful = emptyData.writeToURL(fileUrl, true),
+            failureMessage = "Failed to write the temporary file for saving.",
+        )
 
         // Create a picker controller
         val pickerController = UIDocumentPickerViewController(
@@ -212,11 +222,25 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        dialogSettings.presenterViewController()?.presentViewController(
+        presenter.presentViewController(
             pickerController,
             animated = true,
             completion = null,
         )
+    }
+}
+
+internal fun <T : Any> requireAppleSaverResource(
+    resource: T?,
+    failureMessage: String,
+): T = resource ?: throw FileKitDialogException(failureMessage)
+
+internal fun requireAppleSaverPreparation(
+    successful: Boolean,
+    failureMessage: String,
+) {
+    if (!successful) {
+        throw FileKitDialogException(failureMessage)
     }
 }
 

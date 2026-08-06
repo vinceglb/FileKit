@@ -329,10 +329,12 @@ public actual fun rememberDirectoryPickerLauncher(
 @Composable
 internal actual fun rememberPlatformFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     InitializeAndroidFileKit()
 
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     var hasPendingLaunch by rememberSaveable { mutableStateOf(false) }
@@ -361,13 +363,26 @@ internal actual fun rememberPlatformFileSaverLauncher(
             }
 
             hasPendingLaunch = true
-            launcher.launch(
-                CreateDocumentInput(
-                    mimeType = mimeType,
-                    fileName = fileName,
-                    allowedMimeTypes = allowedMimeTypes,
-                ),
-            )
+            when (
+                val launchResult = launchFileSaverSafely {
+                    launcher.launch(
+                        CreateDocumentInput(
+                            mimeType = mimeType,
+                            fileName = fileName,
+                            allowedMimeTypes = allowedMimeTypes,
+                        ),
+                    )
+                }
+            ) {
+                SaverLaunchResult.Launched -> {
+                    // Await the Activity Result callback.
+                }
+
+                is SaverLaunchResult.Failed -> {
+                    hasPendingLaunch = false
+                    currentOnError(launchResult.failure)
+                }
+            }
         }
     }
 }
@@ -550,6 +565,28 @@ internal sealed interface DirectoryLaunchResult {
     data class Failed(
         val failure: FileKitDialogException,
     ) : DirectoryLaunchResult
+}
+
+internal fun launchFileSaverSafely(
+    launch: () -> Unit,
+): SaverLaunchResult = try {
+    launch()
+    SaverLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    SaverLaunchResult.Failed(
+        FileKitDialogException(
+            message = "No Android activity is available to open the file saver.",
+            cause = failure,
+        ),
+    )
+}
+
+internal sealed interface SaverLaunchResult {
+    data object Launched : SaverLaunchResult
+
+    data class Failed(
+        val failure: FileKitDialogException,
+    ) : SaverLaunchResult
 }
 
 internal sealed interface PickerLaunchResult {

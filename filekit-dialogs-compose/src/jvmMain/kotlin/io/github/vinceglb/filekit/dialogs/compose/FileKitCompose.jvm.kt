@@ -105,6 +105,17 @@ public fun WindowScope.rememberFileSaverLauncher(
     onResult = onResult,
 )
 
+@Composable
+public fun WindowScope.rememberFileSaverLauncher(
+    dialogSettings: FileKitDialogSettings? = null,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+): SaverResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher(
+    dialogSettings = injectDialogSettings(dialogSettings, FileKitDialogParent.awt(this.window)),
+    onError = onError,
+    onResult = onResult,
+)
+
 internal fun injectDialogSettings(
     dialogSettings: FileKitDialogSettings?,
     parent: FileKitDialogParent,

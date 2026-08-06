@@ -130,30 +130,36 @@ internal class WindowsFilePicker(
         allowedExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = useFileDialog(FileDialogType.Save) { fileSaveDialog ->
-        // Set the initial directory
-        directory?.let { fileSaveDialog.setDefaultPath(it) }
+    ): File? = try {
+        useFileDialog(FileDialogType.Save) { fileSaveDialog ->
+            // Set the initial directory
+            directory?.let { fileSaveDialog.setDefaultPath(it) }
 
-        // Set the default file name
-        fileSaveDialog
-            .SetFileName(WString(suggestedName))
-            .verify("SetFileName failed")
-
-        // Set the default extension
-        defaultExtension?.let {
+            // Set the default file name
             fileSaveDialog
-                .SetDefaultExtension(WString(defaultExtension))
-                .verify("SetDefaultExtension failed")
-        }
+                .SetFileName(WString(suggestedName))
+                .verify("SetFileName failed")
 
-        // Set filters
-        val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
-        filterExtensions?.let { fileSaveDialog.addFiltersToDialog(it) }
+            // Set the default extension
+            defaultExtension?.let {
+                fileSaveDialog
+                    .SetDefaultExtension(WString(defaultExtension))
+                    .verify("SetDefaultExtension failed")
+            }
 
-        // Show the dialog to the user
-        fileSaveDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
-            it.getResult(SIGDN_FILESYSPATH)
+            // Set filters
+            val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
+            filterExtensions?.let { fileSaveDialog.addFiltersToDialog(it) }
+
+            // Show the dialog to the user
+            fileSaveDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
+                it.getResult(SIGDN_FILESYSPATH)
+            }
         }
+    } catch (failure: Win32Exception) {
+        throw failure.toFileSaverFailure()
+    } catch (failure: WindowsDialogOperationalException) {
+        throw failure.toFileSaverFailure()
     }
 
     private suspend fun <FD : FileDialog, T> useFileDialog(
@@ -396,6 +402,11 @@ internal class WindowsFilePicker(
 
 private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
     message = "The Windows directory picker could not complete the operation.",
+    cause = this,
+)
+
+private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The Windows file saver could not complete the operation.",
     cause = this,
 )
 

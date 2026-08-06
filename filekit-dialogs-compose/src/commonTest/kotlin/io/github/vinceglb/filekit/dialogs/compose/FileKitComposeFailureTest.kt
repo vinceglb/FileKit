@@ -19,6 +19,70 @@ import kotlin.test.assertSame
 
 class FileKitComposeFailureTest {
     @Test
+    fun runFileSaverLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
+        val failure = FileKitDialogException("The file saver could not be opened.")
+        val reportedFailures = mutableListOf<FileKitDialogException>()
+        var resultInvoked = false
+
+        runFileSaverLauncher(
+            openFileSaver = { throw failure },
+            onError = reportedFailures::add,
+            onResult = { resultInvoked = true },
+        )
+
+        assertEquals(listOf(failure), reportedFailures)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runFileSaverLauncher_userCancellation_invokesNullResultOnce_withoutInvokingError() = runTest {
+        val results = mutableListOf<PlatformFile?>()
+        var errorInvoked = false
+
+        runFileSaverLauncher(
+            openFileSaver = { null },
+            onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(1, results.size)
+        assertEquals(null, results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runFileSaverLauncher_invalidInvocation_propagates_withoutInvokingCallbacks() = runTest {
+        val failure = IllegalArgumentException("Unsupported saver arguments")
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val thrown = assertFailsWith<IllegalArgumentException> {
+            runFileSaverLauncher(
+                openFileSaver = { throw failure },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        assertSame(failure, thrown)
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runFileSaverLauncher_legacyIgnoredFailure_invokesNoResult() = runTest {
+        var resultInvoked = false
+
+        runFileSaverLauncher(
+            openFileSaver = { throw FileKitDialogException("Ignored compatibility failure") },
+            onError = {},
+            onResult = { resultInvoked = true },
+        )
+
+        assertFalse(resultInvoked)
+    }
+
+    @Test
     fun runDirectoryPickerLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
         val failure = FileKitDialogException("The directory picker could not be opened.")
         val reportedFailures = mutableListOf<FileKitDialogException>()

@@ -182,6 +182,42 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun FileSaverLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No file saver activity")
+
+        val result = launchFileSaverSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected saver defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchFileSaverSafely { throw failure }
+        }
+
+        assertSame(failure, thrown)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenNoError_returnsLaunched() {
+        var launched = false
+
+        val result = launchFileSaverSafely {
+            launched = true
+        }
+
+        assertIs<SaverLaunchResult.Launched>(result)
+        assertTrue(launched)
+    }
+
+    @Test
     fun PickerLaunchOutcome_primaryFailsAndFallbackSucceeds_returnsFallbackLaunched() {
         var fallbackCalls = 0
 

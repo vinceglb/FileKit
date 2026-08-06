@@ -30,14 +30,22 @@ if (file != null) {
 
 ```kotlin filekit-dialogs-compose
 val scope = rememberCoroutineScope()
-val launcher = rememberFileSaverLauncher { file ->
-    // Write your data to the file
-    if (file != null) {
-        scope.launch {
-            file.write(bytes)
+val launcher = rememberFileSaverLauncher(
+    dialogSettings = FileKitDialogSettings.createDefault(),
+    onError = { failure ->
+        // A valid file-saving operation could not be completed
+        showError(failure.message)
+    },
+    onResult = { file ->
+        if (file == null) {
+            // The user cancelled the saver
+        } else {
+            scope.launch {
+                file.write(bytes)
+            }
         }
-    }
-}
+    },
+)
 
 Button(onClick = {
     launcher.launch(
@@ -49,6 +57,10 @@ Button(onClick = {
 }
 ```
 </CodeGroup>
+
+`onError` receives a `FileKitDialogException` only when FileKit cannot complete a valid file-saving operation. User cancellation is not a failure: it invokes `onResult(null)`. Coroutine cancellation, invalid arguments or unsupported argument combinations, and unexpected defects continue to propagate normally.
+
+The compatibility overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
 
 ## Parameters
 
@@ -73,10 +85,12 @@ val file = FileKit.openFileSaver(
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFileSaverLauncher(
-    dialogSettings = FileKitDialogSettings.createDefault()
-) { file ->
-    // Handle the selected save location
-}
+    dialogSettings = FileKitDialogSettings.createDefault(),
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the selected save location, or null when the user cancelled
+    },
+)
 
 launcher.launch(
     suggestedName = "my-document",
