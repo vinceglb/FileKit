@@ -18,15 +18,29 @@ val file = FileKit.openCameraPicker()
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher { file ->
-    // Handle the captured photo
-}
+val launcher = rememberCameraPickerLauncher(
+    onError = { failure ->
+        // A valid camera operation could not start or complete
+        showError(failure.message)
+    },
+    onResult = { file ->
+        if (file == null) {
+            // The user dismissed the camera, or denied camera permission on Android
+        } else {
+            // Handle the captured photo
+        }
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Take a photo")
 }
 ```
 </CodeGroup>
+
+`onError` receives a `FileKitDialogException` only when FileKit cannot start or complete a valid camera operation, such as when no Android camera activity is available or iOS cannot prepare, present, encode, or write the capture. User dismissal is not a failure and invokes `onResult(null)`. Android camera-permission denial also invokes `onResult(null)`. Coroutine cancellation, invalid invocation, and unexpected defects continue to propagate normally.
+
+On iOS, the suspending `FileKit.openCameraPicker()` function throws the same `FileKitDialogException` for operational failures. Android's lifecycle-safe Compose launcher owns the Android launch-failure callback behavior described above. The compatibility Compose overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
 
 The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 
@@ -53,9 +67,10 @@ val file = FileKit.openCameraPicker(type = FileKitCameraType.Photo)
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher { file ->
-    // Handle the captured photo
-}
+val launcher = rememberCameraPickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
+)
 
 Button(onClick = { launcher.launch(type = FileKitCameraType.Photo) }) {
     Text("Take a photo")
@@ -83,9 +98,10 @@ val file = FileKit.openCameraPicker(cameraFacing = FileKitCameraFacing.Front)
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher { file ->
-    // Handle the captured photo
-}
+val launcher = rememberCameraPickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
+)
 
 Button(onClick = { launcher.launch(cameraFacing = FileKitCameraFacing.Front) }) {
     Text("Take a selfie")
@@ -114,9 +130,10 @@ val file = FileKit.openCameraPicker(destinationFile = customFile)
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher { file ->
-    // Handle the captured photo
-}
+val launcher = rememberCameraPickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
+)
 
 // Using default destination
 Button(onClick = { launcher.launch() }) {

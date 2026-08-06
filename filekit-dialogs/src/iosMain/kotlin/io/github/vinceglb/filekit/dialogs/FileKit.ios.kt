@@ -252,6 +252,7 @@ internal fun requireAppleSaverPreparation(
  * @param destinationFile The file where the captured media will be saved.
  * @param openCameraSettings Platform-specific settings for the camera.
  * @return The saved file as a [PlatformFile], or null if canceled.
+ * @throws FileKitDialogException When a valid camera operation cannot start or complete.
  */
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
@@ -260,33 +261,59 @@ public actual suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? {
     val image = withContext(Dispatchers.Main) {
+        val cameraSource = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+        val requestedCamera = when (cameraFacing) {
+            FileKitCameraFacing.Front -> {
+                AppleCameraDeviceRequest(
+                    device = UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront,
+                    available = UIImagePickerController.isCameraDeviceAvailable(
+                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront,
+                    ),
+                    unavailableMessage = "The requested front camera is not available on this device.",
+                )
+            }
+
+            FileKitCameraFacing.Back -> {
+                AppleCameraDeviceRequest(
+                    device = UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear,
+                    available = UIImagePickerController.isCameraDeviceAvailable(
+                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear,
+                    ),
+                    unavailableMessage = "The requested rear camera is not available on this device.",
+                )
+            }
+
+            FileKitCameraFacing.System -> {
+                null
+            }
+        }
+        val presentation = prepareAppleCameraPresentation(
+            sourceAvailable = UIImagePickerController.isSourceTypeAvailable(cameraSource),
+            presenter = openCameraSettings.presenterViewController(),
+            requestedCamera = requestedCamera,
+        )
+
         suspendCancellableCoroutine<UIImage?> { continuation ->
             cameraControllerDelegate = CameraControllerDelegate(
                 onImagePicked = { image ->
-                    continuation.resume(image)
+                    try {
+                        continuation.resume(
+                            requireAppleCameraImage(image),
+                        )
+                    } catch (failure: FileKitDialogException) {
+                        continuation.resumeWithException(failure)
+                    }
                 },
+                onPickerCancelled = { continuation.resume(null) },
             )
 
             val pickerController = UIImagePickerController()
-            pickerController.sourceType =
-                UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera
+            pickerController.sourceType = cameraSource
             pickerController.delegate = cameraControllerDelegate
 
-            when (cameraFacing) {
-                FileKitCameraFacing.Front -> {
-                    pickerController.cameraDevice =
-                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceFront
-                }
+            presentation.cameraDevice?.let { pickerController.cameraDevice = it }
 
-                FileKitCameraFacing.Back -> {
-                    pickerController.cameraDevice =
-                        UIImagePickerControllerCameraDevice.UIImagePickerControllerCameraDeviceRear
-                }
-
-                FileKitCameraFacing.System -> {}
-            }
-
-            openCameraSettings.presenterViewController()?.presentViewController(
+            presentation.presenter.presentViewController(
                 pickerController,
                 animated = true,
                 completion = null,
@@ -297,18 +324,95 @@ public actual suspend fun FileKit.openCameraPicker(
     // Encode and write off the main thread: JPEG encoding a full-resolution photo
     // at quality 1.0 is expensive and used to freeze the UI right after the capture
     return withContext(Dispatchers.IO) {
-        // Convert UIImage to NSData (JPEG format with compression quality 1.0)
-        val imageData = UIImageJPEGRepresentation(image, 1.0)
+        completeAppleCameraCapture(
+            image = image,
+            destinationFile = destinationFile,
+            encodeImage = { capturedImage -> UIImageJPEGRepresentation(capturedImage, 1.0) },
+            writeImage = { imageData, fileUrl -> imageData.writeToURL(fileUrl, true) },
+        )
+    }
+}
 
-        // Create an NSURL for the file path
-        val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
+internal data class AppleCameraDeviceRequest(
+    val device: UIImagePickerControllerCameraDevice,
+    val available: Boolean,
+    val unavailableMessage: String,
+)
 
-        // Write the NSData to the file, returning the saved file on success
-        if (imageData?.writeToURL(fileUrl, true) == true) {
-            destinationFile
-        } else {
-            null
-        }
+internal data class AppleCameraPresentation(
+    val presenter: UIViewController,
+    val cameraDevice: UIImagePickerControllerCameraDevice?,
+)
+
+internal fun prepareAppleCameraPresentation(
+    sourceAvailable: Boolean,
+    presenter: UIViewController?,
+    requestedCamera: AppleCameraDeviceRequest?,
+): AppleCameraPresentation {
+    requireAppleCameraAvailability(
+        available = sourceAvailable,
+        failureMessage = "The camera is not available on this device.",
+    )
+    val availablePresenter = requireAppleCameraResource(
+        resource = presenter,
+        failureMessage = "No active view controller is available to present the camera.",
+    )
+    requestedCamera?.let { request ->
+        requireAppleCameraAvailability(
+            available = request.available,
+            failureMessage = request.unavailableMessage,
+        )
+    }
+
+    return AppleCameraPresentation(
+        presenter = availablePresenter,
+        cameraDevice = requestedCamera?.device,
+    )
+}
+
+internal fun completeAppleCameraCapture(
+    image: UIImage,
+    destinationFile: PlatformFile,
+    encodeImage: (UIImage) -> NSData?,
+    writeImage: (NSData, NSURL) -> Boolean,
+): PlatformFile {
+    val imageData = requireAppleCameraResource(
+        resource = encodeImage(image),
+        failureMessage = "Failed to encode the captured image.",
+    )
+    val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
+    requireAppleCameraPreparation(
+        successful = writeImage(imageData, fileUrl),
+        failureMessage = "Failed to write the captured image to its destination.",
+    )
+    return destinationFile
+}
+
+internal fun requireAppleCameraImage(image: UIImage?): UIImage = requireAppleCameraResource(
+    resource = image,
+    failureMessage = "The camera completed without returning a captured image.",
+)
+
+internal fun requireAppleCameraAvailability(
+    available: Boolean,
+    failureMessage: String,
+) {
+    if (!available) {
+        throw FileKitDialogException(failureMessage)
+    }
+}
+
+internal fun <T : Any> requireAppleCameraResource(
+    resource: T?,
+    failureMessage: String,
+): T = resource ?: throw FileKitDialogException(failureMessage)
+
+internal fun requireAppleCameraPreparation(
+    successful: Boolean,
+    failureMessage: String,
+) {
+    if (!successful) {
+        throw FileKitDialogException(failureMessage)
     }
 }
 

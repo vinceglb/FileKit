@@ -243,3 +243,15 @@ internal suspend fun runFileSaverLauncher(
         onResult = onResult,
     )
 }
+
+internal suspend fun runCameraPickerLauncher(
+    openCameraPicker: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openCameraPicker,
+        onError = onError,
+        onResult = onResult,
+    )
+}

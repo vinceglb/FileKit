@@ -398,6 +398,26 @@ internal actual fun rememberPlatformFileSaverLauncher(
 public actual fun rememberCameraPickerLauncher(
     openCameraSettings: FileKitOpenCameraSettings,
     onResult: (PlatformFile?) -> Unit,
+): PhotoResultLauncher = rememberCameraPickerLauncher(
+    openCameraSettings = openCameraSettings,
+    onError = {},
+    onResult = onResult,
+)
+
+/**
+ * Creates and remembers a [PhotoResultLauncher] for taking a picture or video with the camera.
+ *
+ * @param openCameraSettings Platform-specific settings for the camera.
+ * @param onError Callback invoked when a valid camera operation cannot start or complete. It is not invoked for user
+ * dismissal, permission denial, coroutine cancellation, invalid invocations, or unexpected defects.
+ * @param onResult Callback invoked with the saved file, or null if dismissed or camera permission is denied.
+ * @return A [PhotoResultLauncher] that can be used to launch the camera.
+ */
+@Composable
+public actual fun rememberCameraPickerLauncher(
+    openCameraSettings: FileKitOpenCameraSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PhotoResultLauncher {
     InitializeAndroidFileKit()
 
@@ -409,17 +429,27 @@ public actual fun rememberCameraPickerLauncher(
 
     val context = LocalContext.current
 
-    // Updated callback
+    // Updated callbacks
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
+
+    fun clearPendingState() {
+        pendingDestinationUri = null
+        pendingCameraFacingName = FileKitCameraFacing.System.name
+        hasPendingPermissionRequest = false
+    }
 
     // Create a stable contract instance (reused across recompositions)
     val contract = remember { TakePictureWithCameraFacing() }
 
     // Create the launcher using the Activity Result API
     val launcher = rememberLauncherForActivityResult(contract) { success ->
-        val pendingUri = pendingDestinationUri ?: return@rememberLauncherForActivityResult
-        pendingDestinationUri = null
-        currentOnResult(resolveCameraResult(success, pendingUri))
+        dispatchCameraResult(
+            success = success,
+            pendingDestinationUri = pendingDestinationUri,
+            clearPendingState = ::clearPendingState,
+            onResult = currentOnResult,
+        )
     }
 
     val permissionLauncher =
@@ -427,37 +457,23 @@ public actual fun rememberCameraPickerLauncher(
             if (!hasPendingPermissionRequest) return@rememberLauncherForActivityResult
             hasPendingPermissionRequest = false
 
-            when (
-                val resolution = resolveCameraPermissionResult(
+            dispatchCameraPermissionResolution(
+                resolution = resolveCameraPermissionResult(
                     permissionGranted = permissionGranted,
                     pendingDestinationUri = pendingDestinationUri,
-                )
-            ) {
-                CameraPermissionResolution.NoOp -> {
-                    Unit
-                }
-
-                CameraPermissionResolution.ReturnNullResult -> {
-                    pendingDestinationUri = null
-                    currentOnResult(null)
-                }
-
-                is CameraPermissionResolution.LaunchCamera -> {
+                ),
+                launchCamera = { uri ->
                     val cameraFacing = runCatching {
                         FileKitCameraFacing.valueOf(pendingCameraFacingName)
                     }.getOrDefault(FileKitCameraFacing.System)
 
                     contract.setCameraFacing(cameraFacing)
-                    val isLaunched = launchCameraSafely(
-                        uri = resolution.uri,
-                        launch = launcher::launch,
-                    )
-                    if (!isLaunched) {
-                        pendingDestinationUri = null
-                        currentOnResult(null)
-                    }
-                }
-            }
+                    launchCameraSafely(uri = uri, launch = launcher::launch)
+                },
+                clearPendingState = ::clearPendingState,
+                onError = currentOnError,
+                onResult = currentOnResult,
+            )
         }
 
     // Return the PhotoResultLauncher wrapper
@@ -470,7 +486,13 @@ public actual fun rememberCameraPickerLauncher(
 
             if (FileKitAndroidCameraPermissionInternal.needsRuntimeCameraPermission(context)) {
                 hasPendingPermissionRequest = true
-                permissionLauncher.launch(Manifest.permission.CAMERA)
+                dispatchCameraLaunchResult(
+                    result = launchCameraPermissionSafely {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    clearPendingState = ::clearPendingState,
+                    onError = currentOnError,
+                )
                 return@PhotoResultLauncher
             }
 
@@ -478,14 +500,14 @@ public actual fun rememberCameraPickerLauncher(
             contract.setCameraFacing(cameraFacing)
 
             // Launch the camera
-            val isLaunched = launchCameraSafely(
-                uri = uri,
-                launch = launcher::launch,
+            dispatchCameraLaunchResult(
+                result = launchCameraSafely(
+                    uri = uri,
+                    launch = launcher::launch,
+                ),
+                clearPendingState = ::clearPendingState,
+                onError = currentOnError,
             )
-            if (!isLaunched) {
-                pendingDestinationUri = null
-                currentOnResult(null)
-            }
         }
     }
 }
@@ -513,13 +535,80 @@ internal fun resolveCameraPermissionResult(
 internal fun launchCameraSafely(
     uri: Uri,
     launch: (Uri) -> Unit,
-): Boolean = try {
+): CameraLaunchResult = launchCameraActivitySafely(
+    activityUnavailableMessage = "No Android activity is available to capture media with the camera.",
+    securityFailureMessage = "Android rejected the camera launch.",
+) {
     launch(uri)
-    true
-} catch (_: ActivityNotFoundException) {
-    false
-} catch (_: SecurityException) {
-    false
+}
+
+internal fun launchCameraPermissionSafely(
+    launch: () -> Unit,
+): CameraLaunchResult = launchCameraActivitySafely(
+    activityUnavailableMessage = "No Android activity is available to request camera permission.",
+    securityFailureMessage = "Android rejected the camera permission request.",
+    launch = launch,
+)
+
+private fun launchCameraActivitySafely(
+    activityUnavailableMessage: String,
+    securityFailureMessage: String,
+    launch: () -> Unit,
+): CameraLaunchResult = try {
+    launch()
+    CameraLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    CameraLaunchResult.Failed(FileKitDialogException(activityUnavailableMessage, failure))
+} catch (failure: SecurityException) {
+    CameraLaunchResult.Failed(FileKitDialogException(securityFailureMessage, failure))
+}
+
+internal sealed interface CameraLaunchResult {
+    data object Launched : CameraLaunchResult
+
+    data class Failed(
+        val failure: FileKitDialogException,
+    ) : CameraLaunchResult
+}
+
+internal fun dispatchCameraLaunchResult(
+    result: CameraLaunchResult,
+    clearPendingState: () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+) {
+    when (result) {
+        CameraLaunchResult.Launched -> {}
+
+        is CameraLaunchResult.Failed -> {
+            clearPendingState()
+            onError(result.failure)
+        }
+    }
+}
+
+internal fun dispatchCameraPermissionResolution(
+    resolution: CameraPermissionResolution,
+    launchCamera: (Uri) -> CameraLaunchResult,
+    clearPendingState: () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    when (resolution) {
+        CameraPermissionResolution.NoOp -> {}
+
+        CameraPermissionResolution.ReturnNullResult -> {
+            clearPendingState()
+            onResult(null)
+        }
+
+        is CameraPermissionResolution.LaunchCamera -> {
+            dispatchCameraLaunchResult(
+                result = launchCamera(resolution.uri),
+                clearPendingState = clearPendingState,
+                onError = onError,
+            )
+        }
+    }
 }
 
 internal fun launchFilePickerSafely(
@@ -629,6 +718,19 @@ internal fun resolveCameraResult(
 ): PlatformFile? {
     val uri = pendingDestinationUri ?: return null
     return if (success) PlatformFile(uri.toUri()) else null
+}
+
+internal fun dispatchCameraResult(
+    success: Boolean,
+    pendingDestinationUri: String?,
+    clearPendingState: () -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    if (pendingDestinationUri == null) return
+
+    val result = resolveCameraResult(success, pendingDestinationUri)
+    clearPendingState()
+    onResult(result)
 }
 
 private data class PendingModeSnapshot(

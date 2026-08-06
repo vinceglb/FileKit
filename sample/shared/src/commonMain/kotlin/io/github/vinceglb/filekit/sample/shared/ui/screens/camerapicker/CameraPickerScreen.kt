@@ -63,13 +63,21 @@ private fun CameraPickerScreen(
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var cameraFacing by remember { mutableStateOf(CameraFacingOption.System) }
     var capturedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var cameraError by remember { mutableStateOf<String?>(null) }
 
-    val cameraLauncher = rememberCameraPickerLauncher { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        if (file != null) {
-            capturedFiles = listOf(file) + capturedFiles
-        }
-    }
+    val cameraLauncher = rememberCameraPickerLauncher(
+        onError = { failure ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            cameraError = failure.message
+        },
+        onResult = { file ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            cameraError = null
+            if (file != null) {
+                capturedFiles = listOf(file) + capturedFiles
+            }
+        },
+    )
     val isSupported = cameraLauncher.isSupported
     val primaryButtonText = if (isSupported) "Open Camera" else "Camera Unavailable"
 
@@ -130,7 +138,7 @@ private fun CameraPickerScreen(
             item {
                 AppPickerResultsCard(
                     files = capturedFiles,
-                    emptyText = "No photos captured yet",
+                    emptyText = cameraError ?: "No photos captured yet",
                     emptyIcon = LucideIcons.Camera,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

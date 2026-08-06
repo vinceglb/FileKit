@@ -90,34 +90,166 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun CameraLaunchSafely_whenSecurityException_returnsFalse() {
-        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
-            throw SecurityException("camera permission denied")
-        }
+    fun CameraPermission_denied_clearsPendingStateBeforeReturningNull_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val results = mutableListOf<PlatformFile?>()
 
-        assertFalse(launched)
+        dispatchCameraPermissionResolution(
+            resolution = CameraPermissionResolution.ReturnNullResult,
+            launchCamera = { error("Camera must not launch after permission denial") },
+            clearPendingState = { hasPendingLaunch = false },
+            onError = { error("Permission denial must not be reported as an error") },
+            onResult = { result ->
+                assertFalse(hasPendingLaunch)
+                results += result
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(listOf<PlatformFile?>(null), results)
+        assertTrue(hasPendingLaunch)
+
+        dispatchCameraResult(
+            success = false,
+            pendingDestinationUri = "content://example.provider/camera/relaunch.jpg".takeIf { hasPendingLaunch },
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = results::add,
+        )
+
+        assertEquals(listOf<PlatformFile?>(null, null), results)
+        assertFalse(hasPendingLaunch)
     }
 
     @Test
-    fun CameraLaunchSafely_whenActivityNotFound_returnsFalse() {
-        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
-            throw ActivityNotFoundException("No activity found")
-        }
+    fun CameraLaunchFailure_clearsPendingStateBeforeReportingError_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val launchFailure = FileKitDialogException("Camera unavailable")
+        val failures = mutableListOf<FileKitDialogException>()
+        val results = mutableListOf<PlatformFile?>()
 
-        assertFalse(launched)
+        dispatchCameraLaunchResult(
+            result = CameraLaunchResult.Failed(launchFailure),
+            clearPendingState = { hasPendingLaunch = false },
+            onError = { failure ->
+                assertFalse(hasPendingLaunch)
+                failures += failure
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(listOf(launchFailure), failures)
+        assertTrue(hasPendingLaunch)
+
+        dispatchCameraResult(
+            success = true,
+            pendingDestinationUri = "content://example.provider/camera/relaunch.jpg".takeIf { hasPendingLaunch },
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = results::add,
+        )
+
+        assertEquals("content://example.provider/camera/relaunch.jpg", results.single()?.path)
+        assertFalse(hasPendingLaunch)
     }
 
     @Test
-    fun CameraLaunchSafely_whenNoError_returnsTrue() {
+    fun CameraResult_success_clearsPendingStateBeforeReturningFile_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val results = mutableListOf<PlatformFile?>()
+
+        dispatchCameraResult(
+            success = true,
+            pendingDestinationUri = "content://example.provider/camera/photo.jpg",
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = { result ->
+                assertFalse(hasPendingLaunch)
+                results += result
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(1, results.size)
+        assertEquals("content://example.provider/camera/photo.jpg", results.single()?.path)
+        assertTrue(hasPendingLaunch)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("camera permission denied")
+
+        val result = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No activity found")
+
+        val result = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenNoError_returnsLaunched() {
         val expectedUri = Uri.parse("content://example.provider/camera/photo.jpg")
         var launchedUri: Uri? = null
 
-        val launched = launchCameraSafely(expectedUri) { uri ->
+        val result = launchCameraSafely(expectedUri) { uri ->
             launchedUri = uri
         }
 
-        assertTrue(launched)
+        assertIs<CameraLaunchResult.Launched>(result)
         assertEquals(expectedUri, launchedUri)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected camera launcher defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+                throw failure
+            }
+        }
+
+        assertSame(failure, thrown)
+    }
+
+    @Test
+    fun CameraPermissionLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No permission activity")
+
+        val result = launchCameraPermissionSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun LegacyCameraLauncher_androidBinarySignature_remainsAvailable() {
+        val composeFileClass = Class.forName(
+            "io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_androidKt",
+        )
+
+        composeFileClass.getDeclaredMethod(
+            "rememberCameraPickerLauncher",
+            io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings::class.java,
+            Class.forName("kotlin.jvm.functions.Function1"),
+            androidx.compose.runtime.Composer::class.java,
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
+        )
     }
 
     @Test

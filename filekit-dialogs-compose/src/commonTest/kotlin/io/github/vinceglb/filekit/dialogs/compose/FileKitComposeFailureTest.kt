@@ -19,6 +19,51 @@ import kotlin.test.assertSame
 
 class FileKitComposeFailureTest {
     @Test
+    fun runCameraPickerLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
+        val failure = FileKitDialogException("The camera could not be opened.")
+        val reportedFailures = mutableListOf<FileKitDialogException>()
+        var resultInvoked = false
+
+        runCameraPickerLauncher(
+            openCameraPicker = { throw failure },
+            onError = reportedFailures::add,
+            onResult = { resultInvoked = true },
+        )
+
+        assertEquals(listOf(failure), reportedFailures)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runCameraPickerLauncher_userCancellation_invokesNullResultOnce_withoutInvokingError() = runTest {
+        val results = mutableListOf<PlatformFile?>()
+        var errorInvoked = false
+
+        runCameraPickerLauncher(
+            openCameraPicker = { null },
+            onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(1, results.size)
+        assertEquals(null, results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runCameraPickerLauncher_legacyIgnoredFailure_invokesNoResult() = runTest {
+        var resultInvoked = false
+
+        runCameraPickerLauncher(
+            openCameraPicker = { throw FileKitDialogException("Ignored compatibility failure") },
+            onError = {},
+            onResult = { resultInvoked = true },
+        )
+
+        assertFalse(resultInvoked)
+    }
+
+    @Test
     fun runFileSaverLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
         val failure = FileKitDialogException("The file saver could not be opened.")
         val reportedFailures = mutableListOf<FileKitDialogException>()
