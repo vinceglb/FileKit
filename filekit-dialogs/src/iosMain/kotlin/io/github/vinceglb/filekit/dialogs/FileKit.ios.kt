@@ -13,8 +13,15 @@ import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.startAccessingSecurityScopedResource
 import io.github.vinceglb.filekit.stopAccessingSecurityScopedResource
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.useContents
+import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +35,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSData
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
@@ -475,7 +483,7 @@ private suspend fun getPhPickerResults(
     )
 }
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private fun callPhPicker(
     mode: PickerMode,
     type: FileKitType,
@@ -496,13 +504,17 @@ private fun callPhPicker(
     val fileManager = NSFileManager.defaultManager
     val tempRoot = fileManager.temporaryDirectory
         .URLByAppendingPathComponent(NSUUID().UUIDString)
-        ?: throw IllegalStateException("Failed to create temporary directory")
-    fileManager.createDirectoryAtURL(
-        url = tempRoot,
-        withIntermediateDirectories = true,
-        attributes = null,
-        error = null,
-    )
+        ?: throw FileKitPickerException("Failed to create a temporary directory for the selected files.")
+    requireApplePickerOperation(
+        message = "Failed to create a temporary directory for the selected files.",
+    ) { error ->
+        fileManager.createDirectoryAtURL(
+            url = tempRoot,
+            withIntermediateDirectories = true,
+            attributes = null,
+            error = error,
+        )
+    }
 
     // Pre-allocated array to preserve selection order
     val orderedFiles = arrayOfNulls<PlatformFile>(pickerResults.size)
@@ -526,8 +538,9 @@ private fun callPhPicker(
                             when {
                                 error != null -> {
                                     cont.resumeWithException(
-                                        FileKitPickerException(
-                                            message = error.localizedDescription,
+                                        applePickerFailure(
+                                            message = "Failed to load the selected file representation.",
+                                            error = error,
                                         ),
                                     )
                                 }
@@ -556,10 +569,7 @@ private fun callPhPicker(
                         orderedFiles[index] = PlatformFile(src)
                         send(FileKitPickerState.Progress(orderedFiles.filterNotNull(), pickerResults.size))
                     }
-                } catch (cause: Throwable) {
-                    val pickerFailure = cause as? FileKitPickerException
-                        ?: FileKitPickerException("Failed to load the selected file.", cause)
-
+                } catch (pickerFailure: FileKitPickerException) {
                     lock.withLock {
                         if (failure == null) {
                             failure = pickerFailure
@@ -605,7 +615,7 @@ private val FileKitType.contentTypes: List<UTType>
 private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
 
-@OptIn(ExperimentalForeignApi::class)
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 private fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
@@ -615,23 +625,50 @@ private fun copyToTempFile(
     val fileComponents = fileManager.temporaryDirectory.pathComponents
         ?.plus(id)
         ?.plus(url.lastPathComponent)
-        ?: throw IllegalStateException("Failed to get temporary directory")
+        ?: throw FileKitPickerException("Failed to resolve the temporary directory for the selected file.")
 
     // Create a file URL
     val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
-        ?: throw IllegalStateException("Failed to create file URL")
+        ?: throw FileKitPickerException("Failed to create a temporary URL for the selected file.")
 
     // Write the data to the file URL
-    val didCopy = fileManager.copyItemAtURL(
-        srcURL = url,
-        toURL = fileUrl,
-        error = null,
-    )
-    if (!didCopy) {
-        throw FileKitPickerException("Failed to copy the selected file to a temporary location.")
+    requireApplePickerOperation(
+        message = "Failed to copy the selected file to a temporary location.",
+    ) { error ->
+        fileManager.copyItemAtURL(
+            srcURL = url,
+            toURL = fileUrl,
+            error = error,
+        )
     }
 
     return fileUrl
+}
+
+internal class ApplePickerExceptionCause(
+    val error: NSError,
+) : Exception(error.localizedDescription)
+
+internal fun applePickerFailure(
+    message: String,
+    error: NSError?,
+): FileKitPickerException = if (error == null) {
+    FileKitPickerException(message)
+} else {
+    FileKitPickerException(message, ApplePickerExceptionCause(error))
+}
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+private inline fun requireApplePickerOperation(
+    message: String,
+    operation: (CPointer<ObjCObjectVar<NSError?>>) -> Boolean,
+) {
+    memScoped {
+        val error = alloc<ObjCObjectVar<NSError?>>()
+        if (!operation(error.ptr)) {
+            throw applePickerFailure(message, error.value)
+        }
+    }
 }
 
 private fun UIApplication.topMostViewController(): UIViewController? {

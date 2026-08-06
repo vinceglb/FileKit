@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.path
 import org.junit.runner.RunWith
@@ -17,6 +18,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -118,23 +120,27 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun PickerLaunchSafely_whenActivityNotFound_returnsFalse() {
-        val launched = launchPickerSafely {
-            throw ActivityNotFoundException("No activity found")
+    fun PickerLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No activity found")
+
+        val result = launchFilePickerSafely {
+            throw launchFailure
         }
 
-        assertFalse(launched)
+        val failure = assertIs<PickerLaunchResult.Failed>(result).failure
+        assertIs<FileKitPickerException>(failure)
+        assertSame(launchFailure, failure.cause)
     }
 
     @Test
-    fun PickerLaunchSafely_whenNoError_returnsTrue() {
+    fun PickerLaunchSafely_whenNoError_returnsLaunched() {
         var launched = false
 
-        val wasLaunched = launchPickerSafely {
+        val result = launchFilePickerSafely {
             launched = true
         }
 
-        assertTrue(wasLaunched)
+        assertIs<PickerLaunchResult.Launched>(result)
         assertTrue(launched)
     }
 
@@ -143,10 +149,10 @@ class AndroidComposePickerReliabilityTest {
         var fallbackCalls = 0
 
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { false },
+            launchPrimary = { PickerLaunchResult.Failed(FileKitPickerException("Primary failed")) },
             launchFallback = {
                 fallbackCalls++
-                true
+                PickerLaunchResult.Launched
             },
         )
 
@@ -155,13 +161,16 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun PickerLaunchOutcome_primaryAndFallbackFail_returnsCancelled() {
+    fun PickerLaunchOutcome_primaryAndFallbackFail_returnsFallbackOperationalFailure() {
+        val fallbackFailure = FileKitPickerException("Fallback failed")
+
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { false },
-            launchFallback = { false },
+            launchPrimary = { PickerLaunchResult.Failed(FileKitPickerException("Primary failed")) },
+            launchFallback = { PickerLaunchResult.Failed(fallbackFailure) },
         )
 
-        assertEquals(PickerLaunchOutcome.Cancelled, outcome)
+        val failure = assertIs<PickerLaunchOutcome.Failed>(outcome)
+        assertSame(fallbackFailure, failure.failure)
     }
 
     @Test

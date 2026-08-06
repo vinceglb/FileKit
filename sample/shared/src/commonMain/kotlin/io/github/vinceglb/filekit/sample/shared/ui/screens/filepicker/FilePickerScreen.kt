@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.dialogs.FileKitType
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
@@ -79,6 +80,7 @@ private fun FilePickerScreen(
     var customExtensions by remember { mutableStateOf("") }
     var startDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var files by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
 
     val dialogSettingsState = rememberFilePickerDialogSettingsState()
     val dialogSettings = dialogSettingsTransform(dialogSettingsState.build())
@@ -94,57 +96,75 @@ private fun FilePickerScreen(
 
     val resolvedType = resolveFilePickerType(customExtensions)
 
+    val onPickerError: (FileKitPickerException) -> Unit = { failure ->
+        buttonState = AppScreenHeaderButtonState.Enabled
+        files = emptyList()
+        pickerError = failure.message
+    }
+
     val singlePicker = rememberFilePickerLauncher(
         type = resolvedType,
         mode = FileKitMode.Single,
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { selectedFile ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = selectedFile?.let(::listOf) ?: emptyList()
-    }
+        onError = onPickerError,
+        onResult = { selectedFile ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            files = selectedFile?.let(::listOf) ?: emptyList()
+            pickerError = null
+        },
+    )
 
     val multiplePicker = rememberFilePickerLauncher(
         type = resolvedType,
         mode = FileKitMode.Multiple(maxItems = pickerMaxItems),
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { selectedFiles ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = selectedFiles ?: emptyList()
-    }
+        onError = onPickerError,
+        onResult = { selectedFiles ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            files = selectedFiles ?: emptyList()
+            pickerError = null
+        },
+    )
 
     val singleWithStatePicker = rememberFilePickerLauncher(
         type = resolvedType,
         mode = FileKitMode.SingleWithState,
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { state ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = when (state) {
-            FileKitPickerState.Cancelled -> emptyList()
-            is FileKitPickerState.Failed -> emptyList()
-            is FileKitPickerState.Completed<PlatformFile> -> listOf(state.result)
-            is FileKitPickerState.Progress<PlatformFile> -> listOf(state.processed)
-            is FileKitPickerState.Started -> emptyList()
-        }
-    }
+        onError = onPickerError,
+        onResult = { state ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
+            files = when (state) {
+                FileKitPickerState.Cancelled -> emptyList()
+                is FileKitPickerState.Failed -> emptyList()
+                is FileKitPickerState.Completed<PlatformFile> -> listOf(state.result)
+                is FileKitPickerState.Progress<PlatformFile> -> listOf(state.processed)
+                is FileKitPickerState.Started -> emptyList()
+            }
+        },
+    )
 
     val multipleWithStatePicker = rememberFilePickerLauncher(
         type = resolvedType,
         mode = FileKitMode.MultipleWithState(maxItems = pickerMaxItems),
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { state ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = when (state) {
-            FileKitPickerState.Cancelled -> emptyList()
-            is FileKitPickerState.Failed -> emptyList()
-            is FileKitPickerState.Completed<List<PlatformFile>> -> state.result
-            is FileKitPickerState.Progress<List<PlatformFile>> -> state.processed
-            is FileKitPickerState.Started -> emptyList()
-        }
-    }
+        onError = onPickerError,
+        onResult = { state ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
+            files = when (state) {
+                FileKitPickerState.Cancelled -> emptyList()
+                is FileKitPickerState.Failed -> emptyList()
+                is FileKitPickerState.Completed<List<PlatformFile>> -> state.result
+                is FileKitPickerState.Progress<List<PlatformFile>> -> state.processed
+                is FileKitPickerState.Started -> emptyList()
+            }
+        },
+    )
 
     val primaryButtonText = when (pickerMode) {
         Modes.Single,
@@ -213,7 +233,7 @@ private fun FilePickerScreen(
             item {
                 AppPickerResultsCard(
                     files = files,
-                    emptyText = "No files selected yet",
+                    emptyText = pickerError ?: "No files selected yet",
                     emptyIcon = LucideIcons.File,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

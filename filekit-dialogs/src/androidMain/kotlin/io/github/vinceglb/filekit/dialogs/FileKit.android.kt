@@ -446,12 +446,18 @@ internal suspend fun <O> runPickerLaunchWithActivityNotFoundFallback(
     fallback: (suspend () -> O)? = null,
 ): O? = try {
     primary()
-} catch (_: ActivityNotFoundException) {
-    val fallbackLaunch = fallback ?: return null
+} catch (primaryFailure: ActivityNotFoundException) {
+    val fallbackLaunch = fallback ?: throw FileKitPickerException(
+        message = "No Android activity is available to open the file picker.",
+        cause = primaryFailure,
+    )
     try {
         fallbackLaunch()
-    } catch (_: ActivityNotFoundException) {
-        null
+    } catch (fallbackFailure: ActivityNotFoundException) {
+        throw FileKitPickerException(
+            message = "No Android activity is available to open the file picker.",
+            cause = fallbackFailure,
+        )
     }
 }
 

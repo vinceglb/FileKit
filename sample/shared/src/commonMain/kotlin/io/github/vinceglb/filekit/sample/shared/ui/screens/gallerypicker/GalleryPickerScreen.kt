@@ -111,33 +111,37 @@ private fun GalleryPickerScreen(
         type = pickerType,
         mode = FileKitMode.SingleWithState,
         directory = pickerDirectory,
-    ) { state ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
-        files = when (state) {
-            FileKitPickerState.Cancelled -> emptyList()
-            is FileKitPickerState.Failed -> emptyList()
-            is FileKitPickerState.Completed<PlatformFile> -> listOf(state.result)
-            is FileKitPickerState.Progress<PlatformFile> -> listOf(state.processed)
-            is FileKitPickerState.Started -> emptyList()
-        }
-    }
+        onError = onPickerError,
+        onResult = { state ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
+            files = when (state) {
+                FileKitPickerState.Cancelled -> emptyList()
+                is FileKitPickerState.Failed -> emptyList()
+                is FileKitPickerState.Completed<PlatformFile> -> listOf(state.result)
+                is FileKitPickerState.Progress<PlatformFile> -> listOf(state.processed)
+                is FileKitPickerState.Started -> emptyList()
+            }
+        },
+    )
 
     val galleryMultipleWithStatePicker = rememberFilePickerLauncher(
         type = pickerType,
         mode = FileKitMode.MultipleWithState(maxItems = pickerMaxItems),
         directory = pickerDirectory,
-    ) { state ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
-        files = when (state) {
-            FileKitPickerState.Cancelled -> emptyList()
-            is FileKitPickerState.Failed -> emptyList()
-            is FileKitPickerState.Completed<List<PlatformFile>> -> state.result
-            is FileKitPickerState.Progress<List<PlatformFile>> -> state.processed
-            is FileKitPickerState.Started -> emptyList()
-        }
-    }
+        onError = onPickerError,
+        onResult = { state ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = (state as? FileKitPickerState.Failed)?.cause?.message
+            files = when (state) {
+                FileKitPickerState.Cancelled -> emptyList()
+                is FileKitPickerState.Failed -> emptyList()
+                is FileKitPickerState.Completed<List<PlatformFile>> -> state.result
+                is FileKitPickerState.Progress<List<PlatformFile>> -> state.processed
+                is FileKitPickerState.Started -> emptyList()
+            }
+        },
+    )
 
     fun openGalleryPicker() {
         buttonState = AppScreenHeaderButtonState.Loading

@@ -8,6 +8,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 
 /**
  * Creates and remembers a [PickerResultLauncher] for picking files.
@@ -19,7 +21,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
  * @param onResult Callback invoked with the result.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  *
- * Picker failures are ignored by this overload. Use the overload with `onError` to handle them.
+ * Operational picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
@@ -44,7 +47,9 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * @param mode The picking mode (e.g. Single, Multiple).
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected files.
+ * @param onError Callback invoked when a valid picker operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, unexpected defects, or [io.github.vinceglb.filekit.dialogs.FileKitPickerState.Failed]
+ * values delivered by state-tracking modes.
  * @param onResult Callback invoked with the result.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
@@ -77,7 +82,8 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * @param onResult Callback invoked with the picked file, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  *
- * Picker failures are ignored by this overload. Use the overload with `onError` to handle them.
+ * Operational picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public fun rememberFilePickerLauncher(
@@ -99,7 +105,8 @@ public fun rememberFilePickerLauncher(
  * @param type The type of files to pick. Defaults to [FileKitType.File].
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected file.
+ * @param onError Callback invoked when a valid picker operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the picked file, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
@@ -135,13 +142,45 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
     onError: (FileKitPickerException) -> Unit,
     onResult: (ConsumedResult) -> Unit,
 ) {
-    val result = try {
-        openPicker()
-    } catch (failure: FileKitPickerException) {
-        onError(failure)
-        return
+    runDialogOperation(
+        operation = openPicker,
+        onError = { failure ->
+            when (failure) {
+                is FileKitPickerException -> onError(failure)
+                else -> throw failure
+            }
+        },
+        onResult = { result ->
+            mode.consumePickerResult(result, onError, onResult)
+        },
+    )
+}
+
+private suspend fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, ConsumedResult>.consumePickerResult(
+    result: PickerResult,
+    onFailure: (FileKitPickerException) -> Unit,
+    onConsumed: (ConsumedResult) -> Unit,
+) {
+    when (this) {
+        FileKitMode.Single,
+        is FileKitMode.Multiple,
+        -> {
+            consumeResult(result, onConsumed)
+        }
+
+        FileKitMode.SingleWithState,
+        is FileKitMode.MultipleWithState,
+        -> {
+            @Suppress("UNCHECKED_CAST")
+            (result as Flow<ConsumedResult>)
+                .catch { failure ->
+                    when (failure) {
+                        is FileKitPickerException -> onFailure(failure)
+                        else -> throw failure
+                    }
+                }.collect(onConsumed)
+        }
     }
-    mode.consumeResult(result, onResult)
 }
 
 /**

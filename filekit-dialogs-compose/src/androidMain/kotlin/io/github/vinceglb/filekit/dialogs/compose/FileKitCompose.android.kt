@@ -82,11 +82,18 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
 
     val currentType by rememberUpdatedState(type)
     val currentMode by rememberUpdatedState(mode)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnConsumed by rememberUpdatedState(onResult)
 
     var pendingModeId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingMaxItems by rememberSaveable { mutableStateOf<Int?>(null) }
     var pendingLauncherId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun clearPendingState() {
+        pendingModeId = null
+        pendingMaxItems = null
+        pendingLauncherId = null
+    }
 
     fun dispatchPendingResult(launcherId: String, files: List<PlatformFile>?) {
         dispatchPendingPickerResult(
@@ -95,11 +102,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
             pendingModeId = pendingModeId,
             pendingMaxItems = pendingMaxItems,
             files = files,
-            clearPendingState = {
-                pendingModeId = null
-                pendingMaxItems = null
-                pendingLauncherId = null
-            },
+            clearPendingState = ::clearPendingState,
             onConsumed = { consumed ->
                 @Suppress("UNCHECKED_CAST")
                 currentOnConsumed(consumed as ConsumedResult)
@@ -107,12 +110,9 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
         )
     }
 
-    fun dispatchCancelledResult(launcherId: String) {
-        pendingLauncherId = launcherId
-        dispatchPendingResult(
-            launcherId = launcherId,
-            files = null,
-        )
+    fun dispatchLaunchFailure(failure: FileKitPickerException) {
+        clearPendingState()
+        currentOnError(failure)
     }
 
     val visualSingleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -171,65 +171,47 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
                             modeId = modeSnapshot.modeId,
                             maxItems = modeSnapshot.maxItems,
                         ) -> {
-                            when (
-                                resolvePickerLaunchOutcome(
-                                    launchPrimary = {
-                                        pendingLauncherId = LAUNCHER_VISUAL_SINGLE
-                                        launchPickerSafely {
-                                            visualSingleLauncher.launch(request)
-                                        }
-                                    },
-                                    launchFallback = {
-                                        pendingLauncherId = LAUNCHER_FILE_SINGLE
-                                        launchPickerSafely {
-                                            fileSingleLauncher.launch(fallbackMimeTypes)
-                                        }
-                                    },
-                                )
-                            ) {
-                                PickerLaunchOutcome.PrimaryLaunched,
-                                PickerLaunchOutcome.FallbackLaunched,
-                                -> {
-                                    Unit
-                                }
-
-                                PickerLaunchOutcome.Cancelled -> {
-                                    dispatchCancelledResult(LAUNCHER_FILE_SINGLE)
-                                }
+                            val outcome = resolvePickerLaunchOutcome(
+                                launchPrimary = {
+                                    pendingLauncherId = LAUNCHER_VISUAL_SINGLE
+                                    launchFilePickerSafely {
+                                        visualSingleLauncher.launch(request)
+                                    }
+                                },
+                                launchFallback = {
+                                    pendingLauncherId = LAUNCHER_FILE_SINGLE
+                                    launchFilePickerSafely {
+                                        fileSingleLauncher.launch(fallbackMimeTypes)
+                                    }
+                                },
+                            )
+                            if (outcome is PickerLaunchOutcome.Failed) {
+                                dispatchLaunchFailure(outcome.failure)
                             }
                         }
 
                         else -> {
-                            when (
-                                resolvePickerLaunchOutcome(
-                                    launchPrimary = {
-                                        pendingLauncherId = LAUNCHER_VISUAL_MULTIPLE
-                                        launchPickerSafely {
-                                            visualMultipleLauncher.launch(
-                                                DynamicPickMultipleVisualMediaInput(
-                                                    request = request,
-                                                    maxItems = modeSnapshot.maxItems,
-                                                ),
-                                            )
-                                        }
-                                    },
-                                    launchFallback = {
-                                        pendingLauncherId = LAUNCHER_FILE_MULTIPLE
-                                        launchPickerSafely {
-                                            fileMultipleLauncher.launch(fallbackMimeTypes)
-                                        }
-                                    },
-                                )
-                            ) {
-                                PickerLaunchOutcome.PrimaryLaunched,
-                                PickerLaunchOutcome.FallbackLaunched,
-                                -> {
-                                    Unit
-                                }
-
-                                PickerLaunchOutcome.Cancelled -> {
-                                    dispatchCancelledResult(LAUNCHER_FILE_MULTIPLE)
-                                }
+                            val outcome = resolvePickerLaunchOutcome(
+                                launchPrimary = {
+                                    pendingLauncherId = LAUNCHER_VISUAL_MULTIPLE
+                                    launchFilePickerSafely {
+                                        visualMultipleLauncher.launch(
+                                            DynamicPickMultipleVisualMediaInput(
+                                                request = request,
+                                                maxItems = modeSnapshot.maxItems,
+                                            ),
+                                        )
+                                    }
+                                },
+                                launchFallback = {
+                                    pendingLauncherId = LAUNCHER_FILE_MULTIPLE
+                                    launchFilePickerSafely {
+                                        fileMultipleLauncher.launch(fallbackMimeTypes)
+                                    }
+                                },
+                            )
+                            if (outcome is PickerLaunchOutcome.Failed) {
+                                dispatchLaunchFailure(outcome.failure)
                             }
                         }
                     }
@@ -240,21 +222,25 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
                     when {
                         modeSnapshot.isSingleMode() -> {
                             pendingLauncherId = LAUNCHER_FILE_SINGLE
-                            val isLaunched = launchPickerSafely {
-                                fileSingleLauncher.launch(mimeTypes)
-                            }
-                            if (!isLaunched) {
-                                dispatchCancelledResult(LAUNCHER_FILE_SINGLE)
+                            when (
+                                val launchResult = launchFilePickerSafely {
+                                    fileSingleLauncher.launch(mimeTypes)
+                                }
+                            ) {
+                                PickerLaunchResult.Launched -> Unit
+                                is PickerLaunchResult.Failed -> dispatchLaunchFailure(launchResult.failure)
                             }
                         }
 
                         else -> {
                             pendingLauncherId = LAUNCHER_FILE_MULTIPLE
-                            val isLaunched = launchPickerSafely {
-                                fileMultipleLauncher.launch(mimeTypes)
-                            }
-                            if (!isLaunched) {
-                                dispatchCancelledResult(LAUNCHER_FILE_MULTIPLE)
+                            when (
+                                val launchResult = launchFilePickerSafely {
+                                    fileMultipleLauncher.launch(mimeTypes)
+                                }
+                            ) {
+                                PickerLaunchResult.Launched -> Unit
+                                is PickerLaunchResult.Failed -> dispatchLaunchFailure(launchResult.failure)
                             }
                         }
                     }
@@ -489,6 +475,20 @@ internal fun launchCameraSafely(
     false
 }
 
+internal fun launchFilePickerSafely(
+    launch: () -> Unit,
+): PickerLaunchResult = try {
+    launch()
+    PickerLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    PickerLaunchResult.Failed(
+        FileKitPickerException(
+            message = "No Android activity is available to open the file picker.",
+            cause = failure,
+        ),
+    )
+}
+
 internal fun launchPickerSafely(
     launch: () -> Unit,
 ): Boolean = try {
@@ -498,19 +498,38 @@ internal fun launchPickerSafely(
     false
 }
 
-internal enum class PickerLaunchOutcome {
-    PrimaryLaunched,
-    FallbackLaunched,
-    Cancelled,
+internal sealed interface PickerLaunchResult {
+    data object Launched : PickerLaunchResult
+
+    data class Failed(
+        val failure: FileKitPickerException,
+    ) : PickerLaunchResult
+}
+
+internal sealed interface PickerLaunchOutcome {
+    data object PrimaryLaunched : PickerLaunchOutcome
+
+    data object FallbackLaunched : PickerLaunchOutcome
+
+    data class Failed(
+        val failure: FileKitPickerException,
+    ) : PickerLaunchOutcome
 }
 
 internal fun resolvePickerLaunchOutcome(
-    launchPrimary: () -> Boolean,
-    launchFallback: () -> Boolean,
-): PickerLaunchOutcome = when {
-    launchPrimary() -> PickerLaunchOutcome.PrimaryLaunched
-    launchFallback() -> PickerLaunchOutcome.FallbackLaunched
-    else -> PickerLaunchOutcome.Cancelled
+    launchPrimary: () -> PickerLaunchResult,
+    launchFallback: () -> PickerLaunchResult,
+): PickerLaunchOutcome = when (launchPrimary()) {
+    PickerLaunchResult.Launched -> {
+        PickerLaunchOutcome.PrimaryLaunched
+    }
+
+    is PickerLaunchResult.Failed -> {
+        when (val fallbackResult = launchFallback()) {
+            PickerLaunchResult.Launched -> PickerLaunchOutcome.FallbackLaunched
+            is PickerLaunchResult.Failed -> PickerLaunchOutcome.Failed(fallbackResult.failure)
+        }
+    }
 }
 
 internal fun resolveCameraResult(

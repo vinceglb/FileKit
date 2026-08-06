@@ -2,45 +2,229 @@
 
 package io.github.vinceglb.filekit.dialogs.compose
 
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
+import io.github.vinceglb.filekit.dialogs.FileKitPickerState
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertSame
 
 class FileKitComposeFailureTest {
     @Test
-    fun runFilePickerLauncher_reportsPickerException_withoutInvokingResult() = runTest {
+    fun runDialogOperation_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
+        val failure = FileKitDialogException("The system dialog could not be opened.")
+        val reportedFailures = mutableListOf<FileKitDialogException>()
+        var resultInvoked = false
+
+        runDialogOperation(
+            operation = { throw failure },
+            onError = reportedFailures::add,
+            onResult = { resultInvoked = true },
+        )
+
+        assertEquals(listOf(failure), reportedFailures)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_success_invokesResultOnce_withoutInvokingError() = runTest {
+        val results = mutableListOf<String?>()
+        var errorInvoked = false
+
+        runDialogOperation(
+            operation = { null },
+            onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(1, results.size)
+        assertEquals(null, results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_coroutineCancellation_propagates_withoutInvokingCallbacks() = runTest {
+        var errorInvoked = false
+        var resultInvoked = false
+
+        assertFailsWith<CancellationException> {
+            runDialogOperation(
+                operation = { throw CancellationException("Cancelled by caller") },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_unexpectedFailure_propagates_withoutInvokingCallbacks() = runTest {
+        val failure = IllegalStateException("Unexpected picker defect")
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val thrown = assertFailsWith<IllegalStateException> {
+            runDialogOperation(
+                operation = { throw failure },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        assertSame(failure, thrown)
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_resultCallbackFailure_propagates_withoutInvokingError() = runTest {
+        val failure = IllegalStateException("Consumer result callback failed")
+        var errorInvoked = false
+
+        val thrown = assertFailsWith<IllegalStateException> {
+            runDialogOperation(
+                operation = { "selected" },
+                onError = { errorInvoked = true },
+                onResult = { throw failure },
+            )
+        }
+
+        assertSame(failure, thrown)
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_errorCallbackFailure_propagates_once() = runTest {
+        val callbackFailure = IllegalStateException("Consumer error callback failed")
+        var errorInvocations = 0
+
+        val thrown = assertFailsWith<IllegalStateException> {
+            runDialogOperation(
+                operation = { throw FileKitDialogException("Operational failure") },
+                onError = {
+                    errorInvocations++
+                    throw callbackFailure
+                },
+                onResult = {},
+            )
+        }
+
+        assertSame(callbackFailure, thrown)
+        assertEquals(1, errorInvocations)
+    }
+
+    @Test
+    fun runFilePickerLauncher_pickerFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
         val failure = FileKitPickerException("Failed to load the selected file.")
-        var reportedFailure: FileKitPickerException? = null
+        val reportedFailures = mutableListOf<FileKitPickerException>()
         var resultInvoked = false
 
         runFilePickerLauncher(
             mode = FileKitMode.Single,
             openPicker = { throw failure },
-            onError = { reportedFailure = it },
+            onError = reportedFailures::add,
             onResult = { resultInvoked = true },
         )
 
-        assertEquals(expected = failure, actual = reportedFailure)
+        assertEquals(listOf(failure), reportedFailures)
         assertFalse(resultInvoked)
     }
 
     @Test
-    fun runFilePickerLauncher_invokesResult_withoutInvokingError() = runTest {
+    fun runFilePickerLauncher_userCancellation_invokesResultOnce_withoutInvokingError() = runTest {
+        val results = mutableListOf<PlatformFile?>()
         var errorInvoked = false
-        var resultInvoked = false
 
         runFilePickerLauncher(
             mode = FileKitMode.Single,
             openPicker = { null },
             onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(1, results.size)
+        assertEquals(null, results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runFilePickerLauncher_stateValueFailure_invokesResult_withoutInvokingError() = runTest {
+        val failure = FileKitPickerException("Failed after selection.")
+        val results = mutableListOf<FileKitPickerState<PlatformFile>>()
+        var errorInvoked = false
+
+        runFilePickerLauncher(
+            mode = FileKitMode.SingleWithState,
+            openPicker = { flowOf(FileKitPickerState.Failed(failure)) },
+            onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(FileKitPickerState.Failed(failure), results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runFilePickerLauncher_thrownStateStreamFailure_reportsError_afterEarlierState() = runTest {
+        val failure = FileKitPickerException("Failed while processing the selection.")
+        val results = mutableListOf<FileKitPickerState<PlatformFile>>()
+        val reportedFailures = mutableListOf<FileKitPickerException>()
+
+        runFilePickerLauncher(
+            mode = FileKitMode.SingleWithState,
+            openPicker = {
+                flow {
+                    emit(FileKitPickerState.Started(total = 2))
+                    throw failure
+                }
+            },
+            onError = reportedFailures::add,
+            onResult = results::add,
+        )
+
+        assertEquals(FileKitPickerState.Started(total = 2), results.single())
+        assertEquals(listOf(failure), reportedFailures)
+    }
+
+    @Test
+    fun runFilePickerLauncher_stateCallbackFailure_propagates_withoutInvokingError() = runTest {
+        val callbackFailure = IllegalStateException("Consumer state callback failed")
+        var errorInvoked = false
+
+        val thrown = assertFailsWith<IllegalStateException> {
+            runFilePickerLauncher(
+                mode = FileKitMode.SingleWithState,
+                openPicker = { flowOf(FileKitPickerState.Started(total = 1)) },
+                onError = { errorInvoked = true },
+                onResult = { throw callbackFailure },
+            )
+        }
+
+        assertSame(callbackFailure, thrown)
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runFilePickerLauncher_legacyIgnoredFailure_invokesNoResult() = runTest {
+        var resultInvoked = false
+
+        runFilePickerLauncher(
+            mode = FileKitMode.Single,
+            openPicker = { throw FileKitPickerException("Ignored compatibility failure") },
+            onError = {},
             onResult = { resultInvoked = true },
         )
 
-        assertFalse(errorInvoked)
-        assertTrue(resultInvoked)
+        assertFalse(resultInvoked)
     }
 }
