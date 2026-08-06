@@ -4,6 +4,7 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
@@ -24,5 +25,11 @@ private fun CompileCommonPickerCallShapes() {
         mode = FileKitMode.SingleWithState,
         onError = { _: FileKitPickerException -> },
         onResult = { _: FileKitPickerState<PlatformFile> -> },
+    )
+
+    val legacyDirectory = rememberDirectoryPickerLauncher { _: PlatformFile? -> }
+    val explicitDirectory = rememberDirectoryPickerLauncher(
+        onError = { _: FileKitDialogException -> },
+        onResult = { _: PlatformFile? -> },
     )
 }

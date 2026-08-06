@@ -5,6 +5,7 @@ package io.github.vinceglb.filekit.dialogs.compose
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.window.WindowScope
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -79,6 +80,19 @@ public fun WindowScope.rememberDirectoryPickerLauncher(
 ): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher(
     directory = directory,
     dialogSettings = injectDialogSettings(dialogSettings, FileKitDialogParent.awt(this.window)),
+    onResult = onResult,
+)
+
+@Composable
+public fun WindowScope.rememberDirectoryPickerLauncher(
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings? = null,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher(
+    directory = directory,
+    dialogSettings = injectDialogSettings(dialogSettings, FileKitDialogParent.awt(this.window)),
+    onError = onError,
     onResult = onResult,
 )
 

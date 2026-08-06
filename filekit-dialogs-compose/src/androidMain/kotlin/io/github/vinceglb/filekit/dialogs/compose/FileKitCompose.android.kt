@@ -31,6 +31,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidCameraPermissionInternal
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
 import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
@@ -263,9 +264,33 @@ public actual fun rememberDirectoryPickerLauncher(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = rememberDirectoryPickerLauncher(
+    directory = directory,
+    dialogSettings = dialogSettings,
+    onError = {},
+    onResult = onResult,
+)
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when a valid directory operation cannot complete.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+@Suppress("UNUSED_PARAMETER")
+public actual fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     InitializeAndroidFileKit()
 
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
     val currentDirectory by rememberUpdatedState(directory)
 
@@ -283,12 +308,19 @@ public actual fun rememberDirectoryPickerLauncher(
         PickerResultLauncher {
             val initialUri = currentDirectory?.path?.toUri()
             hasPendingLaunch = true
-            val isLaunched = launchPickerSafely {
-                launcher.launch(initialUri)
-            }
-            if (!isLaunched) {
-                hasPendingLaunch = false
-                currentOnResult(null)
+            when (
+                val launchResult = launchDirectoryPickerSafely {
+                    launcher.launch(initialUri)
+                }
+            ) {
+                DirectoryLaunchResult.Launched -> {
+                    // Await the Activity Result callback.
+                }
+
+                is DirectoryLaunchResult.Failed -> {
+                    hasPendingLaunch = false
+                    currentOnError(launchResult.failure)
+                }
             }
         }
     }
@@ -496,6 +528,28 @@ internal fun launchPickerSafely(
     true
 } catch (_: ActivityNotFoundException) {
     false
+}
+
+internal fun launchDirectoryPickerSafely(
+    launch: () -> Unit,
+): DirectoryLaunchResult = try {
+    launch()
+    DirectoryLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    DirectoryLaunchResult.Failed(
+        FileKitDialogException(
+            message = "No Android activity is available to open the directory picker.",
+            cause = failure,
+        ),
+    )
+}
+
+internal sealed interface DirectoryLaunchResult {
+    data object Launched : DirectoryLaunchResult
+
+    data class Failed(
+        val failure: FileKitDialogException,
+    ) : DirectoryLaunchResult
 }
 
 internal sealed interface PickerLaunchResult {

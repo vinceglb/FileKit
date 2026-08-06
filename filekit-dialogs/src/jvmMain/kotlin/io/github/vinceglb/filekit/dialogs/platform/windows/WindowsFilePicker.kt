@@ -16,6 +16,7 @@ import com.sun.jna.platform.win32.WinNT.HRESULT
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
@@ -97,24 +98,30 @@ internal class WindowsFilePicker(
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
-        // Set the initial directory
-        directory?.let { fileOpenDialog.setDefaultPath(it) }
+    ): File? = try {
+        useFileDialog(FileDialogType.Open) { fileOpenDialog ->
+            // Set the initial directory
+            directory?.let { fileOpenDialog.setDefaultPath(it) }
 
-        // Set title
-        dialogSettings.title?.let {
-            fileOpenDialog
-                .SetTitle(WString(dialogSettings.title))
-                .verify("SetTitle failed")
+            // Set title
+            dialogSettings.title?.let {
+                fileOpenDialog
+                    .SetTitle(WString(dialogSettings.title))
+                    .verify("SetTitle failed")
+            }
+
+            // Add in FOS_PICKFOLDERS which hides files and only allows selection of folders
+            fileOpenDialog.setFlag(FOS_PICKFOLDERS)
+
+            // Show the dialog to the user
+            fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
+                it.getResult(SIGDN_DESKTOPABSOLUTEPARSING)
+            }
         }
-
-        // Add in FOS_PICKFOLDERS which hides files and only allows selection of folders
-        fileOpenDialog.setFlag(FOS_PICKFOLDERS)
-
-        // Show the dialog to the user
-        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
-            it.getResult(SIGDN_DESKTOPABSOLUTEPARSING)
-        }
+    } catch (failure: Win32Exception) {
+        throw failure.toDirectoryPickerFailure()
+    } catch (failure: WindowsDialogOperationalException) {
+        throw failure.toDirectoryPickerFailure()
     }
 
     override suspend fun openFileSaver(
@@ -222,14 +229,16 @@ internal class WindowsFilePicker(
 
         // Invalid error codes: throw exception
         if (FAILED(resultFolder)) {
-            throw RuntimeException("SHCreateItemFromParsingName failed")
+            throw WindowsDialogOperationalException(
+                "SHCreateItemFromParsingName failed with HRESULT 0x${resultFolder.toInt().toUInt().toString(16)}",
+            )
         }
 
         // Create ShellItem from the folder
         val folder = ShellItem(pbrFolder.value)
 
         // Set the initial directory
-        this.SetFolder(folder.pointer)
+        this.SetFolder(folder.pointer).verify("SetFolder failed")
 
         // Release the folder
         folder.Release()
@@ -275,7 +284,9 @@ internal class WindowsFilePicker(
 
         // Invalid error codes: throw exception
         if (FAILED(openDialogResult)) {
-            throw RuntimeException("Show failed")
+            throw WindowsDialogOperationalException(
+                "Show failed with HRESULT 0x${openDialogResult.toInt().toUInt().toString(16)}",
+            )
         }
 
         return block(this)
@@ -369,7 +380,9 @@ internal class WindowsFilePicker(
 
     private fun HRESULT.verify(exceptionMessage: String): HRESULT {
         if (FAILED(this)) {
-            throw RuntimeException(exceptionMessage)
+            throw WindowsDialogOperationalException(
+                "$exceptionMessage with HRESULT 0x${toInt().toUInt().toString(16)}",
+            )
         } else {
             return this
         }
@@ -380,6 +393,11 @@ internal class WindowsFilePicker(
             Pointer.nativeValue(Native.getWindowPointer(window))
         }
 }
+
+private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The Windows directory picker could not complete the operation.",
+    cause = this,
+)
 
 internal fun <T> showWindowsDialog(
     parentHandle: Long?,

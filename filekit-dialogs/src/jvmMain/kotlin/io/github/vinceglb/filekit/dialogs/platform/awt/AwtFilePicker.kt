@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit.dialogs.platform.awt
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
@@ -43,7 +44,7 @@ internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
+    ): File? = throw FileKitDialogException("AWT does not support directory picker dialogs.")
 
     private suspend fun callAwtPicker(
         title: String?,

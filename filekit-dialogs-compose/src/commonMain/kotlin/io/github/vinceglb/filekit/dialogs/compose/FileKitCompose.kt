@@ -4,6 +4,7 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
@@ -190,6 +191,9 @@ private suspend fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, Con
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
+ *
+ * Operational directory-picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public expect fun rememberDirectoryPickerLauncher(
@@ -197,3 +201,33 @@ public expect fun rememberDirectoryPickerLauncher(
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when a valid directory operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, or unexpected defects.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+public expect fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher
+
+internal suspend fun runDirectoryPickerLauncher(
+    openDirectoryPicker: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openDirectoryPicker,
+        onError = onError,
+        onResult = onResult,
+    )
+}

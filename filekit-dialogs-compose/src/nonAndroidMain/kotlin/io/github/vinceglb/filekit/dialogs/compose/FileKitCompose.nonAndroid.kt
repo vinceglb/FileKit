@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
@@ -28,22 +29,50 @@ public actual fun rememberDirectoryPickerLauncher(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = rememberDirectoryPickerLauncher(
+    directory = directory,
+    dialogSettings = dialogSettings,
+    onError = {},
+    onResult = onResult,
+)
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when a valid directory operation cannot complete.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+public actual fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     val coroutineScope = rememberCoroutineScope()
     val stableDialogSettings = rememberStableDialogSettings(dialogSettings)
 
     val currentDirectory by rememberUpdatedState(directory)
     val currentDialogSettings by rememberUpdatedState(stableDialogSettings)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     return remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                val result = FileKit.openDirectoryPicker(
-                    directory = currentDirectory,
-                    dialogSettings = currentDialogSettings,
+                runDirectoryPickerLauncher(
+                    openDirectoryPicker = {
+                        FileKit.openDirectoryPicker(
+                            directory = currentDirectory,
+                            dialogSettings = currentDialogSettings,
+                        )
+                    },
+                    onError = currentOnError,
+                    onResult = currentOnResult,
                 )
-                currentOnResult(result)
             }
         }
     }

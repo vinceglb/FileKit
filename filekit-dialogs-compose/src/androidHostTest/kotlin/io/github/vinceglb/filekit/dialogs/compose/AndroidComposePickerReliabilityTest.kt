@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.path
@@ -141,6 +142,42 @@ class AndroidComposePickerReliabilityTest {
         }
 
         assertIs<PickerLaunchResult.Launched>(result)
+        assertTrue(launched)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No directory picker activity")
+
+        val result = launchDirectoryPickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected launcher defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchDirectoryPickerSafely { throw failure }
+        }
+
+        assertSame(failure, thrown)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenNoError_returnsLaunched() {
+        var launched = false
+
+        val result = launchDirectoryPickerSafely {
+            launched = true
+        }
+
+        assertIs<DirectoryLaunchResult.Launched>(result)
         assertTrue(launched)
     }
 

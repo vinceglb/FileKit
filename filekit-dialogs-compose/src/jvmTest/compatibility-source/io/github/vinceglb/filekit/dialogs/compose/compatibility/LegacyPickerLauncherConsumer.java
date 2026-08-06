@@ -6,6 +6,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings;
 import io.github.vinceglb.filekit.dialogs.FileKitMode;
 import io.github.vinceglb.filekit.dialogs.FileKitType;
 import io.github.vinceglb.filekit.dialogs.compose.FileKitComposeKt;
+import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_jvmKt;
+import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_nonAndroidKt;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
@@ -29,6 +31,23 @@ public final class LegacyPickerLauncherConsumer {
         ));
         link(() -> FileKitComposeKt.rememberFilePickerLauncher(
             (FileKitType) null,
+            (PlatformFile) null,
+            (FileKitDialogSettings) null,
+            (Function1<PlatformFile, Unit>) null,
+            (Composer) null,
+            0,
+            0
+        ));
+        link(() -> FileKitCompose_nonAndroidKt.rememberDirectoryPickerLauncher(
+            (PlatformFile) null,
+            (FileKitDialogSettings) null,
+            (Function1<PlatformFile, Unit>) null,
+            (Composer) null,
+            0,
+            0
+        ));
+        link(() -> FileKitCompose_jvmKt.rememberDirectoryPickerLauncher(
+            null,
             (PlatformFile) null,
             (FileKitDialogSettings) null,
             (Function1<PlatformFile, Unit>) null,

@@ -19,6 +19,70 @@ import kotlin.test.assertSame
 
 class FileKitComposeFailureTest {
     @Test
+    fun runDirectoryPickerLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
+        val failure = FileKitDialogException("The directory picker could not be opened.")
+        val reportedFailures = mutableListOf<FileKitDialogException>()
+        var resultInvoked = false
+
+        runDirectoryPickerLauncher(
+            openDirectoryPicker = { throw failure },
+            onError = reportedFailures::add,
+            onResult = { resultInvoked = true },
+        )
+
+        assertEquals(listOf(failure), reportedFailures)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDirectoryPickerLauncher_userCancellation_invokesNullResultOnce_withoutInvokingError() = runTest {
+        val results = mutableListOf<PlatformFile?>()
+        var errorInvoked = false
+
+        runDirectoryPickerLauncher(
+            openDirectoryPicker = { null },
+            onError = { errorInvoked = true },
+            onResult = results::add,
+        )
+
+        assertEquals(1, results.size)
+        assertEquals(null, results.single())
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runDirectoryPickerLauncher_invalidInvocation_propagates_withoutInvokingCallbacks() = runTest {
+        val failure = IllegalArgumentException("Unsupported directory argument")
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val thrown = assertFailsWith<IllegalArgumentException> {
+            runDirectoryPickerLauncher(
+                openDirectoryPicker = { throw failure },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        assertSame(failure, thrown)
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDirectoryPickerLauncher_legacyIgnoredFailure_invokesNoResult() = runTest {
+        var resultInvoked = false
+
+        runDirectoryPickerLauncher(
+            openDirectoryPicker = { throw FileKitDialogException("Ignored compatibility failure") },
+            onError = {},
+            onResult = { resultInvoked = true },
+        )
+
+        assertFalse(resultInvoked)
+    }
+
+    @Test
     fun runDialogOperation_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
         val failure = FileKitDialogException("The system dialog could not be opened.")
         val reportedFailures = mutableListOf<FileKitDialogException>()
