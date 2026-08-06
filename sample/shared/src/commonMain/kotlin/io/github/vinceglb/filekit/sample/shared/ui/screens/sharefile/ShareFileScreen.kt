@@ -65,8 +65,11 @@ private fun ShareFileScreen(
     val buttonState = AppScreenHeaderButtonState.Enabled
     var pickerMode by remember { mutableStateOf(ShareMode.Multiple) }
     var selectedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var shareError by remember { mutableStateOf<String?>(null) }
 
-    val shareLauncher = rememberShareFileLauncher()
+    val shareLauncher = rememberShareFileLauncher(
+        onError = { failure -> shareError = failure.message },
+    )
     val isSupported = shareLauncher.isSupported
     val primaryButtonText = when (selectedFiles.size) {
         0 -> "Share File"
@@ -99,6 +102,7 @@ private fun ShareFileScreen(
         if (!isSupported || selectedFiles.isEmpty()) {
             return
         }
+        shareError = null
         shareLauncher.launch(selectedFiles)
     }
 
@@ -152,6 +156,17 @@ private fun ShareFileScreen(
                     AppPickerSupportCard(
                         text = "Sharing is available on Android and iOS targets.",
                         icon = LucideIcons.Share,
+                        modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
+                    )
+                }
+            }
+
+            shareError?.let { failureMessage ->
+                item {
+                    Text(
+                        text = failureMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                     )
                 }

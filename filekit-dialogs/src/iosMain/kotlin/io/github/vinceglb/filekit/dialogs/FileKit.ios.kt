@@ -421,6 +421,7 @@ internal fun requireAppleCameraPreparation(
  *
  * @param file The file to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When the share sheet cannot be presented or the selected activity reports an error.
  */
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareFile(
@@ -438,6 +439,7 @@ public actual suspend fun FileKit.shareFile(
  *
  * @param files The list of files to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When the share sheet cannot be presented or the selected activity reports an error.
  */
 @OptIn(ExperimentalForeignApi::class)
 public actual suspend fun FileKit.shareFile(
@@ -446,7 +448,7 @@ public actual suspend fun FileKit.shareFile(
 ) {
     if (files.isEmpty()) return
 
-    val viewController = shareSettings.presenterViewController() ?: return
+    val viewController = requireAppleSharePresenter(shareSettings.presenterViewController())
 
     files.forEach { it.startAccessingSecurityScopedResource() }
     // Ensure we always pass a file URL to the activity items; otherwise iOS may treat the
@@ -466,14 +468,38 @@ public actual suspend fun FileKit.shareFile(
 
     shareSettings.addOptionUIActivityViewController(shareVC)
 
-    shareVC.setCompletionWithItemsHandler { _, _, _, _ ->
-        files.forEach { it.stopAccessingSecurityScopedResource() }
-    }
+    suspendCancellableCoroutine { continuation ->
+        shareVC.setCompletionWithItemsHandler { _, _, _, error ->
+            files.forEach { it.stopAccessingSecurityScopedResource() }
+            if (continuation.isActive) {
+                val failure = appleShareCompletionFailure(error)
+                if (failure == null) {
+                    continuation.resume(Unit)
+                } else {
+                    continuation.resumeWithException(failure)
+                }
+            }
+        }
 
-    viewController.presentViewController(
-        viewControllerToPresent = shareVC,
-        animated = true,
-        completion = null,
+        viewController.presentViewController(
+            viewControllerToPresent = shareVC,
+            animated = true,
+            completion = null,
+        )
+    }
+}
+
+internal fun requireAppleSharePresenter(presenter: UIViewController?): UIViewController = presenter
+    ?: throw FileKitDialogException("No active view controller is available to present the share sheet.")
+
+internal class AppleShareExceptionCause(
+    val error: NSError,
+) : Exception(error.localizedDescription)
+
+internal fun appleShareCompletionFailure(error: NSError?): FileKitDialogException? = error?.let {
+    FileKitDialogException(
+        message = "The share operation failed: ${it.localizedDescription}",
+        cause = AppleShareExceptionCause(it),
     )
 }
 

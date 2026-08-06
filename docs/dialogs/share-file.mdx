@@ -23,17 +23,18 @@ val file = PlatformFile("/path/to/file.txt")
 // share a single file
 FileKit.shareFile(file)
 // share multiple files
-FileKit.shareFiles(listOf(file1, file2))
+FileKit.shareFile(listOf(file1, file2))
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberShareFileLauncher()
+var shareError by remember { mutableStateOf<String?>(null) }
+val launcher = rememberShareFileLauncher(
+    onError = { failure -> shareError = failure.message },
+)
 
 Button(onClick = { 
-    // share a single file
+    // Successful sharing is callback-less.
     launcher.launch(file)
-    // share multiple files
-    launcher.launch(listOf(file1, file2))
 }) {
     Text("Share file")
 }
@@ -41,7 +42,8 @@ Button(onClick = {
 </CodeGroup>
 
 <Info>
-Ensure the file you are sharing exists and is accessible. Sharing a non-existent file will result in an error.
+The Compose launcher reports FileKit-owned operational failures through `onError`. Successful sharing remains
+callback-less. The legacy overload without `onError` remains available and ignores normalized failures without logging.
 </Info>
 
 ## Android setup
@@ -62,16 +64,16 @@ FileKit.shareFile(
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberShareFileLauncher()
+val launcher = rememberShareFileLauncher(
+    shareSettings = FileKitShareSettings(
+        authority = "${context.packageName}.fileprovider",
+    ),
+    onError = { failure -> /* Show or log the failure */ },
+)
 
 val file = FileKit.filesDir / "my_file.txt"
 Button(onClick = { 
-    launcher.launch(
-        file = file,
-        shareSettings = FileKitShareSettings(
-            authority = "${context.packageName}.fileprovider"
-        )
-    )
+    launcher.launch(file)
 }) {
     Text("Share file")
 }

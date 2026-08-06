@@ -42,14 +42,39 @@ public expect fun rememberCameraPickerLauncher(
     onResult: (PlatformFile?) -> Unit,
 ): PhotoResultLauncher
 
+/**
+ * Creates and remembers a sharing launcher whose operational failures are ignored without logging.
+ *
+ * Sharing success remains callback-less. Use the overload with `onError` to observe failures.
+ */
 @Composable
 public fun rememberShareFileLauncher(
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
+): ShareResultLauncher = rememberShareFileLauncher(
+    shareSettings = shareSettings,
+    onError = {},
+)
+
+/**
+ * Creates and remembers a sharing launcher with explicit operational-failure handling.
+ *
+ * Sharing success remains callback-less. [onError] is invoked when a valid sharing operation cannot start or complete.
+ * It is not invoked for coroutine cancellation, invalid invocations, or unexpected defects.
+ *
+ * @param shareSettings Platform-specific settings for sharing.
+ * @param onError Callback invoked when a valid sharing operation cannot start or complete.
+ * @return A [ShareResultLauncher] that can be used to launch the share sheet.
+ */
+@Composable
+public fun rememberShareFileLauncher(
+    shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
+    onError: (FileKitDialogException) -> Unit,
 ): ShareResultLauncher {
     // Coroutine
     val coroutineScope = rememberCoroutineScope()
     val stableShareSettings = rememberStableShareSettings(shareSettings)
     val currentShareSettings by rememberUpdatedState(stableShareSettings)
+    val currentOnError by rememberUpdatedState(onError)
 
     // FileKit
     val fileKit = remember { FileKit }
@@ -58,7 +83,10 @@ public fun rememberShareFileLauncher(
     val returnedLauncher = remember {
         ShareResultLauncher { files ->
             coroutineScope.launch {
-                fileKit.shareFile(files, currentShareSettings)
+                runShareFileLauncher(
+                    shareFiles = { fileKit.shareFile(files, currentShareSettings) },
+                    onError = currentOnError,
+                )
             }
         }
     }

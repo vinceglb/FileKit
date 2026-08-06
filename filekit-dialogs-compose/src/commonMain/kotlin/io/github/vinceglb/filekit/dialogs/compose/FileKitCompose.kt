@@ -255,3 +255,14 @@ internal suspend fun runCameraPickerLauncher(
         onResult = onResult,
     )
 }
+
+internal suspend fun runShareFileLauncher(
+    shareFiles: suspend () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+) {
+    runDialogOperation(
+        operation = shareFiles,
+        onError = onError,
+        onResult = {},
+    )
+}

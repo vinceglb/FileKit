@@ -259,6 +259,7 @@ public class TakePictureWithCameraFacing(
  *
  * @param file The file to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When no Android activity is available to share the file.
  */
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
@@ -275,6 +276,7 @@ public actual suspend fun FileKit.shareFile(
  *
  * @param files The list of files to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When no Android activity is available to share the files.
  */
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
@@ -322,7 +324,20 @@ public actual suspend fun FileKit.shareFile(
     }
     shareSettings.addOptionChooseIntent(chooseIntent)
 
-    context.startActivity(chooseIntent)
+    launchAndroidShareIntent {
+        context.startActivity(chooseIntent)
+    }
+}
+
+internal fun launchAndroidShareIntent(launch: () -> Unit) {
+    try {
+        launch()
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to share the selected files.",
+            cause = failure,
+        )
+    }
 }
 
 /**

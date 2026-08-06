@@ -21,11 +21,21 @@ public expect suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
 ): PlatformFile?
 
+/**
+ * Shares [file] with the platform share sheet.
+ *
+ * @throws FileKitDialogException When a valid sharing operation cannot start or complete.
+ */
 public expect suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
 )
 
+/**
+ * Shares [files] with the platform share sheet.
+ *
+ * @throws FileKitDialogException When a valid sharing operation cannot start or complete.
+ */
 public expect suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),

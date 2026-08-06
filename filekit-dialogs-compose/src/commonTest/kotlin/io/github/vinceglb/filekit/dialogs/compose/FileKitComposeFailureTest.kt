@@ -19,6 +19,39 @@ import kotlin.test.assertSame
 
 class FileKitComposeFailureTest {
     @Test
+    fun runShareFileLauncher_operationalFailure_invokesErrorOnce() = runTest {
+        val failure = FileKitDialogException("The share sheet could not be opened.")
+        val reportedFailures = mutableListOf<FileKitDialogException>()
+
+        runShareFileLauncher(
+            shareFiles = { throw failure },
+            onError = reportedFailures::add,
+        )
+
+        assertEquals(listOf(failure), reportedFailures)
+    }
+
+    @Test
+    fun runShareFileLauncher_success_doesNotInvokeError() = runTest {
+        var errorInvoked = false
+
+        runShareFileLauncher(
+            shareFiles = {},
+            onError = { errorInvoked = true },
+        )
+
+        assertFalse(errorInvoked)
+    }
+
+    @Test
+    fun runShareFileLauncher_legacyIgnoredFailure_invokesNoCallback() = runTest {
+        runShareFileLauncher(
+            shareFiles = { throw FileKitDialogException("Ignored compatibility failure") },
+            onError = {},
+        )
+    }
+
+    @Test
     fun runCameraPickerLauncher_operationalFailure_invokesErrorOnce_withoutInvokingResult() = runTest {
         val failure = FileKitDialogException("The camera could not be opened.")
         val reportedFailures = mutableListOf<FileKitDialogException>()
