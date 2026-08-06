@@ -34,6 +34,7 @@ public expect fun rememberCameraPickerLauncher(
  * @param onError Callback invoked when a valid camera operation cannot start or complete. It is not invoked for user
  * dismissal, Android camera-permission denial, coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the saved file, or null if dismissed or Android camera permission is denied.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  */
 @Composable
 public expect fun rememberCameraPickerLauncher(
@@ -60,6 +61,7 @@ public fun rememberShareFileLauncher(
  *
  * Sharing success remains callback-less. [onError] is invoked when a valid sharing operation cannot start or complete.
  * It is not invoked for coroutine cancellation, invalid invocations, or unexpected defects.
+ * Exceptions thrown by [onError] propagate.
  *
  * @param shareSettings Platform-specific settings for sharing.
  * @param onError Callback invoked when a valid sharing operation cannot start or complete.

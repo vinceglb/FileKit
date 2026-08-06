@@ -42,6 +42,8 @@ Button(onClick = { launcher.launch() }) {
 
 On iOS, the suspending `FileKit.openCameraPicker()` function throws the same `FileKitDialogException` for operational failures. Android's lifecycle-safe Compose launcher owns the Android launch-failure callback behavior described above. The compatibility Compose overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
 
+See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
+
 The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
 
 ## Android camera permission behavior

@@ -11,7 +11,7 @@ class AppleSaverFailureTest {
     @Test
     fun AppleSaver_missingPreparationResource_throwsDialogOperationalFailure() {
         val failure = assertFailsWith<FileKitDialogException> {
-            requireAppleSaverResource<NSURL>(
+            requireAppleDialogResource<NSURL>(
                 resource = null,
                 failureMessage = "Failed to prepare a temporary file for saving.",
             )
@@ -23,8 +23,8 @@ class AppleSaverFailureTest {
     @Test
     fun AppleSaver_failedPreparationOperation_throwsDialogOperationalFailure() {
         val failure = assertFailsWith<FileKitDialogException> {
-            requireAppleSaverPreparation(
-                successful = false,
+            requireAppleDialogCondition(
+                satisfied = false,
                 failureMessage = "Failed to write the temporary file for saving.",
             )
         }

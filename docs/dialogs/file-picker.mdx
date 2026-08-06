@@ -16,9 +16,12 @@ val file = FileKit.openFilePicker()
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberFilePickerLauncher { file ->
-    // Handle the file
-}
+val launcher = rememberFilePickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the file, or null when the user cancelled
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick a file")
@@ -26,20 +29,9 @@ Button(onClick = { launcher.launch() }) {
 ```
 </CodeGroup>
 
-The short Compose form above is kept for source and binary compatibility. It ignores operational picker failures without logging.
-For new integrations, provide `onError` explicitly:
+The shorter Compose overload without `onError` remains available for source and binary compatibility. It ignores operational picker failures without logging. New integrations should use the explicit form shown above.
 
-```kotlin
-val launcher = rememberFilePickerLauncher(
-    onError = { failure ->
-        // The valid picker operation could not be completed.
-        println("Picker failed: ${failure.message}")
-    },
-    onResult = { file ->
-        // A file was selected, or the user cancelled when file is null.
-    },
-)
-```
+See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
 
 <Warning>
 On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not
@@ -175,10 +167,12 @@ val file = FileKit.openFilePicker(type = FileKitType.File(listOf("pdf", "docx"))
 
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
-    type = FileKitType.File(extensions = listOf("pdf", "docx"))
-) { file ->
-    // Handle the pdf or docx file
-}
+    type = FileKitType.File(extensions = listOf("pdf", "docx")),
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the pdf or docx file, or null when the user cancelled
+    },
+)
 ```
 </CodeGroup>
 
@@ -200,9 +194,11 @@ val file = FileKit.openFilePicker(
 val launcher = rememberFilePickerLauncher(
     directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault(),
-) { file ->
-    // Handle the file
-}
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the file, or null when the user cancelled
+    },
+)
 ```
 </CodeGroup>
 

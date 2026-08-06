@@ -1,0 +1,39 @@
+---
+title: 'Dialog error handling'
+sidebarTitle: 'Error handling'
+description: 'Handle FileKit dialog results, cancellation, and operational failures'
+---
+
+FileKit keeps successful results, user cancellation, operational failures, and programmer errors separate. New Compose integrations should use launcher overloads with an explicit `onError` callback.
+
+## Callback contract
+
+| Outcome | `onResult` | `onError` | Propagates |
+| --- | --- | --- | --- |
+| A value-returning picker, directory picker, saver, or camera succeeds | Called once with the value | Not called | No |
+| The user dismisses a value-returning dialog | Called once with `null` | Not called | No |
+| Android camera permission is denied | Called once with `null` | Not called | No |
+| A valid FileKit operation cannot start or complete | Not called | Called once with a `FileKitDialogException` subtype | No |
+| The launcher coroutine is cancelled | Not called | Not called | Cancellation |
+| The invocation is invalid or an unexpected defect occurs | Not called | Not called | The original exception |
+| Your `onResult` or `onError` callback throws | No compensating callback is delivered | No compensating callback is delivered | The callback exception |
+
+`FileKitPickerException` is the picker-specific subtype of `FileKitDialogException`. FileKit does not convert invalid arguments, unsupported argument combinations, or unexpected defects into operational failures.
+
+## State-tracking picker modes
+
+`SingleWithState` and `MultipleWithState` report progress and their represented terminal outcome through `onResult`:
+
+- `Started` and `Progress` are non-terminal values.
+- Exactly one of `Completed`, `Cancelled`, or `Failed` is the represented terminal value.
+- `FileKitPickerState.Failed` remains data delivered to `onResult`; it is not duplicated through `onError`.
+- A picker failure thrown outside the state stream is delivered to `onError`.
+- Coroutine cancellation stops delivery and produces no later terminal callback.
+
+## Sharing
+
+Sharing has no success callback. A successful share launch, including user dismissal after the system share UI appears, remains callback-less. A FileKit-owned operational failure is delivered to `onError`; coroutine cancellation, invalid invocation, unexpected defects, and callback exceptions propagate.
+
+## Compatibility overloads
+
+Launcher overloads without `onError` remain available for source and binary compatibility. They preserve their historical callback shape and ignore normalized operational failures without logging. They do not swallow coroutine cancellation, invalid invocation, unexpected defects, or exceptions thrown by your callbacks.

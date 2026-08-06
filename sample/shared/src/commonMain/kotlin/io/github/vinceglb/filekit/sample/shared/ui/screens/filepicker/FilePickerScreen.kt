@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
@@ -88,11 +89,13 @@ private fun FilePickerScreen(
     val startDirectoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { directory ->
-        if (directory != null) {
-            startDirectory = directory
-        }
-    }
+        onError = { failure: FileKitDialogException -> pickerError = failure.message },
+        onResult = { directory ->
+            if (directory != null) {
+                startDirectory = directory
+            }
+        },
+    )
 
     val resolvedType = resolveFilePickerType(customExtensions)
 

@@ -3,6 +3,7 @@
 package io.github.vinceglb.filekit.dialogs.compose
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class LegacyPickerLauncherBinaryCompatibilityTest {
     @Test
@@ -11,6 +12,7 @@ class LegacyPickerLauncherBinaryCompatibilityTest {
             "io.github.vinceglb.filekit.dialogs.compose.compatibility.LegacyPickerLauncherConsumer",
         )
 
+        assertEquals(12, consumer.getMethod("legacyOverloadCount").invoke(null))
         consumer.getMethod("linkLegacyOverloads").invoke(null)
     }
 }

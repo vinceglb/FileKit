@@ -93,8 +93,8 @@ class FileKitDialogParentTest {
     }
 
     @Test
-    fun FileKitDialogParent_withIncompatibleAdapter_throwsPickerExceptionWithoutRawValue() {
-        val error = assertFailsWith<FileKitPickerException> {
+    fun FileKitDialogParent_withIncompatibleAdapter_throwsInvalidInvocationWithoutRawValue() {
+        val error = assertFailsWith<IllegalArgumentException> {
             FileKitDialogParent.windows(0x1234).resolveXdgPortalParent { error("unused") }
         }
 
@@ -110,13 +110,13 @@ class FileKitDialogParentTest {
     }
 
     @Test
-    fun AwtNativeIdentifier_withZeroOrException_throwsPickerException() {
-        assertFailsWith<FileKitPickerException> {
+    fun AwtNativeIdentifier_withZeroOrException_throwsInvalidInvocation() {
+        assertFailsWith<IllegalArgumentException> {
             resolveAwtNativeIdentifier("Windows HWND") { 0 }
         }
 
         val cause = IllegalStateException("Component must be displayable")
-        val error = assertFailsWith<FileKitPickerException> {
+        val error = assertFailsWith<IllegalArgumentException> {
             resolveAwtNativeIdentifier("X11 XID") { throw cause }
         }
 

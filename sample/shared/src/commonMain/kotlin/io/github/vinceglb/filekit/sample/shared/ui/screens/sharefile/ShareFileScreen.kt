@@ -80,16 +80,22 @@ private fun ShareFileScreen(
     val singlePicker = rememberFilePickerLauncher(
         type = FileKitType.File(),
         mode = FileKitMode.Single,
-    ) { file ->
-        selectedFiles = file?.let(::listOf) ?: emptyList()
-    }
+        onError = { failure -> shareError = failure.message },
+        onResult = { file ->
+            shareError = null
+            selectedFiles = file?.let(::listOf) ?: emptyList()
+        },
+    )
 
     val multiplePicker = rememberFilePickerLauncher(
         type = FileKitType.File(),
         mode = FileKitMode.Multiple(),
-    ) { files ->
-        selectedFiles = files ?: emptyList()
-    }
+        onError = { failure -> shareError = failure.message },
+        onResult = { files ->
+            shareError = null
+            selectedFiles = files ?: emptyList()
+        },
+    )
 
     fun pickFiles() {
         when (pickerMode) {

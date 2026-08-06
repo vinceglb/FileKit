@@ -52,6 +52,7 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * coroutine cancellation, invalid invocations, unexpected defects, or [io.github.vinceglb.filekit.dialogs.FileKitPickerState.Failed]
  * values delivered by state-tracking modes.
  * @param onResult Callback invoked with the result.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
 @Composable
@@ -109,6 +110,7 @@ public fun rememberFilePickerLauncher(
  * @param onError Callback invoked when a valid picker operation cannot complete. It is not invoked for user cancellation,
  * coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the picked file, or null if cancelled.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
 @Composable
@@ -210,6 +212,7 @@ public expect fun rememberDirectoryPickerLauncher(
  * @param onError Callback invoked when a valid directory operation cannot complete. It is not invoked for user cancellation,
  * coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
 @Composable

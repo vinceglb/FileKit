@@ -183,7 +183,7 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
             extension = normalizedDefaultExtension,
         )
 
-        val presenter = requireAppleSaverResource(
+        val presenter = requireAppleDialogResource(
             resource = dialogSettings.presenterViewController(),
             failureMessage = "No active view controller is available to present the file saver.",
         )
@@ -192,21 +192,21 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         val fileManager = NSFileManager.defaultManager
 
         // Get the temporary directory
-        val fileComponents = requireAppleSaverResource(
+        val fileComponents = requireAppleDialogResource(
             resource = fileManager.temporaryDirectory.pathComponents?.plus(fileName),
             failureMessage = "Failed to prepare a temporary file path for saving.",
         )
 
         // Create a file URL
-        val fileUrl = requireAppleSaverResource(
+        val fileUrl = requireAppleDialogResource(
             resource = NSURL.fileURLWithPathComponents(fileComponents),
             failureMessage = "Failed to create a temporary file URL for saving.",
         )
 
         // Write an empty string to the file to ensure it exists
         val emptyData = NSData()
-        requireAppleSaverPreparation(
-            successful = emptyData.writeToURL(fileUrl, true),
+        requireAppleDialogCondition(
+            satisfied = emptyData.writeToURL(fileUrl, true),
             failureMessage = "Failed to write the temporary file for saving.",
         )
 
@@ -230,16 +230,16 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     }
 }
 
-internal fun <T : Any> requireAppleSaverResource(
+internal fun <T : Any> requireAppleDialogResource(
     resource: T?,
     failureMessage: String,
 ): T = resource ?: throw FileKitDialogException(failureMessage)
 
-internal fun requireAppleSaverPreparation(
-    successful: Boolean,
+internal fun requireAppleDialogCondition(
+    satisfied: Boolean,
     failureMessage: String,
 ) {
-    if (!successful) {
+    if (!satisfied) {
         throw FileKitDialogException(failureMessage)
     }
 }
@@ -349,17 +349,17 @@ internal fun prepareAppleCameraPresentation(
     presenter: UIViewController?,
     requestedCamera: AppleCameraDeviceRequest?,
 ): AppleCameraPresentation {
-    requireAppleCameraAvailability(
-        available = sourceAvailable,
+    requireAppleDialogCondition(
+        satisfied = sourceAvailable,
         failureMessage = "The camera is not available on this device.",
     )
-    val availablePresenter = requireAppleCameraResource(
+    val availablePresenter = requireAppleDialogResource(
         resource = presenter,
         failureMessage = "No active view controller is available to present the camera.",
     )
     requestedCamera?.let { request ->
-        requireAppleCameraAvailability(
-            available = request.available,
+        requireAppleDialogCondition(
+            satisfied = request.available,
             failureMessage = request.unavailableMessage,
         )
     }
@@ -376,45 +376,22 @@ internal fun completeAppleCameraCapture(
     encodeImage: (UIImage) -> NSData?,
     writeImage: (NSData, NSURL) -> Boolean,
 ): PlatformFile {
-    val imageData = requireAppleCameraResource(
+    val imageData = requireAppleDialogResource(
         resource = encodeImage(image),
         failureMessage = "Failed to encode the captured image.",
     )
     val fileUrl = NSURL.fileURLWithPath(destinationFile.path)
-    requireAppleCameraPreparation(
-        successful = writeImage(imageData, fileUrl),
+    requireAppleDialogCondition(
+        satisfied = writeImage(imageData, fileUrl),
         failureMessage = "Failed to write the captured image to its destination.",
     )
     return destinationFile
 }
 
-internal fun requireAppleCameraImage(image: UIImage?): UIImage = requireAppleCameraResource(
+internal fun requireAppleCameraImage(image: UIImage?): UIImage = requireAppleDialogResource(
     resource = image,
     failureMessage = "The camera completed without returning a captured image.",
 )
-
-internal fun requireAppleCameraAvailability(
-    available: Boolean,
-    failureMessage: String,
-) {
-    if (!available) {
-        throw FileKitDialogException(failureMessage)
-    }
-}
-
-internal fun <T : Any> requireAppleCameraResource(
-    resource: T?,
-    failureMessage: String,
-): T = resource ?: throw FileKitDialogException(failureMessage)
-
-internal fun requireAppleCameraPreparation(
-    successful: Boolean,
-    failureMessage: String,
-) {
-    if (!successful) {
-        throw FileKitDialogException(failureMessage)
-    }
-}
 
 /**
  * Shares a file using the iOS share sheet.

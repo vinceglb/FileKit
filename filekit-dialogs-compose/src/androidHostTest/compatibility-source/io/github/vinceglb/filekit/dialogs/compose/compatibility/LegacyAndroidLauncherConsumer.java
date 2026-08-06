@@ -1,28 +1,30 @@
 package io.github.vinceglb.filekit.dialogs.compose.compatibility;
 
 import androidx.compose.runtime.Composer;
-import androidx.compose.ui.window.WindowScope;
 import io.github.vinceglb.filekit.PlatformFile;
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings;
 import io.github.vinceglb.filekit.dialogs.FileKitMode;
+import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings;
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException;
+import io.github.vinceglb.filekit.dialogs.FileKitShareSettings;
 import io.github.vinceglb.filekit.dialogs.FileKitType;
 import io.github.vinceglb.filekit.dialogs.compose.FileKitComposeKt;
-import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_jvmKt;
-import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_nonAndroidKt;
+import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_androidKt;
+import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_mobileKt;
 import io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_nonWebKt;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
 /**
- * Source for the class fixture in jvmTest/resources. Compile this source only against the fixed-point
- * FileKit artifacts so the runtime test proves that precompiled legacy consumers still link.
+ * Source for the class fixture in androidHostTest/resources. Compile this source only against the
+ * fixed-point FileKit artifacts so the runtime test proves that precompiled consumers of every
+ * legacy Android launcher family still link.
  */
-public final class LegacyPickerLauncherConsumer {
-    private LegacyPickerLauncherConsumer() {}
+public final class LegacyAndroidLauncherConsumer {
+    private LegacyAndroidLauncherConsumer() {}
 
     public static int legacyOverloadCount() {
-        return 12;
+        return 8;
     }
 
     public static void linkLegacyOverloads() {
@@ -66,60 +68,7 @@ public final class LegacyPickerLauncherConsumer {
             0,
             0
         ));
-        link(() -> FileKitCompose_jvmKt.<Object, Object>rememberFilePickerLauncher(
-            (WindowScope) null,
-            (FileKitType) null,
-            (FileKitMode<Object, Object>) null,
-            (PlatformFile) null,
-            (FileKitDialogSettings) null,
-            (Function1<Object, Unit>) null,
-            (Composer) null,
-            0,
-            0
-        ));
-        link(() -> FileKitCompose_jvmKt.<Object, Object>rememberFilePickerLauncher(
-            (WindowScope) null,
-            (FileKitType) null,
-            (FileKitMode<Object, Object>) null,
-            (PlatformFile) null,
-            (FileKitDialogSettings) null,
-            (Function1<FileKitPickerException, Unit>) null,
-            (Function1<Object, Unit>) null,
-            (Composer) null,
-            0,
-            0
-        ));
-        link(() -> FileKitCompose_jvmKt.rememberFilePickerLauncher(
-            (WindowScope) null,
-            (FileKitType) null,
-            (PlatformFile) null,
-            (FileKitDialogSettings) null,
-            (Function1<PlatformFile, Unit>) null,
-            (Composer) null,
-            0,
-            0
-        ));
-        link(() -> FileKitCompose_jvmKt.rememberFilePickerLauncher(
-            (WindowScope) null,
-            (FileKitType) null,
-            (PlatformFile) null,
-            (FileKitDialogSettings) null,
-            (Function1<FileKitPickerException, Unit>) null,
-            (Function1<PlatformFile, Unit>) null,
-            (Composer) null,
-            0,
-            0
-        ));
-        link(() -> FileKitCompose_nonAndroidKt.rememberDirectoryPickerLauncher(
-            (PlatformFile) null,
-            (FileKitDialogSettings) null,
-            (Function1<PlatformFile, Unit>) null,
-            (Composer) null,
-            0,
-            0
-        ));
-        link(() -> FileKitCompose_jvmKt.rememberDirectoryPickerLauncher(
-            null,
+        link(() -> FileKitCompose_androidKt.rememberDirectoryPickerLauncher(
             (PlatformFile) null,
             (FileKitDialogSettings) null,
             (Function1<PlatformFile, Unit>) null,
@@ -133,10 +82,15 @@ public final class LegacyPickerLauncherConsumer {
             (Composer) null,
             0
         ));
-        link(() -> FileKitCompose_jvmKt.rememberFileSaverLauncher(
-            null,
-            (FileKitDialogSettings) null,
+        link(() -> FileKitCompose_androidKt.rememberCameraPickerLauncher(
+            (FileKitOpenCameraSettings) null,
             (Function1<PlatformFile, Unit>) null,
+            (Composer) null,
+            0,
+            0
+        ));
+        link(() -> FileKitCompose_mobileKt.rememberShareFileLauncher(
+            (FileKitShareSettings) null,
             (Composer) null,
             0,
             0

@@ -32,6 +32,7 @@ public fun rememberFileSaverLauncher(
  * @param onError Callback invoked when a valid file-saving operation cannot complete. It is not invoked for user
  * cancellation, coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the saved file path, or null if cancelled.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [SaverResultLauncher] that can be used to launch the saver.
  */
 @Composable

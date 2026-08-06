@@ -240,6 +240,7 @@ private fun GalleryPickerScreen(
 
                         GalleryPickerDirectory(
                             directory = pickerDirectory,
+                            onError = { failure -> pickerError = failure.message },
                             onPickDirectory = { pickerDirectory = it },
                         )
                     }

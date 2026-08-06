@@ -94,11 +94,13 @@ private fun FileSaverScreen(
     val directoryPickerLauncher = rememberDirectoryPickerLauncher(
         directory = saveDirectory,
         dialogSettings = dialogSettings,
-    ) { directory ->
-        if (directory != null) {
-            saveDirectory = directory
-        }
-    }
+        onError = onSaverError,
+        onResult = { directory ->
+            if (directory != null) {
+                saveDirectory = directory
+            }
+        },
+    )
     val isSupported = fileSaverLauncher.isSupported
     val primaryButtonText = if (isSupported) "Save File" else "File Saver Unavailable"
 
