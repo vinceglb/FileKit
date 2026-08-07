@@ -81,15 +81,22 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         suggestedName = suggestedName,
         extension = normalizedDefaultExtension,
     )
-    val uri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = CreateDocumentInput(
-            mimeType = mimeType,
-            fileName = fileName,
-            allowedMimeTypes = allowedMimeTypes,
-        ),
-    )
+    val uri = try {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = CreateDocumentInput(
+                mimeType = mimeType,
+                fileName = fileName,
+                allowedMimeTypes = allowedMimeTypes,
+            ),
+        )
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to open the file saver.",
+            cause = failure,
+        )
+    }
     return uri?.let(::PlatformFile)
 }
 

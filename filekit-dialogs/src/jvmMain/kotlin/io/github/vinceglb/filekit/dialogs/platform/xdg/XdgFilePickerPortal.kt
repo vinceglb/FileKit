@@ -177,6 +177,34 @@ private suspend fun <T> runXdgRequest(
     throw toFailure(failure)
 } catch (failure: DBusException) {
     throw toFailure(failure)
+} catch (failure: XdgPortalResponseException) {
+    throw toFailure(failure)
+}
+
+internal class XdgPortalResponseException(
+    internal val response: Int,
+) : RuntimeException("The XDG portal ended the request with response code $response.")
+
+internal fun resolveXdgPortalResponse(
+    response: Int,
+    results: Map<String, Variant<*>>,
+): List<URI>? = when (response) {
+    0 -> {
+        @Suppress("UNCHECKED_CAST")
+        (results["uris"]!!.value as List<String>).map { path -> path.toURI() }
+    }
+
+    1 -> {
+        null
+    }
+
+    2 -> {
+        throw XdgPortalResponseException(response)
+    }
+
+    else -> {
+        error("Unexpected XDG portal response code: $response")
+    }
 }
 
 internal interface XdgFileChooserTransport {
@@ -260,9 +288,11 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
         val result = CompletableDeferred<List<URI>?>()
         val matchRule = DBusMatchRule("signal", "org.freedesktop.portal.Request", "Response")
         val registration = AtomicReference<AutoCloseable?>(null)
-        val handler = ResponseHandler(path) { uris ->
-            result.complete(uris)
-        }
+        val handler = ResponseHandler(
+            path = path,
+            onComplete = { uris -> result.complete(uris) },
+            onFailure = { failure -> result.completeExceptionally(failure) },
+        )
         registration.set(
             addGenericSigHandlerCompat(
                 connection = connection,
@@ -279,6 +309,7 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
     private class ResponseHandler(
         private val path: String,
         private val onComplete: (result: List<URI>?) -> Unit,
+        private val onFailure: (failure: XdgPortalResponseException) -> Unit,
     ) : DBusSigHandler<DBusSignal> {
         @Suppress("UNCHECKED_CAST")
         override fun handle(signal: DBusSignal) {
@@ -287,13 +318,10 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
                 val response = params[0] as UInt32
                 val results = params[1] as Map<String, Variant<*>>
 
-                if (response.toInt() == 0) {
-                    val uris = (results["uris"]!!.value as List<String>).map { path ->
-                        path.toURI()
-                    }
-                    onComplete(uris)
-                } else {
-                    onComplete(null)
+                try {
+                    onComplete(resolveXdgPortalResponse(response.toInt(), results))
+                } catch (failure: XdgPortalResponseException) {
+                    onFailure(failure)
                 }
             }
         }

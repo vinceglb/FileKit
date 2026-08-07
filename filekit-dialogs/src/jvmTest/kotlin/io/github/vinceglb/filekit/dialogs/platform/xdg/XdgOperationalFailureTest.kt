@@ -13,7 +13,9 @@ import org.freedesktop.dbus.exceptions.DBusExecutionException
 import org.freedesktop.dbus.types.Variant
 import java.net.URI
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class XdgOperationalFailureTest {
@@ -83,6 +85,65 @@ class XdgOperationalFailureTest {
     }
 
     @Test
+    fun XdgFilePickerPortal_otherPortalResponse_throwsPickerOperationalFailureWithCause() = runTest {
+        val picker = XdgFilePickerPortal(RespondingXdgFileChooserTransport(response = 2))
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            picker.openFilePicker(
+                fileExtensions = null,
+                directory = null,
+                dialogSettings = FileKitDialogSettings(),
+            )
+        }
+
+        assertEquals(2, (failure.cause as XdgPortalResponseException).response)
+    }
+
+    @Test
+    fun XdgFilePickerPortal_otherDirectoryResponse_throwsDialogOperationalFailureWithCause() = runTest {
+        val picker = XdgFilePickerPortal(RespondingXdgFileChooserTransport(response = 2))
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            picker.openDirectoryPicker(
+                directory = null,
+                dialogSettings = FileKitDialogSettings(),
+            )
+        }
+
+        assertEquals(2, (failure.cause as XdgPortalResponseException).response)
+    }
+
+    @Test
+    fun XdgFilePickerPortal_otherSaverResponse_throwsDialogOperationalFailureWithCause() = runTest {
+        val picker = XdgFilePickerPortal(RespondingXdgFileChooserTransport(response = 2))
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            picker.openFileSaver(
+                suggestedName = "document",
+                defaultExtension = "txt",
+                allowedExtensions = setOf("txt"),
+                directory = null,
+                dialogSettings = FileKitDialogSettings(),
+            )
+        }
+
+        assertEquals(2, (failure.cause as XdgPortalResponseException).response)
+    }
+
+    @Test
+    fun XdgFilePickerPortal_cancelledPortalResponse_returnsNull() = runTest {
+        val picker = XdgFilePickerPortal(RespondingXdgFileChooserTransport(response = 1))
+
+        val result = picker.openFilePicker(
+            fileExtensions = null,
+            directory = null,
+            dialogSettings = FileKitDialogSettings(),
+        )
+
+        assertNull(result)
+    }
+
+    @Test
     fun XdgFilePickerPortal_cancellation_propagatesUnchanged() = runTest {
         val cancellation = CancellationException("Picker cancelled")
         val picker = XdgFilePickerPortal(ThrowingXdgFileChooserTransport(cancellation))
@@ -148,4 +209,28 @@ private class ThrowingXdgFileChooserTransport(
         title: String,
         options: MutableMap<String, Variant<*>>,
     ): List<URI>? = throw failure
+}
+
+private class RespondingXdgFileChooserTransport(
+    private val response: Int,
+) : XdgFileChooserTransport {
+    override fun isAvailable(): Boolean = true
+
+    override suspend fun openFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>? = resolveXdgPortalResponse(
+        response = response,
+        results = emptyMap<String, Variant<*>>(),
+    )
+
+    override suspend fun saveFile(
+        parentWindow: String,
+        title: String,
+        options: MutableMap<String, Variant<*>>,
+    ): List<URI>? = resolveXdgPortalResponse(
+        response = response,
+        results = emptyMap<String, Variant<*>>(),
+    )
 }
