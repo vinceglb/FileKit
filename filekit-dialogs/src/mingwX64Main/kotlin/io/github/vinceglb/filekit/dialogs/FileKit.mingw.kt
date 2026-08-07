@@ -67,12 +67,13 @@ private val ERROR_CANCELLED_HRESULT = 0x800704C7u.toInt()
 private val ERROR_FILE_NOT_FOUND_HRESULT = 0x80070002u.toInt()
 private val ERROR_INVALID_DRIVE_HRESULT = 0x8007000Fu.toInt()
 
-private class WindowsDialogOperationalException(
+internal class WindowsDialogOperationalException(
     message: String,
 ) : RuntimeException(message)
 
-private enum class WindowsDialogFailurePolicy {
+internal enum class WindowsDialogFailurePolicy {
     Legacy,
+    Picker,
     Directory,
     Saver,
     ;
@@ -80,6 +81,7 @@ private enum class WindowsDialogFailurePolicy {
     fun createFailure(message: String): RuntimeException = when (this) {
         Legacy -> IllegalStateException(message)
 
+        Picker,
         Directory,
         Saver,
         -> WindowsDialogOperationalException(message)
@@ -98,8 +100,25 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
         FileKitType.ImageAndVideo -> imageExtensions + videoExtensions
         is FileKitType.File -> type.extensions
     }
-    return showOpenDialog(extensions, directory, dialogSettings.title, pickFolders = false, mode is PickerMode.Multiple)
-        .toPickerStateFlow()
+    return runWindowsNativePickerOperation {
+        showOpenDialog(
+            extensions = extensions,
+            directory = directory,
+            title = dialogSettings.title,
+            pickFolders = false,
+            allowMultiple = mode is PickerMode.Multiple,
+            failurePolicy = WindowsDialogFailurePolicy.Picker,
+        )
+    }.toPickerStateFlow()
+}
+
+internal fun <T> runWindowsNativePickerOperation(operation: () -> T): T = try {
+    operation()
+} catch (failure: WindowsDialogOperationalException) {
+    throw FileKitPickerException(
+        message = "The Windows file picker could not complete the operation.",
+        cause = failure,
+    )
 }
 
 public actual suspend fun FileKit.openDirectoryPicker(
@@ -194,21 +213,17 @@ private fun showOpenDialog(
         directory?.let { setFolder(dlg, it, failurePolicy) }
         if (!extensions.isNullOrEmpty() && !pickFolders) setFileTypes(dlg, extensions, failurePolicy)
 
-        val hr = fk_dialog_show(dlg.reinterpret(), null)
-        if (hr != S_OK) {
-            if (hr == ERROR_CANCELLED_HRESULT) {
-                return@memScoped null
+        handleWindowsNativeDialogResult(
+            result = fk_dialog_show(dlg.reinterpret(), null),
+            failurePolicy = failurePolicy,
+            operation = "IFileOpenDialog::Show",
+        ) {
+            if (allowMultiple) {
+                getMultipleResults(dlg, failurePolicy)
+            } else {
+                val sigdn = if (pickFolders) FK_SIGDN_DESKTOPABSOLUTEPARSING.toInt() else FK_SIGDN_FILESYSPATH.toInt()
+                getSingleResult(dlg, sigdn, failurePolicy)?.let { listOf(it) }
             }
-            throw failurePolicy.createFailure(
-                "IFileOpenDialog::Show failed with HRESULT 0x${hr.toUInt().toString(16)}",
-            )
-        }
-
-        if (allowMultiple) {
-            getMultipleResults(dlg, failurePolicy)
-        } else {
-            val sigdn = if (pickFolders) FK_SIGDN_DESKTOPABSOLUTEPARSING.toInt() else FK_SIGDN_FILESYSPATH.toInt()
-            getSingleResult(dlg, sigdn, failurePolicy)?.let { listOf(it) }
         }
     } finally {
         ppDlg.value?.let { fk_open_dialog_release(it.reinterpret()) }
@@ -216,6 +231,23 @@ private fun showOpenDialog(
             CoUninitialize()
         }
     }
+}
+
+internal fun <T> handleWindowsNativeDialogResult(
+    result: Int,
+    failurePolicy: WindowsDialogFailurePolicy,
+    operation: String,
+    resolveResult: () -> T,
+): T? {
+    if (result == ERROR_CANCELLED_HRESULT) {
+        return null
+    }
+    if (result != S_OK) {
+        throw failurePolicy.createFailure(
+            "$operation failed with HRESULT 0x${result.toUInt().toString(16)}",
+        )
+    }
+    return resolveResult()
 }
 
 private fun showSaveDialog(
