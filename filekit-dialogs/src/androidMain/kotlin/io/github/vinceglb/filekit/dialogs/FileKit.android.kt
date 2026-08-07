@@ -114,11 +114,18 @@ public actual suspend fun FileKit.openDirectoryPicker(
     val registry = FileKit.registry
     val contract = ActivityResultContracts.OpenDocumentTree()
     val initialUri = directory?.path?.toUri()
-    val treeUri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = initialUri,
-    )
+    val treeUri = try {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = initialUri,
+        )
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to open the directory picker.",
+            cause = failure,
+        )
+    }
     return treeUri?.let(::PlatformFile)
 }
 
