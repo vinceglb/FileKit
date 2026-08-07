@@ -2,7 +2,9 @@ package io.github.vinceglb.filekit.dialogs.platform.xdg
 
 import com.sun.jna.Native
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.resolveXdgPortalParent
 import io.github.vinceglb.filekit.path
@@ -16,6 +18,8 @@ import org.freedesktop.dbus.annotations.DBusProperty.Access
 import org.freedesktop.dbus.annotations.Position
 import org.freedesktop.dbus.connections.impl.DBusConnection
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder
+import org.freedesktop.dbus.exceptions.DBusException
+import org.freedesktop.dbus.exceptions.DBusExecutionException
 import org.freedesktop.dbus.interfaces.DBusInterface
 import org.freedesktop.dbus.interfaces.DBusSigHandler
 import org.freedesktop.dbus.interfaces.Properties
@@ -86,12 +90,19 @@ internal class XdgFilePickerPortal(
         fileExtensions?.let { options["filters"] = createFilterOption(it) }
         directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
 
-        return transport
-            .openFile(
+        return runXdgRequest(
+            toFailure = if (openDirectory) {
+                Throwable::toDirectoryPickerFailure
+            } else {
+                Throwable::toFilePickerFailure
+            },
+        ) {
+            transport.openFile(
                 parentWindow = parentWindow,
                 title = title ?: "",
                 options = options,
-            )?.map { File(it) }
+            )
+        }?.map { File(it) }
     }
 
     override suspend fun openFileSaver(
@@ -111,12 +122,14 @@ internal class XdgFilePickerPortal(
         filterExtensions?.let { options["filters"] = createFilterOption(it) }
         directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
 
-        return transport
-            .saveFile(
-                parentWindow = dialogSettings.resolveXdgPortalParent(),
+        val parentWindow = dialogSettings.resolveXdgPortalParent()
+        return runXdgRequest(Throwable::toFileSaverFailure) {
+            transport.saveFile(
+                parentWindow = parentWindow,
                 title = "",
                 options = options,
-            )?.first()
+            )
+        }?.first()
             ?.let { File(it) }
     }
 
@@ -138,6 +151,32 @@ internal class XdgFilePickerPortal(
         System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
         return Variant(nullTerminated)
     }
+}
+
+private fun Throwable.toFilePickerFailure(): FileKitPickerException = FileKitPickerException(
+    message = "The XDG file picker could not complete the operation.",
+    cause = this,
+)
+
+private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The XDG directory picker could not complete the operation.",
+    cause = this,
+)
+
+private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The XDG file saver could not complete the operation.",
+    cause = this,
+)
+
+private suspend fun <T> runXdgRequest(
+    toFailure: (Throwable) -> FileKitDialogException,
+    request: suspend () -> T,
+): T = try {
+    request()
+} catch (failure: DBusExecutionException) {
+    throw toFailure(failure)
+} catch (failure: DBusException) {
+    throw toFailure(failure)
 }
 
 internal interface XdgFileChooserTransport {
