@@ -6,6 +6,7 @@ import com.sun.jna.WString
 import com.sun.jna.platform.win32.COM.COMUtils.FAILED
 import com.sun.jna.platform.win32.Guid
 import com.sun.jna.platform.win32.Ole32
+import com.sun.jna.platform.win32.W32Errors.HRESULT_FROM_WIN32
 import com.sun.jna.platform.win32.WTypes
 import com.sun.jna.platform.win32.Win32Exception
 import com.sun.jna.platform.win32.WinDef
@@ -18,6 +19,7 @@ import com.sun.jna.ptr.PointerByReference
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileOpenDialog
@@ -46,53 +48,61 @@ internal class WindowsFilePicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
-        // Set the initial directory
-        directory?.let { fileOpenDialog.setDefaultPath(it) }
+    ): File? = try {
+        useFileDialog(FileDialogType.Open) { fileOpenDialog ->
+            // Set the initial directory
+            directory?.let { fileOpenDialog.setDefaultPath(it) }
 
-        // Set title
-        dialogSettings.title?.let {
-            fileOpenDialog
-                .SetTitle(WString(dialogSettings.title))
-                .verify("SetTitle failed")
+            // Set title
+            dialogSettings.title?.let {
+                fileOpenDialog
+                    .SetTitle(WString(dialogSettings.title))
+                    .verify("SetTitle failed")
+            }
+
+            // Add filters
+            fileExtensions
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { fileOpenDialog.addFiltersToDialog(it) }
+
+            fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
+                it.getResult(SIGDN_FILESYSPATH)
+            }
         }
-
-        // Add filters
-        fileExtensions
-            ?.takeIf { it.isNotEmpty() }
-            ?.let { fileOpenDialog.addFiltersToDialog(it) }
-
-        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
-            it.getResult(SIGDN_FILESYSPATH)
-        }
+    } catch (failure: WindowsDialogOperationalException) {
+        throw failure.toFilePickerFailure()
     }
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? = useFileDialog(FileDialogType.Open) { fileOpenDialog ->
-        // Set the initial directory
-        directory?.let { fileOpenDialog.setDefaultPath(it) }
+    ): List<File>? = try {
+        useFileDialog(FileDialogType.Open) { fileOpenDialog ->
+            // Set the initial directory
+            directory?.let { fileOpenDialog.setDefaultPath(it) }
 
-        // Set title
-        dialogSettings.title?.let {
-            fileOpenDialog
-                .SetTitle(WString(dialogSettings.title))
-                .verify("SetTitle failed")
+            // Set title
+            dialogSettings.title?.let {
+                fileOpenDialog
+                    .SetTitle(WString(dialogSettings.title))
+                    .verify("SetTitle failed")
+            }
+
+            // Add filters
+            fileExtensions
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { fileOpenDialog.addFiltersToDialog(it) }
+
+            // Set a flag for multiple options
+            fileOpenDialog.setFlag(FOS_ALLOWMULTISELECT)
+
+            fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
+                it.getResults()
+            }
         }
-
-        // Add filters
-        fileExtensions
-            ?.takeIf { it.isNotEmpty() }
-            ?.let { fileOpenDialog.addFiltersToDialog(it) }
-
-        // Set a flag for multiple options
-        fileOpenDialog.setFlag(FOS_ALLOWMULTISELECT)
-
-        fileOpenDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
-            it.getResults()
-        }
+    } catch (failure: WindowsDialogOperationalException) {
+        throw failure.toFilePickerFailure()
     }
 
     override suspend fun openDirectoryPicker(
@@ -281,21 +291,9 @@ internal class WindowsFilePicker(
     ): T? {
         // Show the dialog to the user
         val openDialogResult = showWindowsDialog(parentHandle, this::Show)
-
-        // Valid error code: User canceled the dialog
-        val userCanceledException = Win32Exception(ERROR_CANCELLED)
-        if (openDialogResult == userCanceledException.hr) {
-            return null
+        return handleWindowsDialogResult(openDialogResult) {
+            block(this)
         }
-
-        // Invalid error codes: throw exception
-        if (FAILED(openDialogResult)) {
-            throw WindowsDialogOperationalException(
-                "Show failed with HRESULT 0x${openDialogResult.toInt().toUInt().toString(16)}",
-            )
-        }
-
-        return block(this)
     }
 
     private fun FileDialog.getResult(sigdnName: Long): File {
@@ -410,10 +408,34 @@ private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDial
     cause = this,
 )
 
+private fun Throwable.toFilePickerFailure(): FileKitPickerException = FileKitPickerException(
+    message = "The Windows file picker could not complete the operation.",
+    cause = this,
+)
+
 internal fun <T> showWindowsDialog(
     parentHandle: Long?,
     show: (WinDef.HWND?) -> T,
 ): T = show(parentHandle?.let(::toWindowsHwnd))
+
+internal fun <T> handleWindowsDialogResult(
+    openDialogResult: HRESULT,
+    block: () -> T,
+): T? {
+    // Valid error code: User canceled the dialog
+    if (openDialogResult == HRESULT_FROM_WIN32(ERROR_CANCELLED)) {
+        return null
+    }
+
+    // Invalid error codes: throw exception
+    if (FAILED(openDialogResult)) {
+        throw WindowsDialogOperationalException(
+            "Show failed with HRESULT 0x${openDialogResult.toInt().toUInt().toString(16)}",
+        )
+    }
+
+    return block()
+}
 
 internal fun toWindowsHwnd(handle: Long): WinDef.HWND = WinDef.HWND(Pointer(handle))
 
