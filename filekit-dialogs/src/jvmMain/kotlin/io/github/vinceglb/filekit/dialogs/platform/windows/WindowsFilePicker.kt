@@ -20,6 +20,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
+import io.github.vinceglb.filekit.dialogs.WINDOWS_FILE_PICKER_FAILURE_MESSAGE
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileOpenDialog
@@ -48,7 +49,7 @@ internal class WindowsFilePicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = try {
+    ): File? = runWindowsFilePickerOperation {
         useFileDialog(FileDialogType.Open) { fileOpenDialog ->
             // Set the initial directory
             directory?.let { fileOpenDialog.setDefaultPath(it) }
@@ -69,15 +70,13 @@ internal class WindowsFilePicker(
                 it.getResult(SIGDN_FILESYSPATH)
             }
         }
-    } catch (failure: WindowsDialogOperationalException) {
-        throw failure.toFilePickerFailure()
     }
 
     override suspend fun openFilesPicker(
         fileExtensions: Set<String>?,
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): List<File>? = try {
+    ): List<File>? = runWindowsFilePickerOperation {
         useFileDialog(FileDialogType.Open) { fileOpenDialog ->
             // Set the initial directory
             directory?.let { fileOpenDialog.setDefaultPath(it) }
@@ -101,8 +100,6 @@ internal class WindowsFilePicker(
                 it.getResults()
             }
         }
-    } catch (failure: WindowsDialogOperationalException) {
-        throw failure.toFilePickerFailure()
     }
 
     override suspend fun openDirectoryPicker(
@@ -409,9 +406,15 @@ private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDial
 )
 
 private fun Throwable.toFilePickerFailure(): FileKitPickerException = FileKitPickerException(
-    message = "The Windows file picker could not complete the operation.",
+    message = WINDOWS_FILE_PICKER_FAILURE_MESSAGE,
     cause = this,
 )
+
+private suspend fun <T> runWindowsFilePickerOperation(operation: suspend () -> T): T = try {
+    operation()
+} catch (failure: WindowsDialogOperationalException) {
+    throw failure.toFilePickerFailure()
+}
 
 internal fun <T> showWindowsDialog(
     parentHandle: Long?,

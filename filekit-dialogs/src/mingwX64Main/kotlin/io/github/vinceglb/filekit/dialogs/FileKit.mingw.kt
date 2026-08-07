@@ -116,7 +116,7 @@ internal fun <T> runWindowsNativePickerOperation(operation: () -> T): T = try {
     operation()
 } catch (failure: WindowsDialogOperationalException) {
     throw FileKitPickerException(
-        message = "The Windows file picker could not complete the operation.",
+        message = WINDOWS_FILE_PICKER_FAILURE_MESSAGE,
         cause = failure,
     )
 }
