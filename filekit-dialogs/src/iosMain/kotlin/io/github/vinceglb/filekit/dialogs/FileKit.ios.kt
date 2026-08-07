@@ -518,8 +518,12 @@ private fun isIpad(): Boolean {
     return device.userInterfaceIdiom == UIUserInterfaceIdiomPad
 }
 
-private fun FileKitDialogSettings.presenterViewController(): UIViewController? =
-    presenter ?: UIApplication.sharedApplication.topMostViewController()
+private fun activeAppleViewController(): UIViewController? =
+    UIApplication.sharedApplication.topMostViewController()
+
+private fun FileKitDialogSettings.presenterViewController(
+    activeViewController: () -> UIViewController? = ::activeAppleViewController,
+): UIViewController? = presenter ?: activeViewController()
 
 private fun FileKitOpenCameraSettings.presenterViewController(): UIViewController? =
     presenter ?: UIApplication.sharedApplication.topMostViewController()
@@ -553,10 +557,14 @@ private suspend fun callPicker(
         pickerController.delegate = documentPickerDelegate
 
         // Present the picker controller
-        dialogSettings.presenterViewController()?.presentViewController(
-            pickerController,
-            animated = true,
-            completion = null,
+        presentApplePickerController(
+            dialogSettings = dialogSettings,
+            controller = pickerController,
+            operation = if (mode == Mode.Directory) {
+                ApplePickerPresentationOperation.Directory
+            } else {
+                ApplePickerPresentationOperation.Document
+            },
         )
     }
 }
@@ -607,7 +615,34 @@ private suspend fun getPhPickerResults(
     controller.presentationController?.delegate = phPickerDismissDelegate
 
     // Present the picker controller
-    dialogSettings.presenterViewController()?.presentViewController(
+    presentApplePickerController(
+        dialogSettings = dialogSettings,
+        controller = controller,
+        operation = ApplePickerPresentationOperation.PhotoOrVideo,
+    )
+}
+
+internal enum class ApplePickerPresentationOperation {
+    Document,
+    PhotoOrVideo,
+    Directory,
+}
+
+internal fun presentApplePickerController(
+    dialogSettings: FileKitDialogSettings,
+    controller: UIViewController,
+    operation: ApplePickerPresentationOperation,
+    activeViewController: () -> UIViewController? = ::activeAppleViewController,
+) {
+    val presenter = dialogSettings.presenterViewController(activeViewController)
+    if (presenter == null) {
+        if (operation != ApplePickerPresentationOperation.Directory) {
+            throw FileKitPickerException("No active view controller is available to present the file picker.")
+        }
+        throw FileKitDialogException("No active view controller is available to present the directory picker.")
+    }
+
+    presenter.presentViewController(
         controller,
         animated = true,
         completion = null,
