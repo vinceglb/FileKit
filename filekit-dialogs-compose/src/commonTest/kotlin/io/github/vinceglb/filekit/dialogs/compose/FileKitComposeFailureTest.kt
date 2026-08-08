@@ -461,6 +461,37 @@ class FileKitComposeFailureTest {
     }
 
     @Test
+    fun runFilePickerLauncher_cancelledJobAfterNonCooperativeStateFailure_invokesNoCallbacks() = runTest {
+        lateinit var resumeStateStream: () -> Unit
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val job = launch(start = CoroutineStart.UNDISPATCHED) {
+            runFilePickerLauncher(
+                mode = FileKitMode.SingleWithState,
+                openPicker = {
+                    flow<FileKitPickerState<PlatformFile>> {
+                        suspendCoroutine<Unit> { continuation ->
+                            resumeStateStream = { continuation.resumeWith(Result.success(Unit)) }
+                        }
+                        throw FileKitPickerException("Late state-stream failure")
+                    }
+                },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        job.cancel()
+        resumeStateStream()
+        job.join()
+
+        assertTrue(job.isCancelled)
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
     fun runFilePickerLauncher_stateCallbackFailure_propagates_withoutInvokingError() = runTest {
         val callbackFailure = IllegalStateException("Consumer state callback failed")
         var errorInvoked = false

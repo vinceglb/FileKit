@@ -9,6 +9,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 
@@ -178,7 +180,10 @@ private suspend fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, Con
             (result as Flow<ConsumedResult>)
                 .catch { failure ->
                     when (failure) {
-                        is FileKitPickerException -> onFailure(failure)
+                        is FileKitPickerException -> {
+                            currentCoroutineContext().ensureActive()
+                            onFailure(failure)
+                        }
                         else -> throw failure
                     }
                 }.collect(onConsumed)
