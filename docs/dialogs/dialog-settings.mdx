@@ -92,28 +92,39 @@ There is no compatibility `parentWindow` property or constructor.
 
 #### Nucleus with the Tao backend
 
-Nucleus 2.1.10 exposes a native HWND for Tao windows on Windows. Adapt that
-framework-specific window locally and pass the resulting settings to a plain,
-non-`WindowScope` launcher:
+Nucleus 2.3.2 exposes the native identities needed to parent Tao dialogs on
+Windows and Linux/X11. Adapt the framework-specific window locally and pass the
+resulting settings to a plain, non-`WindowScope` launcher:
 
 ```kotlin
-val parent = when (Platform.Current) {
-    Platform.Windows -> nucleusWindow.unsafe.taoWindow
-        ?.nativeHandle
-        ?.takeIf { it != 0L }
-        ?.let(FileKitDialogParent::windows)
-    else -> null
+private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
+    unsafe.awtWindow?.let { return FileKitDialogParent.awt(it) }
+
+    return when (Platform.Current) {
+        Platform.Windows -> unsafe.taoWindow
+            ?.nativeHandle
+            ?.takeIf { it != 0L }
+            ?.let(FileKitDialogParent::windows)
+        Platform.Linux -> unsafe.taoWindow
+            ?.x11WindowId
+            ?.let(FileKitDialogParent::x11)
+        else -> null
+    }
 }
 
-val settings = FileKitDialogSettings(parent = parent)
+val settings = FileKitDialogSettings(parent = nucleusWindow.fileKitDialogParent())
+val launcher = rememberFilePickerLauncher(dialogSettings = settings) { file ->
+    // Use the selected file.
+}
 ```
 
 Do not pass `nucleusWindow.unsafe.taoHandle`: it is an opaque Tao event-loop
-identity, not an operating-system dialog parent. Nucleus currently does not
-expose an X11 XID or `xdg_foreign` export for Tao on Linux. On macOS it exposes
-an NSView, while FileKit's JVM picker would need a separate NSWindow sheet
-implementation. Tao parenting is therefore currently supported through this
-adapter on Windows only.
+identity, not an operating-system dialog parent. On Wayland, `x11WindowId` is
+`null`, so this adapter deliberately opens an unparented dialog. Wayland parent
+exports and macOS NSWindow sheets are deferred pending community feedback; both
+require lifecycle handling beyond these direct Windows and X11 conversions.
+The dialog also remains unparented when the Nucleus window has not exposed a
+supported identity yet.
 
 ### iOS and macOS Settings
 

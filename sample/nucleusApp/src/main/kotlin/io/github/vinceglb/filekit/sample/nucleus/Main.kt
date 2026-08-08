@@ -42,8 +42,13 @@ private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
                 ?.let(FileKitDialogParent::windows)
         }
 
-        // Tao does not expose an XDG portal identifier on Linux, and its macOS
-        // handle is an NSView rather than the NSWindow required for a sheet.
+        Platform.Linux -> {
+            // Nucleus returns null here when Tao is using Wayland.
+            unsafe.taoWindow
+                ?.x11WindowId
+                ?.let(FileKitDialogParent::x11)
+        }
+
         else -> {
             null
         }
