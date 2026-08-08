@@ -39,6 +39,17 @@ class SwingDirectoryPickerResultTest {
     }
 
     @Test
+    fun SwingDirectoryPicker_errorSelection_throwsDialogOperationalFailure() {
+        assertFailsWith<FileKitDialogException> {
+            resolveSwingPickerResult(
+                returnValue = JFileChooser.ERROR_OPTION,
+                selectedFiles = emptyArray(),
+                selectedFile = null,
+            )
+        }
+    }
+
+    @Test
     fun SwingDirectoryPicker_headlessFailure_throwsDialogOperationalFailureWithCause() = runTest {
         val headlessFailure = HeadlessException("No graphics environment")
 

@@ -109,8 +109,9 @@ internal fun resolveSwingPickerResult(
     returnValue: Int,
     selectedFiles: Array<File>,
     selectedFile: File?,
-): List<File>? = if (returnValue == JFileChooser.APPROVE_OPTION) {
-    selectedFiles.toList().takeIf { it.isNotEmpty() } ?: selectedFile?.let(::listOf)
-} else {
-    null
+): List<File>? = when (returnValue) {
+    JFileChooser.APPROVE_OPTION -> selectedFiles.toList().takeIf { it.isNotEmpty() } ?: selectedFile?.let(::listOf)
+    JFileChooser.CANCEL_OPTION -> null
+    JFileChooser.ERROR_OPTION -> throw FileKitDialogException("The Swing directory picker failed to display.")
+    else -> throw FileKitDialogException("The Swing directory picker returned an unknown result: $returnValue.")
 }
