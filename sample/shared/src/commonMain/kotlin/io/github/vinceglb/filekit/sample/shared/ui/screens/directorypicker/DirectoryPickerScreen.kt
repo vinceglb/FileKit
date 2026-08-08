@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
@@ -68,25 +69,37 @@ private fun DirectoryPickerScreen(
     var startDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var pickedDirectories by remember { mutableStateOf(emptyList<PlatformFile>()) }
     var selectedFile by remember { mutableStateOf<PlatformFile?>(null) }
+    var directoryError by remember { mutableStateOf<String?>(null) }
     val dialogSettings = dialogSettingsTransform(FileKitDialogSettings.createDefault())
+
+    val onDirectoryError: (FileKitDialogException) -> Unit = { failure ->
+        buttonState = AppScreenHeaderButtonState.Enabled
+        directoryError = failure.message
+    }
 
     val directoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { directory ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        if (directory != null) {
-            pickedDirectories = listOf(directory) + pickedDirectories
-        }
-    }
+        onError = onDirectoryError,
+        onResult = { directory ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            directoryError = null
+            if (directory != null) {
+                pickedDirectories = listOf(directory) + pickedDirectories
+            }
+        },
+    )
     val startDirectoryLauncher = rememberDirectoryPickerLauncher(
         directory = startDirectory,
         dialogSettings = dialogSettings,
-    ) { directory ->
-        if (directory != null) {
-            startDirectory = directory
-        }
-    }
+        onError = onDirectoryError,
+        onResult = { directory ->
+            directoryError = null
+            if (directory != null) {
+                startDirectory = directory
+            }
+        },
+    )
 
     fun openDirectoryPicker() {
         buttonState = AppScreenHeaderButtonState.Loading
@@ -149,7 +162,7 @@ private fun DirectoryPickerScreen(
                 item {
                     AppPickerResultsCard(
                         files = pickedDirectories,
-                        emptyText = "No directory selected yet",
+                        emptyText = directoryError ?: "No directory selected yet",
                         emptyIcon = LucideIcons.Folder,
                         onFileClick = onDisplayFileDetails,
                         modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

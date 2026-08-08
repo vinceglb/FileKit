@@ -1,6 +1,24 @@
+import org.gradle.api.tasks.testing.Test
+
 plugins {
     alias(libs.plugins.filekit.kotlinMultiplatformLibrary)
     alias(libs.plugins.vanniktech.mavenPublish)
+}
+
+val jvmTest = tasks.named<Test>("jvmTest")
+val headlessAwtFilePickerTest = tasks.register<Test>("headlessAwtFilePickerTest") {
+    dependsOn(tasks.named("jvmTestClasses"))
+    testClassesDirs = jvmTest.get().testClassesDirs
+    classpath = jvmTest.get().classpath
+    filter.includeTestsMatching(
+        "io.github.vinceglb.filekit.dialogs.platform.awt.AwtFilePickerFailureTest",
+    )
+    systemProperty("filekit.test.headlessAwtFilePicker", "true")
+    systemProperty("java.awt.headless", "true")
+}
+
+jvmTest.configure {
+    dependsOn(headlessAwtFilePickerTest)
 }
 
 kotlin {

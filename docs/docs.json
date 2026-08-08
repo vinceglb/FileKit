@@ -37,6 +37,7 @@
         "group": "FileKit Dialogs",
         "pages": [
           "dialogs/setup",
+          "dialogs/error-handling",
           "dialogs/file-picker",
           "dialogs/gallery-picker",
           "dialogs/directory-picker",

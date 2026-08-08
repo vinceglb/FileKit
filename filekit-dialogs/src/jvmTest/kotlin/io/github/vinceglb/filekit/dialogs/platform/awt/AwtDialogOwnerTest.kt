@@ -4,7 +4,6 @@ package io.github.vinceglb.filekit.dialogs.platform.awt
 
 import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import kotlinx.coroutines.test.runTest
 import java.awt.Dialog
 import java.awt.Frame
@@ -23,8 +22,15 @@ class AwtDialogOwnerTest {
     }
 
     @Test
+    fun requireSupportedAwtFileDialogOwner_withUnsupportedWindow_throwsInvalidInvocation() {
+        assertFailsWith<IllegalArgumentException> {
+            requireSupportedAwtFileDialogOwner(Window::class.java)
+        }
+    }
+
+    @Test
     fun AwtFilePicker_withNativeParent_failsBeforeOpeningUi() = runTest {
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             AwtFilePicker().openFilePicker(
                 fileExtensions = null,
                 directory = null,
@@ -37,7 +43,7 @@ class AwtDialogOwnerTest {
 
     @Test
     fun AwtFileSaver_withNativeParent_failsBeforeOpeningUi() = runTest {
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             AwtFileSaver.saveFile(
                 suggestedName = "example",
                 defaultExtension = "txt",

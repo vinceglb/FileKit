@@ -17,6 +17,8 @@ import io.github.vinceglb.filekit.PlatformFile
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
  * @return The path where the file should be saved as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When a valid file-saving operation cannot be prepared, presented, or completed.
+ * Invalid arguments and unsupported argument combinations remain caller-contract violations and are not wrapped in this type.
  */
 public suspend fun FileKit.openFileSaver(
     suggestedName: String,

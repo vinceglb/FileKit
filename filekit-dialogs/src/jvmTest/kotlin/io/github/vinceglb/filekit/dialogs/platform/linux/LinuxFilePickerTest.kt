@@ -5,7 +5,6 @@ package io.github.vinceglb.filekit.dialogs.platform.linux
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
-import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.awt.AwtFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.swing.SwingFilePicker
@@ -59,16 +58,16 @@ class LinuxFilePickerTest {
         )
         val settings = FileKitDialogSettings(parent = FileKitDialogParent.x11(42))
 
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             picker.openFilePicker(null, null, settings)
         }
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             picker.openFilesPicker(null, null, settings)
         }
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             picker.openDirectoryPicker(null, settings)
         }
-        assertFailsWith<FileKitPickerException> {
+        assertFailsWith<IllegalArgumentException> {
             picker.openFileSaver("example", "txt", null, null, settings)
         }
     }

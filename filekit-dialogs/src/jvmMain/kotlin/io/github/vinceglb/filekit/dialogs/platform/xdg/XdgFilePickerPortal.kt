@@ -2,7 +2,9 @@ package io.github.vinceglb.filekit.dialogs.platform.xdg
 
 import com.sun.jna.Native
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.resolveXdgPortalParent
 import io.github.vinceglb.filekit.path
@@ -16,6 +18,8 @@ import org.freedesktop.dbus.annotations.DBusProperty.Access
 import org.freedesktop.dbus.annotations.Position
 import org.freedesktop.dbus.connections.impl.DBusConnection
 import org.freedesktop.dbus.connections.impl.DBusConnectionBuilder
+import org.freedesktop.dbus.exceptions.DBusException
+import org.freedesktop.dbus.exceptions.DBusExecutionException
 import org.freedesktop.dbus.interfaces.DBusInterface
 import org.freedesktop.dbus.interfaces.DBusSigHandler
 import org.freedesktop.dbus.interfaces.Properties
@@ -86,12 +90,19 @@ internal class XdgFilePickerPortal(
         fileExtensions?.let { options["filters"] = createFilterOption(it) }
         directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
 
-        return transport
-            .openFile(
+        return runXdgRequest(
+            toFailure = if (openDirectory) {
+                Throwable::toDirectoryPickerFailure
+            } else {
+                Throwable::toFilePickerFailure
+            },
+        ) {
+            transport.openFile(
                 parentWindow = parentWindow,
                 title = title ?: "",
                 options = options,
-            )?.map { File(it) }
+            )
+        }?.map { File(it) }
     }
 
     override suspend fun openFileSaver(
@@ -111,12 +122,14 @@ internal class XdgFilePickerPortal(
         filterExtensions?.let { options["filters"] = createFilterOption(it) }
         directory?.let { options["current_folder"] = createCurrentFolderOption(it) }
 
-        return transport
-            .saveFile(
-                parentWindow = dialogSettings.resolveXdgPortalParent(),
+        val parentWindow = dialogSettings.resolveXdgPortalParent()
+        return runXdgRequest(Throwable::toFileSaverFailure) {
+            transport.saveFile(
+                parentWindow = parentWindow,
                 title = "",
                 options = options,
-            )?.first()
+            )
+        }?.first()
             ?.let { File(it) }
     }
 
@@ -137,6 +150,60 @@ internal class XdgFilePickerPortal(
         val nullTerminated = ByteArray(stringBytes.size + 1)
         System.arraycopy(stringBytes, 0, nullTerminated, 0, stringBytes.size)
         return Variant(nullTerminated)
+    }
+}
+
+private fun Throwable.toFilePickerFailure(): FileKitPickerException = FileKitPickerException(
+    message = "The XDG file picker could not complete the operation.",
+    cause = this,
+)
+
+private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The XDG directory picker could not complete the operation.",
+    cause = this,
+)
+
+private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDialogException(
+    message = "The XDG file saver could not complete the operation.",
+    cause = this,
+)
+
+private suspend fun <T> runXdgRequest(
+    toFailure: (Throwable) -> FileKitDialogException,
+    request: suspend () -> T,
+): T = try {
+    request()
+} catch (failure: DBusExecutionException) {
+    throw toFailure(failure)
+} catch (failure: DBusException) {
+    throw toFailure(failure)
+} catch (failure: XdgPortalResponseException) {
+    throw toFailure(failure)
+}
+
+internal class XdgPortalResponseException(
+    internal val response: Int,
+) : RuntimeException("The XDG portal ended the request with response code $response.")
+
+internal fun resolveXdgPortalResponse(
+    response: Int,
+    results: Map<String, Variant<*>>,
+): List<URI>? = when (response) {
+    0 -> {
+        @Suppress("UNCHECKED_CAST")
+        (results["uris"]!!.value as List<String>).map { path -> path.toURI() }
+    }
+
+    1 -> {
+        null
+    }
+
+    2 -> {
+        throw XdgPortalResponseException(response)
+    }
+
+    else -> {
+        error("Unexpected XDG portal response code: $response")
     }
 }
 
@@ -221,9 +288,10 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
         val result = CompletableDeferred<List<URI>?>()
         val matchRule = DBusMatchRule("signal", "org.freedesktop.portal.Request", "Response")
         val registration = AtomicReference<AutoCloseable?>(null)
-        val handler = ResponseHandler(path) { uris ->
-            result.complete(uris)
-        }
+        val handler = ResponseHandler(
+            path = path,
+            result = result,
+        )
         registration.set(
             addGenericSigHandlerCompat(
                 connection = connection,
@@ -239,23 +307,11 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
 
     private class ResponseHandler(
         private val path: String,
-        private val onComplete: (result: List<URI>?) -> Unit,
+        private val result: CompletableDeferred<List<URI>?>,
     ) : DBusSigHandler<DBusSignal> {
-        @Suppress("UNCHECKED_CAST")
         override fun handle(signal: DBusSignal) {
             if (path == signal.path) {
-                val params = signal.parameters
-                val response = params[0] as UInt32
-                val results = params[1] as Map<String, Variant<*>>
-
-                if (response.toInt() == 0) {
-                    val uris = (results["uris"]!!.value as List<String>).map { path ->
-                        path.toURI()
-                    }
-                    onComplete(uris)
-                } else {
-                    onComplete(null)
-                }
+                dispatchXdgPortalResponse(signal.parameters, result)
             }
         }
     }
@@ -298,6 +354,21 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
         FileChooserDbusInterface::class.java,
+    )
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun dispatchXdgPortalResponse(
+    parameters: Array<out Any?>,
+    result: CompletableDeferred<List<URI>?>,
+) {
+    runCatching {
+        val response = parameters[0] as UInt32
+        val results = parameters[1] as Map<String, Variant<*>>
+        resolveXdgPortalResponse(response.toInt(), results)
+    }.fold(
+        onSuccess = { uris -> result.complete(uris) },
+        onFailure = { failure -> result.completeExceptionally(failure) },
     )
 }
 

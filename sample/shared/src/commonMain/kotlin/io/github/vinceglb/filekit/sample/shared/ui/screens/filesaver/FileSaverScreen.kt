@@ -22,6 +22,7 @@ import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.compose.rememberDirectoryPickerLauncher
 import io.github.vinceglb.filekit.name
@@ -71,24 +72,35 @@ private fun FileSaverScreen(
     var allowedExtensions by remember { mutableStateOf("pdf, txt") }
     var saveDirectory by remember { mutableStateOf<PlatformFile?>(null) }
     var savedFiles by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var saverError by remember { mutableStateOf<String?>(null) }
     val dialogSettings = dialogSettingsTransform(FileKitDialogSettings.createDefault())
+
+    val onSaverError: (FileKitDialogException) -> Unit = { failure ->
+        buttonState = AppScreenHeaderButtonState.Enabled
+        saverError = failure.message
+    }
 
     val fileSaverLauncher = rememberFileSaverLauncher(
         dialogSettings = dialogSettings,
-    ) { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        if (file != null) {
-            savedFiles = listOf(file) + savedFiles
-        }
-    }
+        onError = onSaverError,
+        onResult = { file ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            saverError = null
+            if (file != null) {
+                savedFiles = listOf(file) + savedFiles
+            }
+        },
+    )
     val directoryPickerLauncher = rememberDirectoryPickerLauncher(
         directory = saveDirectory,
         dialogSettings = dialogSettings,
-    ) { directory ->
-        if (directory != null) {
-            saveDirectory = directory
-        }
-    }
+        onError = onSaverError,
+        onResult = { directory ->
+            if (directory != null) {
+                saveDirectory = directory
+            }
+        },
+    )
     val isSupported = fileSaverLauncher.isSupported
     val primaryButtonText = if (isSupported) "Save File" else "File Saver Unavailable"
 
@@ -173,7 +185,7 @@ private fun FileSaverScreen(
             item {
                 AppPickerResultsCard(
                     files = savedFiles,
-                    emptyText = "No save locations selected yet",
+                    emptyText = saverError ?: "No save locations selected yet",
                     emptyIcon = LucideIcons.File,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

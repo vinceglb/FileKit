@@ -1,11 +1,13 @@
 package io.github.vinceglb.filekit.dialogs.platform.swing
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.requireAwtWindowOrNull
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.awt.HeadlessException
 import java.io.File
 import javax.swing.JFileChooser
 import javax.swing.UIManager
@@ -48,7 +50,7 @@ internal class SwingFilePicker : PlatformFilePicker {
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? =
+    ): File? = runSwingDirectoryPicker {
         callSwingFilePicker(
             mode = JFileChooser.DIRECTORIES_ONLY,
             isMultiSelectionEnabled = false,
@@ -56,6 +58,7 @@ internal class SwingFilePicker : PlatformFilePicker {
             fileExtensions = null,
             dialogSettings = dialogSettings,
         )?.firstOrNull()
+    }
 
     private suspend fun callSwingFilePicker(
         mode: Int,
@@ -79,12 +82,36 @@ internal class SwingFilePicker : PlatformFilePicker {
 
         val parentWindow = dialogSettings.parent.requireAwtWindowOrNull("Swing dialogs")
         val returnValue = jFileChooser.showOpenDialog(parentWindow)
-        if (returnValue == JFileChooser.APPROVE_OPTION) {
-            continuation.resume(
-                jFileChooser.selectedFiles.toList().takeIf { it.isNotEmpty() } ?: jFileChooser.selectedFile?.let { listOf(it) },
-            )
-        }
+        continuation.resume(
+            resolveSwingPickerResult(
+                returnValue = returnValue,
+                selectedFiles = jFileChooser.selectedFiles,
+                selectedFile = jFileChooser.selectedFile,
+            ),
+        )
 
         continuation.invokeOnCancellation { jFileChooser.cancelSelection() }
     }
+}
+
+internal suspend fun <T> runSwingDirectoryPicker(
+    operation: suspend () -> T,
+): T = try {
+    operation()
+} catch (failure: HeadlessException) {
+    throw FileKitDialogException(
+        message = "The Swing directory picker is unavailable in a headless environment.",
+        cause = failure,
+    )
+}
+
+internal fun resolveSwingPickerResult(
+    returnValue: Int,
+    selectedFiles: Array<File>,
+    selectedFile: File?,
+): List<File>? = when (returnValue) {
+    JFileChooser.APPROVE_OPTION -> selectedFiles.toList().takeIf { it.isNotEmpty() } ?: selectedFile?.let(::listOf)
+    JFileChooser.CANCEL_OPTION -> null
+    JFileChooser.ERROR_OPTION -> throw FileKitDialogException("The Swing directory picker failed to display.")
+    else -> throw FileKitDialogException("The Swing directory picker returned an unknown result: $returnValue.")
 }

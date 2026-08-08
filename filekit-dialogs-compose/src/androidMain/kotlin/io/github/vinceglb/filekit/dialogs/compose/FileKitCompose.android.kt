@@ -31,6 +31,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidCameraPermissionInternal
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
 import io.github.vinceglb.filekit.dialogs.FileKitCameraFacing
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings
@@ -82,11 +83,18 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
 
     val currentType by rememberUpdatedState(type)
     val currentMode by rememberUpdatedState(mode)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnConsumed by rememberUpdatedState(onResult)
 
     var pendingModeId by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingMaxItems by rememberSaveable { mutableStateOf<Int?>(null) }
     var pendingLauncherId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    fun clearPendingState() {
+        pendingModeId = null
+        pendingMaxItems = null
+        pendingLauncherId = null
+    }
 
     fun dispatchPendingResult(launcherId: String, files: List<PlatformFile>?) {
         dispatchPendingPickerResult(
@@ -95,11 +103,7 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
             pendingModeId = pendingModeId,
             pendingMaxItems = pendingMaxItems,
             files = files,
-            clearPendingState = {
-                pendingModeId = null
-                pendingMaxItems = null
-                pendingLauncherId = null
-            },
+            clearPendingState = ::clearPendingState,
             onConsumed = { consumed ->
                 @Suppress("UNCHECKED_CAST")
                 currentOnConsumed(consumed as ConsumedResult)
@@ -107,12 +111,9 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
         )
     }
 
-    fun dispatchCancelledResult(launcherId: String) {
-        pendingLauncherId = launcherId
-        dispatchPendingResult(
-            launcherId = launcherId,
-            files = null,
-        )
+    fun dispatchLaunchFailure(failure: FileKitPickerException) {
+        clearPendingState()
+        currentOnError(failure)
     }
 
     val visualSingleLauncher = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -171,65 +172,47 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
                             modeId = modeSnapshot.modeId,
                             maxItems = modeSnapshot.maxItems,
                         ) -> {
-                            when (
-                                resolvePickerLaunchOutcome(
-                                    launchPrimary = {
-                                        pendingLauncherId = LAUNCHER_VISUAL_SINGLE
-                                        launchPickerSafely {
-                                            visualSingleLauncher.launch(request)
-                                        }
-                                    },
-                                    launchFallback = {
-                                        pendingLauncherId = LAUNCHER_FILE_SINGLE
-                                        launchPickerSafely {
-                                            fileSingleLauncher.launch(fallbackMimeTypes)
-                                        }
-                                    },
-                                )
-                            ) {
-                                PickerLaunchOutcome.PrimaryLaunched,
-                                PickerLaunchOutcome.FallbackLaunched,
-                                -> {
-                                    Unit
-                                }
-
-                                PickerLaunchOutcome.Cancelled -> {
-                                    dispatchCancelledResult(LAUNCHER_FILE_SINGLE)
-                                }
+                            val outcome = resolvePickerLaunchOutcome(
+                                launchPrimary = {
+                                    pendingLauncherId = LAUNCHER_VISUAL_SINGLE
+                                    launchFilePickerSafely {
+                                        visualSingleLauncher.launch(request)
+                                    }
+                                },
+                                launchFallback = {
+                                    pendingLauncherId = LAUNCHER_FILE_SINGLE
+                                    launchFilePickerSafely {
+                                        fileSingleLauncher.launch(fallbackMimeTypes)
+                                    }
+                                },
+                            )
+                            if (outcome is PickerLaunchOutcome.Failed) {
+                                dispatchLaunchFailure(outcome.failure)
                             }
                         }
 
                         else -> {
-                            when (
-                                resolvePickerLaunchOutcome(
-                                    launchPrimary = {
-                                        pendingLauncherId = LAUNCHER_VISUAL_MULTIPLE
-                                        launchPickerSafely {
-                                            visualMultipleLauncher.launch(
-                                                DynamicPickMultipleVisualMediaInput(
-                                                    request = request,
-                                                    maxItems = modeSnapshot.maxItems,
-                                                ),
-                                            )
-                                        }
-                                    },
-                                    launchFallback = {
-                                        pendingLauncherId = LAUNCHER_FILE_MULTIPLE
-                                        launchPickerSafely {
-                                            fileMultipleLauncher.launch(fallbackMimeTypes)
-                                        }
-                                    },
-                                )
-                            ) {
-                                PickerLaunchOutcome.PrimaryLaunched,
-                                PickerLaunchOutcome.FallbackLaunched,
-                                -> {
-                                    Unit
-                                }
-
-                                PickerLaunchOutcome.Cancelled -> {
-                                    dispatchCancelledResult(LAUNCHER_FILE_MULTIPLE)
-                                }
+                            val outcome = resolvePickerLaunchOutcome(
+                                launchPrimary = {
+                                    pendingLauncherId = LAUNCHER_VISUAL_MULTIPLE
+                                    launchFilePickerSafely {
+                                        visualMultipleLauncher.launch(
+                                            DynamicPickMultipleVisualMediaInput(
+                                                request = request,
+                                                maxItems = modeSnapshot.maxItems,
+                                            ),
+                                        )
+                                    }
+                                },
+                                launchFallback = {
+                                    pendingLauncherId = LAUNCHER_FILE_MULTIPLE
+                                    launchFilePickerSafely {
+                                        fileMultipleLauncher.launch(fallbackMimeTypes)
+                                    }
+                                },
+                            )
+                            if (outcome is PickerLaunchOutcome.Failed) {
+                                dispatchLaunchFailure(outcome.failure)
                             }
                         }
                     }
@@ -240,21 +223,25 @@ internal actual fun <PickerResult, ConsumedResult> rememberPlatformFilePickerLau
                     when {
                         modeSnapshot.isSingleMode() -> {
                             pendingLauncherId = LAUNCHER_FILE_SINGLE
-                            val isLaunched = launchPickerSafely {
-                                fileSingleLauncher.launch(mimeTypes)
-                            }
-                            if (!isLaunched) {
-                                dispatchCancelledResult(LAUNCHER_FILE_SINGLE)
+                            when (
+                                val launchResult = launchFilePickerSafely {
+                                    fileSingleLauncher.launch(mimeTypes)
+                                }
+                            ) {
+                                PickerLaunchResult.Launched -> Unit
+                                is PickerLaunchResult.Failed -> dispatchLaunchFailure(launchResult.failure)
                             }
                         }
 
                         else -> {
                             pendingLauncherId = LAUNCHER_FILE_MULTIPLE
-                            val isLaunched = launchPickerSafely {
-                                fileMultipleLauncher.launch(mimeTypes)
-                            }
-                            if (!isLaunched) {
-                                dispatchCancelledResult(LAUNCHER_FILE_MULTIPLE)
+                            when (
+                                val launchResult = launchFilePickerSafely {
+                                    fileMultipleLauncher.launch(mimeTypes)
+                                }
+                            ) {
+                                PickerLaunchResult.Launched -> Unit
+                                is PickerLaunchResult.Failed -> dispatchLaunchFailure(launchResult.failure)
                             }
                         }
                     }
@@ -277,9 +264,33 @@ public actual fun rememberDirectoryPickerLauncher(
     directory: PlatformFile?,
     dialogSettings: FileKitDialogSettings,
     onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher = rememberDirectoryPickerLauncher(
+    directory = directory,
+    dialogSettings = dialogSettings,
+    onError = {},
+    onResult = onResult,
+)
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when a valid directory operation cannot complete.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+@Suppress("UNUSED_PARAMETER")
+public actual fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile?,
+    dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher {
     InitializeAndroidFileKit()
 
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
     val currentDirectory by rememberUpdatedState(directory)
 
@@ -297,13 +308,13 @@ public actual fun rememberDirectoryPickerLauncher(
         PickerResultLauncher {
             val initialUri = currentDirectory?.path?.toUri()
             hasPendingLaunch = true
-            val isLaunched = launchPickerSafely {
-                launcher.launch(initialUri)
-            }
-            if (!isLaunched) {
-                hasPendingLaunch = false
-                currentOnResult(null)
-            }
+            dispatchAndroidDialogLaunchResult(
+                result = launchDirectoryPickerSafely {
+                    launcher.launch(initialUri)
+                },
+                clearPendingState = { hasPendingLaunch = false },
+                onError = currentOnError,
+            )
         }
     }
 }
@@ -311,10 +322,12 @@ public actual fun rememberDirectoryPickerLauncher(
 @Composable
 internal actual fun rememberPlatformFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     InitializeAndroidFileKit()
 
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     var hasPendingLaunch by rememberSaveable { mutableStateOf(false) }
@@ -343,12 +356,18 @@ internal actual fun rememberPlatformFileSaverLauncher(
             }
 
             hasPendingLaunch = true
-            launcher.launch(
-                CreateDocumentInput(
-                    mimeType = mimeType,
-                    fileName = fileName,
-                    allowedMimeTypes = allowedMimeTypes,
-                ),
+            dispatchAndroidDialogLaunchResult(
+                result = launchFileSaverSafely {
+                    launcher.launch(
+                        CreateDocumentInput(
+                            mimeType = mimeType,
+                            fileName = fileName,
+                            allowedMimeTypes = allowedMimeTypes,
+                        ),
+                    )
+                },
+                clearPendingState = { hasPendingLaunch = false },
+                onError = currentOnError,
             )
         }
     }
@@ -365,6 +384,26 @@ internal actual fun rememberPlatformFileSaverLauncher(
 public actual fun rememberCameraPickerLauncher(
     openCameraSettings: FileKitOpenCameraSettings,
     onResult: (PlatformFile?) -> Unit,
+): PhotoResultLauncher = rememberCameraPickerLauncher(
+    openCameraSettings = openCameraSettings,
+    onError = {},
+    onResult = onResult,
+)
+
+/**
+ * Creates and remembers a [PhotoResultLauncher] for taking a picture or video with the camera.
+ *
+ * @param openCameraSettings Platform-specific settings for the camera.
+ * @param onError Callback invoked when a valid camera operation cannot start or complete. It is not invoked for user
+ * dismissal, permission denial, coroutine cancellation, invalid invocations, or unexpected defects.
+ * @param onResult Callback invoked with the saved file, or null if dismissed or camera permission is denied.
+ * @return A [PhotoResultLauncher] that can be used to launch the camera.
+ */
+@Composable
+public actual fun rememberCameraPickerLauncher(
+    openCameraSettings: FileKitOpenCameraSettings,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
 ): PhotoResultLauncher {
     InitializeAndroidFileKit()
 
@@ -376,17 +415,27 @@ public actual fun rememberCameraPickerLauncher(
 
     val context = LocalContext.current
 
-    // Updated callback
+    // Updated callbacks
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
+
+    fun clearPendingState() {
+        pendingDestinationUri = null
+        pendingCameraFacingName = FileKitCameraFacing.System.name
+        hasPendingPermissionRequest = false
+    }
 
     // Create a stable contract instance (reused across recompositions)
     val contract = remember { TakePictureWithCameraFacing() }
 
     // Create the launcher using the Activity Result API
     val launcher = rememberLauncherForActivityResult(contract) { success ->
-        val pendingUri = pendingDestinationUri ?: return@rememberLauncherForActivityResult
-        pendingDestinationUri = null
-        currentOnResult(resolveCameraResult(success, pendingUri))
+        dispatchCameraResult(
+            success = success,
+            pendingDestinationUri = pendingDestinationUri,
+            clearPendingState = ::clearPendingState,
+            onResult = currentOnResult,
+        )
     }
 
     val permissionLauncher =
@@ -394,37 +443,23 @@ public actual fun rememberCameraPickerLauncher(
             if (!hasPendingPermissionRequest) return@rememberLauncherForActivityResult
             hasPendingPermissionRequest = false
 
-            when (
-                val resolution = resolveCameraPermissionResult(
+            dispatchCameraPermissionResolution(
+                resolution = resolveCameraPermissionResult(
                     permissionGranted = permissionGranted,
                     pendingDestinationUri = pendingDestinationUri,
-                )
-            ) {
-                CameraPermissionResolution.NoOp -> {
-                    Unit
-                }
-
-                CameraPermissionResolution.ReturnNullResult -> {
-                    pendingDestinationUri = null
-                    currentOnResult(null)
-                }
-
-                is CameraPermissionResolution.LaunchCamera -> {
+                ),
+                launchCamera = { uri ->
                     val cameraFacing = runCatching {
                         FileKitCameraFacing.valueOf(pendingCameraFacingName)
                     }.getOrDefault(FileKitCameraFacing.System)
 
                     contract.setCameraFacing(cameraFacing)
-                    val isLaunched = launchCameraSafely(
-                        uri = resolution.uri,
-                        launch = launcher::launch,
-                    )
-                    if (!isLaunched) {
-                        pendingDestinationUri = null
-                        currentOnResult(null)
-                    }
-                }
-            }
+                    launchCameraSafely(uri = uri, launch = launcher::launch)
+                },
+                clearPendingState = ::clearPendingState,
+                onError = currentOnError,
+                onResult = currentOnResult,
+            )
         }
 
     // Return the PhotoResultLauncher wrapper
@@ -437,7 +472,13 @@ public actual fun rememberCameraPickerLauncher(
 
             if (FileKitAndroidCameraPermissionInternal.needsRuntimeCameraPermission(context)) {
                 hasPendingPermissionRequest = true
-                permissionLauncher.launch(Manifest.permission.CAMERA)
+                dispatchAndroidDialogLaunchResult(
+                    result = launchCameraPermissionSafely {
+                        permissionLauncher.launch(Manifest.permission.CAMERA)
+                    },
+                    clearPendingState = ::clearPendingState,
+                    onError = currentOnError,
+                )
                 return@PhotoResultLauncher
             }
 
@@ -445,14 +486,14 @@ public actual fun rememberCameraPickerLauncher(
             contract.setCameraFacing(cameraFacing)
 
             // Launch the camera
-            val isLaunched = launchCameraSafely(
-                uri = uri,
-                launch = launcher::launch,
+            dispatchAndroidDialogLaunchResult(
+                result = launchCameraSafely(
+                    uri = uri,
+                    launch = launcher::launch,
+                ),
+                clearPendingState = ::clearPendingState,
+                onError = currentOnError,
             )
-            if (!isLaunched) {
-                pendingDestinationUri = null
-                currentOnResult(null)
-            }
         }
     }
 }
@@ -480,37 +521,158 @@ internal fun resolveCameraPermissionResult(
 internal fun launchCameraSafely(
     uri: Uri,
     launch: (Uri) -> Unit,
-): Boolean = try {
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to capture media with the camera.",
+    securityFailureMessage = "Android rejected the camera launch.",
+) {
     launch(uri)
-    true
-} catch (_: ActivityNotFoundException) {
-    false
-} catch (_: SecurityException) {
-    false
 }
 
-internal fun launchPickerSafely(
+internal fun launchCameraPermissionSafely(
     launch: () -> Unit,
-): Boolean = try {
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to request camera permission.",
+    securityFailureMessage = "Android rejected the camera permission request.",
+    launch = launch,
+)
+
+private fun launchAndroidDialogSafely(
+    activityUnavailableMessage: String,
+    securityFailureMessage: String,
+    launch: () -> Unit,
+): AndroidDialogLaunchResult = try {
     launch()
-    true
-} catch (_: ActivityNotFoundException) {
-    false
+    AndroidDialogLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    AndroidDialogLaunchResult.Failed(FileKitDialogException(activityUnavailableMessage, failure))
+} catch (failure: SecurityException) {
+    AndroidDialogLaunchResult.Failed(FileKitDialogException(securityFailureMessage, failure))
 }
 
-internal enum class PickerLaunchOutcome {
-    PrimaryLaunched,
-    FallbackLaunched,
-    Cancelled,
+internal sealed interface AndroidDialogLaunchResult {
+    data object Launched : AndroidDialogLaunchResult
+
+    data class Failed(
+        val failure: FileKitDialogException,
+    ) : AndroidDialogLaunchResult
+}
+
+internal fun dispatchAndroidDialogLaunchResult(
+    result: AndroidDialogLaunchResult,
+    clearPendingState: () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+) {
+    when (result) {
+        AndroidDialogLaunchResult.Launched -> {}
+
+        is AndroidDialogLaunchResult.Failed -> {
+            clearPendingState()
+            onError(result.failure)
+        }
+    }
+}
+
+internal fun dispatchCameraPermissionResolution(
+    resolution: CameraPermissionResolution,
+    launchCamera: (Uri) -> AndroidDialogLaunchResult,
+    clearPendingState: () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    when (resolution) {
+        CameraPermissionResolution.NoOp -> {}
+
+        CameraPermissionResolution.ReturnNullResult -> {
+            clearPendingState()
+            onResult(null)
+        }
+
+        is CameraPermissionResolution.LaunchCamera -> {
+            dispatchAndroidDialogLaunchResult(
+                result = launchCamera(resolution.uri),
+                clearPendingState = clearPendingState,
+                onError = onError,
+            )
+        }
+    }
+}
+
+internal fun launchFilePickerSafely(
+    launch: () -> Unit,
+): PickerLaunchResult = try {
+    launch()
+    PickerLaunchResult.Launched
+} catch (failure: ActivityNotFoundException) {
+    PickerLaunchResult.Failed(
+        FileKitPickerException(
+            message = "No Android activity is available to open the file picker.",
+            cause = failure,
+        ),
+        isFallbackEligible = true,
+    )
+} catch (failure: SecurityException) {
+    PickerLaunchResult.Failed(
+        FileKitPickerException(
+            message = "Android rejected the file picker launch.",
+            cause = failure,
+        ),
+        isFallbackEligible = false,
+    )
+}
+
+internal fun launchDirectoryPickerSafely(
+    launch: () -> Unit,
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to open the directory picker.",
+    securityFailureMessage = "Android rejected the directory picker launch.",
+    launch = launch,
+)
+
+internal fun launchFileSaverSafely(
+    launch: () -> Unit,
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to open the file saver.",
+    securityFailureMessage = "Android rejected the file saver launch.",
+    launch = launch,
+)
+
+internal sealed interface PickerLaunchResult {
+    data object Launched : PickerLaunchResult
+
+    data class Failed(
+        val failure: FileKitPickerException,
+        val isFallbackEligible: Boolean,
+    ) : PickerLaunchResult
+}
+
+internal sealed interface PickerLaunchOutcome {
+    data object PrimaryLaunched : PickerLaunchOutcome
+
+    data object FallbackLaunched : PickerLaunchOutcome
+
+    data class Failed(
+        val failure: FileKitPickerException,
+    ) : PickerLaunchOutcome
 }
 
 internal fun resolvePickerLaunchOutcome(
-    launchPrimary: () -> Boolean,
-    launchFallback: () -> Boolean,
-): PickerLaunchOutcome = when {
-    launchPrimary() -> PickerLaunchOutcome.PrimaryLaunched
-    launchFallback() -> PickerLaunchOutcome.FallbackLaunched
-    else -> PickerLaunchOutcome.Cancelled
+    launchPrimary: () -> PickerLaunchResult,
+    launchFallback: () -> PickerLaunchResult,
+): PickerLaunchOutcome = when (val primaryResult = launchPrimary()) {
+    PickerLaunchResult.Launched -> {
+        PickerLaunchOutcome.PrimaryLaunched
+    }
+
+    is PickerLaunchResult.Failed -> {
+        if (!primaryResult.isFallbackEligible) {
+            PickerLaunchOutcome.Failed(primaryResult.failure)
+        } else {
+            when (val fallbackResult = launchFallback()) {
+                PickerLaunchResult.Launched -> PickerLaunchOutcome.FallbackLaunched
+                is PickerLaunchResult.Failed -> PickerLaunchOutcome.Failed(fallbackResult.failure)
+            }
+        }
+    }
 }
 
 internal fun resolveCameraResult(
@@ -519,6 +681,19 @@ internal fun resolveCameraResult(
 ): PlatformFile? {
     val uri = pendingDestinationUri ?: return null
     return if (success) PlatformFile(uri.toUri()) else null
+}
+
+internal fun dispatchCameraResult(
+    success: Boolean,
+    pendingDestinationUri: String?,
+    clearPendingState: () -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    if (pendingDestinationUri == null) return
+
+    val result = resolveCameraResult(success, pendingDestinationUri)
+    clearPendingState()
+    onResult(result)
 }
 
 private data class PendingModeSnapshot(

@@ -146,7 +146,7 @@ public sealed class FileKitDialogParent {
     private fun unsupportedParent(
         adapter: String,
         supported: String,
-    ): Nothing = throw FileKitPickerException(
+    ): Nothing = throw IllegalArgumentException(
         "$adapter does not support ${kindName()} dialog parents. Supported parents: $supported.",
     )
 
@@ -181,14 +181,14 @@ internal fun resolveAwtNativeIdentifier(
     val identifier = try {
         conversion()
     } catch (cause: Exception) {
-        throw FileKitPickerException(
-            message = "The AWT dialog parent could not resolve to a usable $identifierName.",
-            cause = cause,
+        throw IllegalArgumentException(
+            "The AWT dialog parent could not resolve to a usable $identifierName.",
+            cause,
         )
     }
 
     if (identifier == 0L) {
-        throw FileKitPickerException(
+        throw IllegalArgumentException(
             "The AWT dialog parent resolved to an invalid zero $identifierName.",
         )
     }

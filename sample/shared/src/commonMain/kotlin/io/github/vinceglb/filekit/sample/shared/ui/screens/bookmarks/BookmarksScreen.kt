@@ -68,27 +68,41 @@ private fun BookmarksScreen(
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var bookmarkedFile by remember { mutableStateOf<PlatformFile?>(null) }
     var bookmarkedDirectory by remember { mutableStateOf<PlatformFile?>(null) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
 
-    val filePickerLauncher = rememberFilePickerLauncher { file ->
-        scope.launch {
-            if (file != null) {
-                storage.save(BookmarkKind.File, file)
-                bookmarkedFile = file
-            }
+    val filePickerLauncher = rememberFilePickerLauncher(
+        onError = { failure ->
             buttonState = AppScreenHeaderButtonState.Enabled
-        }
-    }
+            pickerError = failure.message
+        },
+        onResult = { file ->
+            pickerError = null
+            scope.launch {
+                if (file != null) {
+                    storage.save(BookmarkKind.File, file)
+                    bookmarkedFile = file
+                }
+                buttonState = AppScreenHeaderButtonState.Enabled
+            }
+        },
+    )
     val directoryPickerLauncher = rememberDirectoryPickerLauncher(
         directory = bookmarkedDirectory,
-    ) { directory ->
-        scope.launch {
-            if (directory != null) {
-                storage.save(BookmarkKind.Directory, directory)
-                bookmarkedDirectory = directory
-            }
+        onError = { failure ->
             buttonState = AppScreenHeaderButtonState.Enabled
-        }
-    }
+            pickerError = failure.message
+        },
+        onResult = { directory ->
+            pickerError = null
+            scope.launch {
+                if (directory != null) {
+                    storage.save(BookmarkKind.Directory, directory)
+                    bookmarkedDirectory = directory
+                }
+                buttonState = AppScreenHeaderButtonState.Enabled
+            }
+        },
+    )
 
     LaunchedEffect(storage) {
         bookmarkedFile = storage.load(BookmarkKind.File)
@@ -182,7 +196,7 @@ private fun BookmarksScreen(
             item {
                 AppPickerResultsCard(
                     files = bookmarkedItems,
-                    emptyText = "No bookmarks saved yet",
+                    emptyText = pickerError ?: "No bookmarks saved yet",
                     emptyIcon = LucideIcons.BookOpenText,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),

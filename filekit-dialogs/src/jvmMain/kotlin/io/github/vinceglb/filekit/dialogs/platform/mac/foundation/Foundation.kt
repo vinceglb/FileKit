@@ -17,6 +17,10 @@ import java.util.Arrays
 import java.util.Collections
 import java.util.UUID
 
+internal class FoundationRunnableBootstrapException(
+    message: String,
+) : IllegalStateException(message)
+
 internal fun registerObjcRunnableClass(
     className: String,
     allocate: (String) -> ID?,
@@ -26,12 +30,16 @@ internal fun registerObjcRunnableClass(
 ): ID {
     val runnableClass = allocate(className)
     if (runnableClass == null || runnableClass == ID.NIL) {
-        throw IllegalStateException("Unable to allocate Objective-C runnable adapter class '$className'")
+        throw FoundationRunnableBootstrapException(
+            "Unable to allocate Objective-C runnable adapter class '$className'",
+        )
     }
 
     if (!addMethod(runnableClass)) {
         dispose(runnableClass)
-        throw IllegalStateException("Unable to add run: method to Objective-C runnable adapter class '$className'")
+        throw FoundationRunnableBootstrapException(
+            "Unable to add run: method to Objective-C runnable adapter class '$className'",
+        )
     }
 
     register(runnableClass)

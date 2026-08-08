@@ -32,11 +32,15 @@ val image = FileKit.openFilePicker(type = FileKitType.Image)
 ```kotlin filekit-dialogs-compose
 val launcher = rememberFilePickerLauncher(
     type = FileKitType.Image,
-) { image ->
-    // Handle the image
-}
+    onError = { failure -> println("Picker failed: ${failure.message}") },
+    onResult = { image ->
+        // Handle the image, or user cancellation when image is null.
+    },
+)
 ```
 </CodeGroup>
+
+See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
 
 <Warning>
 On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not

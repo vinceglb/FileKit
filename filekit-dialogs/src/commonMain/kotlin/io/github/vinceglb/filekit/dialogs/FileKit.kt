@@ -11,8 +11,11 @@ import kotlinx.coroutines.flow.Flow
  * @param mode The picking mode (e.g. Single, Multiple).
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @return The result of the picker, depending on the [mode].
- * @throws FileKitPickerException When the user selected files but FileKit could not resolve them.
+ * For state-tracking modes, [FileKitPickerState.Failed] remains a result value in the returned flow.
+ * Coroutine cancellation and invalid invocations propagate separately from picker failures.
+ *
+ * @return The result of the picker, depending on the [mode]. Basic modes return `null` when the user cancels.
+ * @throws FileKitPickerException When a valid picker operation cannot be completed or its selected files cannot be resolved.
  */
 public suspend fun <A, B> FileKit.openFilePicker(
     type: FileKitType = FileKitType.File(),
@@ -35,8 +38,10 @@ public suspend fun <A, B> FileKit.openFilePicker(
  * @param type The type of files to pick (e.g. Images, Videos, or specific extensions). Defaults to [FileKitType.File].
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @return The picked [PlatformFile], or null if cancelled.
- * @throws FileKitPickerException When the user selected a file but FileKit could not resolve it.
+ * Coroutine cancellation and invalid invocations propagate separately from picker failures.
+ *
+ * @return The picked [PlatformFile], or `null` if the user cancels.
+ * @throws FileKitPickerException When a valid picker operation cannot be completed or its selected file cannot be resolved.
  */
 public suspend fun FileKit.openFilePicker(
     type: FileKitType = FileKitType.File(),

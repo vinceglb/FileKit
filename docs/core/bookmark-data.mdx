@@ -120,15 +120,18 @@ fun MyScreen() {
         file = BookmarkManager.load()
     }
     
-    val picker = rememberFilePickerLauncher { pickedFile ->
-        file = pickedFile
-        // Save the bookmark in a coroutine
-        pickedFile?.let {
-            coroutineScope.launch {
-                BookmarkManager.save(it)
+    val picker = rememberFilePickerLauncher(
+        onError = { failure -> println("Picker failed: ${failure.message}") },
+        onResult = { pickedFile ->
+            file = pickedFile
+            // Save the bookmark in a coroutine
+            pickedFile?.let {
+                coroutineScope.launch {
+                    BookmarkManager.save(it)
+                }
             }
-        }
-    }
+        },
+    )
     
     // UI to show file details and a button to launch the picker
     Column {

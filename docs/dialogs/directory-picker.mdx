@@ -16,15 +16,31 @@ val directory = FileKit.openDirectoryPicker()
 ```
 
 ```kotlin filekit-dialogs-compose
-val launcher = rememberDirectoryPickerLauncher { directory ->
-    // Handle the directory
-}
+val launcher = rememberDirectoryPickerLauncher(
+    onError = { failure ->
+        // A valid directory operation could not be completed
+        showError(failure.message)
+    },
+    onResult = { directory ->
+        if (directory == null) {
+            // The user cancelled the picker
+        } else {
+            // Handle the selected directory
+        }
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick a directory")
 }
 ```
 </CodeGroup>
+
+`onError` receives a `FileKitDialogException` only when FileKit cannot complete a valid directory operation. User cancellation is not a failure: it invokes `onResult(null)`. Coroutine cancellation, invalid invocation, and unexpected defects continue to propagate normally.
+
+The compatibility overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
+
+See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
 
 ## Customizing the dialog
 
@@ -41,9 +57,11 @@ val directory = FileKit.openDirectoryPicker(
 val launcher = rememberDirectoryPickerLauncher(
     directory = PlatformFile("/custom/initial/path"),
     dialogSettings = FileKitDialogSettings.createDefault(),
-) { directory ->
-    // Handle the directory
-}
+    onError = { failure -> showError(failure.message) },
+    onResult = { directory ->
+        // Handle the selected directory, or null when the user cancelled
+    },
+)
 ```
 </CodeGroup>
 

@@ -113,9 +113,13 @@ private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
 }
 
 val settings = FileKitDialogSettings(parent = nucleusWindow.fileKitDialogParent())
-val launcher = rememberFilePickerLauncher(dialogSettings = settings) { file ->
-    // Use the selected file.
-}
+val launcher = rememberFilePickerLauncher(
+    dialogSettings = settings,
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Use the selected file, or null when the user cancelled.
+    },
+)
 ```
 
 Do not pass `nucleusWindow.unsafe.taoHandle`: it is an opaque Tao event-loop
