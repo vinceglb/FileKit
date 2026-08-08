@@ -135,7 +135,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
     )?.firstOrNull()
 } catch (failure: WindowsDialogOperationalException) {
     throw FileKitDialogException(
-        message = "The Windows directory picker could not complete the operation.",
+        message = WINDOWS_DIRECTORY_PICKER_FAILURE_MESSAGE,
         cause = failure,
     )
 }
@@ -152,7 +152,7 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     showSaveDialog(buildFileSaverSuggestedName(suggestedName, ext), ext, filters, directory, dialogSettings.title)
 } catch (failure: WindowsDialogOperationalException) {
     throw FileKitDialogException(
-        message = "The Windows file saver could not complete the operation.",
+        message = WINDOWS_FILE_SAVER_FAILURE_MESSAGE,
         cause = failure,
     )
 }

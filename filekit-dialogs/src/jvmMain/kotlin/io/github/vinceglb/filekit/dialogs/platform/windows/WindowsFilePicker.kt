@@ -20,7 +20,9 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
+import io.github.vinceglb.filekit.dialogs.WINDOWS_DIRECTORY_PICKER_FAILURE_MESSAGE
 import io.github.vinceglb.filekit.dialogs.WINDOWS_FILE_PICKER_FAILURE_MESSAGE
+import io.github.vinceglb.filekit.dialogs.WINDOWS_FILE_SAVER_FAILURE_MESSAGE
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileOpenDialog
@@ -402,12 +404,12 @@ private fun HRESULT.verify(exceptionMessage: String): HRESULT {
 }
 
 private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
-    message = "The Windows directory picker could not complete the operation.",
+    message = WINDOWS_DIRECTORY_PICKER_FAILURE_MESSAGE,
     cause = this,
 )
 
 private fun Throwable.toFileSaverFailure(): FileKitDialogException = FileKitDialogException(
-    message = "The Windows file saver could not complete the operation.",
+    message = WINDOWS_FILE_SAVER_FAILURE_MESSAGE,
     cause = this,
 )
 

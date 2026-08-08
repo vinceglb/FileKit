@@ -5,6 +5,9 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
+import io.github.vinceglb.filekit.dialogs.MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE
+import io.github.vinceglb.filekit.dialogs.MACOS_FILE_PICKER_FAILURE_MESSAGE
+import io.github.vinceglb.filekit.dialogs.MACOS_FILE_SAVER_FAILURE_MESSAGE
 import io.github.vinceglb.filekit.dialogs.buildFileSaverAllowedFileTypes
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
@@ -188,12 +191,6 @@ internal class MacOSFilePicker : PlatformFilePicker {
     private companion object {
         const val NS_MODAL_RESPONSE_OK = 1
         const val NS_MODAL_RESPONSE_CANCEL = 0
-        const val MACOS_FILE_PICKER_FAILURE_MESSAGE =
-            "The macOS file picker could not complete the operation."
-        const val MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE =
-            "The macOS directory picker could not complete the operation."
-        const val MACOS_FILE_SAVER_FAILURE_MESSAGE =
-            "The macOS file saver could not complete the operation."
 
         fun Collection<String>.toNsStringArray(): ID? {
             if (isEmpty()) {

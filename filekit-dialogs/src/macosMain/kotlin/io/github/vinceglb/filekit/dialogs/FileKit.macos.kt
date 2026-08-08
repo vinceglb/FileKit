@@ -95,7 +95,7 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     when (result) {
         NSModalResponseOK -> Unit
         NSModalResponseCancel -> return null
-        else -> throw FileKitDialogException("The macOS file saver could not complete the operation.")
+        else -> throw FileKitDialogException(MACOS_FILE_SAVER_FAILURE_MESSAGE)
     }
 
     // Return the result
@@ -157,9 +157,9 @@ private fun callPicker(
         else -> throw when (mode) {
             Mode.Single,
             Mode.Multiple,
-            -> FileKitPickerException("The macOS file picker could not complete the operation.")
+            -> FileKitPickerException(MACOS_FILE_PICKER_FAILURE_MESSAGE)
 
-            Mode.Directory -> FileKitDialogException("The macOS directory picker could not complete the operation.")
+            Mode.Directory -> FileKitDialogException(MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE)
         }
     }
 
