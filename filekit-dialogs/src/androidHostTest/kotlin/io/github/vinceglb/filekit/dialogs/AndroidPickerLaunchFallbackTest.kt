@@ -71,6 +71,49 @@ class AndroidPickerLaunchFallbackTest {
     }
 
     @Test
+    fun PickerLaunch_primaryThrowsSecurityException_doesNotInvokeFallbackAndThrowsPickerFailureWithCause() {
+        val launchFailure = SecurityException("Visual picker launch rejected")
+        var fallbackCalls = 0
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw launchFailure
+                    },
+                    fallback = {
+                        fallbackCalls++
+                        "fallback-result"
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+        assertEquals(0, fallbackCalls)
+    }
+
+    @Test
+    fun PickerLaunch_fallbackThrowsSecurityException_throwsPickerFailureWithCause() {
+        val launchFailure = SecurityException("Document picker launch rejected")
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw ActivityNotFoundException("No activity for visual picker")
+                    },
+                    fallback = {
+                        throw launchFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
     fun PickerLaunch_primaryReturnsNull_doesNotInvokeFallback() = runBlocking {
         var fallbackCalls = 0
 

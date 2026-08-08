@@ -15,6 +15,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
@@ -29,6 +30,19 @@ class AndroidDirectoryPickerFailureTest {
         }
 
         assertSame(platformFailure, failure.cause)
+    }
+
+    @Test
+    fun AndroidDirectoryPicker_securityRejection_throwsDialogOperationalFailureWithCause() {
+        val platformFailure = SecurityException("Directory picker launch rejected")
+        FileKit.init(throwingActivityResultRegistry(platformFailure))
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking { FileKit.openDirectoryPicker() }
+        }
+
+        val cause = assertIs<SecurityException>(failure.cause)
+        assertEquals(platformFailure.message, cause.message)
     }
 
     @Test

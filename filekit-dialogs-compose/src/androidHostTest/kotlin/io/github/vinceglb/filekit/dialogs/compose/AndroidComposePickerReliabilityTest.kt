@@ -266,6 +266,19 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun PickerLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("Picker launch rejected")
+
+        val result = launchFilePickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<PickerLaunchResult.Failed>(result).failure
+        assertIs<FileKitPickerException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
     fun PickerLaunchSafely_whenNoError_returnsLaunched() {
         var launched = false
 
@@ -280,6 +293,19 @@ class AndroidComposePickerReliabilityTest {
     @Test
     fun DirectoryLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
         val launchFailure = ActivityNotFoundException("No directory picker activity")
+
+        val result = launchDirectoryPickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("Directory picker launch rejected")
 
         val result = launchDirectoryPickerSafely {
             throw launchFailure
@@ -327,6 +353,19 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun FileSaverLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("File saver launch rejected")
+
+        val result = launchFileSaverSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
     fun FileSaverLaunchSafely_whenUnexpectedFailure_propagates() {
         val failure = IllegalStateException("Unexpected saver defect")
 
@@ -354,7 +393,12 @@ class AndroidComposePickerReliabilityTest {
         var fallbackCalls = 0
 
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { PickerLaunchResult.Failed(FileKitPickerException("Primary failed")) },
+            launchPrimary = {
+                PickerLaunchResult.Failed(
+                    failure = FileKitPickerException("Primary failed"),
+                    isFallbackEligible = true,
+                )
+            },
             launchFallback = {
                 fallbackCalls++
                 PickerLaunchResult.Launched
@@ -366,12 +410,44 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
+    fun PickerLaunchOutcome_primarySecurityFailure_doesNotLaunchFallback() {
+        val launchFailure = SecurityException("Visual picker launch rejected")
+        var fallbackCalls = 0
+
+        val outcome = resolvePickerLaunchOutcome(
+            launchPrimary = {
+                launchFilePickerSafely {
+                    throw launchFailure
+                }
+            },
+            launchFallback = {
+                fallbackCalls++
+                PickerLaunchResult.Launched
+            },
+        )
+
+        val failure = assertIs<PickerLaunchOutcome.Failed>(outcome).failure
+        assertSame(launchFailure, failure.cause)
+        assertEquals(0, fallbackCalls)
+    }
+
+    @Test
     fun PickerLaunchOutcome_primaryAndFallbackFail_returnsFallbackOperationalFailure() {
         val fallbackFailure = FileKitPickerException("Fallback failed")
 
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { PickerLaunchResult.Failed(FileKitPickerException("Primary failed")) },
-            launchFallback = { PickerLaunchResult.Failed(fallbackFailure) },
+            launchPrimary = {
+                PickerLaunchResult.Failed(
+                    failure = FileKitPickerException("Primary failed"),
+                    isFallbackEligible = true,
+                )
+            },
+            launchFallback = {
+                PickerLaunchResult.Failed(
+                    failure = fallbackFailure,
+                    isFallbackEligible = false,
+                )
+            },
         )
 
         val failure = assertIs<PickerLaunchOutcome.Failed>(outcome)

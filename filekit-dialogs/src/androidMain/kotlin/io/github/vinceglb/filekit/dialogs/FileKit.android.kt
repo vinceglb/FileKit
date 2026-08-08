@@ -96,6 +96,11 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
             message = "No Android activity is available to open the file saver.",
             cause = failure,
         )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the file saver launch.",
+            cause = failure,
+        )
     }
     return uri?.let(::PlatformFile)
 }
@@ -123,6 +128,11 @@ public actual suspend fun FileKit.openDirectoryPicker(
     } catch (failure: ActivityNotFoundException) {
         throw FileKitDialogException(
             message = "No Android activity is available to open the directory picker.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the directory picker launch.",
             cause = failure,
         )
     }
@@ -509,7 +519,17 @@ internal suspend fun <O> runPickerLaunchWithActivityNotFoundFallback(
             message = "No Android activity is available to open the file picker.",
             cause = fallbackFailure,
         )
+    } catch (fallbackFailure: SecurityException) {
+        throw FileKitPickerException(
+            message = "Android rejected the file picker launch.",
+            cause = fallbackFailure,
+        )
     }
+} catch (primaryFailure: SecurityException) {
+    throw FileKitPickerException(
+        message = "Android rejected the file picker launch.",
+        cause = primaryFailure,
+    )
 }
 
 internal fun FileKitType.toVisualFallbackMimeTypes(): Array<String> = when (this) {

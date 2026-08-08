@@ -14,6 +14,7 @@ import org.robolectric.RobolectricTestRunner
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
@@ -28,6 +29,19 @@ class AndroidFileSaverFailureTest {
         }
 
         assertSame(platformFailure, failure.cause)
+    }
+
+    @Test
+    fun AndroidFileSaver_securityRejection_throwsDialogOperationalFailureWithCause() {
+        val platformFailure = SecurityException("File saver launch rejected")
+        FileKit.init(throwingActivityResultRegistry(platformFailure))
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            runBlocking { openFileSaver() }
+        }
+
+        val cause = assertIs<SecurityException>(failure.cause)
+        assertEquals(platformFailure.message, cause.message)
     }
 
     @Test

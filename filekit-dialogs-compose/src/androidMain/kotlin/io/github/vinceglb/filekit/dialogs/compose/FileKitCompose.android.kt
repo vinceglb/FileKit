@@ -622,6 +622,15 @@ internal fun launchFilePickerSafely(
             message = "No Android activity is available to open the file picker.",
             cause = failure,
         ),
+        isFallbackEligible = true,
+    )
+} catch (failure: SecurityException) {
+    PickerLaunchResult.Failed(
+        FileKitPickerException(
+            message = "Android rejected the file picker launch.",
+            cause = failure,
+        ),
+        isFallbackEligible = false,
     )
 }
 
@@ -643,6 +652,13 @@ internal fun launchDirectoryPickerSafely(
     DirectoryLaunchResult.Failed(
         FileKitDialogException(
             message = "No Android activity is available to open the directory picker.",
+            cause = failure,
+        ),
+    )
+} catch (failure: SecurityException) {
+    DirectoryLaunchResult.Failed(
+        FileKitDialogException(
+            message = "Android rejected the directory picker launch.",
             cause = failure,
         ),
     )
@@ -668,6 +684,13 @@ internal fun launchFileSaverSafely(
             cause = failure,
         ),
     )
+} catch (failure: SecurityException) {
+    SaverLaunchResult.Failed(
+        FileKitDialogException(
+            message = "Android rejected the file saver launch.",
+            cause = failure,
+        ),
+    )
 }
 
 internal sealed interface SaverLaunchResult {
@@ -683,6 +706,7 @@ internal sealed interface PickerLaunchResult {
 
     data class Failed(
         val failure: FileKitPickerException,
+        val isFallbackEligible: Boolean,
     ) : PickerLaunchResult
 }
 
@@ -699,15 +723,19 @@ internal sealed interface PickerLaunchOutcome {
 internal fun resolvePickerLaunchOutcome(
     launchPrimary: () -> PickerLaunchResult,
     launchFallback: () -> PickerLaunchResult,
-): PickerLaunchOutcome = when (launchPrimary()) {
+): PickerLaunchOutcome = when (val primaryResult = launchPrimary()) {
     PickerLaunchResult.Launched -> {
         PickerLaunchOutcome.PrimaryLaunched
     }
 
     is PickerLaunchResult.Failed -> {
-        when (val fallbackResult = launchFallback()) {
-            PickerLaunchResult.Launched -> PickerLaunchOutcome.FallbackLaunched
-            is PickerLaunchResult.Failed -> PickerLaunchOutcome.Failed(fallbackResult.failure)
+        if (!primaryResult.isFallbackEligible) {
+            PickerLaunchOutcome.Failed(primaryResult.failure)
+        } else {
+            when (val fallbackResult = launchFallback()) {
+                PickerLaunchResult.Launched -> PickerLaunchOutcome.FallbackLaunched
+                is PickerLaunchResult.Failed -> PickerLaunchOutcome.Failed(fallbackResult.failure)
+            }
         }
     }
 }
