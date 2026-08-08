@@ -290,8 +290,7 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
         val registration = AtomicReference<AutoCloseable?>(null)
         val handler = ResponseHandler(
             path = path,
-            onComplete = { uris -> result.complete(uris) },
-            onFailure = { failure -> result.completeExceptionally(failure) },
+            result = result,
         )
         registration.set(
             addGenericSigHandlerCompat(
@@ -308,21 +307,11 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
 
     private class ResponseHandler(
         private val path: String,
-        private val onComplete: (result: List<URI>?) -> Unit,
-        private val onFailure: (failure: XdgPortalResponseException) -> Unit,
+        private val result: CompletableDeferred<List<URI>?>,
     ) : DBusSigHandler<DBusSignal> {
-        @Suppress("UNCHECKED_CAST")
         override fun handle(signal: DBusSignal) {
             if (path == signal.path) {
-                val params = signal.parameters
-                val response = params[0] as UInt32
-                val results = params[1] as Map<String, Variant<*>>
-
-                try {
-                    onComplete(resolveXdgPortalResponse(response.toInt(), results))
-                } catch (failure: XdgPortalResponseException) {
-                    onFailure(failure)
-                }
+                dispatchXdgPortalResponse(signal.parameters, result)
             }
         }
     }
@@ -365,6 +354,21 @@ private class DbusXdgFileChooserTransport : XdgFileChooserTransport {
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
         FileChooserDbusInterface::class.java,
+    )
+}
+
+@Suppress("UNCHECKED_CAST")
+internal fun dispatchXdgPortalResponse(
+    parameters: Array<out Any?>,
+    result: CompletableDeferred<List<URI>?>,
+) {
+    runCatching {
+        val response = parameters[0] as UInt32
+        val results = parameters[1] as Map<String, Variant<*>>
+        resolveXdgPortalResponse(response.toInt(), results)
+    }.fold(
+        onSuccess = { uris -> result.complete(uris) },
+        onFailure = { failure -> result.completeExceptionally(failure) },
     )
 }
 

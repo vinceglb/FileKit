@@ -7,9 +7,11 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogParent
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runTest
 import org.freedesktop.dbus.exceptions.DBusException
 import org.freedesktop.dbus.exceptions.DBusExecutionException
+import org.freedesktop.dbus.types.UInt32
 import org.freedesktop.dbus.types.Variant
 import java.net.URI
 import kotlin.test.Test
@@ -17,8 +19,33 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class XdgOperationalFailureTest {
+    @Test
+    fun XdgResponseDispatcher_unexpectedResponse_completesWaitingRequestExceptionallyOnce() = runTest {
+        val result = CompletableDeferred<List<URI>?>()
+        val unexpectedResponse = arrayOf(
+            UInt32(99),
+            emptyMap<String, Variant<*>>(),
+        )
+
+        dispatchXdgPortalResponse(
+            parameters = unexpectedResponse,
+            result = result,
+        )
+
+        assertTrue(result.isCompleted, "The response dispatcher left the waiting request suspended")
+
+        dispatchXdgPortalResponse(
+            parameters = arrayOf(UInt32(1), emptyMap<String, Variant<*>>()),
+            result = result,
+        )
+
+        val failure = assertFailsWith<IllegalStateException> { result.await() }
+        assertEquals("Unexpected XDG portal response code: 99", failure.message)
+    }
+
     @Test
     fun XdgFilePickerPortal_filePickerDbusExecutionFailure_throwsPickerOperationalFailureWithCause() = runTest {
         val cause = DBusExecutionException("Portal request failed")
