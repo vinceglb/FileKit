@@ -40,7 +40,7 @@ Button(onClick = { launcher.launch() }) {
 
 `onError` receives a `FileKitDialogException` only when FileKit cannot start or complete a valid camera operation, such as when no Android camera activity is available or iOS cannot prepare, present, encode, or write the capture. User dismissal is not a failure and invokes `onResult(null)`. Android camera-permission denial also invokes `onResult(null)`. Coroutine cancellation, invalid invocation, and unexpected defects continue to propagate normally.
 
-On iOS, the suspending `FileKit.openCameraPicker()` function throws the same `FileKitDialogException` for operational failures. Android's lifecycle-safe Compose launcher owns the Android launch-failure callback behavior described above. The compatibility Compose overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
+The suspending `FileKit.openCameraPicker()` function throws the same `FileKitDialogException` for operational failures. On Android, this includes an unavailable or unauthorized camera-permission request or camera launch. On iOS, this includes failures while preparing, presenting, encoding, or writing the capture. Android's lifecycle-safe Compose launcher reports the equivalent launch failures through `onError`. The compatibility Compose overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
 
 See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
 

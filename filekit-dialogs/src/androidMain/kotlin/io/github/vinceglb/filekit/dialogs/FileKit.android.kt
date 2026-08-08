@@ -137,6 +137,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
  * @param destinationFile The file where the captured media will be saved.
  * @param openCameraSettings Platform-specific settings for the camera.
  * @return The saved file as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When Android cannot launch the permission request or camera activity.
  */
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
@@ -145,7 +146,20 @@ public actual suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? {
     val registry = FileKit.registry
-    if (!FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)) {
+    val hasCameraPermission = try {
+        FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to request camera permission.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the camera permission request.",
+            cause = failure,
+        )
+    }
+    if (!hasCameraPermission) {
         return null
     }
 
@@ -157,8 +171,16 @@ public actual suspend fun FileKit.openCameraPicker(
             contract = contract,
             input = uri,
         )
-    } catch (_: SecurityException) {
-        return null
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to capture media with the camera.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the camera launch.",
+            cause = failure,
+        )
     }
     return if (isSaved) destinationFile else null
 }
