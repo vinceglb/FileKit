@@ -34,24 +34,62 @@ class WindowsNativePickerFailureTest {
     private suspend fun <PickerResult, ConsumedResult> assertIncompatibleComApartmentFailure(
         mode: FileKitMode<PickerResult, ConsumedResult>,
     ) {
+        val failure = runIncompatibleComApartmentOperation {
+            FileKit.openFilePicker(
+                type = FileKitType.File(),
+                mode = mode,
+            )
+        }
+
+        assertIs<FileKitPickerException>(failure)
+        assertEquals("The Windows file picker could not complete the operation.", failure.message)
+        assertIncompatibleComApartmentCause(failure)
+    }
+
+    @Test
+    fun DirectoryPicker_incompatibleComApartment_throwsDialogOperationalFailureWithCause() = runTest {
+        val failure = runIncompatibleComApartmentOperation {
+            FileKit.openDirectoryPicker()
+        }
+
+        assertEquals(FileKitDialogException::class, failure::class)
+        assertEquals("The Windows directory picker could not complete the operation.", failure.message)
+        assertIncompatibleComApartmentCause(failure)
+    }
+
+    @Test
+    fun FileSaver_incompatibleComApartment_throwsDialogOperationalFailureWithCause() = runTest {
+        val failure = runIncompatibleComApartmentOperation {
+            FileKit.openFileSaver(
+                suggestedName = "report.txt",
+                allowedExtensions = null,
+            )
+        }
+
+        assertEquals(FileKitDialogException::class, failure::class)
+        assertEquals("The Windows file saver could not complete the operation.", failure.message)
+        assertIncompatibleComApartmentCause(failure)
+    }
+
+    private suspend fun runIncompatibleComApartmentOperation(
+        operation: suspend () -> Unit,
+    ): FileKitDialogException {
         val initializationResult = CoInitializeEx(null, COINIT_MULTITHREADED)
         assertEquals(S_OK, initializationResult)
 
         try {
-            val failure = assertFailsWith<FileKitPickerException> {
-                FileKit.openFilePicker(
-                    type = FileKitType.File(),
-                    mode = mode,
-                )
+            return assertFailsWith<FileKitDialogException> {
+                operation()
             }
-
-            assertEquals("The Windows file picker could not complete the operation.", failure.message)
-            val cause = assertNotNull(failure.cause)
-            assertIs<WindowsDialogOperationalException>(cause)
-            assertEquals("CoInitializeEx failed with HRESULT 0x80010106", cause.message)
         } finally {
             CoUninitialize()
         }
+    }
+
+    private fun assertIncompatibleComApartmentCause(failure: FileKitDialogException) {
+        val cause = assertNotNull(failure.cause)
+        assertIs<WindowsDialogOperationalException>(cause)
+        assertEquals("CoInitializeEx failed with HRESULT 0x80010106", cause.message)
     }
 
     @Test
@@ -60,7 +98,6 @@ class WindowsNativePickerFailureTest {
 
         val result = handleWindowsNativeDialogResult(
             result = ERROR_CANCELLED_HRESULT,
-            failurePolicy = WindowsDialogFailurePolicy.Picker,
             operation = "IFileOpenDialog::Show",
         ) {
             selectionResolved = true
@@ -78,7 +115,6 @@ class WindowsNativePickerFailureTest {
         val failure = assertFailsWith<FileKitPickerException> {
             runWindowsNativePickerOperation {
                 setWindowsNativeDialogFolder(
-                    failurePolicy = WindowsDialogFailurePolicy.Picker,
                     setFolder = { E_FAIL_HRESULT },
                     releaseFolder = { shellItemReleased = true },
                 )
@@ -90,27 +126,6 @@ class WindowsNativePickerFailureTest {
         assertIs<WindowsDialogOperationalException>(cause)
         assertEquals("IFileDialog::SetFolder failed with HRESULT 0x80004005", cause.message)
         assertTrue(shellItemReleased)
-    }
-
-    @Test
-    fun DirectoryAndSaverSetFolder_failedHresult_remainsDialogOperationalFailure() {
-        listOf(
-            WindowsDialogFailurePolicy.Directory,
-            WindowsDialogFailurePolicy.Saver,
-        ).forEach { failurePolicy ->
-            var shellItemReleased = false
-
-            val failure = assertFailsWith<WindowsDialogOperationalException> {
-                setWindowsNativeDialogFolder(
-                    failurePolicy = failurePolicy,
-                    setFolder = { E_FAIL_HRESULT },
-                    releaseFolder = { shellItemReleased = true },
-                )
-            }
-
-            assertEquals("IFileDialog::SetFolder failed with HRESULT 0x80004005", failure.message)
-            assertTrue(shellItemReleased)
-        }
     }
 
     @Test
