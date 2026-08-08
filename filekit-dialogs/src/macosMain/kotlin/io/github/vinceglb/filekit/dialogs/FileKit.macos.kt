@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.absolutePath
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.flow.Flow
+import platform.AppKit.NSModalResponseCancel
 import platform.AppKit.NSModalResponseOK
 import platform.AppKit.NSOpenPanel
 import platform.AppKit.NSSavePanel
@@ -91,9 +92,10 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
     // Run the NSSavePanel
     val result = nsSavePanel.runModal()
 
-    // If the user canceled the operation, return null
-    if (result != NSModalResponseOK) {
-        return null
+    when (result) {
+        NSModalResponseOK -> Unit
+        NSModalResponseCancel -> return null
+        else -> throw FileKitDialogException("The macOS file saver could not complete the operation.")
     }
 
     // Return the result
@@ -147,9 +149,18 @@ private fun callPicker(
     // Run the NSOpenPanel
     val result = nsOpenPanel.runModal()
 
-    // If the user canceled the operation, return null
-    if (result != NSModalResponseOK) {
-        return null
+    when (result) {
+        NSModalResponseOK -> Unit
+
+        NSModalResponseCancel -> return null
+
+        else -> throw when (mode) {
+            Mode.Single,
+            Mode.Multiple,
+            -> FileKitPickerException("The macOS file picker could not complete the operation.")
+
+            Mode.Directory -> FileKitDialogException("The macOS directory picker could not complete the operation.")
+        }
     }
 
     // Return the result
