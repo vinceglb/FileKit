@@ -121,13 +121,12 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun CameraLaunchFailure_clearsPendingStateBeforeReportingError_andAllowsImmediateRelaunch() {
+    fun AndroidDialogLaunchResult_failed_clearsPendingStateBeforeReportingError_andAllowsImmediateRelaunch() {
         var hasPendingLaunch = true
-        val launchFailure = FileKitDialogException("Camera unavailable")
+        val launchFailure = FileKitDialogException("Dialog unavailable")
         val failures = mutableListOf<FileKitDialogException>()
-        val results = mutableListOf<PlatformFile?>()
 
-        dispatchCameraLaunchResult(
+        dispatchAndroidDialogLaunchResult(
             result = AndroidDialogLaunchResult.Failed(launchFailure),
             clearPendingState = { hasPendingLaunch = false },
             onError = { failure ->
@@ -139,16 +138,21 @@ class AndroidComposePickerReliabilityTest {
 
         assertEquals(listOf(launchFailure), failures)
         assertTrue(hasPendingLaunch)
+    }
 
-        dispatchCameraResult(
-            success = true,
-            pendingDestinationUri = "content://example.provider/camera/relaunch.jpg".takeIf { hasPendingLaunch },
+    @Test
+    fun AndroidDialogLaunchResult_launched_keepsPendingStateAndDoesNotReportError() {
+        var hasPendingLaunch = true
+        val failures = mutableListOf<FileKitDialogException>()
+
+        dispatchAndroidDialogLaunchResult(
+            result = AndroidDialogLaunchResult.Launched,
             clearPendingState = { hasPendingLaunch = false },
-            onResult = results::add,
+            onError = failures::add,
         )
 
-        assertEquals("content://example.provider/camera/relaunch.jpg", results.single()?.path)
-        assertFalse(hasPendingLaunch)
+        assertTrue(hasPendingLaunch)
+        assertTrue(failures.isEmpty())
     }
 
     @Test

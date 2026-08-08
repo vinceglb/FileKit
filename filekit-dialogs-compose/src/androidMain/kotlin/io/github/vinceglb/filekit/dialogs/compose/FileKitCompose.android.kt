@@ -308,20 +308,13 @@ public actual fun rememberDirectoryPickerLauncher(
         PickerResultLauncher {
             val initialUri = currentDirectory?.path?.toUri()
             hasPendingLaunch = true
-            when (
-                val launchResult = launchDirectoryPickerSafely {
+            dispatchAndroidDialogLaunchResult(
+                result = launchDirectoryPickerSafely {
                     launcher.launch(initialUri)
-                }
-            ) {
-                AndroidDialogLaunchResult.Launched -> {
-                    // Await the Activity Result callback.
-                }
-
-                is AndroidDialogLaunchResult.Failed -> {
-                    hasPendingLaunch = false
-                    currentOnError(launchResult.failure)
-                }
-            }
+                },
+                clearPendingState = { hasPendingLaunch = false },
+                onError = currentOnError,
+            )
         }
     }
 }
@@ -363,8 +356,8 @@ internal actual fun rememberPlatformFileSaverLauncher(
             }
 
             hasPendingLaunch = true
-            when (
-                val launchResult = launchFileSaverSafely {
+            dispatchAndroidDialogLaunchResult(
+                result = launchFileSaverSafely {
                     launcher.launch(
                         CreateDocumentInput(
                             mimeType = mimeType,
@@ -372,17 +365,10 @@ internal actual fun rememberPlatformFileSaverLauncher(
                             allowedMimeTypes = allowedMimeTypes,
                         ),
                     )
-                }
-            ) {
-                AndroidDialogLaunchResult.Launched -> {
-                    // Await the Activity Result callback.
-                }
-
-                is AndroidDialogLaunchResult.Failed -> {
-                    hasPendingLaunch = false
-                    currentOnError(launchResult.failure)
-                }
-            }
+                },
+                clearPendingState = { hasPendingLaunch = false },
+                onError = currentOnError,
+            )
         }
     }
 }
@@ -486,7 +472,7 @@ public actual fun rememberCameraPickerLauncher(
 
             if (FileKitAndroidCameraPermissionInternal.needsRuntimeCameraPermission(context)) {
                 hasPendingPermissionRequest = true
-                dispatchCameraLaunchResult(
+                dispatchAndroidDialogLaunchResult(
                     result = launchCameraPermissionSafely {
                         permissionLauncher.launch(Manifest.permission.CAMERA)
                     },
@@ -500,7 +486,7 @@ public actual fun rememberCameraPickerLauncher(
             contract.setCameraFacing(cameraFacing)
 
             // Launch the camera
-            dispatchCameraLaunchResult(
+            dispatchAndroidDialogLaunchResult(
                 result = launchCameraSafely(
                     uri = uri,
                     launch = launcher::launch,
@@ -571,7 +557,7 @@ internal sealed interface AndroidDialogLaunchResult {
     ) : AndroidDialogLaunchResult
 }
 
-internal fun dispatchCameraLaunchResult(
+internal fun dispatchAndroidDialogLaunchResult(
     result: AndroidDialogLaunchResult,
     clearPendingState: () -> Unit,
     onError: (FileKitDialogException) -> Unit,
@@ -602,7 +588,7 @@ internal fun dispatchCameraPermissionResolution(
         }
 
         is CameraPermissionResolution.LaunchCamera -> {
-            dispatchCameraLaunchResult(
+            dispatchAndroidDialogLaunchResult(
                 result = launchCamera(resolution.uri),
                 clearPendingState = clearPendingState,
                 onError = onError,
