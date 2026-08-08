@@ -288,16 +288,12 @@ private fun showSaveDialog(
         filterExtensions?.let { setFileTypes(dlg, it) }
         directory?.let { setFolder(dlg, it) }
 
-        val hr = fk_dialog_show(dlg.reinterpret(), null)
-        if (hr != S_OK) {
-            if (hr == ERROR_CANCELLED_HRESULT) {
-                return@memScoped null
-            }
-            throw WindowsDialogOperationalException(
-                "IFileSaveDialog::Show failed with HRESULT 0x${hr.toUInt().toString(16)}",
-            )
+        handleWindowsNativeDialogResult(
+            result = fk_dialog_show(dlg.reinterpret(), null),
+            operation = "IFileSaveDialog::Show",
+        ) {
+            getSingleResult(dlg, FK_SIGDN_FILESYSPATH.toInt())
         }
-        getSingleResult(dlg, FK_SIGDN_FILESYSPATH.toInt())
     } finally {
         ppDlg.value?.let { fk_save_dialog_release(it.reinterpret()) }
         if (comInitialized) {

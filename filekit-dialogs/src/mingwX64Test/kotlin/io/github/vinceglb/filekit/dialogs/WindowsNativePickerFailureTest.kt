@@ -93,18 +93,36 @@ class WindowsNativePickerFailureTest {
     }
 
     @Test
-    fun OpenPicker_cancelledDialog_returnsNullWithoutResolvingSelection() {
+    fun FileSaver_cancelledDialog_returnsNullWithoutResolvingSelection() {
         var selectionResolved = false
 
         val result = handleWindowsNativeDialogResult(
             result = ERROR_CANCELLED_HRESULT,
-            operation = "IFileOpenDialog::Show",
+            operation = "IFileSaveDialog::Show",
         ) {
             selectionResolved = true
             "selected.txt"
         }
 
         assertNull(result)
+        assertFalse(selectionResolved)
+    }
+
+    @Test
+    fun FileSaver_failedDialog_throwsOperationalFailureWithoutResolvingSelection() {
+        var selectionResolved = false
+
+        val failure = assertFailsWith<WindowsDialogOperationalException> {
+            handleWindowsNativeDialogResult(
+                result = E_FAIL_HRESULT,
+                operation = "IFileSaveDialog::Show",
+            ) {
+                selectionResolved = true
+                "selected.txt"
+            }
+        }
+
+        assertEquals("IFileSaveDialog::Show failed with HRESULT 0x80004005", failure.message)
         assertFalse(selectionResolved)
     }
 
