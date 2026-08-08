@@ -383,6 +383,11 @@ internal fun launchAndroidShareIntent(launch: () -> Unit) {
             message = "No Android activity is available to share the selected files.",
             cause = failure,
         )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the sharing launch.",
+            cause = failure,
+        )
     }
 }
 

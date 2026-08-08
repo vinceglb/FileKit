@@ -24,6 +24,20 @@ class AndroidSharingFailureTest {
     }
 
     @Test
+    fun AndroidSharing_securityRejection_throwsDialogOperationalFailureWithCause() {
+        val platformFailure = SecurityException("Sharing launch rejected")
+
+        val failure = assertFailsWith<FileKitDialogException> {
+            launchAndroidShareIntent {
+                throw platformFailure
+            }
+        }
+
+        assertEquals("Android rejected the sharing launch.", failure.message)
+        assertSame(platformFailure, failure.cause)
+    }
+
+    @Test
     fun AndroidSharing_unexpectedFailure_propagates() {
         val platformFailure = IllegalStateException("Unexpected sharing defect")
 
