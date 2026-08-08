@@ -313,11 +313,11 @@ public actual fun rememberDirectoryPickerLauncher(
                     launcher.launch(initialUri)
                 }
             ) {
-                DirectoryLaunchResult.Launched -> {
+                AndroidDialogLaunchResult.Launched -> {
                     // Await the Activity Result callback.
                 }
 
-                is DirectoryLaunchResult.Failed -> {
+                is AndroidDialogLaunchResult.Failed -> {
                     hasPendingLaunch = false
                     currentOnError(launchResult.failure)
                 }
@@ -374,11 +374,11 @@ internal actual fun rememberPlatformFileSaverLauncher(
                     )
                 }
             ) {
-                SaverLaunchResult.Launched -> {
+                AndroidDialogLaunchResult.Launched -> {
                     // Await the Activity Result callback.
                 }
 
-                is SaverLaunchResult.Failed -> {
+                is AndroidDialogLaunchResult.Failed -> {
                     hasPendingLaunch = false
                     currentOnError(launchResult.failure)
                 }
@@ -535,7 +535,7 @@ internal fun resolveCameraPermissionResult(
 internal fun launchCameraSafely(
     uri: Uri,
     launch: (Uri) -> Unit,
-): CameraLaunchResult = launchCameraActivitySafely(
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
     activityUnavailableMessage = "No Android activity is available to capture media with the camera.",
     securityFailureMessage = "Android rejected the camera launch.",
 ) {
@@ -544,42 +544,42 @@ internal fun launchCameraSafely(
 
 internal fun launchCameraPermissionSafely(
     launch: () -> Unit,
-): CameraLaunchResult = launchCameraActivitySafely(
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
     activityUnavailableMessage = "No Android activity is available to request camera permission.",
     securityFailureMessage = "Android rejected the camera permission request.",
     launch = launch,
 )
 
-private fun launchCameraActivitySafely(
+private fun launchAndroidDialogSafely(
     activityUnavailableMessage: String,
     securityFailureMessage: String,
     launch: () -> Unit,
-): CameraLaunchResult = try {
+): AndroidDialogLaunchResult = try {
     launch()
-    CameraLaunchResult.Launched
+    AndroidDialogLaunchResult.Launched
 } catch (failure: ActivityNotFoundException) {
-    CameraLaunchResult.Failed(FileKitDialogException(activityUnavailableMessage, failure))
+    AndroidDialogLaunchResult.Failed(FileKitDialogException(activityUnavailableMessage, failure))
 } catch (failure: SecurityException) {
-    CameraLaunchResult.Failed(FileKitDialogException(securityFailureMessage, failure))
+    AndroidDialogLaunchResult.Failed(FileKitDialogException(securityFailureMessage, failure))
 }
 
-internal sealed interface CameraLaunchResult {
-    data object Launched : CameraLaunchResult
+internal sealed interface AndroidDialogLaunchResult {
+    data object Launched : AndroidDialogLaunchResult
 
     data class Failed(
         val failure: FileKitDialogException,
-    ) : CameraLaunchResult
+    ) : AndroidDialogLaunchResult
 }
 
 internal fun dispatchCameraLaunchResult(
-    result: CameraLaunchResult,
+    result: AndroidDialogLaunchResult,
     clearPendingState: () -> Unit,
     onError: (FileKitDialogException) -> Unit,
 ) {
     when (result) {
-        CameraLaunchResult.Launched -> {}
+        AndroidDialogLaunchResult.Launched -> {}
 
-        is CameraLaunchResult.Failed -> {
+        is AndroidDialogLaunchResult.Failed -> {
             clearPendingState()
             onError(result.failure)
         }
@@ -588,7 +588,7 @@ internal fun dispatchCameraLaunchResult(
 
 internal fun dispatchCameraPermissionResolution(
     resolution: CameraPermissionResolution,
-    launchCamera: (Uri) -> CameraLaunchResult,
+    launchCamera: (Uri) -> AndroidDialogLaunchResult,
     clearPendingState: () -> Unit,
     onError: (FileKitDialogException) -> Unit,
     onResult: (PlatformFile?) -> Unit,
@@ -645,61 +645,19 @@ internal fun launchPickerSafely(
 
 internal fun launchDirectoryPickerSafely(
     launch: () -> Unit,
-): DirectoryLaunchResult = try {
-    launch()
-    DirectoryLaunchResult.Launched
-} catch (failure: ActivityNotFoundException) {
-    DirectoryLaunchResult.Failed(
-        FileKitDialogException(
-            message = "No Android activity is available to open the directory picker.",
-            cause = failure,
-        ),
-    )
-} catch (failure: SecurityException) {
-    DirectoryLaunchResult.Failed(
-        FileKitDialogException(
-            message = "Android rejected the directory picker launch.",
-            cause = failure,
-        ),
-    )
-}
-
-internal sealed interface DirectoryLaunchResult {
-    data object Launched : DirectoryLaunchResult
-
-    data class Failed(
-        val failure: FileKitDialogException,
-    ) : DirectoryLaunchResult
-}
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to open the directory picker.",
+    securityFailureMessage = "Android rejected the directory picker launch.",
+    launch = launch,
+)
 
 internal fun launchFileSaverSafely(
     launch: () -> Unit,
-): SaverLaunchResult = try {
-    launch()
-    SaverLaunchResult.Launched
-} catch (failure: ActivityNotFoundException) {
-    SaverLaunchResult.Failed(
-        FileKitDialogException(
-            message = "No Android activity is available to open the file saver.",
-            cause = failure,
-        ),
-    )
-} catch (failure: SecurityException) {
-    SaverLaunchResult.Failed(
-        FileKitDialogException(
-            message = "Android rejected the file saver launch.",
-            cause = failure,
-        ),
-    )
-}
-
-internal sealed interface SaverLaunchResult {
-    data object Launched : SaverLaunchResult
-
-    data class Failed(
-        val failure: FileKitDialogException,
-    ) : SaverLaunchResult
-}
+): AndroidDialogLaunchResult = launchAndroidDialogSafely(
+    activityUnavailableMessage = "No Android activity is available to open the file saver.",
+    securityFailureMessage = "Android rejected the file saver launch.",
+    launch = launch,
+)
 
 internal sealed interface PickerLaunchResult {
     data object Launched : PickerLaunchResult

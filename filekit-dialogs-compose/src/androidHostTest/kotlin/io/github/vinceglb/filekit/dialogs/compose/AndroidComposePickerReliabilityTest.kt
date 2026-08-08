@@ -128,7 +128,7 @@ class AndroidComposePickerReliabilityTest {
         val results = mutableListOf<PlatformFile?>()
 
         dispatchCameraLaunchResult(
-            result = CameraLaunchResult.Failed(launchFailure),
+            result = AndroidDialogLaunchResult.Failed(launchFailure),
             clearPendingState = { hasPendingLaunch = false },
             onError = { failure ->
                 assertFalse(hasPendingLaunch)
@@ -180,8 +180,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("Android rejected the camera launch.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -193,8 +194,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("No Android activity is available to capture media with the camera.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -207,7 +209,7 @@ class AndroidComposePickerReliabilityTest {
             launchedUri = uri
         }
 
-        assertIs<CameraLaunchResult.Launched>(result)
+        assertIs<AndroidDialogLaunchResult.Launched>(result)
         assertEquals(expectedUri, launchedUri)
     }
 
@@ -232,7 +234,8 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
+        assertEquals("No Android activity is available to request camera permission.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -298,8 +301,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("No Android activity is available to open the directory picker.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -311,8 +315,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("Android rejected the directory picker launch.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -335,7 +340,7 @@ class AndroidComposePickerReliabilityTest {
             launched = true
         }
 
-        assertIs<DirectoryLaunchResult.Launched>(result)
+        assertIs<AndroidDialogLaunchResult.Launched>(result)
         assertTrue(launched)
     }
 
@@ -347,8 +352,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("No Android activity is available to open the file saver.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -360,8 +366,9 @@ class AndroidComposePickerReliabilityTest {
             throw launchFailure
         }
 
-        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        val failure = assertIs<AndroidDialogLaunchResult.Failed>(result).failure
         assertIs<FileKitDialogException>(failure)
+        assertEquals("Android rejected the file saver launch.", failure.message)
         assertSame(launchFailure, failure.cause)
     }
 
@@ -384,7 +391,7 @@ class AndroidComposePickerReliabilityTest {
             launched = true
         }
 
-        assertIs<SaverLaunchResult.Launched>(result)
+        assertIs<AndroidDialogLaunchResult.Launched>(result)
         assertTrue(launched)
     }
 
