@@ -249,12 +249,13 @@ internal class WindowsFilePicker(
 
         // Create ShellItem from the folder
         val folder = ShellItem(pbrFolder.value)
-
-        // Set the initial directory
-        this.SetFolder(folder.pointer).verify("SetFolder failed")
-
-        // Release the folder
-        folder.Release()
+        try {
+            // Set the initial directory
+            this.SetFolder(folder.pointer).verify("SetFolder failed")
+        } finally {
+            // Release the folder
+            folder.Release()
+        }
     }
 
     private fun FileDialog.addFiltersToDialog(fileExtensions: Set<String>) {
