@@ -9,6 +9,7 @@ import platform.darwin.NSObject
 
 internal class CameraControllerDelegate(
     private val onImagePicked: (UIImage?) -> Unit,
+    private val onPickerCancelled: () -> Unit,
 ) : NSObject(),
     UIImagePickerControllerDelegateProtocol,
     UINavigationControllerDelegateProtocol {
@@ -26,7 +27,7 @@ internal class CameraControllerDelegate(
 
     override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
         picker.dismissViewControllerAnimated(true) {
-            onImagePicked.invoke(null)
+            onPickerCancelled.invoke()
         }
     }
 }

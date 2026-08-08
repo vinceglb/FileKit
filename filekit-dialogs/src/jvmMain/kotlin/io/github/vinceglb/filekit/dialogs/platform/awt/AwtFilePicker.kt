@@ -1,7 +1,9 @@
 package io.github.vinceglb.filekit.dialogs.platform.awt
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -10,6 +12,7 @@ import java.awt.EventQueue
 import java.awt.FileDialog
 import java.awt.FileDialog.LOAD
 import java.awt.Frame
+import java.awt.HeadlessException
 import java.awt.Window
 import java.io.File
 import java.io.FilenameFilter
@@ -43,7 +46,7 @@ internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openDirectoryPicker(
         directory: PlatformFile?,
         dialogSettings: FileKitDialogSettings,
-    ): File? = throw UnsupportedOperationException("Directory picker is not supported on Linux yet.")
+    ): File? = throw FileKitDialogException("AWT does not support directory picker dialogs.")
 
     private suspend fun callAwtPicker(
         title: String?,
@@ -51,34 +54,41 @@ internal class AwtFilePicker : PlatformFilePicker {
         directory: PlatformFile?,
         fileExtensions: Set<String>?,
         parentWindow: Window?,
-    ): List<File>? = suspendCancellableCoroutine { continuation ->
-        // Handle parentWindow: Dialog, Frame, or null
-        val dialog = when (parentWindow) {
-            is Dialog -> FileDialog(parentWindow, title, LOAD)
-            else -> FileDialog(parentWindow as? Frame, title, LOAD)
-        }
-
-        EventQueue.invokeLater {
-            // Set multiple mode
-            dialog.isMultipleMode = isMultipleMode
-
-            // Set mime types
-            dialog.filenameFilter = FilenameFilter { _, name ->
-                fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+    ): List<File>? = try {
+        suspendCancellableCoroutine { continuation ->
+            // Handle parentWindow: Dialog, Frame, or null
+            val dialog = when (parentWindow) {
+                is Dialog -> FileDialog(parentWindow, title, LOAD)
+                else -> FileDialog(parentWindow as? Frame, title, LOAD)
             }
 
-            // Set initial directory
-            directory?.let { dialog.directory = directory.path }
+            EventQueue.invokeLater {
+                // Set multiple mode
+                dialog.isMultipleMode = isMultipleMode
 
-            // Show the dialog
-            dialog.isVisible = true
+                // Set mime types
+                dialog.filenameFilter = FilenameFilter { _, name ->
+                    fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+                }
 
-            val files = dialog.files.takeIf { it.isNotEmpty() }
-            val result = files ?: dialog.file?.let { arrayOf(File(it)) }
+                // Set initial directory
+                directory?.let { dialog.directory = directory.path }
 
-            continuation.resume(value = result?.toList())
+                // Show the dialog
+                dialog.isVisible = true
+
+                val files = dialog.files.takeIf { it.isNotEmpty() }
+                val result = files ?: dialog.file?.let { arrayOf(File(it)) }
+
+                continuation.resume(value = result?.toList())
+            }
+
+            continuation.invokeOnCancellation { dialog.dispose() }
         }
-
-        continuation.invokeOnCancellation { dialog.dispose() }
+    } catch (failure: HeadlessException) {
+        throw FileKitPickerException(
+            message = "The AWT file picker is unavailable in a headless environment.",
+            cause = failure,
+        )
     }
 }

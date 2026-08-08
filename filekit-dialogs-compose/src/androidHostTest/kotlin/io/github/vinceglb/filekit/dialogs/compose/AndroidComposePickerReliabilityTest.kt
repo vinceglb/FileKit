@@ -7,6 +7,8 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitAndroidDialogsInternal
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import io.github.vinceglb.filekit.path
 import org.junit.runner.RunWith
@@ -17,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
@@ -87,54 +90,301 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun CameraLaunchSafely_whenSecurityException_returnsFalse() {
-        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
-            throw SecurityException("camera permission denied")
-        }
+    fun CameraPermission_denied_clearsPendingStateBeforeReturningNull_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val results = mutableListOf<PlatformFile?>()
 
-        assertFalse(launched)
+        dispatchCameraPermissionResolution(
+            resolution = CameraPermissionResolution.ReturnNullResult,
+            launchCamera = { error("Camera must not launch after permission denial") },
+            clearPendingState = { hasPendingLaunch = false },
+            onError = { error("Permission denial must not be reported as an error") },
+            onResult = { result ->
+                assertFalse(hasPendingLaunch)
+                results += result
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(listOf<PlatformFile?>(null), results)
+        assertTrue(hasPendingLaunch)
+
+        dispatchCameraResult(
+            success = false,
+            pendingDestinationUri = "content://example.provider/camera/relaunch.jpg".takeIf { hasPendingLaunch },
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = results::add,
+        )
+
+        assertEquals(listOf<PlatformFile?>(null, null), results)
+        assertFalse(hasPendingLaunch)
     }
 
     @Test
-    fun CameraLaunchSafely_whenActivityNotFound_returnsFalse() {
-        val launched = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
-            throw ActivityNotFoundException("No activity found")
-        }
+    fun CameraLaunchFailure_clearsPendingStateBeforeReportingError_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val launchFailure = FileKitDialogException("Camera unavailable")
+        val failures = mutableListOf<FileKitDialogException>()
+        val results = mutableListOf<PlatformFile?>()
 
-        assertFalse(launched)
+        dispatchCameraLaunchResult(
+            result = CameraLaunchResult.Failed(launchFailure),
+            clearPendingState = { hasPendingLaunch = false },
+            onError = { failure ->
+                assertFalse(hasPendingLaunch)
+                failures += failure
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(listOf(launchFailure), failures)
+        assertTrue(hasPendingLaunch)
+
+        dispatchCameraResult(
+            success = true,
+            pendingDestinationUri = "content://example.provider/camera/relaunch.jpg".takeIf { hasPendingLaunch },
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = results::add,
+        )
+
+        assertEquals("content://example.provider/camera/relaunch.jpg", results.single()?.path)
+        assertFalse(hasPendingLaunch)
     }
 
     @Test
-    fun CameraLaunchSafely_whenNoError_returnsTrue() {
+    fun CameraResult_success_clearsPendingStateBeforeReturningFile_andAllowsImmediateRelaunch() {
+        var hasPendingLaunch = true
+        val results = mutableListOf<PlatformFile?>()
+
+        dispatchCameraResult(
+            success = true,
+            pendingDestinationUri = "content://example.provider/camera/photo.jpg",
+            clearPendingState = { hasPendingLaunch = false },
+            onResult = { result ->
+                assertFalse(hasPendingLaunch)
+                results += result
+                hasPendingLaunch = true
+            },
+        )
+
+        assertEquals(1, results.size)
+        assertEquals("content://example.provider/camera/photo.jpg", results.single()?.path)
+        assertTrue(hasPendingLaunch)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("camera permission denied")
+
+        val result = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No activity found")
+
+        val result = launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun CameraLaunchSafely_whenNoError_returnsLaunched() {
         val expectedUri = Uri.parse("content://example.provider/camera/photo.jpg")
         var launchedUri: Uri? = null
 
-        val launched = launchCameraSafely(expectedUri) { uri ->
+        val result = launchCameraSafely(expectedUri) { uri ->
             launchedUri = uri
         }
 
-        assertTrue(launched)
+        assertIs<CameraLaunchResult.Launched>(result)
         assertEquals(expectedUri, launchedUri)
     }
 
     @Test
-    fun PickerLaunchSafely_whenActivityNotFound_returnsFalse() {
-        val launched = launchPickerSafely {
-            throw ActivityNotFoundException("No activity found")
+    fun CameraLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected camera launcher defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchCameraSafely(Uri.parse("content://example.provider/camera/photo.jpg")) {
+                throw failure
+            }
         }
 
-        assertFalse(launched)
+        assertSame(failure, thrown)
     }
 
     @Test
-    fun PickerLaunchSafely_whenNoError_returnsTrue() {
+    fun CameraPermissionLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No permission activity")
+
+        val result = launchCameraPermissionSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<CameraLaunchResult.Failed>(result).failure
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun LegacyCameraLauncher_androidBinarySignature_remainsAvailable() {
+        val composeFileClass = Class.forName(
+            "io.github.vinceglb.filekit.dialogs.compose.FileKitCompose_androidKt",
+        )
+
+        composeFileClass.getDeclaredMethod(
+            "rememberCameraPickerLauncher",
+            io.github.vinceglb.filekit.dialogs.FileKitOpenCameraSettings::class.java,
+            Class.forName("kotlin.jvm.functions.Function1"),
+            androidx.compose.runtime.Composer::class.java,
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
+        )
+    }
+
+    @Test
+    fun PickerLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No activity found")
+
+        val result = launchFilePickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<PickerLaunchResult.Failed>(result).failure
+        assertIs<FileKitPickerException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun PickerLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("Picker launch rejected")
+
+        val result = launchFilePickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<PickerLaunchResult.Failed>(result).failure
+        assertIs<FileKitPickerException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun PickerLaunchSafely_whenNoError_returnsLaunched() {
         var launched = false
 
-        val wasLaunched = launchPickerSafely {
+        val result = launchFilePickerSafely {
             launched = true
         }
 
-        assertTrue(wasLaunched)
+        assertIs<PickerLaunchResult.Launched>(result)
+        assertTrue(launched)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No directory picker activity")
+
+        val result = launchDirectoryPickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("Directory picker launch rejected")
+
+        val result = launchDirectoryPickerSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<DirectoryLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected launcher defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchDirectoryPickerSafely { throw failure }
+        }
+
+        assertSame(failure, thrown)
+    }
+
+    @Test
+    fun DirectoryLaunchSafely_whenNoError_returnsLaunched() {
+        var launched = false
+
+        val result = launchDirectoryPickerSafely {
+            launched = true
+        }
+
+        assertIs<DirectoryLaunchResult.Launched>(result)
+        assertTrue(launched)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenActivityNotFound_returnsOperationalFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No file saver activity")
+
+        val result = launchFileSaverSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenSecurityException_returnsOperationalFailureWithCause() {
+        val launchFailure = SecurityException("File saver launch rejected")
+
+        val result = launchFileSaverSafely {
+            throw launchFailure
+        }
+
+        val failure = assertIs<SaverLaunchResult.Failed>(result).failure
+        assertIs<FileKitDialogException>(failure)
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenUnexpectedFailure_propagates() {
+        val failure = IllegalStateException("Unexpected saver defect")
+
+        val thrown = kotlin.test.assertFailsWith<IllegalStateException> {
+            launchFileSaverSafely { throw failure }
+        }
+
+        assertSame(failure, thrown)
+    }
+
+    @Test
+    fun FileSaverLaunchSafely_whenNoError_returnsLaunched() {
+        var launched = false
+
+        val result = launchFileSaverSafely {
+            launched = true
+        }
+
+        assertIs<SaverLaunchResult.Launched>(result)
         assertTrue(launched)
     }
 
@@ -143,10 +393,15 @@ class AndroidComposePickerReliabilityTest {
         var fallbackCalls = 0
 
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { false },
+            launchPrimary = {
+                PickerLaunchResult.Failed(
+                    failure = FileKitPickerException("Primary failed"),
+                    isFallbackEligible = true,
+                )
+            },
             launchFallback = {
                 fallbackCalls++
-                true
+                PickerLaunchResult.Launched
             },
         )
 
@@ -155,13 +410,48 @@ class AndroidComposePickerReliabilityTest {
     }
 
     @Test
-    fun PickerLaunchOutcome_primaryAndFallbackFail_returnsCancelled() {
+    fun PickerLaunchOutcome_primarySecurityFailure_doesNotLaunchFallback() {
+        val launchFailure = SecurityException("Visual picker launch rejected")
+        var fallbackCalls = 0
+
         val outcome = resolvePickerLaunchOutcome(
-            launchPrimary = { false },
-            launchFallback = { false },
+            launchPrimary = {
+                launchFilePickerSafely {
+                    throw launchFailure
+                }
+            },
+            launchFallback = {
+                fallbackCalls++
+                PickerLaunchResult.Launched
+            },
         )
 
-        assertEquals(PickerLaunchOutcome.Cancelled, outcome)
+        val failure = assertIs<PickerLaunchOutcome.Failed>(outcome).failure
+        assertSame(launchFailure, failure.cause)
+        assertEquals(0, fallbackCalls)
+    }
+
+    @Test
+    fun PickerLaunchOutcome_primaryAndFallbackFail_returnsFallbackOperationalFailure() {
+        val fallbackFailure = FileKitPickerException("Fallback failed")
+
+        val outcome = resolvePickerLaunchOutcome(
+            launchPrimary = {
+                PickerLaunchResult.Failed(
+                    failure = FileKitPickerException("Primary failed"),
+                    isFallbackEligible = true,
+                )
+            },
+            launchFallback = {
+                PickerLaunchResult.Failed(
+                    failure = fallbackFailure,
+                    isFallbackEligible = false,
+                )
+            },
+        )
+
+        val failure = assertIs<PickerLaunchOutcome.Failed>(outcome)
+        assertSame(fallbackFailure, failure.failure)
     }
 
     @Test

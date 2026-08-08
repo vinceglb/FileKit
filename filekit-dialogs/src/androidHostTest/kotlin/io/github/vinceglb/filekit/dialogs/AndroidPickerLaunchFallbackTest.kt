@@ -9,7 +9,9 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 
 class AndroidPickerLaunchFallbackTest {
     @Test
@@ -31,28 +33,84 @@ class AndroidPickerLaunchFallbackTest {
     }
 
     @Test
-    fun PickerLaunch_primaryAndFallbackThrowActivityNotFound_returnsNull() = runBlocking {
-        val result = runPickerLaunchWithActivityNotFoundFallback(
-            primary = {
-                throw ActivityNotFoundException("No activity for visual picker")
-            },
-            fallback = {
-                throw ActivityNotFoundException("No activity for document picker")
-            },
-        )
+    fun PickerLaunch_primaryAndFallbackThrowActivityNotFound_throwsPickerFailureWithFallbackCause() {
+        val fallbackFailure = ActivityNotFoundException("No activity for document picker")
 
-        assertNull(result)
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw ActivityNotFoundException("No activity for visual picker")
+                    },
+                    fallback = {
+                        throw fallbackFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(fallbackFailure, failure.cause)
+        assertIs<FileKitDialogException>(failure)
     }
 
     @Test
-    fun PickerLaunch_primaryThrowsActivityNotFoundWithoutFallback_returnsNull() = runBlocking {
-        val result = runPickerLaunchWithActivityNotFoundFallback(
-            primary = {
-                throw ActivityNotFoundException("No activity for document picker")
-            },
-        )
+    fun PickerLaunch_primaryThrowsActivityNotFoundWithoutFallback_throwsPickerFailureWithCause() {
+        val launchFailure = ActivityNotFoundException("No activity for document picker")
 
-        assertNull(result)
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw launchFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+    }
+
+    @Test
+    fun PickerLaunch_primaryThrowsSecurityException_doesNotInvokeFallbackAndThrowsPickerFailureWithCause() {
+        val launchFailure = SecurityException("Visual picker launch rejected")
+        var fallbackCalls = 0
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw launchFailure
+                    },
+                    fallback = {
+                        fallbackCalls++
+                        "fallback-result"
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
+        assertEquals(0, fallbackCalls)
+    }
+
+    @Test
+    fun PickerLaunch_fallbackThrowsSecurityException_throwsPickerFailureWithCause() {
+        val launchFailure = SecurityException("Document picker launch rejected")
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            runBlocking {
+                runPickerLaunchWithActivityNotFoundFallback(
+                    primary = {
+                        throw ActivityNotFoundException("No activity for visual picker")
+                    },
+                    fallback = {
+                        throw launchFailure
+                    },
+                )
+            }
+        }
+
+        assertSame(launchFailure, failure.cause)
     }
 
     @Test

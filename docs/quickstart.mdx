@@ -31,9 +31,12 @@ val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
 
 ```kotlin filekit-dialogs-compose
 // Pick a single file
-val launcher = rememberFilePickerLauncher { file ->
-    // Handle the selected file
-}
+val launcher = rememberFilePickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the selected file, or null when the user cancelled
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick a file")
@@ -55,9 +58,12 @@ val directory = FileKit.openDirectoryPicker()
 
 ```kotlin filekit-dialogs-compose
 // Pick a single directory
-val launcher = rememberDirectoryPickerLauncher { directory ->
-    // Handle the selected directory
-}
+val launcher = rememberDirectoryPickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { directory ->
+        // Handle the selected directory, or null when the user cancelled
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick a directory")
@@ -79,9 +85,12 @@ val imageFile = FileKit.openCameraPicker()
 
 ```kotlin filekit-dialogs-compose
 // Pick a single image
-val launcher = rememberCameraPickerLauncher { imageFile ->
-    // Handle the selected image
-}
+val launcher = rememberCameraPickerLauncher(
+    onError = { failure -> showError(failure.message) },
+    onResult = { imageFile ->
+        // Handle the selected image, or null when the user dismissed the camera
+    },
+)
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick an image")
@@ -113,10 +122,14 @@ file?.writeString(contentToSave)
 
 ```kotlin filekit-dialogs-compose
 // Create a file saver launcher
-val launcher = rememberFileSaverLauncher { file ->
-    // Handle the saved file
-    file?.let { saveFile(it) }
-}
+val launcher = rememberFileSaverLauncher(
+    dialogSettings = FileKitDialogSettings.createDefault(),
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Cancellation is reported as null, not as an error
+        file?.let { saveFile(it) }
+    },
+)
 
 // Display a button to open the file saver dialog
 Button(onClick = {

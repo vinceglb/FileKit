@@ -11,7 +11,7 @@ class ObjcRunnableClassRegistrationTest {
     fun ObjcRunnableClassRegistration_nullAllocation_rejectsBeforeNativeMutation() {
         val events = mutableListOf<String>()
 
-        val exception = assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<FoundationRunnableBootstrapException> {
             registerObjcRunnableClass(
                 className = CLASS_NAME,
                 allocate = {
@@ -35,7 +35,7 @@ class ObjcRunnableClassRegistrationTest {
     fun ObjcRunnableClassRegistration_zeroValuedAllocation_rejectsBeforeNativeMutation() {
         val events = mutableListOf<String>()
 
-        val exception = assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<FoundationRunnableBootstrapException> {
             registerObjcRunnableClass(
                 className = CLASS_NAME,
                 allocate = {
@@ -60,7 +60,7 @@ class ObjcRunnableClassRegistrationTest {
         val runnableClass = ID(42)
         val events = mutableListOf<String>()
 
-        val exception = assertFailsWith<IllegalStateException> {
+        val exception = assertFailsWith<FoundationRunnableBootstrapException> {
             registerObjcRunnableClass(
                 className = CLASS_NAME,
                 allocate = {

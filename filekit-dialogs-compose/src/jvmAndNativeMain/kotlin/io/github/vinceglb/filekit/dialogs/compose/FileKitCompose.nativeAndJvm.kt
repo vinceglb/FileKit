@@ -7,6 +7,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openFileSaver
 import kotlinx.coroutines.launch
@@ -14,24 +15,31 @@ import kotlinx.coroutines.launch
 @Composable
 internal actual fun rememberPlatformFileSaverLauncher(
     dialogSettings: FileKitDialogSettings,
+    onError: (FileKitDialogException) -> Unit,
     onResult: (PlatformFile?) -> Unit,
 ): SaverResultLauncher {
     val coroutineScope = rememberCoroutineScope()
     val stableDialogSettings = rememberStableDialogSettings(dialogSettings)
     val currentDialogSettings by rememberUpdatedState(stableDialogSettings)
+    val currentOnError by rememberUpdatedState(onError)
     val currentOnResult by rememberUpdatedState(onResult)
 
     return remember {
         SaverResultLauncher { suggestedName, defaultExtension, allowedExtensions, directory ->
             coroutineScope.launch {
-                val result = FileKit.openFileSaver(
-                    suggestedName = suggestedName,
-                    defaultExtension = defaultExtension,
-                    allowedExtensions = allowedExtensions,
-                    directory = directory,
-                    dialogSettings = currentDialogSettings,
+                runFileSaverLauncher(
+                    openFileSaver = {
+                        FileKit.openFileSaver(
+                            suggestedName = suggestedName,
+                            defaultExtension = defaultExtension,
+                            allowedExtensions = allowedExtensions,
+                            directory = directory,
+                            dialogSettings = currentDialogSettings,
+                        )
+                    },
+                    onError = currentOnError,
+                    onResult = currentOnResult,
                 )
-                currentOnResult(result)
             }
         }
     }

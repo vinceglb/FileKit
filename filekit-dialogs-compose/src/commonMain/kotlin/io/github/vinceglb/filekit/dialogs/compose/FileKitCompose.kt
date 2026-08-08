@@ -4,10 +4,13 @@ package io.github.vinceglb.filekit.dialogs.compose
 
 import androidx.compose.runtime.Composable
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitType
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 
 /**
  * Creates and remembers a [PickerResultLauncher] for picking files.
@@ -19,7 +22,8 @@ import io.github.vinceglb.filekit.dialogs.FileKitType
  * @param onResult Callback invoked with the result.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  *
- * Picker failures are ignored by this overload. Use the overload with `onError` to handle them.
+ * Operational picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
@@ -44,8 +48,11 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * @param mode The picking mode (e.g. Single, Multiple).
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected files.
+ * @param onError Callback invoked when a valid picker operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, unexpected defects, or [io.github.vinceglb.filekit.dialogs.FileKitPickerState.Failed]
+ * values delivered by state-tracking modes.
  * @param onResult Callback invoked with the result.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
 @Composable
@@ -77,7 +84,8 @@ public fun <PickerResult, ConsumedResult> rememberFilePickerLauncher(
  * @param onResult Callback invoked with the picked file, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  *
- * Picker failures are ignored by this overload. Use the overload with `onError` to handle them.
+ * Operational picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public fun rememberFilePickerLauncher(
@@ -99,8 +107,10 @@ public fun rememberFilePickerLauncher(
  * @param type The type of files to pick. Defaults to [FileKitType.File].
  * @param directory The initial directory. Supported on desktop platforms.
  * @param dialogSettings Platform-specific settings for the dialog.
- * @param onError Callback invoked when FileKit cannot resolve the selected file.
+ * @param onError Callback invoked when a valid picker operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, or unexpected defects.
  * @param onResult Callback invoked with the picked file, or null if cancelled.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
  */
 @Composable
@@ -135,13 +145,45 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
     onError: (FileKitPickerException) -> Unit,
     onResult: (ConsumedResult) -> Unit,
 ) {
-    val result = try {
-        openPicker()
-    } catch (failure: FileKitPickerException) {
-        onError(failure)
-        return
+    runDialogOperation(
+        operation = openPicker,
+        onError = { failure ->
+            when (failure) {
+                is FileKitPickerException -> onError(failure)
+                else -> throw failure
+            }
+        },
+        onResult = { result ->
+            mode.consumePickerResult(result, onError, onResult)
+        },
+    )
+}
+
+private suspend fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, ConsumedResult>.consumePickerResult(
+    result: PickerResult,
+    onFailure: (FileKitPickerException) -> Unit,
+    onConsumed: (ConsumedResult) -> Unit,
+) {
+    when (this) {
+        FileKitMode.Single,
+        is FileKitMode.Multiple,
+        -> {
+            consumeResult(result, onConsumed)
+        }
+
+        FileKitMode.SingleWithState,
+        is FileKitMode.MultipleWithState,
+        -> {
+            @Suppress("UNCHECKED_CAST")
+            (result as Flow<ConsumedResult>)
+                .catch { failure ->
+                    when (failure) {
+                        is FileKitPickerException -> onFailure(failure)
+                        else -> throw failure
+                    }
+                }.collect(onConsumed)
+        }
     }
-    mode.consumeResult(result, onResult)
 }
 
 /**
@@ -151,6 +193,9 @@ internal suspend fun <PickerResult, ConsumedResult> runFilePickerLauncher(
  * @param dialogSettings Platform-specific settings for the dialog.
  * @param onResult Callback invoked with the picked directory, or null if cancelled.
  * @return A [PickerResultLauncher] that can be used to launch the picker.
+ *
+ * Operational directory-picker failures are ignored without logging by this compatibility overload.
+ * Use the overload with `onError` to observe them. User cancellation remains an [onResult] value.
  */
 @Composable
 public expect fun rememberDirectoryPickerLauncher(
@@ -158,3 +203,69 @@ public expect fun rememberDirectoryPickerLauncher(
     dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
     onResult: (PlatformFile?) -> Unit,
 ): PickerResultLauncher
+
+/**
+ * Creates and remembers a [PickerResultLauncher] for picking a directory.
+ *
+ * @param directory The initial directory. Supported on desktop platforms.
+ * @param dialogSettings Platform-specific settings for the dialog.
+ * @param onError Callback invoked when a valid directory operation cannot complete. It is not invoked for user cancellation,
+ * coroutine cancellation, invalid invocations, or unexpected defects.
+ * @param onResult Callback invoked with the picked directory, or null if cancelled.
+ * Exceptions thrown by [onError] or [onResult] propagate without a compensating callback.
+ * @return A [PickerResultLauncher] that can be used to launch the picker.
+ */
+@Composable
+public expect fun rememberDirectoryPickerLauncher(
+    directory: PlatformFile? = null,
+    dialogSettings: FileKitDialogSettings = FileKitDialogSettings.createDefault(),
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+): PickerResultLauncher
+
+internal suspend fun runDirectoryPickerLauncher(
+    openDirectoryPicker: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openDirectoryPicker,
+        onError = onError,
+        onResult = onResult,
+    )
+}
+
+internal suspend fun runFileSaverLauncher(
+    openFileSaver: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openFileSaver,
+        onError = onError,
+        onResult = onResult,
+    )
+}
+
+internal suspend fun runCameraPickerLauncher(
+    openCameraPicker: suspend () -> PlatformFile?,
+    onError: (FileKitDialogException) -> Unit,
+    onResult: (PlatformFile?) -> Unit,
+) {
+    runDialogOperation(
+        operation = openCameraPicker,
+        onError = onError,
+        onResult = onResult,
+    )
+}
+
+internal suspend fun runShareFileLauncher(
+    shareFiles: suspend () -> Unit,
+    onError: (FileKitDialogException) -> Unit,
+) {
+    runDialogOperation(
+        operation = shareFiles,
+        onError = onError,
+        onResult = {},
+    )
+}

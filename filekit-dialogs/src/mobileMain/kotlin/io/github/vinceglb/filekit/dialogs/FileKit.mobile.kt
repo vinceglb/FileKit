@@ -13,6 +13,12 @@ public enum class FileKitCameraFacing {
     Back,
 }
 
+/**
+ * Opens a camera picker dialog.
+ *
+ * @return The saved file as a [PlatformFile], or `null` if the user dismisses the camera or denies camera permission.
+ * @throws FileKitDialogException When a valid camera operation cannot start or complete.
+ */
 @OptIn(ExperimentalUuidApi::class)
 public expect suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType = FileKitCameraType.Photo,
@@ -21,11 +27,21 @@ public expect suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings = FileKitOpenCameraSettings.createDefault(),
 ): PlatformFile?
 
+/**
+ * Shares [file] with the platform share sheet.
+ *
+ * @throws FileKitDialogException When a valid sharing operation cannot start or complete.
+ */
 public expect suspend fun FileKit.shareFile(
     file: PlatformFile,
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),
 )
 
+/**
+ * Shares [files] with the platform share sheet.
+ *
+ * @throws FileKitDialogException When a valid sharing operation cannot start or complete.
+ */
 public expect suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
     shareSettings: FileKitShareSettings = FileKitShareSettings.createDefault(),

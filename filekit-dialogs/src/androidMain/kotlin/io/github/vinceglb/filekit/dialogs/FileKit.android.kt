@@ -81,15 +81,27 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         suggestedName = suggestedName,
         extension = normalizedDefaultExtension,
     )
-    val uri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = CreateDocumentInput(
-            mimeType = mimeType,
-            fileName = fileName,
-            allowedMimeTypes = allowedMimeTypes,
-        ),
-    )
+    val uri = try {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = CreateDocumentInput(
+                mimeType = mimeType,
+                fileName = fileName,
+                allowedMimeTypes = allowedMimeTypes,
+            ),
+        )
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to open the file saver.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the file saver launch.",
+            cause = failure,
+        )
+    }
     return uri?.let(::PlatformFile)
 }
 
@@ -107,11 +119,23 @@ public actual suspend fun FileKit.openDirectoryPicker(
     val registry = FileKit.registry
     val contract = ActivityResultContracts.OpenDocumentTree()
     val initialUri = directory?.path?.toUri()
-    val treeUri = awaitActivityResult(
-        registry = registry,
-        contract = contract,
-        input = initialUri,
-    )
+    val treeUri = try {
+        awaitActivityResult(
+            registry = registry,
+            contract = contract,
+            input = initialUri,
+        )
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to open the directory picker.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the directory picker launch.",
+            cause = failure,
+        )
+    }
     return treeUri?.let(::PlatformFile)
 }
 
@@ -123,6 +147,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
  * @param destinationFile The file where the captured media will be saved.
  * @param openCameraSettings Platform-specific settings for the camera.
  * @return The saved file as a [PlatformFile], or null if cancelled.
+ * @throws FileKitDialogException When Android cannot launch the permission request or camera activity.
  */
 public actual suspend fun FileKit.openCameraPicker(
     type: FileKitCameraType,
@@ -131,7 +156,20 @@ public actual suspend fun FileKit.openCameraPicker(
     openCameraSettings: FileKitOpenCameraSettings,
 ): PlatformFile? {
     val registry = FileKit.registry
-    if (!FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)) {
+    val hasCameraPermission = try {
+        FileKitAndroidCameraPermissionInternal.requestCameraPermissionIfNeeded(registry, context)
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to request camera permission.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the camera permission request.",
+            cause = failure,
+        )
+    }
+    if (!hasCameraPermission) {
         return null
     }
 
@@ -143,8 +181,16 @@ public actual suspend fun FileKit.openCameraPicker(
             contract = contract,
             input = uri,
         )
-    } catch (_: SecurityException) {
-        return null
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to capture media with the camera.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the camera launch.",
+            cause = failure,
+        )
     }
     return if (isSaved) destinationFile else null
 }
@@ -259,6 +305,7 @@ public class TakePictureWithCameraFacing(
  *
  * @param file The file to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When no Android activity is available to share the file.
  */
 public actual suspend fun FileKit.shareFile(
     file: PlatformFile,
@@ -275,6 +322,7 @@ public actual suspend fun FileKit.shareFile(
  *
  * @param files The list of files to share.
  * @param shareSettings Platform-specific settings for sharing.
+ * @throws FileKitDialogException When no Android activity is available to share the files.
  */
 public actual suspend fun FileKit.shareFile(
     files: List<PlatformFile>,
@@ -322,7 +370,25 @@ public actual suspend fun FileKit.shareFile(
     }
     shareSettings.addOptionChooseIntent(chooseIntent)
 
-    context.startActivity(chooseIntent)
+    launchAndroidShareIntent {
+        context.startActivity(chooseIntent)
+    }
+}
+
+internal fun launchAndroidShareIntent(launch: () -> Unit) {
+    try {
+        launch()
+    } catch (failure: ActivityNotFoundException) {
+        throw FileKitDialogException(
+            message = "No Android activity is available to share the selected files.",
+            cause = failure,
+        )
+    } catch (failure: SecurityException) {
+        throw FileKitDialogException(
+            message = "Android rejected the sharing launch.",
+            cause = failure,
+        )
+    }
 }
 
 /**
@@ -446,13 +512,29 @@ internal suspend fun <O> runPickerLaunchWithActivityNotFoundFallback(
     fallback: (suspend () -> O)? = null,
 ): O? = try {
     primary()
-} catch (_: ActivityNotFoundException) {
-    val fallbackLaunch = fallback ?: return null
+} catch (primaryFailure: ActivityNotFoundException) {
+    val fallbackLaunch = fallback ?: throw FileKitPickerException(
+        message = "No Android activity is available to open the file picker.",
+        cause = primaryFailure,
+    )
     try {
         fallbackLaunch()
-    } catch (_: ActivityNotFoundException) {
-        null
+    } catch (fallbackFailure: ActivityNotFoundException) {
+        throw FileKitPickerException(
+            message = "No Android activity is available to open the file picker.",
+            cause = fallbackFailure,
+        )
+    } catch (fallbackFailure: SecurityException) {
+        throw FileKitPickerException(
+            message = "Android rejected the file picker launch.",
+            cause = fallbackFailure,
+        )
     }
+} catch (primaryFailure: SecurityException) {
+    throw FileKitPickerException(
+        message = "Android rejected the file picker launch.",
+        cause = primaryFailure,
+    )
 }
 
 internal fun FileKitType.toVisualFallbackMimeTypes(): Array<String> = when (this) {

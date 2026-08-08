@@ -59,34 +59,54 @@ private fun DebugScreen(
 ) {
     var buttonState by remember { mutableStateOf(AppScreenHeaderButtonState.Enabled) }
     var files by remember { mutableStateOf(emptyList<PlatformFile>()) }
+    var pickerError by remember { mutableStateOf<String?>(null) }
     var showPickerReproSheet by remember { mutableStateOf(false) }
     var launchImagePickerAfterSheetDismiss by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
     val pickerReproSheetState = rememberModalBottomSheetState()
-    val picker = rememberFilePickerLauncher { file ->
-        buttonState = AppScreenHeaderButtonState.Enabled
-        files = file?.let(::listOf) ?: emptyList()
+    val picker = rememberFilePickerLauncher(
+        onError = { failure ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = failure.message
+        },
+        onResult = { file ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = null
+            files = file?.let(::listOf) ?: emptyList()
 
-        scope.launch {
-            file?.let { debugPlatformTest(it) }
-        }
-    }
+            scope.launch {
+                file?.let { debugPlatformTest(it) }
+            }
+        },
+    )
     val imagePicker = rememberFilePickerLauncher(
         type = FileKitType.Image,
         mode = FileKitMode.Multiple(),
-    ) { pickedFiles ->
-        files = pickedFiles ?: emptyList()
-    }
+        onError = { failure -> pickerError = failure.message },
+        onResult = { pickedFiles ->
+            pickerError = null
+            files = pickedFiles ?: emptyList()
+        },
+    )
 
-    val folderPicker = rememberDirectoryPickerLauncher(directory = null) { folder ->
-        scope.launch {
-            folder?.let {
-                debugPlatformTest(folder)
-                // bookmarkFolder(folder)
+    val folderPicker = rememberDirectoryPickerLauncher(
+        directory = null,
+        onError = { failure ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = failure.message
+        },
+        onResult = { folder ->
+            buttonState = AppScreenHeaderButtonState.Enabled
+            pickerError = null
+            scope.launch {
+                folder?.let {
+                    debugPlatformTest(folder)
+                    // bookmarkFolder(folder)
+                }
             }
-        }
-    }
+        },
+    )
 
     fun test() {
         scope.launch {
@@ -151,7 +171,7 @@ private fun DebugScreen(
             item {
                 AppPickerResultsCard(
                     files = files,
-                    emptyText = "No files selected yet",
+                    emptyText = pickerError ?: "No files selected yet",
                     emptyIcon = LucideIcons.MessageCircleCode,
                     onFileClick = onDisplayFileDetails,
                     modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
