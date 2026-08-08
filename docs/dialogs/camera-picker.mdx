@@ -173,13 +173,18 @@ val file = FileKit.openCameraPicker(
 
 ```kotlin filekit-dialogs-compose
 val customFile = FileKit.filesDir / "my_photo.jpg"
-Button(onClick = { 
-    launcher.launch(
-        destinationFile = customFile,
-        openCameraSettings = FileKitOpenCameraSettings(
-            authority = "${context.packageName}.fileprovider"
-        )
-    )
+val launcher = rememberCameraPickerLauncher(
+    openCameraSettings = FileKitOpenCameraSettings(
+        authority = "${context.packageName}.fileprovider",
+    ),
+    onError = { failure -> showError(failure.message) },
+    onResult = { file ->
+        // Handle the captured photo, or null when dismissed or camera permission is denied
+    },
+)
+
+Button(onClick = {
+    launcher.launch(destinationFile = customFile)
 }) {
     Text("Take a photo to custom location")
 }
