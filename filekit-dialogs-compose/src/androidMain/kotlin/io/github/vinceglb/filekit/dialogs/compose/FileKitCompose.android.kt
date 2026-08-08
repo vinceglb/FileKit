@@ -634,15 +634,6 @@ internal fun launchFilePickerSafely(
     )
 }
 
-internal fun launchPickerSafely(
-    launch: () -> Unit,
-): Boolean = try {
-    launch()
-    true
-} catch (_: ActivityNotFoundException) {
-    false
-}
-
 internal fun launchDirectoryPickerSafely(
     launch: () -> Unit,
 ): AndroidDialogLaunchResult = launchAndroidDialogSafely(
