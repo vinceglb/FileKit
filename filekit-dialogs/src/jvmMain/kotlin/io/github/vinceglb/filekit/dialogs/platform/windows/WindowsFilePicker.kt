@@ -259,15 +259,7 @@ internal class WindowsFilePicker(
     }
 
     private fun FileDialog.addFiltersToDialog(fileExtensions: Set<String>) {
-        // Create the filter string
-        val filterString = fileExtensions.joinToString(";") { "*.$it" }
-
-        val filterSpec = COMDLG_FILTERSPEC()
-        filterSpec.pszName = WString(filterString)
-        filterSpec.pszSpec = WString(filterString)
-
-        // Set the filter
-        this.SetFileTypes(1, arrayOf(filterSpec))
+        setWindowsFileTypes(fileExtensions, this::SetFileTypes)
     }
 
     private fun FileDialog.setFlag(flag: Int) {
@@ -380,20 +372,33 @@ internal class WindowsFilePicker(
         }
     }
 
-    private fun HRESULT.verify(exceptionMessage: String): HRESULT {
-        if (FAILED(this)) {
-            throw WindowsDialogOperationalException(
-                "$exceptionMessage with HRESULT 0x${toInt().toUInt().toString(16)}",
-            )
-        } else {
-            return this
-        }
-    }
-
     private fun FileKitDialogSettings.resolveWindowsDialogHandle(): Long? =
         parent.resolveWindowsHandle { window ->
             Pointer.nativeValue(Native.getWindowPointer(window))
         }
+}
+
+internal fun setWindowsFileTypes(
+    fileExtensions: Set<String>,
+    setFileTypes: (Int, Array<COMDLG_FILTERSPEC?>?) -> HRESULT,
+) {
+    val filterString = fileExtensions.joinToString(";") { "*.$it" }
+    val filterSpec = COMDLG_FILTERSPEC().apply {
+        pszName = WString(filterString)
+        pszSpec = WString(filterString)
+    }
+
+    setFileTypes(1, arrayOf(filterSpec)).verify("SetFileTypes failed")
+}
+
+private fun HRESULT.verify(exceptionMessage: String): HRESULT {
+    if (FAILED(this)) {
+        throw WindowsDialogOperationalException(
+            "$exceptionMessage with HRESULT 0x${toInt().toUInt().toString(16)}",
+        )
+    } else {
+        return this
+    }
 }
 
 private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(

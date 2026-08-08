@@ -4,10 +4,12 @@ package io.github.vinceglb.filekit.dialogs.platform.windows
 
 import com.sun.jna.platform.win32.W32Errors.HRESULT_FROM_WIN32
 import com.sun.jna.platform.win32.WinError.ERROR_CANCELLED
+import com.sun.jna.platform.win32.WinNT.HRESULT
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -63,6 +65,18 @@ class WindowsFilePickerFailureTest {
 
         assertNull(result)
         assertFalse(selectionResolved)
+    }
+
+    @Test
+    fun WindowsFilePicker_setFileTypesFailure_throwsOperationalFailure() {
+        val failure = assertFailsWith<WindowsDialogOperationalException> {
+            setWindowsFileTypes(setOf("txt")) { _, _ -> HRESULT(E_OUTOFMEMORY) }
+        }
+
+        assertEquals(
+            "SetFileTypes failed with HRESULT 0x8007000e",
+            failure.message,
+        )
     }
 
     private fun failingWindowsDialogExecutor(): WindowsDialogExecutor = WindowsDialogExecutor(
