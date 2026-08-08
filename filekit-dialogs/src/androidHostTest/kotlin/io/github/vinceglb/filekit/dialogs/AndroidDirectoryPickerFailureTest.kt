@@ -32,6 +32,7 @@ class AndroidDirectoryPickerFailureTest {
             runBlocking { FileKit.openDirectoryPicker() }
         }
 
+        assertEquals("No Android activity is available to open the directory picker.", failure.message)
         assertSame(platformFailure, failure.cause)
     }
 
@@ -45,6 +46,7 @@ class AndroidDirectoryPickerFailureTest {
             runBlocking { FileKit.openDirectoryPicker() }
         }
 
+        assertEquals("Android rejected the directory picker launch.", failure.message)
         val cause = assertIs<SecurityException>(failure.cause)
         assertEquals(platformFailure.message, cause.message)
     }

@@ -31,6 +31,7 @@ class AndroidFileSaverFailureTest {
             runBlocking { openFileSaver() }
         }
 
+        assertEquals("No Android activity is available to open the file saver.", failure.message)
         assertSame(platformFailure, failure.cause)
     }
 
@@ -44,6 +45,7 @@ class AndroidFileSaverFailureTest {
             runBlocking { openFileSaver() }
         }
 
+        assertEquals("Android rejected the file saver launch.", failure.message)
         val cause = assertIs<SecurityException>(failure.cause)
         assertEquals(platformFailure.message, cause.message)
     }

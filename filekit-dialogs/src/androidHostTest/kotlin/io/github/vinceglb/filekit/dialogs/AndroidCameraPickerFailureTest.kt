@@ -54,6 +54,7 @@ class AndroidCameraPickerFailureTest {
             runBlocking { openCameraPickerAtTestDestination() }
         }
 
+        assertEquals("No Android activity is available to capture media with the camera.", failure.message)
         assertSame(platformFailure, failure.cause)
     }
 
@@ -67,6 +68,7 @@ class AndroidCameraPickerFailureTest {
             runBlocking { openCameraPickerAtTestDestination() }
         }
 
+        assertEquals("Android rejected the camera launch.", failure.message)
         val cause = assertIs<SecurityException>(failure.cause)
         assertEquals(platformFailure.message, cause.message)
     }
@@ -82,6 +84,7 @@ class AndroidCameraPickerFailureTest {
             runBlocking { openCameraPickerAtTestDestination() }
         }
 
+        assertEquals("No Android activity is available to request camera permission.", failure.message)
         assertSame(platformFailure, failure.cause)
     }
 
@@ -96,6 +99,7 @@ class AndroidCameraPickerFailureTest {
             runBlocking { openCameraPickerAtTestDestination() }
         }
 
+        assertEquals("Android rejected the camera permission request.", failure.message)
         val cause = assertIs<SecurityException>(failure.cause)
         assertEquals(platformFailure.message, cause.message)
     }
