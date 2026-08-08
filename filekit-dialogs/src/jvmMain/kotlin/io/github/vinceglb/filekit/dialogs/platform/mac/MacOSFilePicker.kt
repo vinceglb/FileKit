@@ -72,6 +72,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         val pool = Foundation.NSAutoreleasePool()
         try {
             var response: File? = null
+            var modalFailure: FileKitDialogException? = null
 
             normalizeRunnableBootstrapFailure(
                 operationalFailure = { cause ->
@@ -110,12 +111,15 @@ internal class MacOSFilePicker : PlatformFilePicker {
                     )
 
                     val result = Foundation.invoke(savePanel, "runModal")
-                    if (result.toInt() == NS_MODAL_RESPONSE_OK) {
-                        response = singlePath(savePanel)
+                    when (result.toInt()) {
+                        NS_MODAL_RESPONSE_OK -> response = singlePath(savePanel)
+                        NS_MODAL_RESPONSE_CANCEL -> Unit
+                        else -> modalFailure = FileKitDialogException(MACOS_FILE_SAVER_FAILURE_MESSAGE)
                     }
                 }
             }
 
+            modalFailure?.let { throw it }
             response
         } finally {
             pool.drain()
@@ -132,6 +136,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
         val pool = Foundation.NSAutoreleasePool()
         try {
             var response: T? = null
+            var modalFailure: FileKitDialogException? = null
 
             normalizeRunnableBootstrapFailure(mode::operationalFailure) {
                 Foundation.executeOnMainThread(
@@ -165,13 +170,15 @@ internal class MacOSFilePicker : PlatformFilePicker {
                     // Open the file picker
                     val result = Foundation.invoke(openPanel, "runModal")
 
-                    // Get the path(s) from the file picker if the user validated the selection
-                    if (result.toInt() == 1) {
-                        response = mode.getResult(openPanel)
+                    when (result.toInt()) {
+                        NS_MODAL_RESPONSE_OK -> response = mode.getResult(openPanel)
+                        NS_MODAL_RESPONSE_CANCEL -> Unit
+                        else -> modalFailure = mode.operationalFailure()
                     }
                 }
             }
 
+            modalFailure?.let { throw it }
             response
         } finally {
             pool.drain()
@@ -180,6 +187,7 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
     private companion object {
         const val NS_MODAL_RESPONSE_OK = 1
+        const val NS_MODAL_RESPONSE_CANCEL = 0
         const val MACOS_FILE_PICKER_FAILURE_MESSAGE =
             "The macOS file picker could not complete the operation."
         const val MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE =
@@ -239,6 +247,8 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
         abstract fun getResult(openPanel: ID): T?
 
+        abstract fun operationalFailure(): FileKitDialogException
+
         abstract fun operationalFailure(cause: Throwable): FileKitDialogException
 
         data object SingleFile : MacOSFilePickerMode<File?>() {
@@ -249,6 +259,10 @@ internal class MacOSFilePicker : PlatformFilePicker {
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
+
+            override fun operationalFailure(): FileKitDialogException = FileKitPickerException(
+                MACOS_FILE_PICKER_FAILURE_MESSAGE,
+            )
 
             override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitPickerException(
                 MACOS_FILE_PICKER_FAILURE_MESSAGE,
@@ -267,6 +281,10 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
             override fun getResult(openPanel: ID): List<File>? = multiplePaths(openPanel)
 
+            override fun operationalFailure(): FileKitDialogException = FileKitPickerException(
+                MACOS_FILE_PICKER_FAILURE_MESSAGE,
+            )
+
             override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitPickerException(
                 MACOS_FILE_PICKER_FAILURE_MESSAGE,
                 cause,
@@ -281,6 +299,10 @@ internal class MacOSFilePicker : PlatformFilePicker {
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
+
+            override fun operationalFailure(): FileKitDialogException = FileKitDialogException(
+                MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE,
+            )
 
             override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitDialogException(
                 MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE,
