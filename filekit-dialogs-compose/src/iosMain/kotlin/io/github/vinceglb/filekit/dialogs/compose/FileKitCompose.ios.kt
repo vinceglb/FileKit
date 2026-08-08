@@ -60,8 +60,8 @@ public actual fun rememberCameraPickerLauncher(
     val returnedLauncher = remember {
         PhotoResultLauncher { type, cameraFacing, destinationFile ->
             coroutineScope.launch {
-                runCameraPickerLauncher(
-                    openCameraPicker = {
+                runDialogOperation(
+                    operation = {
                         fileKit.openCameraPicker(
                             type = type,
                             cameraFacing = cameraFacing,

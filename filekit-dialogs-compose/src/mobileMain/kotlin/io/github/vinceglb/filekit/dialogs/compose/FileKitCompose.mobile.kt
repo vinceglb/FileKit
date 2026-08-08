@@ -85,9 +85,10 @@ public fun rememberShareFileLauncher(
     val returnedLauncher = remember {
         ShareResultLauncher { files ->
             coroutineScope.launch {
-                runShareFileLauncher(
-                    shareFiles = { fileKit.shareFile(files, currentShareSettings) },
+                runDialogOperation(
+                    operation = { fileKit.shareFile(files, currentShareSettings) },
                     onError = currentOnError,
+                    onResult = {},
                 )
             }
         }

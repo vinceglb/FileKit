@@ -27,8 +27,8 @@ internal actual fun rememberPlatformFileSaverLauncher(
     return remember {
         SaverResultLauncher { suggestedName, defaultExtension, allowedExtensions, directory ->
             coroutineScope.launch {
-                runFileSaverLauncher(
-                    openFileSaver = {
+                runDialogOperation(
+                    operation = {
                         FileKit.openFileSaver(
                             suggestedName = suggestedName,
                             defaultExtension = defaultExtension,

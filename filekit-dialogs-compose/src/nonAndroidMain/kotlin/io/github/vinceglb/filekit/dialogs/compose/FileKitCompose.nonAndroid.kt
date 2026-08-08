@@ -63,8 +63,8 @@ public actual fun rememberDirectoryPickerLauncher(
     return remember {
         PickerResultLauncher {
             coroutineScope.launch {
-                runDirectoryPickerLauncher(
-                    openDirectoryPicker = {
+                runDialogOperation(
+                    operation = {
                         FileKit.openDirectoryPicker(
                             directory = currentDirectory,
                             dialogSettings = currentDialogSettings,
