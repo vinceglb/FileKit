@@ -1,11 +1,14 @@
 package io.github.vinceglb.filekit.dialogs.platform.mac
 
 import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.FileKitMacOSSettings
+import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.buildFileSaverAllowedFileTypes
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.Foundation
+import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.FoundationRunnableBootstrapException
 import io.github.vinceglb.filekit.dialogs.platform.mac.foundation.ID
 import io.github.vinceglb.filekit.dialogs.requireMacOSCompatible
 import io.github.vinceglb.filekit.path
@@ -70,40 +73,46 @@ internal class MacOSFilePicker : PlatformFilePicker {
         try {
             var response: File? = null
 
-            Foundation.executeOnMainThread(
-                withAutoreleasePool = false,
-                waitUntilDone = true,
+            normalizeRunnableBootstrapFailure(
+                operationalFailure = { cause ->
+                    FileKitDialogException(MACOS_FILE_SAVER_FAILURE_MESSAGE, cause)
+                },
             ) {
-                val savePanel = Foundation.invoke("NSSavePanel", "new")
+                Foundation.executeOnMainThread(
+                    withAutoreleasePool = false,
+                    waitUntilDone = true,
+                ) {
+                    val savePanel = Foundation.invoke("NSSavePanel", "new")
 
-                dialogSettings.title?.let {
-                    Foundation.invoke(savePanel, "setMessage:", Foundation.nsString(it))
-                }
+                    dialogSettings.title?.let {
+                        Foundation.invoke(savePanel, "setMessage:", Foundation.nsString(it))
+                    }
 
-                directory?.let {
-                    Foundation.invoke(savePanel, "setDirectoryURL:", Foundation.nsURL(it.path))
-                }
+                    directory?.let {
+                        Foundation.invoke(savePanel, "setDirectoryURL:", Foundation.nsURL(it.path))
+                    }
 
-                // Set the file name without extension, NSSavePanel appends it from allowedFileTypes
-                Foundation.invoke(
-                    savePanel,
-                    "setNameFieldStringValue:",
-                    Foundation.nsString(suggestedName),
-                )
+                    // Set the file name without extension, NSSavePanel appends it from allowedFileTypes
+                    Foundation.invoke(
+                        savePanel,
+                        "setNameFieldStringValue:",
+                        Foundation.nsString(suggestedName),
+                    )
 
-                // Default extension first so it is the one appended
-                val fileTypes = buildFileSaverAllowedFileTypes(defaultExtension, allowedExtensions)
-                savePanel.setAllowedFileTypes(fileTypes)
+                    // Default extension first so it is the one appended
+                    val fileTypes = buildFileSaverAllowedFileTypes(defaultExtension, allowedExtensions)
+                    savePanel.setAllowedFileTypes(fileTypes)
 
-                Foundation.invoke(
-                    savePanel,
-                    "setCanCreateDirectories:",
-                    dialogSettings.macOS.canCreateDirectories,
-                )
+                    Foundation.invoke(
+                        savePanel,
+                        "setCanCreateDirectories:",
+                        dialogSettings.macOS.canCreateDirectories,
+                    )
 
-                val result = Foundation.invoke(savePanel, "runModal")
-                if (result.toInt() == NS_MODAL_RESPONSE_OK) {
-                    response = singlePath(savePanel)
+                    val result = Foundation.invoke(savePanel, "runModal")
+                    if (result.toInt() == NS_MODAL_RESPONSE_OK) {
+                        response = singlePath(savePanel)
+                    }
                 }
             }
 
@@ -124,40 +133,42 @@ internal class MacOSFilePicker : PlatformFilePicker {
         try {
             var response: T? = null
 
-            Foundation.executeOnMainThread(
-                withAutoreleasePool = false,
-                waitUntilDone = true,
-            ) {
-                // Create the file picker
-                val openPanel = Foundation.invoke("NSOpenPanel", "new")
+            normalizeRunnableBootstrapFailure(mode::operationalFailure) {
+                Foundation.executeOnMainThread(
+                    withAutoreleasePool = false,
+                    waitUntilDone = true,
+                ) {
+                    // Create the file picker
+                    val openPanel = Foundation.invoke("NSOpenPanel", "new")
 
-                // Setup single, multiple selection or directory mode
-                mode.setupPickerMode(openPanel, macOSSettings.canCreateDirectories)
+                    // Setup single, multiple selection or directory mode
+                    mode.setupPickerMode(openPanel, macOSSettings.canCreateDirectories)
 
-                // Set the title
-                title?.let {
-                    Foundation.invoke(openPanel, "setMessage:", Foundation.nsString(it))
-                }
+                    // Set the title
+                    title?.let {
+                        Foundation.invoke(openPanel, "setMessage:", Foundation.nsString(it))
+                    }
 
-                // Set initial directory
-                directory?.let {
-                    Foundation.invoke(openPanel, "setDirectoryURL:", Foundation.nsURL(it.path))
-                }
+                    // Set initial directory
+                    directory?.let {
+                        Foundation.invoke(openPanel, "setDirectoryURL:", Foundation.nsURL(it.path))
+                    }
 
-                // Set file extensions
-                openPanel.setAllowedFileTypes(fileExtensions)
+                    // Set file extensions
+                    openPanel.setAllowedFileTypes(fileExtensions)
 
-                // Set resolvesAliases
-                macOSSettings.resolvesAliases?.let { resolvesAliases ->
-                    Foundation.invoke(openPanel, "setResolvesAliases:", resolvesAliases)
-                }
+                    // Set resolvesAliases
+                    macOSSettings.resolvesAliases?.let { resolvesAliases ->
+                        Foundation.invoke(openPanel, "setResolvesAliases:", resolvesAliases)
+                    }
 
-                // Open the file picker
-                val result = Foundation.invoke(openPanel, "runModal")
+                    // Open the file picker
+                    val result = Foundation.invoke(openPanel, "runModal")
 
-                // Get the path(s) from the file picker if the user validated the selection
-                if (result.toInt() == 1) {
-                    response = mode.getResult(openPanel)
+                    // Get the path(s) from the file picker if the user validated the selection
+                    if (result.toInt() == 1) {
+                        response = mode.getResult(openPanel)
+                    }
                 }
             }
 
@@ -169,6 +180,12 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
     private companion object {
         const val NS_MODAL_RESPONSE_OK = 1
+        const val MACOS_FILE_PICKER_FAILURE_MESSAGE =
+            "The macOS file picker could not complete the operation."
+        const val MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE =
+            "The macOS directory picker could not complete the operation."
+        const val MACOS_FILE_SAVER_FAILURE_MESSAGE =
+            "The macOS file saver could not complete the operation."
 
         fun Collection<String>.toNsStringArray(): ID? {
             if (isEmpty()) {
@@ -222,6 +239,8 @@ internal class MacOSFilePicker : PlatformFilePicker {
 
         abstract fun getResult(openPanel: ID): T?
 
+        abstract fun operationalFailure(cause: Throwable): FileKitDialogException
+
         data object SingleFile : MacOSFilePickerMode<File?>() {
             override fun setupPickerMode(openPanel: ID, canCreateDirectories: Boolean) {
                 Foundation.invoke(openPanel, "setCanChooseFiles:", true)
@@ -230,6 +249,11 @@ internal class MacOSFilePicker : PlatformFilePicker {
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
+
+            override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitPickerException(
+                MACOS_FILE_PICKER_FAILURE_MESSAGE,
+                cause,
+            )
         }
 
         data object MultipleFiles : MacOSFilePickerMode<List<File>>() {
@@ -242,6 +266,11 @@ internal class MacOSFilePicker : PlatformFilePicker {
             }
 
             override fun getResult(openPanel: ID): List<File>? = multiplePaths(openPanel)
+
+            override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitPickerException(
+                MACOS_FILE_PICKER_FAILURE_MESSAGE,
+                cause,
+            )
         }
 
         data object Directories : MacOSFilePickerMode<File>() {
@@ -252,6 +281,20 @@ internal class MacOSFilePicker : PlatformFilePicker {
             }
 
             override fun getResult(openPanel: ID): File? = singlePath(openPanel)
+
+            override fun operationalFailure(cause: Throwable): FileKitDialogException = FileKitDialogException(
+                MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE,
+                cause,
+            )
         }
     }
+}
+
+internal inline fun <T> normalizeRunnableBootstrapFailure(
+    operationalFailure: (FoundationRunnableBootstrapException) -> FileKitDialogException,
+    operation: () -> T,
+): T = try {
+    operation()
+} catch (cause: FoundationRunnableBootstrapException) {
+    throw operationalFailure(cause)
 }
