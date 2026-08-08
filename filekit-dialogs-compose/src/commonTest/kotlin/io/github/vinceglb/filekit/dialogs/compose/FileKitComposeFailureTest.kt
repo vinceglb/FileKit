@@ -8,14 +8,18 @@ import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.FileKitPickerState
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlin.coroutines.suspendCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class FileKitComposeFailureTest {
     @Test
@@ -269,6 +273,60 @@ class FileKitComposeFailureTest {
             )
         }
 
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_cancelledJobAfterNonCooperativeSuccess_invokesNoCallbacks() = runTest {
+        lateinit var completeOperation: (Result<String>) -> Unit
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val job = launch(start = CoroutineStart.UNDISPATCHED) {
+            runDialogOperation(
+                operation = {
+                    suspendCoroutine { continuation ->
+                        completeOperation = continuation::resumeWith
+                    }
+                },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        job.cancel()
+        completeOperation(Result.success("selected"))
+        job.join()
+
+        assertTrue(job.isCancelled)
+        assertFalse(errorInvoked)
+        assertFalse(resultInvoked)
+    }
+
+    @Test
+    fun runDialogOperation_cancelledJobAfterNonCooperativeFailure_invokesNoCallbacks() = runTest {
+        lateinit var completeOperation: (Result<String>) -> Unit
+        var errorInvoked = false
+        var resultInvoked = false
+
+        val job = launch(start = CoroutineStart.UNDISPATCHED) {
+            runDialogOperation(
+                operation = {
+                    suspendCoroutine { continuation ->
+                        completeOperation = continuation::resumeWith
+                    }
+                },
+                onError = { errorInvoked = true },
+                onResult = { resultInvoked = true },
+            )
+        }
+
+        job.cancel()
+        completeOperation(Result.failure(FileKitDialogException("Late operational failure")))
+        job.join()
+
+        assertTrue(job.isCancelled)
         assertFalse(errorInvoked)
         assertFalse(resultInvoked)
     }
