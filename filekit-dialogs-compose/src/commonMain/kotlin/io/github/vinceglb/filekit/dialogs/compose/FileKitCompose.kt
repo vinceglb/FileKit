@@ -184,7 +184,10 @@ private suspend fun <PickerResult, ConsumedResult> FileKitMode<PickerResult, Con
                             currentCoroutineContext().ensureActive()
                             onFailure(failure)
                         }
-                        else -> throw failure
+
+                        else -> {
+                            throw failure
+                        }
                     }
                 }.collect(onConsumed)
         }

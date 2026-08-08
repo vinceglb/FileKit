@@ -7,6 +7,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitPickerException
 import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.awt.AWTError
 import java.awt.Dialog
 import java.awt.EventQueue
 import java.awt.FileDialog
@@ -17,6 +18,7 @@ import java.awt.Window
 import java.io.File
 import java.io.FilenameFilter
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 internal class AwtFilePicker : PlatformFilePicker {
     override suspend fun openFilePicker(
@@ -54,7 +56,7 @@ internal class AwtFilePicker : PlatformFilePicker {
         directory: PlatformFile?,
         fileExtensions: Set<String>?,
         parentWindow: Window?,
-    ): List<File>? = try {
+    ): List<File>? = runAwtFilePicker {
         suspendCancellableCoroutine { continuation ->
             // Handle parentWindow: Dialog, Frame, or null
             val dialog = when (parentWindow) {
@@ -63,32 +65,47 @@ internal class AwtFilePicker : PlatformFilePicker {
             }
 
             EventQueue.invokeLater {
-                // Set multiple mode
-                dialog.isMultipleMode = isMultipleMode
+                try {
+                    // Set multiple mode
+                    dialog.isMultipleMode = isMultipleMode
 
-                // Set mime types
-                dialog.filenameFilter = FilenameFilter { _, name ->
-                    fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+                    // Set mime types
+                    dialog.filenameFilter = FilenameFilter { _, name ->
+                        fileExtensions?.any { name.endsWith(suffix = it) } ?: true
+                    }
+
+                    // Set initial directory
+                    directory?.let { dialog.directory = directory.path }
+
+                    // Show the dialog
+                    dialog.isVisible = true
+
+                    val files = dialog.files.takeIf { it.isNotEmpty() }
+                    val result = files ?: dialog.file?.let { arrayOf(File(it)) }
+
+                    continuation.resume(value = result?.toList())
+                } catch (failure: AWTError) {
+                    continuation.resumeWithException(failure)
                 }
-
-                // Set initial directory
-                directory?.let { dialog.directory = directory.path }
-
-                // Show the dialog
-                dialog.isVisible = true
-
-                val files = dialog.files.takeIf { it.isNotEmpty() }
-                val result = files ?: dialog.file?.let { arrayOf(File(it)) }
-
-                continuation.resume(value = result?.toList())
             }
 
             continuation.invokeOnCancellation { dialog.dispose() }
         }
-    } catch (failure: HeadlessException) {
-        throw FileKitPickerException(
-            message = "The AWT file picker is unavailable in a headless environment.",
-            cause = failure,
-        )
     }
+}
+
+internal suspend fun <T> runAwtFilePicker(
+    operation: suspend () -> T,
+): T = try {
+    operation()
+} catch (failure: HeadlessException) {
+    throw FileKitPickerException(
+        message = "The AWT file picker is unavailable in a headless environment.",
+        cause = failure,
+    )
+} catch (failure: AWTError) {
+    throw FileKitPickerException(
+        message = "The AWT file picker could not connect to the display environment.",
+        cause = failure,
+    )
 }

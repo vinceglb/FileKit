@@ -5,6 +5,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.path
 import kotlinx.coroutines.suspendCancellableCoroutine
+import java.awt.AWTError
 import java.awt.Dialog
 import java.awt.FileDialog
 import java.awt.Frame
@@ -79,6 +80,11 @@ internal suspend fun <T> runAwtFileSaver(
 } catch (failure: HeadlessException) {
     throw FileKitDialogException(
         message = "The AWT file saver is unavailable in a headless environment.",
+        cause = failure,
+    )
+} catch (failure: AWTError) {
+    throw FileKitDialogException(
+        message = "The AWT file saver could not connect to the display environment.",
         cause = failure,
     )
 }
