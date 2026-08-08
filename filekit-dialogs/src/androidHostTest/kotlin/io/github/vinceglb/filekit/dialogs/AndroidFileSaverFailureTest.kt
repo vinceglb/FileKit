@@ -19,10 +19,13 @@ import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidFileSaverFailureTest {
+    private lateinit var registry: ActivityResultRegistry
+
     @Test
     fun AndroidFileSaver_missingActivity_throwsDialogOperationalFailureWithCause() {
         val platformFailure = ActivityNotFoundException("No activity for file saver")
-        FileKit.init(throwingActivityResultRegistry(platformFailure))
+        registry = throwingActivityResultRegistry(platformFailure)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<FileKitDialogException> {
             runBlocking { openFileSaver() }
@@ -34,7 +37,8 @@ class AndroidFileSaverFailureTest {
     @Test
     fun AndroidFileSaver_securityRejection_throwsDialogOperationalFailureWithCause() {
         val platformFailure = SecurityException("File saver launch rejected")
-        FileKit.init(throwingActivityResultRegistry(platformFailure))
+        registry = throwingActivityResultRegistry(platformFailure)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<FileKitDialogException> {
             runBlocking { openFileSaver() }
@@ -47,7 +51,8 @@ class AndroidFileSaverFailureTest {
     @Test
     fun AndroidFileSaver_cancellation_propagatesUnchanged() {
         val cancellation = CancellationException("Saver cancelled")
-        FileKit.init(throwingActivityResultRegistry(cancellation))
+        registry = throwingActivityResultRegistry(cancellation)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<CancellationException> {
             runBlocking { openFileSaver() }
@@ -59,7 +64,8 @@ class AndroidFileSaverFailureTest {
     @Test
     fun AndroidFileSaver_unexpectedFailure_propagatesUnchanged() {
         val defect = IllegalStateException("Unexpected saver defect")
-        FileKit.init(throwingActivityResultRegistry(defect))
+        registry = throwingActivityResultRegistry(defect)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<IllegalStateException> {
             runBlocking { openFileSaver() }

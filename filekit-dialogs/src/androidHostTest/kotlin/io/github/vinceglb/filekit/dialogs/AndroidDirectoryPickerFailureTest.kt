@@ -20,10 +20,13 @@ import kotlin.test.assertSame
 
 @RunWith(RobolectricTestRunner::class)
 class AndroidDirectoryPickerFailureTest {
+    private lateinit var registry: ActivityResultRegistry
+
     @Test
     fun AndroidDirectoryPicker_missingActivity_throwsDialogOperationalFailureWithCause() {
         val platformFailure = ActivityNotFoundException("No activity for directory picker")
-        FileKit.init(throwingActivityResultRegistry(platformFailure))
+        registry = throwingActivityResultRegistry(platformFailure)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<FileKitDialogException> {
             runBlocking { FileKit.openDirectoryPicker() }
@@ -35,7 +38,8 @@ class AndroidDirectoryPickerFailureTest {
     @Test
     fun AndroidDirectoryPicker_securityRejection_throwsDialogOperationalFailureWithCause() {
         val platformFailure = SecurityException("Directory picker launch rejected")
-        FileKit.init(throwingActivityResultRegistry(platformFailure))
+        registry = throwingActivityResultRegistry(platformFailure)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<FileKitDialogException> {
             runBlocking { FileKit.openDirectoryPicker() }
@@ -48,7 +52,8 @@ class AndroidDirectoryPickerFailureTest {
     @Test
     fun AndroidDirectoryPicker_cancellation_propagatesUnchanged() {
         val cancellation = CancellationException("Directory picker cancelled")
-        FileKit.init(throwingActivityResultRegistry(cancellation))
+        registry = throwingActivityResultRegistry(cancellation)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<CancellationException> {
             runBlocking { FileKit.openDirectoryPicker() }
@@ -60,7 +65,8 @@ class AndroidDirectoryPickerFailureTest {
     @Test
     fun AndroidDirectoryPicker_unexpectedFailure_propagatesUnchanged() {
         val defect = IllegalStateException("Unexpected directory picker defect")
-        FileKit.init(throwingActivityResultRegistry(defect))
+        registry = throwingActivityResultRegistry(defect)
+        FileKit.init(registry)
 
         val failure = assertFailsWith<IllegalStateException> {
             runBlocking { FileKit.openDirectoryPicker() }
