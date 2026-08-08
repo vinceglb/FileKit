@@ -362,10 +362,27 @@ private fun MemScope.setFolder(
         )
     }
     val folder = ppsi.value ?: return
+    setWindowsNativeDialogFolder(
+        failurePolicy = failurePolicy,
+        setFolder = { fk_dialog_set_folder(dlg.reinterpret(), folder.reinterpret()) },
+        releaseFolder = { fk_shell_item_release(folder.reinterpret()) },
+    )
+}
+
+internal fun setWindowsNativeDialogFolder(
+    failurePolicy: WindowsDialogFailurePolicy,
+    setFolder: () -> Int,
+    releaseFolder: () -> Unit,
+) {
     try {
-        fk_dialog_set_folder(dlg.reinterpret(), folder.reinterpret())
+        val result = setFolder()
+        if (result != S_OK) {
+            throw failurePolicy.createFailure(
+                "IFileDialog::SetFolder failed with HRESULT 0x${result.toUInt().toString(16)}",
+            )
+        }
     } finally {
-        fk_shell_item_release(folder.reinterpret())
+        releaseFolder()
     }
 }
 

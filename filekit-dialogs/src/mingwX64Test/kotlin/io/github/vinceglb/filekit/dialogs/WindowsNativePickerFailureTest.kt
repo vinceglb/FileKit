@@ -17,6 +17,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalForeignApi::class)
 class WindowsNativePickerFailureTest {
@@ -71,6 +72,48 @@ class WindowsNativePickerFailureTest {
     }
 
     @Test
+    fun PickerSetFolder_failedHresult_throwsPickerOperationalFailureAndReleasesShellItem() {
+        var shellItemReleased = false
+
+        val failure = assertFailsWith<FileKitPickerException> {
+            runWindowsNativePickerOperation {
+                setWindowsNativeDialogFolder(
+                    failurePolicy = WindowsDialogFailurePolicy.Picker,
+                    setFolder = { E_FAIL_HRESULT },
+                    releaseFolder = { shellItemReleased = true },
+                )
+            }
+        }
+
+        assertEquals("The Windows file picker could not complete the operation.", failure.message)
+        val cause = assertNotNull(failure.cause)
+        assertIs<WindowsDialogOperationalException>(cause)
+        assertEquals("IFileDialog::SetFolder failed with HRESULT 0x80004005", cause.message)
+        assertTrue(shellItemReleased)
+    }
+
+    @Test
+    fun DirectoryAndSaverSetFolder_failedHresult_remainsDialogOperationalFailure() {
+        listOf(
+            WindowsDialogFailurePolicy.Directory,
+            WindowsDialogFailurePolicy.Saver,
+        ).forEach { failurePolicy ->
+            var shellItemReleased = false
+
+            val failure = assertFailsWith<WindowsDialogOperationalException> {
+                setWindowsNativeDialogFolder(
+                    failurePolicy = failurePolicy,
+                    setFolder = { E_FAIL_HRESULT },
+                    releaseFolder = { shellItemReleased = true },
+                )
+            }
+
+            assertEquals("IFileDialog::SetFolder failed with HRESULT 0x80004005", failure.message)
+            assertTrue(shellItemReleased)
+        }
+    }
+
+    @Test
     fun PickerOperation_unexpectedFailure_propagatesUnchanged() {
         val sentinel = UnexpectedPickerFailure()
 
@@ -99,6 +142,7 @@ class WindowsNativePickerFailureTest {
     }
 
     private companion object {
+        val E_FAIL_HRESULT = 0x80004005u.toInt()
         val ERROR_CANCELLED_HRESULT = 0x800704C7u.toInt()
     }
 
