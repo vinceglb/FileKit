@@ -24,6 +24,7 @@ fun resolvePkgConfigArgs(argument: String): Array<String> = runCatching {
     providers
         .exec {
             commandLine("pkg-config", argument, "dbus-1")
+            isIgnoreExitValue = true
         }.standardOutput
         .asText
         .get()
@@ -37,14 +38,12 @@ fun resolvePkgConfigVariable(variable: String): String? = runCatching {
     providers
         .exec {
             commandLine("pkg-config", "--variable=$variable", "dbus-1")
+            isIgnoreExitValue = true
         }.standardOutput
         .asText
         .get()
         .trim()
 }.getOrNull()?.takeIf { it.isNotEmpty() }
-
-val dbusCompilerOpts = resolvePkgConfigArgs("--cflags")
-val dbusLibDir = resolvePkgConfigVariable("libdir")
 
 jvmTest.configure {
     dependsOn(headlessAwtFilePickerTest)
@@ -72,6 +71,11 @@ kotlin {
     val isLinuxHost = HostManager.hostIsLinux
 
     if (isLinuxHost) {
+        // pkg-config failures are acceptable: when the dbus-1 development package is missing the
+        // D-Bus cinterop simply resolves no flags and the JVM targets remain buildable.
+        val dbusCompilerOpts = resolvePkgConfigArgs("--cflags")
+        val dbusLibDir = resolvePkgConfigVariable("libdir")
+
         listOf(linuxX64(), linuxArm64()).forEach { target ->
             // The konan linker does not search the distro's multiarch library dirs, so the host's
             // libdbus location must be passed explicitly. Native test binaries only link for the
