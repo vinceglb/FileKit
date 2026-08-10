@@ -96,6 +96,14 @@ class XdgPortalModelTest {
     }
 
     @Test
+    fun portalUriToFilePath_utf8EncodedPath_returnsDecodedPath() {
+        assertEquals(
+            "/home/user/café.png",
+            portalUriToFilePath("file:///home/user/caf%C3%A9.png"),
+        )
+    }
+
+    @Test
     fun portalUriToFilePath_localhostUri_returnsDecodedPath() {
         assertEquals(
             "/tmp/file.txt",
@@ -114,6 +122,16 @@ class XdgPortalModelTest {
             "/home/user/a b[1].txt",
             percentDecode("/home/user/a%20b%5B1%5D.txt"),
         )
+    }
+
+    @Test
+    fun percentDecode_utf8EncodedCharacters_returnsDecoded() {
+        assertEquals("/home/user/café.png", percentDecode("/home/user/caf%C3%A9.png"))
+    }
+
+    @Test
+    fun percentDecode_literalNonAsciiCharacters_returnsDecoded() {
+        assertEquals("/home/user/café.png", percentDecode("/home/user/café.png"))
     }
 
     @Test

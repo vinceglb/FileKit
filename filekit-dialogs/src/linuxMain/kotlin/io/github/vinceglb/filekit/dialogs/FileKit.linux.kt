@@ -148,13 +148,13 @@ private fun openPortalDialog(
 }
 
 /**
- * Builds the `current_folder` portal option: a null-terminated bytestring holding the `file://` URI
- * of the folder, as expected by the portal FileChooser.
+ * Builds the `current_folder` portal option: a null-terminated bytestring holding the raw
+ * filesystem path of the folder, as expected by the portal FileChooser.
  */
 private fun createCurrentFolderOption(folder: PlatformFile): PortalVariant.Bytes {
-    val uri = "file://${folder.path}"
-    val bytes = ByteArray(uri.length + 1)
-    uri.encodeToByteArray().copyInto(bytes)
+    val path = folder.path
+    val bytes = ByteArray(path.length + 1)
+    path.encodeToByteArray().copyInto(bytes)
     return PortalVariant.Bytes(bytes)
 }
 

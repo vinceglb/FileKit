@@ -149,21 +149,31 @@ internal fun portalUriToFilePath(uri: String): String? {
     }
 }
 
+/**
+ * Decodes percent-encoded characters in a URI. Encoded bytes are collected together with the UTF-8
+ * bytes of literal characters and decoded as UTF-8, so non-ASCII filenames such as `café.txt`
+ * survive the round trip.
+ */
 internal fun percentDecode(value: String): String {
-    val builder = StringBuilder(value.length)
+    val bytes = mutableListOf<Byte>()
     var index = 0
     while (index < value.length) {
         val char = value[index]
         if (char == '%' && index + 3 <= value.length) {
-            val decoded = value.substring(index + 1, index + 3).toIntOrNull(16)
-            if (decoded != null) {
-                builder.append(decoded.toChar())
+            val hex = value.substring(index + 1, index + 3).toIntOrNull(16)
+            if (hex != null) {
+                bytes += hex.toByte()
                 index += 3
                 continue
             }
         }
-        builder.append(char)
-        index += 1
+        val end = if (char.isHighSurrogate() && index + 1 < value.length && value[index + 1].isLowSurrogate()) {
+            index + 2
+        } else {
+            index + 1
+        }
+        value.substring(index, end).encodeToByteArray().forEach { bytes += it }
+        index = end
     }
-    return builder.toString()
+    return bytes.toByteArray().decodeToString()
 }
