@@ -57,3 +57,5 @@ compose.desktop {
 ```
 
 This prevents a `NoClassDefFoundError` in some cases. Read more about this issue in the [GitHub issue #107](https://github.com/vinceglb/FileKit/issues/107).
+
+If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the GNOME XDG Desktop Portal. The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME and other modern desktops); the application binary links against `libdbus-1`, which is present on every D-Bus enabled system.

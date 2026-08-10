@@ -17,6 +17,34 @@ val headlessAwtFilePickerTest = tasks.register<Test>("headlessAwtFilePickerTest"
     systemProperty("java.awt.headless", "true")
 }
 
+// pkg-config resolution for the libdbus cinterop. The dbus-1 development package is required to
+// build the library for Linux native targets, while consumers only need the runtime library.
+fun resolvePkgConfigArgs(argument: String): Array<String> = runCatching {
+    providers
+        .exec {
+            commandLine("pkg-config", argument, "dbus-1")
+        }.standardOutput
+        .asText
+        .get()
+}.getOrDefault("")
+    .trim()
+    .split(Regex("\\s+"))
+    .filter(String::isNotBlank)
+    .toTypedArray()
+
+fun resolvePkgConfigVariable(variable: String): String? = runCatching {
+    providers
+        .exec {
+            commandLine("pkg-config", "--variable=$variable", "dbus-1")
+        }.standardOutput
+        .asText
+        .get()
+        .trim()
+}.getOrNull()?.takeIf { it.isNotEmpty() }
+
+val dbusCompilerOpts = resolvePkgConfigArgs("--cflags")
+val dbusLibDir = resolvePkgConfigVariable("libdir")
+
 jvmTest.configure {
     dependsOn(headlessAwtFilePickerTest)
 }
@@ -36,6 +64,30 @@ kotlin {
                 }
             }
         }
+    }
+
+    listOf(linuxX64(), linuxArm64()).forEach { target ->
+        // The konan linker does not search the distro's multiarch library dirs, so the host's
+        // libdbus location must be passed explicitly. Native test binaries only link for the
+        // host architecture, so the host libdir is always correct there.
+        dbusLibDir?.let { libDir -> target.binaries.configureEach { linkerOpts("-L$libDir") } }
+        listOf("main", "test").forEach { compilationName ->
+            target.compilations.getByName(compilationName) {
+                cinterops {
+                    create("dbus") {
+                        defFile(project.file("src/linuxMain/cinterop/dbus.def"))
+                        compilerOpts(*dbusCompilerOpts)
+                    }
+                }
+            }
+        }
+    }
+
+    sourceSets {
+        // The libdbus client must not live in `linuxMain`: its metadata compilation cannot see
+        // target cinterop bindings, so the file is compiled into both Linux target compilations.
+        getByName("linuxX64Main") { kotlin.srcDir("src/linuxDbusMain/kotlin") }
+        getByName("linuxArm64Main") { kotlin.srcDir("src/linuxDbusMain/kotlin") }
     }
 
     sourceSets {
