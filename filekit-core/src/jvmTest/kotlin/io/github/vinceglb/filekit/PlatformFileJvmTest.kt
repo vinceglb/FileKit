@@ -10,14 +10,76 @@ import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import java.io.File
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import kotlin.coroutines.Continuation
+import kotlin.io.path.createDirectory
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeBytes
+import kotlin.io.path.writeText
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 
 class PlatformFileJvmTest {
+    /**
+     * Reads the archive back with java.util.zip, so the format is judged by an implementation that
+     * knows nothing about the one that wrote it.
+     */
+    @Test
+    fun PlatformFile_zipTo_directoryTree_roundTripsThroughJavaUtilZip() = runTest {
+        val root = createTempDirectory("filekit-zip-test")
+        try {
+            val tree = root.resolve("photos").createDirectory()
+            tree.resolve("a.txt").writeText("first")
+            tree.resolve("nested").createDirectory().resolve("b.txt").writeText("second")
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            PlatformFile(tree.toFile()) zipTo archive
+
+            val unpacked = mutableMapOf<String, String>()
+            ZipInputStream(archive.file.inputStream()).use { input ->
+                while (true) {
+                    val entry = input.nextEntry ?: break
+                    unpacked[entry.name] = if (entry.isDirectory) "" else input.readBytes().decodeToString()
+                }
+            }
+
+            assertEquals(
+                expected = setOf("photos/", "photos/a.txt", "photos/nested/", "photos/nested/b.txt"),
+                actual = unpacked.keys,
+            )
+            assertEquals(expected = "first", actual = unpacked.getValue("photos/a.txt"))
+            assertEquals(expected = "second", actual = unpacked.getValue("photos/nested/b.txt"))
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
+    /** ZipFile reads through the central directory and verifies each entry's CRC on close. */
+    @Test
+    fun PlatformFile_zipTo_binaryContent_survivesByteForByteWithMatchingCrc() = runTest {
+        val root = createTempDirectory("filekit-zip-binary")
+        try {
+            val payload = ByteArray(200_000) { (it * 31 % 251).toByte() }
+            val source = root.resolve("payload.bin")
+            source.writeBytes(payload)
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            PlatformFile(source.toFile()) zipTo archive
+
+            ZipFile(archive.file).use { zip ->
+                val entry = zip.getEntry("payload.bin")
+                assertEquals(expected = payload.size.toLong(), actual = entry.size)
+                assertContentEquals(payload, zip.getInputStream(entry).use { it.readBytes() })
+            }
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
     private val resourceDirectory = PlatformFile(Path("src/nonWebTest/resources"))
     private val textFile = PlatformFile(resourceDirectory, "hello.txt")
     private val imageFile = PlatformFile(resourceDirectory, "compose-logo.png")
