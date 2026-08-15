@@ -17,8 +17,11 @@ import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readString
 import kotlinx.serialization.Serializable
+import platform.posix.S_IFLNK
+import platform.posix.S_IFMT
 import platform.posix.fnmatch
 import platform.posix.getcwd
+import platform.posix.lstat
 import platform.posix.stat
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -294,4 +297,12 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
         isStale = false,
         shouldRefresh = false,
     )
+}
+
+// lstat, not stat: stat would resolve the link and report on its target.
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.isSymbolicLink(): Boolean = memScoped {
+    val statBuf = alloc<stat>()
+    if (lstat(absolutePath(), statBuf.ptr) != 0) return@memScoped false
+    (statBuf.st_mode.toInt() and S_IFMT) == S_IFLNK
 }

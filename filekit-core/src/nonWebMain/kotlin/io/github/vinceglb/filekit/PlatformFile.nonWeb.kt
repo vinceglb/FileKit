@@ -216,8 +216,34 @@ public expect suspend fun PlatformFile.atomicMove(destination: PlatformFile)
  * Deletes this file.
  *
  * @param mustExist If `true`, fails if the file does not exist. Defaults to `true`.
+ * @param recursively If `true`, a directory is emptied before it is removed. Defaults to `false`,
+ * which fails on a directory that still has contents. Symbolic links are unlinked, never followed.
  */
-public expect suspend fun PlatformFile.delete(mustExist: Boolean = true)
+public expect suspend fun PlatformFile.delete(
+    mustExist: Boolean = true,
+    recursively: Boolean = false,
+)
+
+/**
+ * Empties this directory, depth first, leaving the directory itself in place. Does nothing when
+ * this is not a directory.
+ *
+ * A symbolic link is removed as a link and never descended into: following one would delete the
+ * contents of whatever it points at, which lives outside the tree the caller asked to remove.
+ */
+internal suspend fun PlatformFile.deleteChildren() {
+    if (!isDirectory() || isSymbolicLink()) return
+    list().forEach { child ->
+        child.deleteChildren()
+        child.delete(mustExist = false)
+    }
+}
+
+/**
+ * Whether this path is a symbolic link, asked without resolving it. [isDirectory] cannot answer
+ * this: it follows the link and reports on the target.
+ */
+internal expect fun PlatformFile.isSymbolicLink(): Boolean
 
 /**
  * Appends a child path to this [PlatformFile].

@@ -180,3 +180,6 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
         shouldRefresh = Platform.isMac(),
     )
 }
+
+internal actual fun PlatformFile.isSymbolicLink(): Boolean =
+    Files.isSymbolicLink(file.toPath())

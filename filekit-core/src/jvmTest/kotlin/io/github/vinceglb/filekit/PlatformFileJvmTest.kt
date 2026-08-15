@@ -10,14 +10,39 @@ import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import java.io.File
+import java.nio.file.Files
 import kotlin.coroutines.Continuation
+import kotlin.io.path.createDirectory
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.exists
+import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class PlatformFileJvmTest {
+    @Test
+    fun PlatformFile_deleteRecursively_unlinksSymlinkAndLeavesItsTargetIntact() = runTest {
+        val tempRoot = createTempDirectory("filekit-symlink-test")
+        try {
+            val outside = tempRoot.resolve("outside").createDirectory()
+            val treasure = outside.resolve("treasure.txt")
+            treasure.writeText("must survive")
+
+            val doomed = tempRoot.resolve("doomed").createDirectory()
+            Files.createSymbolicLink(doomed.resolve("link-to-outside"), outside)
+
+            PlatformFile(doomed.toFile()).delete(recursively = true)
+
+            assertFalse(doomed.exists(), "the tree the caller asked to remove is gone")
+            assertTrue(treasure.exists(), "the symlink target lives outside that tree and is untouched")
+        } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
     private val resourceDirectory = PlatformFile(Path("src/nonWebTest/resources"))
     private val textFile = PlatformFile(resourceDirectory, "hello.txt")
     private val imageFile = PlatformFile(resourceDirectory, "compose-logo.png")

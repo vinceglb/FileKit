@@ -39,6 +39,9 @@ import platform.CoreServices.UTTypeCopyPreferredTagWithClass
 import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSDate
 import platform.Foundation.NSError
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileType
+import platform.Foundation.NSFileTypeSymbolicLink
 import platform.Foundation.NSLock
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLContentModificationDateKey
@@ -424,3 +427,12 @@ private fun NSError?.toBookmarkResolutionException(): BookmarkResolutionExceptio
     reason = classifyAppleBookmarkResolutionError(this),
     message = "Failed to resolve bookmark data: $this",
 )
+
+// attributesOfItemAtPath does not resolve the link, so a symlink reports its own type here rather
+// than the type of whatever it points at.
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.isSymbolicLink(): Boolean {
+    val path = nsUrl.path ?: return false
+    val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
+    return attributes?.get(NSFileType) == NSFileTypeSymbolicLink
+}

@@ -19,8 +19,11 @@ import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
 import platform.windows.DWORDVar
 import platform.windows.FILETIME
+import platform.windows.FILE_ATTRIBUTE_REPARSE_POINT
 import platform.windows.GET_FILEEX_INFO_LEVELS
 import platform.windows.GetFileAttributesExW
+import platform.windows.GetFileAttributesW
+import platform.windows.INVALID_FILE_ATTRIBUTES
 import platform.windows.GetFullPathNameW
 import platform.windows.HKEYVar
 import platform.windows.HKEY_CLASSES_ROOT
@@ -229,4 +232,13 @@ private fun FILETIME.toInstant(): Instant {
     val windowsTicks = dwHighDateTime.toLong().shl(32) or dwLowDateTime.toLong()
     val epochMillis = (windowsTicks / 10_000L) - 11_644_473_600_000L
     return Instant.fromEpochMilliseconds(epochMillis)
+}
+
+// Windows models symlinks and junctions as reparse points, and GetFileAttributesW reports on the
+// entry itself rather than on whatever it redirects to.
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.isSymbolicLink(): Boolean {
+    val attributes = GetFileAttributesW(absolutePath())
+    if (attributes == INVALID_FILE_ATTRIBUTES) return false
+    return (attributes and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) != 0u
 }

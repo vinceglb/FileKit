@@ -8,6 +8,8 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.system.Os
+import android.system.OsConstants
 import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -449,16 +451,19 @@ private fun PlatformFile.resolveAtomicMoveDestination(source: PlatformFile): Pla
     return this
 }
 
-public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
+public actual suspend fun PlatformFile.delete(mustExist: Boolean, recursively: Boolean): Unit =
     withContext(Dispatchers.IO) {
         when (androidFile) {
             is AndroidFile.FileWrapper -> {
+                if (recursively) deleteChildren()
                 SystemFileSystem.delete(
                     path = toKotlinxIoPath(),
                     mustExist = mustExist,
                 )
             }
 
+            // No recursion here: SAF has no empty-directory rule to work around. Removing a
+            // document is the provider's job, and DocumentsContract takes the subtree with it.
             is AndroidFile.UriWrapper -> {
                 val documentFile = DocumentFile.fromSingleUri(FileKit.context, androidFile.uri)
                     ?: throw FileKitException("Could not access Uri as DocumentFile")
@@ -1142,4 +1147,15 @@ private fun Uri.toFileOrNull(): File? {
 
     val filePath = path ?: return null
     return File(filePath)
+}
+
+// Os.lstat rather than java.nio.file.Files.isSymbolicLink: the latter needs API 26, and this
+// library still supports 21. lstat reports on the entry itself, where stat would follow the link.
+internal actual fun PlatformFile.isSymbolicLink(): Boolean = when (val file = androidFile) {
+    is AndroidFile.FileWrapper -> runCatching {
+        OsConstants.S_ISLNK(Os.lstat(file.file.absolutePath).st_mode)
+    }.getOrDefault(false)
+
+    // A document provider exposes no link concept; an entry is whatever it says it is.
+    is AndroidFile.UriWrapper -> false
 }

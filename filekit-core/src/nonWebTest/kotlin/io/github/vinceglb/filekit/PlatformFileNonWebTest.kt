@@ -110,6 +110,52 @@ class PlatformFileNonWebTest {
     }
 
     @Test
+    fun PlatformFile_deleteNonEmptyDirectory_fails() = runTest {
+        val root = resourceDirectory / "delete-non-recursive"
+        try {
+            (root / "nested").createDirectories()
+            (root / "nested" / "leaf.txt").writeString("leaf")
+
+            assertFailsWith<IOException> { root.delete() }
+            assertTrue(root.exists())
+        } finally {
+            root.delete(mustExist = false, recursively = true)
+        }
+    }
+
+    @Test
+    fun PlatformFile_deleteNonEmptyDirectoryRecursively_removesWholeTree() = runTest {
+        val root = resourceDirectory / "delete-recursive"
+        try {
+            (root / "a" / "b").createDirectories()
+            (root / "a" / "b" / "leaf.txt").writeString("leaf")
+            (root / "a" / "sibling.txt").writeString("sibling")
+            (root / "top.txt").writeString("top")
+
+            root.delete(recursively = true)
+
+            assertFalse(root.exists())
+        } finally {
+            root.delete(mustExist = false, recursively = true)
+        }
+    }
+
+    @Test
+    fun PlatformFile_deleteFileRecursively_removesFile() = runTest {
+        val file = resourceDirectory / "delete-recursive-file.txt"
+        file.writeString("content")
+
+        file.delete(recursively = true)
+
+        assertFalse(file.exists())
+    }
+
+    @Test
+    fun PlatformFile_deleteMissingPathRecursivelyWithMustExistFalse_doesNothing() = runTest {
+        (resourceDirectory / "never-created-directory").delete(mustExist = false, recursively = true)
+    }
+
+    @Test
     fun testPlatformFileReadBytes() = runTest {
         val textFileContent = textFile.readString()
         assertEquals(expected = "Hello, World!", actual = textFileContent)
