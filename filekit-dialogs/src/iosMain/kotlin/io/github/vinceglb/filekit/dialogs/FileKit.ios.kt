@@ -218,8 +218,10 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
         // Set the initial directory
         directory?.let { pickerController.directoryURL = NSURL.fileURLWithPath(it.path) }
 
-        // Assign the delegate to the picker controller
+        // Assign the delegate to the picker controller. It answers for the presentation as well,
+        // so a swipe that never reaches documentPickerWasCancelled still ends the wait.
         pickerController.delegate = documentPickerDelegate
+        pickerController.presentationController?.delegate = documentPickerDelegate
 
         // Present the picker controller
         presenter.presentViewController(
@@ -553,8 +555,10 @@ private suspend fun callPicker(
         // Set up the picker mode
         pickerController.allowsMultipleSelection = mode == Mode.Multiple
 
-        // Assign the delegate to the picker controller
+        // Assign the delegate to the picker controller. It answers for the presentation as well,
+        // so a swipe that never reaches documentPickerWasCancelled still ends the wait.
         pickerController.delegate = documentPickerDelegate
+        pickerController.presentationController?.delegate = documentPickerDelegate
 
         // Present the picker controller
         presentApplePickerController(
