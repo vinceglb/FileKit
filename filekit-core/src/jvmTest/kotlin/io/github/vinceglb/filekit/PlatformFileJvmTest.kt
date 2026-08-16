@@ -7,6 +7,11 @@ import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import java.io.File
@@ -22,8 +27,42 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class PlatformFileJvmTest {
+    /**
+     * Nothing in the compression loop suspends on its own, so cancellation only works because the
+     * loop checks for it. Uses real time rather than runTest's virtual clock, which would skip the
+     * delay and cancel before any work had started.
+     */
+    @Test
+    fun PlatformFile_zipTo_cancelledMidEntry_stopsAndLeavesNoArchive() = runBlocking {
+        val root = createTempDirectory("filekit-zip-cancel")
+        try {
+            // Big and barely compressible, so the deflater is still busy when the cancel lands.
+            val payload = ByteArray(64 * 1024 * 1024)
+            var seed = 1L
+            for (index in payload.indices) {
+                seed = seed * 6_364_136_223_846_793_005L + 1_442_695_040_888_963_407L
+                payload[index] = (seed ushr 33).toByte()
+            }
+            val source = root.resolve("big.bin")
+            source.writeBytes(payload)
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            val job = launch(Dispatchers.Default) { PlatformFile(source.toFile()) zipTo archive }
+            delay(100)
+            job.cancelAndJoin()
+
+            // If this fails because the job already finished, the case is no longer being
+            // exercised and the payload needs to grow.
+            assertTrue(job.isCancelled, "zip finished before it could be cancelled")
+            assertFalse(archive.file.exists(), "a cancelled zip should not leave a truncated archive")
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
     /**
      * Reads the archive back with java.util.zip, so the format is judged by an implementation that
      * knows nothing about the one that wrote it.

@@ -5,12 +5,15 @@ package io.github.vinceglb.filekit
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import kotlinx.io.Sink
 import kotlinx.io.buffered
 import kotlinx.io.readByteArray
 import kotlinx.io.writeIntLe
 import kotlinx.io.writeShortLe
+import kotlin.coroutines.coroutineContext
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -48,15 +51,25 @@ public suspend infix fun List<PlatformFile>.zipTo(destination: PlatformFile) {
     }
 
     withContext(Dispatchers.IO) {
-        destination.sink().buffered().use { sink ->
-            val writer = ZipWriter(sink)
-            forEach { source ->
-                if (!source.exists()) {
-                    throw FileKitException("Cannot zip \"${source.name}\": it does not exist.")
-                }
-                writer.add(source, source.name, mutableSetOf())
+        val missing = firstOrNull { !it.exists() }
+        if (missing != null) {
+            throw FileKitException("Cannot zip \"${missing.name}\": it does not exist.")
+        }
+
+        try {
+            destination.sink().buffered().use { sink ->
+                val writer = ZipWriter(sink)
+                forEach { source -> writer.add(source, source.name, mutableSetOf()) }
+                writer.finish()
             }
-            writer.finish()
+        } catch (error: Throwable) {
+            // A truncated archive still opens like an archive, and cancellation can now land
+            // mid-entry, so half a zip is a real outcome rather than a theoretical one.
+            //
+            // NonCancellable is load-bearing: delete() suspends, and on the already-cancelled job
+            // that got us here it would throw before removing anything.
+            withContext(NonCancellable) { runCatching { destination.delete(mustExist = false) } }
+            throw error
         }
     }
 }
@@ -87,7 +100,7 @@ private class ZipWriter(private val sink: Sink) {
         entries += CentralDirectoryEntry(nameBytes, METHOD_STORED, time, date, 0, 0, 0, localHeaderOffset, isDirectory = true)
     }
 
-    private fun writeFileEntry(source: PlatformFile, entryName: String) {
+    private suspend fun writeFileEntry(source: PlatformFile, entryName: String) {
         val nameBytes = entryName.encodeToByteArray()
         val localHeaderOffset = offset
         val (time, date) = source.lastModified().toDosDateTime()
@@ -104,6 +117,9 @@ private class ZipWriter(private val sink: Sink) {
             source.source().buffered().use { input ->
                 val chunk = ByteArray(COPY_CHUNK_BYTES)
                 while (true) {
+                    // Nothing in this loop suspends on its own, so without this a cancelled job
+                    // would keep compressing to the end of the file.
+                    coroutineContext.ensureActive()
                     val read = input.readAtMostTo(chunk, 0, chunk.size)
                     if (read <= 0) break
                     crc.update(chunk, read)
