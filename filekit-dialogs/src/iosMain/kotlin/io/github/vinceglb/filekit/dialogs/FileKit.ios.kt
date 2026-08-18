@@ -720,7 +720,12 @@ private fun callPhPicker(
                                 else -> {
                                     // Must copy the URL here because it becomes invalid outside the loadFileRepresentationForTypeIdentifier callback scope
                                     runCatching {
-                                        copyToTempFile(fileManager, url, tempRoot.lastPathComponent!!)
+                                        copyToTempFile(
+                                            fileManager = fileManager,
+                                            url = url,
+                                            id = tempRoot.lastPathComponent!!,
+                                            index = index,
+                                        )
                                     }.onSuccess(cont::resume)
                                         .onFailure { cont.resumeWithException(it) }
                                 }
@@ -786,18 +791,34 @@ private fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
     id: String,
+    index: Int,
 ): NSURL {
-    // Get the temporary directory
-    val fileComponents = fileManager.temporaryDirectory.pathComponents
+    val fileName = url.lastPathComponent ?: "file"
+
+    // Use a per-asset subdirectory so lastPathComponent stays unchanged.
+    val directoryComponents = fileManager.temporaryDirectory.pathComponents
         ?.plus(id)
-        ?.plus(url.lastPathComponent)
+        ?.plus(index.toString())
         ?: throw FileKitPickerException("Failed to resolve the temporary directory for the selected file.")
 
-    // Create a file URL
+    val directoryUrl = NSURL.fileURLWithPathComponents(directoryComponents)
+        ?: throw FileKitPickerException("Failed to create a temporary directory for the selected file.")
+
+    requireApplePickerOperation(
+        message = "Failed to create a temporary directory for the selected file.",
+    ) { error ->
+        fileManager.createDirectoryAtURL(
+            url = directoryUrl,
+            withIntermediateDirectories = true,
+            attributes = null,
+            error = error,
+        )
+    }
+
+    val fileComponents = directoryComponents.plus(fileName)
     val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
         ?: throw FileKitPickerException("Failed to create a temporary URL for the selected file.")
 
-    // Write the data to the file URL
     requireApplePickerOperation(
         message = "Failed to copy the selected file to a temporary location.",
     ) { error ->
