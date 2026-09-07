@@ -787,7 +787,7 @@ private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun copyToTempFile(
+internal fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
     id: String,
