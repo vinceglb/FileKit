@@ -3,7 +3,7 @@ package io.github.vinceglb.filekit.dialogs.util
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.UIKit.UIApplication
 import platform.UIKit.UIColor
-import platform.UIKit.UIScreen
+import platform.UIKit.UISceneActivationStateForegroundActive
 import platform.UIKit.UIViewController
 import platform.UIKit.UIWindow
 import platform.UIKit.UIWindowLevelAlert
@@ -24,11 +24,14 @@ internal class CameraPresenterWindow {
     private var previousKeyWindow: UIWindow? = null
 
     @OptIn(ExperimentalForeignApi::class)
-    fun attach(): UIViewController {
+    fun attach(): UIViewController? {
         val application = UIApplication.sharedApplication
-        previousKeyWindow = application.keyWindow
-        val scene = application.connectedScenes.firstNotNullOfOrNull { it as? UIWindowScene }
-        val newWindow = scene?.let(::UIWindow) ?: UIWindow(frame = UIScreen.mainScreen.bounds)
+        val scene = application.connectedScenes
+            .filterIsInstance<UIWindowScene>()
+            .firstOrNull { it.activationState == UISceneActivationStateForegroundActive }
+            ?: return null
+        previousKeyWindow = scene.keyWindow
+        val newWindow = UIWindow(windowScene = scene)
         newWindow.rootViewController = hostViewController
         newWindow.windowLevel = UIWindowLevelAlert + 1.0
         newWindow.backgroundColor = UIColor.clearColor
