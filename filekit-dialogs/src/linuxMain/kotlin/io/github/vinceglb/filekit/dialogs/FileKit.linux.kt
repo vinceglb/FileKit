@@ -151,10 +151,10 @@ private fun openPortalDialog(
  * Builds the `current_folder` portal option: a null-terminated bytestring holding the raw
  * filesystem path of the folder, as expected by the portal FileChooser.
  */
-private fun createCurrentFolderOption(folder: PlatformFile): PortalVariant.Bytes {
+internal fun createCurrentFolderOption(folder: PlatformFile): PortalVariant.Bytes {
     val path = folder.path
-    val bytes = ByteArray(path.length + 1)
-    path.encodeToByteArray().copyInto(bytes)
+    val encodedPath = path.encodeToByteArray()
+    val bytes = encodedPath.copyOf(encodedPath.size + 1)
     return PortalVariant.Bytes(bytes)
 }
 

@@ -22,7 +22,7 @@ import dbus.dbus_connection_close
 import dbus.dbus_connection_flush
 import dbus.dbus_connection_get_is_connected
 import dbus.dbus_connection_pop_message
-import dbus.dbus_connection_read_write_dispatch
+import dbus.dbus_connection_read_write
 import dbus.dbus_connection_send_with_reply_and_block
 import dbus.dbus_connection_unref
 import dbus.dbus_error_free
@@ -65,7 +65,7 @@ private const val PORTAL_RESPONSE_MATCH_RULE =
     "type='signal',interface='org.freedesktop.portal.Request',member='Response'"
 
 private const val NO_TIMEOUT = -1
-private const val READ_WRITE_DISPATCH_TIMEOUT_MS = 100
+private const val READ_WRITE_TIMEOUT_MS = 100
 
 private fun MemScope.appendVariant(
     iter: CPointer<DBusMessageIter>,
@@ -269,7 +269,7 @@ private fun MemScope.readRequestHandle(
     return readString(iter.ptr)
 }
 
-private fun MemScope.awaitPortalResponse(
+internal fun MemScope.awaitPortalResponse(
     connection: CPointer<DBusConnection>,
     handlePath: String,
 ): List<String>? {
@@ -279,7 +279,8 @@ private fun MemScope.awaitPortalResponse(
                 "The connection to the D-Bus session bus was lost while waiting for the XDG portal response",
             )
         }
-        dbus_connection_read_write_dispatch(connection, READ_WRITE_DISPATCH_TIMEOUT_MS)
+        // Messages are consumed below; dispatching here could discard a queued Response.
+        dbus_connection_read_write(connection, READ_WRITE_TIMEOUT_MS)
 
         while (true) {
             val message = dbus_connection_pop_message(connection) ?: break
