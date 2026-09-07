@@ -58,6 +58,20 @@ compose.desktop {
 
 This prevents a `NoClassDefFoundError` in some cases. Read more about this issue in the [GitHub issue #107](https://github.com/vinceglb/FileKit/issues/107).
 
-If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the GNOME XDG Desktop Portal. The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME and other modern desktops); the application binary links against `libdbus-1`, which is present on every D-Bus enabled system.
+If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the GNOME XDG Desktop Portal. The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME and other modern desktops); the application binary links against the `libdbus-1` runtime library.
+
+Building an application that consumes FileKit Dialogs requires the target architecture's D-Bus development libraries (`libdbus-1-dev` on Debian/Ubuntu), including the unversioned `libdbus-1.so` linker file. If the library directory is outside Kotlin/Native's linker search paths, configure the corresponding target, for example:
+
+```kotlin
+kotlin {
+    linuxX64 {
+        binaries.all {
+            linkerOpts("-L/usr/lib/x86_64-linux-gnu")
+        }
+    }
+}
+```
+
+Use your target's library directory (reported by `pkg-config --variable=libdir dbus-1` on a native Linux build machine). Cross-compilation requires libraries for the target architecture. Running the finished application requires the runtime library, not the development package.
 
 Building `filekit-dialogs` from source for Linux native targets requires the Linux D-Bus development headers (`libdbus-1-dev` on Debian/Ubuntu). Linux builds discover them through `pkg-config`. For cross-compilation, pass `-Pfilekit.dbusHeaders=/path/to/include`, where `include/dbus/` contains both the public headers and the Linux `dbus-arch-deps.h`. Release and snapshot workflows supply these headers to the macOS build so both Linux artifacts and their multiplatform metadata are published together.
