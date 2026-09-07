@@ -1,0 +1,74 @@
+headers = spawn.h unistd.h
+headerFilter = spawn.h
+package = filekit.process
+linkerOpts.linux = -lpthread
+
+---
+#include <errno.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+
+struct filekit_process_reaper {
+    pthread_mutex_t ready;
+    pid_t pid;
+};
+
+static void *filekit_reap_process(void *argument) {
+    struct filekit_process_reaper *reaper = argument;
+    pthread_mutex_lock(&reaper->ready);
+    pid_t pid = reaper->pid;
+    pthread_mutex_unlock(&reaper->ready);
+    pthread_mutex_destroy(&reaper->ready);
+    free(reaper);
+
+    /* Only collect our own child, preserving the application's SIGCHLD policy. */
+    if (pid > 0) {
+        while (waitpid(pid, NULL, 0) < 0 && errno == EINTR) {}
+    }
+    return NULL;
+}
+
+static inline int filekit_spawn_process(pid_t *pid, const char *executable, char *const argv[]) {
+    extern char **environ;
+    struct filekit_process_reaper *reaper = malloc(sizeof(*reaper));
+    if (reaper == NULL) return ENOMEM;
+    int error = pthread_mutex_init(&reaper->ready, NULL);
+    if (error != 0) {
+        free(reaper);
+        return error;
+    }
+    pthread_attr_t attributes;
+    error = pthread_attr_init(&attributes);
+    if (error != 0) {
+        pthread_mutex_destroy(&reaper->ready);
+        free(reaper);
+        return error;
+    }
+    error = pthread_attr_setdetachstate(&attributes, PTHREAD_CREATE_DETACHED);
+    if (error != 0) {
+        pthread_attr_destroy(&attributes);
+        pthread_mutex_destroy(&reaper->ready);
+        free(reaper);
+        return error;
+    }
+
+    /* Create the reaper before the child, so a thread allocation failure cannot orphan it.
+       The mutex keeps the reaper asleep until spawning completes and its PID is published. */
+    pthread_mutex_lock(&reaper->ready);
+    pthread_t thread;
+    error = pthread_create(&thread, &attributes, filekit_reap_process, reaper);
+    pthread_attr_destroy(&attributes);
+    if (error != 0) {
+        pthread_mutex_unlock(&reaper->ready);
+        pthread_mutex_destroy(&reaper->ready);
+        free(reaper);
+        return error;
+    }
+
+    error = posix_spawnp(pid, executable, NULL, NULL, argv, environ);
+    reaper->pid = error == 0 ? *pid : -1;
+    pthread_mutex_unlock(&reaper->ready);
+    /* The detached reaper now owns the allocation and releases its thread on exit. */
+    return error;
+}

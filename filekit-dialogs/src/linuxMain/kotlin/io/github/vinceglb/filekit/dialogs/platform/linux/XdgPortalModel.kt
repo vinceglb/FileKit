@@ -1,5 +1,7 @@
 package io.github.vinceglb.filekit.dialogs.platform.linux
 
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.random.Random
 
 /**
@@ -77,6 +79,7 @@ internal expect fun runXdgPortalRequest(
     parentWindow: String,
     title: String,
     options: Map<String, PortalVariant>,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
 ): List<String>?
 
 /**

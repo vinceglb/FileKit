@@ -1,4 +1,5 @@
 import org.gradle.api.tasks.testing.Test
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 import org.jetbrains.kotlin.konan.target.HostManager
 
 plugins {
@@ -77,10 +78,17 @@ kotlin {
     val dbusLibDir = if (HostManager.hostIsLinux) resolvePkgConfigVariable("libdir") else null
 
     listOf(linuxX64(), linuxArm64()).forEach { target ->
+        // Linux test executables need Linux runtime libraries and cannot run on other hosts.
+        target.binaries.withType<TestExecutable>().configureEach {
+            linkTaskProvider.configure { enabled = HostManager.hostIsLinux }
+        }
         dbusLibDir?.let { libDir -> target.binaries.configureEach { linkerOpts("-L$libDir") } }
         listOf("main", "test").forEach { compilationName ->
             target.compilations.getByName(compilationName) {
                 cinterops {
+                    create("process") {
+                        defFile(project.file("src/linuxMain/cinterop/process.def"))
+                    }
                     create("dbus") {
                         defFile(project.file("src/linuxMain/cinterop/dbus.def"))
                         compilerOpts(*dbusCompilerOpts)

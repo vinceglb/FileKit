@@ -23,7 +23,9 @@ import dbus.dbus_connection_flush
 import dbus.dbus_connection_get_is_connected
 import dbus.dbus_connection_pop_message
 import dbus.dbus_connection_read_write
+import dbus.dbus_connection_send
 import dbus.dbus_connection_send_with_reply_and_block
+import dbus.dbus_connection_set_exit_on_disconnect
 import dbus.dbus_connection_unref
 import dbus.dbus_error_free
 import dbus.dbus_error_init
@@ -54,6 +56,10 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.FileChooser.html
 // https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Request.html
@@ -90,15 +96,20 @@ internal actual fun runXdgPortalRequest(
     parentWindow: String,
     title: String,
     options: Map<String, PortalVariant>,
+    coroutineContext: CoroutineContext,
 ): List<String>? = memScoped {
     val error = alloc<DBusError>()
     dbus_error_init(error.ptr)
     var connection: CPointer<DBusConnection>? = null
     var request: CPointer<DBusMessage>? = null
     var reply: CPointer<DBusMessage>? = null
+    var handlePath: String? = null
     try {
+        coroutineContext.ensureActive()
         connection = dbus_bus_get_private(DBusBusType.DBUS_BUS_SESSION, error.ptr)
             ?: throw dbusOperationFailure(error, "Could not connect to the D-Bus session bus")
+        // A library must report a lost bus to its caller, never terminate the application.
+        dbus_connection_set_exit_on_disconnect(connection, 0u)
 
         dbus_bus_add_match(connection, PORTAL_RESPONSE_MATCH_RULE, error.ptr)
         if (dbus_error_is_set(error.ptr) != 0u) {
@@ -126,10 +137,15 @@ internal actual fun runXdgPortalRequest(
         reply = dbus_connection_send_with_reply_and_block(connection, request, NO_TIMEOUT, error.ptr)
             ?: throw dbusOperationFailure(error, "The XDG portal did not answer the ${method.name} request")
 
-        val handlePath = readRequestHandle(reply)
+        handlePath = readRequestHandle(reply)
             ?: throw LinuxXdgPortalException("The XDG portal returned an invalid request handle")
 
-        awaitPortalResponse(connection, handlePath)
+        awaitPortalResponse(connection, handlePath, coroutineContext)
+    } catch (cancelled: CancellationException) {
+        if (connection != null && handlePath != null) {
+            closePortalRequest(connection, handlePath)
+        }
+        throw cancelled
     } finally {
         reply?.let { dbus_message_unref(it) }
         request?.let { dbus_message_unref(it) }
@@ -138,6 +154,23 @@ internal actual fun runXdgPortalRequest(
             dbus_connection_unref(it)
         }
         dbus_error_free(error.ptr)
+    }
+}
+
+private fun closePortalRequest(connection: CPointer<DBusConnection>, handlePath: String) {
+    val close = dbus_message_new_method_call(
+        PORTAL_DESTINATION,
+        handlePath,
+        PORTAL_REQUEST_INTERFACE,
+        "Close",
+    ) ?: return
+    try {
+        dbus_connection_send(connection, close, null)
+        // Best effort, without blocking cancellation on a flush or a method reply.
+        // Closing the private connection below also releases the caller's portal requests.
+        dbus_connection_read_write(connection, 0)
+    } finally {
+        dbus_message_unref(close)
     }
 }
 
@@ -272,8 +305,10 @@ private fun MemScope.readRequestHandle(
 internal fun MemScope.awaitPortalResponse(
     connection: CPointer<DBusConnection>,
     handlePath: String,
+    coroutineContext: CoroutineContext = EmptyCoroutineContext,
 ): List<String>? {
     while (true) {
+        coroutineContext.ensureActive()
         if (dbus_connection_get_is_connected(connection) == 0u) {
             throw LinuxXdgPortalException(
                 "The connection to the D-Bus session bus was lost while waiting for the XDG portal response",
@@ -283,6 +318,7 @@ internal fun MemScope.awaitPortalResponse(
         dbus_connection_read_write(connection, READ_WRITE_TIMEOUT_MS)
 
         while (true) {
+            coroutineContext.ensureActive()
             val message = dbus_connection_pop_message(connection) ?: break
             try {
                 if (dbus_message_is_signal(message, PORTAL_REQUEST_INTERFACE, "Response") != 0u) {

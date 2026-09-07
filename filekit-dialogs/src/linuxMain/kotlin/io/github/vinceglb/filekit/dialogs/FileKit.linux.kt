@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalForeignApi::class)
-
 package io.github.vinceglb.filekit.dialogs
 
 import io.github.vinceglb.filekit.FileKit
@@ -9,24 +7,12 @@ import io.github.vinceglb.filekit.dialogs.platform.linux.PortalRequestMethod
 import io.github.vinceglb.filekit.dialogs.platform.linux.PortalVariant
 import io.github.vinceglb.filekit.dialogs.platform.linux.buildPortalFileFilters
 import io.github.vinceglb.filekit.dialogs.platform.linux.runXdgPortalRequest
-import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.path
-import kotlinx.cinterop.ByteVar
-import kotlinx.cinterop.CPointerVar
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.cstr
-import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.ptr
-import kotlinx.cinterop.set
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import platform.posix.EXIT_FAILURE
-import platform.posix._exit
-import platform.posix.execvp
-import platform.posix.fork
+import kotlin.coroutines.CoroutineContext
 
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
@@ -49,6 +35,7 @@ internal actual suspend fun FileKit.platformOpenFilePicker(
                 title = dialogSettings.title,
                 multiple = mode is PickerMode.Multiple,
                 openDirectory = false,
+                coroutineContext = coroutineContext,
             )
         }
     }.toPickerStateFlow()
@@ -72,6 +59,7 @@ public actual suspend fun FileKit.openDirectoryPicker(
             title = dialogSettings.title,
             multiple = false,
             openDirectory = true,
+            coroutineContext = coroutineContext,
         )?.firstOrNull()
     } catch (failure: LinuxXdgPortalException) {
         throw FileKitDialogException(
@@ -102,6 +90,7 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
             parentWindow = "",
             title = dialogSettings.title.orEmpty(),
             options = options,
+            coroutineContext = coroutineContext,
         )?.firstOrNull()
             ?.let { PlatformFile(it) }
     } catch (failure: LinuxXdgPortalException) {
@@ -131,6 +120,7 @@ private fun openPortalDialog(
     title: String?,
     multiple: Boolean,
     openDirectory: Boolean,
+    coroutineContext: CoroutineContext,
 ): List<PlatformFile>? {
     val options = mutableMapOf<String, PortalVariant>(
         "multiple" to PortalVariant.Bool(multiple),
@@ -144,6 +134,7 @@ private fun openPortalDialog(
         parentWindow = "",
         title = title.orEmpty(),
         options = options,
+        coroutineContext = coroutineContext,
     )?.map { path -> PlatformFile(path) }
 }
 
@@ -165,25 +156,4 @@ internal fun <T> runLinuxNativePickerOperation(operation: () -> T): T = try {
         message = LINUX_FILE_PICKER_FAILURE_MESSAGE,
         cause = failure,
     )
-}
-
-private fun openWithXdgOpen(path: String) {
-    val spawnResult = memScoped {
-        val executable = "xdg-open".cstr
-        val pathArgument = path.cstr
-        val arguments = allocArray<CPointerVar<ByteVar>>(3)
-        arguments[0] = executable.ptr
-        arguments[1] = pathArgument.ptr
-        arguments[2] = null
-
-        val pid = fork()
-        if (pid == 0) {
-            execvp("xdg-open", arguments)
-            _exit(EXIT_FAILURE)
-        }
-        pid
-    }
-    if (spawnResult < 0) {
-        throw FileKitException("Could not open the file with the default application.")
-    }
 }

@@ -46,8 +46,11 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -99,7 +102,20 @@ class PortalResponseParsingTest {
     }
 
     @Test
-    fun PortalResponse_alreadyQueued_returnsFirstResponse() = memScoped {
+    fun PortalResponse_alreadyQueued_returnsFirstResponse() = withQueuedResponses { connection, handle ->
+        assertEquals(listOf("/tmp/first"), awaitPortalResponse(connection, handle))
+    }
+
+    @Test
+    fun PortalResponse_cancelledJob_propagatesCancellationBeforeConsumingResponse() = withQueuedResponses { connection, handle ->
+        val job = Job().also { it.cancel() }
+        assertFailsWith<CancellationException> {
+            awaitPortalResponse(connection, handle, job)
+        }
+        assertEquals(listOf("/tmp/first"), awaitPortalResponse(connection, handle))
+    }
+
+    private fun withQueuedResponses(block: MemScope.(CPointer<DBusConnection>, String) -> Unit) = memScoped {
         val error = alloc<DBusError>()
         dbus_error_init(error.ptr)
         val connection = dbus_bus_get_private(DBusBusType.DBUS_BUS_SESSION, error.ptr)
@@ -134,7 +150,7 @@ class PortalResponseParsingTest {
             // The bus processes our messages in order, so both signals precede this reply.
             busBarrier(connection)
 
-            assertEquals(listOf("/tmp/first"), awaitPortalResponse(connection, handle))
+            block(connection, handle)
         } finally {
             dbus_connection_close(connection)
             dbus_connection_unref(connection)
