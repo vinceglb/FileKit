@@ -79,10 +79,13 @@ public actual fun PlatformFile.createDirectories(mustCreate: Boolean): Unit =
         SystemFileSystem.createDirectories(toKotlinxIoPath(), mustCreate)
     }
 
-public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
+public actual suspend fun PlatformFile.delete(mustExist: Boolean, recursively: Boolean): Unit =
     withScopedAccess {
         withContext(Dispatchers.IO) {
-            SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
+            if (!deleteIfSymbolicLink()) {
+                if (recursively) deleteChildren()
+                SystemFileSystem.delete(path = toKotlinxIoPath(), mustExist = mustExist)
+            }
         }
     }
 

@@ -216,8 +216,35 @@ public expect suspend fun PlatformFile.atomicMove(destination: PlatformFile)
  * Deletes this file.
  *
  * @param mustExist If `true`, fails if the file does not exist. Defaults to `true`.
+ * @param recursively If `true`, a directory is emptied before it is removed. Defaults to `false`,
+ * which fails on a filesystem directory that still has contents. Symbolic links (including dangling
+ * links) and Windows directory junctions are unlinked, never followed. Android document URI deletion
+ * is handled by the document provider regardless of this flag.
  */
-public expect suspend fun PlatformFile.delete(mustExist: Boolean = true)
+public expect suspend fun PlatformFile.delete(
+    mustExist: Boolean = true,
+    recursively: Boolean = false,
+)
+
+/**
+ * Empties this directory, depth first, leaving the directory itself in place. Does nothing when
+ * this is not a directory.
+ *
+ * The caller must handle links with [deleteIfSymbolicLink] before entering this function.
+ */
+internal suspend fun PlatformFile.deleteChildren() {
+    if (!isDirectory()) return
+    list().forEach { child ->
+        child.delete(mustExist = false, recursively = true)
+    }
+}
+
+/**
+ * Unlinks this entry and returns `true` if it is a symbolic link or a Windows reparse point.
+ * Returns `false` for other entries and missing paths. Inspection and deletion must not follow the
+ * target: it can be missing, cyclic, or outside the tree being deleted. Deletion failures propagate.
+ */
+internal expect fun PlatformFile.deleteIfSymbolicLink(): Boolean
 
 /**
  * Appends a child path to this [PlatformFile].

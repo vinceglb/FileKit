@@ -24,6 +24,7 @@ import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
@@ -39,6 +40,9 @@ import platform.CoreServices.UTTypeCopyPreferredTagWithClass
 import platform.CoreServices.kUTTagClassMIMEType
 import platform.Foundation.NSDate
 import platform.Foundation.NSError
+import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileType
+import platform.Foundation.NSFileTypeSymbolicLink
 import platform.Foundation.NSLock
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLContentModificationDateKey
@@ -48,8 +52,11 @@ import platform.Foundation.NSURLResourceKey
 import platform.Foundation.NSURLTypeIdentifierKey
 import platform.Foundation.timeIntervalSince1970
 import platform.UniformTypeIdentifiers.UTType
+import platform.posix.errno
 import platform.posix.free
 import platform.posix.realpath
+import platform.posix.strerror
+import platform.posix.unlink
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -424,3 +431,17 @@ private fun NSError?.toBookmarkResolutionException(): BookmarkResolutionExceptio
     reason = classifyAppleBookmarkResolutionError(this),
     message = "Failed to resolve bookmark data: $this",
 )
+
+// attributesOfItemAtPath does not resolve the link, so a symlink reports its own type here rather
+// than the type of whatever it points at.
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val path = nsUrl.path ?: return false
+    val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
+    if (attributes?.get(NSFileType) != NSFileTypeSymbolicLink) return false
+
+    if (unlink(path) != 0) {
+        throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
+    }
+    return true
+}

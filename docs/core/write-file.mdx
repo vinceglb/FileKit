@@ -120,6 +120,19 @@ file.delete()
 file.delete(mustExist = false)
 ```
 
+To delete a directory and its contents, opt into recursive deletion:
+
+```kotlin
+val directory = PlatformFile(FileKit.cacheDir, "temporary-downloads")
+directory.delete(recursively = true)
+```
+
+For filesystem paths, `recursively` defaults to `false`, so deleting a non-empty
+directory fails unless you enable it. Symbolic links (including dangling links)
+and Windows directory junctions are removed as links; their targets are left
+untouched. Android document URIs continue to use the document provider's deletion
+behavior.
+
 ## Creating Directories
 
 Before writing to a file, you may need to ensure its parent directory exists:

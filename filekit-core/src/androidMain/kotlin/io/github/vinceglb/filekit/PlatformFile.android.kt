@@ -8,6 +8,9 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.system.ErrnoException
+import android.system.Os
+import android.system.OsConstants
 import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -17,6 +20,7 @@ import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.asSink
@@ -449,16 +453,21 @@ private fun PlatformFile.resolveAtomicMoveDestination(source: PlatformFile): Pla
     return this
 }
 
-public actual suspend fun PlatformFile.delete(mustExist: Boolean): Unit =
+public actual suspend fun PlatformFile.delete(mustExist: Boolean, recursively: Boolean): Unit =
     withContext(Dispatchers.IO) {
         when (androidFile) {
             is AndroidFile.FileWrapper -> {
-                SystemFileSystem.delete(
-                    path = toKotlinxIoPath(),
-                    mustExist = mustExist,
-                )
+                if (!deleteIfSymbolicLink()) {
+                    if (recursively) deleteChildren()
+                    SystemFileSystem.delete(
+                        path = toKotlinxIoPath(),
+                        mustExist = mustExist,
+                    )
+                }
             }
 
+            // No recursion here: SAF has no empty-directory rule to work around. Removing a
+            // document is the provider's job, and DocumentsContract takes the subtree with it.
             is AndroidFile.UriWrapper -> {
                 val documentFile = DocumentFile.fromSingleUri(FileKit.context, androidFile.uri)
                     ?: throw FileKitException("Could not access Uri as DocumentFile")
@@ -1142,4 +1151,23 @@ private fun Uri.toFileOrNull(): File? {
 
     val filePath = path ?: return null
     return File(filePath)
+}
+
+// lstat/remove work on API 21 and operate on the link itself, including a dangling link.
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
+    val metadata = try {
+        Os.lstat(file.absolutePath)
+    } catch (error: ErrnoException) {
+        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
+        throw IOException("Could not inspect ${file.absolutePath}", error)
+    }
+    if (!OsConstants.S_ISLNK(metadata.st_mode)) return false
+
+    try {
+        Os.remove(file.absolutePath)
+    } catch (error: ErrnoException) {
+        throw IOException("Could not unlink ${file.absolutePath}", error)
+    }
+    return true
 }

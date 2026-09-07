@@ -14,21 +14,31 @@ import kotlinx.cinterop.value
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
 import platform.windows.DWORDVar
+import platform.windows.DeleteFileW
+import platform.windows.ERROR_FILE_NOT_FOUND
+import platform.windows.ERROR_PATH_NOT_FOUND
 import platform.windows.FILETIME
+import platform.windows.FILE_ATTRIBUTE_DIRECTORY
+import platform.windows.FILE_ATTRIBUTE_REPARSE_POINT
 import platform.windows.GET_FILEEX_INFO_LEVELS
 import platform.windows.GetFileAttributesExW
+import platform.windows.GetFileAttributesW
 import platform.windows.GetFullPathNameW
+import platform.windows.GetLastError
 import platform.windows.HKEYVar
 import platform.windows.HKEY_CLASSES_ROOT
+import platform.windows.INVALID_FILE_ATTRIBUTES
 import platform.windows.KEY_READ
 import platform.windows.MAX_PATH
 import platform.windows.RegCloseKey
 import platform.windows.RegOpenKeyExW
 import platform.windows.RegQueryValueExW
+import platform.windows.RemoveDirectoryW
 import platform.windows.WIN32_FILE_ATTRIBUTE_DATA
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -229,4 +239,28 @@ private fun FILETIME.toInstant(): Instant {
     val windowsTicks = dwHighDateTime.toLong().shl(32) or dwLowDateTime.toLong()
     val epochMillis = (windowsTicks / 10_000L) - 11_644_473_600_000L
     return Instant.fromEpochMilliseconds(epochMillis)
+}
+
+// Windows models symlinks and junctions as reparse points, and GetFileAttributesW reports on the
+// entry itself rather than on whatever it redirects to.
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val path = absolutePath()
+    val attributes = GetFileAttributesW(path)
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        val error = GetLastError()
+        if (error == ERROR_FILE_NOT_FOUND.toUInt() || error == ERROR_PATH_NOT_FOUND.toUInt()) return false
+        throw IOException("Could not inspect $path: Windows error $error")
+    }
+    if ((attributes and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) == 0u) return false
+
+    val removed = if ((attributes and FILE_ATTRIBUTE_DIRECTORY.toUInt()) != 0u) {
+        RemoveDirectoryW(path)
+    } else {
+        DeleteFileW(path)
+    }
+    if (removed == 0) {
+        throw IOException("Could not unlink $path: Windows error ${GetLastError()}")
+    }
+    return true
 }
