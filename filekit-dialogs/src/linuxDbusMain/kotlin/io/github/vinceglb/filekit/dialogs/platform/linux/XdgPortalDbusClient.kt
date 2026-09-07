@@ -31,6 +31,7 @@ import dbus.dbus_error_free
 import dbus.dbus_error_init
 import dbus.dbus_error_is_set
 import dbus.dbus_message_get_path
+import dbus.dbus_message_get_sender
 import dbus.dbus_message_is_signal
 import dbus.dbus_message_iter_append_basic
 import dbus.dbus_message_iter_close_container
@@ -69,6 +70,10 @@ private const val PORTAL_FILE_CHOOSER_INTERFACE = "org.freedesktop.portal.FileCh
 private const val PORTAL_REQUEST_INTERFACE = "org.freedesktop.portal.Request"
 private const val PORTAL_RESPONSE_MATCH_RULE =
     "type='signal',interface='org.freedesktop.portal.Request',member='Response'"
+
+private const val PORTAL_OWNER_MATCH_RULE =
+    "type='signal',sender='org.freedesktop.DBus',interface='org.freedesktop.DBus'," +
+        "member='NameOwnerChanged',arg0='org.freedesktop.portal.Desktop'"
 
 private const val NO_TIMEOUT = -1
 private const val READ_WRITE_TIMEOUT_MS = 100
@@ -111,9 +116,11 @@ internal actual fun runXdgPortalRequest(
         // A library must report a lost bus to its caller, never terminate the application.
         dbus_connection_set_exit_on_disconnect(connection, 0u)
 
-        dbus_bus_add_match(connection, PORTAL_RESPONSE_MATCH_RULE, error.ptr)
-        if (dbus_error_is_set(error.ptr) != 0u) {
-            throw dbusOperationFailure(error, "Could not subscribe to XDG portal responses")
+        for (rule in listOf(PORTAL_RESPONSE_MATCH_RULE, PORTAL_OWNER_MATCH_RULE)) {
+            dbus_bus_add_match(connection, rule, error.ptr)
+            if (dbus_error_is_set(error.ptr) != 0u) {
+                throw dbusOperationFailure(error, "Could not subscribe to XDG portal events")
+            }
         }
         dbus_connection_flush(connection)
 
@@ -140,7 +147,9 @@ internal actual fun runXdgPortalRequest(
         handlePath = readRequestHandle(reply)
             ?: throw LinuxXdgPortalException("The XDG portal returned an invalid request handle")
 
-        awaitPortalResponse(connection, handlePath, coroutineContext)
+        val portalOwner = dbus_message_get_sender(reply)?.toKString()
+            ?: throw LinuxXdgPortalException("The XDG portal reply had no sender")
+        awaitPortalResponse(connection, handlePath, coroutineContext, portalOwner)
     } catch (cancelled: CancellationException) {
         if (connection != null && handlePath != null) {
             closePortalRequest(connection, handlePath)
@@ -306,6 +315,7 @@ internal fun MemScope.awaitPortalResponse(
     connection: CPointer<DBusConnection>,
     handlePath: String,
     coroutineContext: CoroutineContext = EmptyCoroutineContext,
+    portalOwner: String? = null,
 ): List<String>? {
     while (true) {
         coroutineContext.ensureActive()
@@ -321,6 +331,9 @@ internal fun MemScope.awaitPortalResponse(
             coroutineContext.ensureActive()
             val message = dbus_connection_pop_message(connection) ?: break
             try {
+                if (portalOwner != null && portalOwnerWasLost(message, portalOwner)) {
+                    throw LinuxXdgPortalException("The XDG portal service stopped while waiting for its response")
+                }
                 if (dbus_message_is_signal(message, PORTAL_REQUEST_INTERFACE, "Response") != 0u) {
                     val path = dbus_message_get_path(message)?.toKString()
                     if (path == handlePath) {
@@ -332,6 +345,24 @@ internal fun MemScope.awaitPortalResponse(
             }
         }
     }
+}
+
+internal fun MemScope.portalOwnerWasLost(message: CPointer<DBusMessage>, expectedOwner: String): Boolean {
+    if (dbus_message_is_signal(message, "org.freedesktop.DBus", "NameOwnerChanged") == 0u ||
+        dbus_message_get_sender(message)?.toKString() != "org.freedesktop.DBus"
+    ) {
+        return false
+    }
+    val iter = alloc<DBusMessageIter>()
+    if (dbus_message_iter_init(message, iter.ptr) == 0u) return false
+    if (dbus_message_iter_get_arg_type(iter.ptr) != DBUS_TYPE_STRING) return false
+    if (readString(iter.ptr) != PORTAL_DESTINATION) return false
+    dbus_message_iter_next(iter.ptr)
+    if (dbus_message_iter_get_arg_type(iter.ptr) != DBUS_TYPE_STRING) return false
+    if (readString(iter.ptr) != expectedOwner) return false
+    dbus_message_iter_next(iter.ptr)
+    if (dbus_message_iter_get_arg_type(iter.ptr) != DBUS_TYPE_STRING) return false
+    return readString(iter.ptr) != expectedOwner
 }
 
 internal fun MemScope.parsePortalResponse(

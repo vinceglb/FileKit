@@ -29,10 +29,12 @@ import dbus.dbus_message_iter_init_append
 import dbus.dbus_message_iter_open_container
 import dbus.dbus_message_new
 import dbus.dbus_message_new_method_call
+import dbus.dbus_message_new_signal
 import dbus.dbus_message_set_destination
 import dbus.dbus_message_set_interface
 import dbus.dbus_message_set_member
 import dbus.dbus_message_set_path
+import dbus.dbus_message_set_sender
 import dbus.dbus_message_unref
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
@@ -51,6 +53,7 @@ import kotlinx.coroutines.Job
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -113,6 +116,31 @@ class PortalResponseParsingTest {
             awaitPortalResponse(connection, handle, job)
         }
         assertEquals(listOf("/tmp/first"), awaitPortalResponse(connection, handle))
+    }
+
+    @Test
+    fun PortalOwner_crashOrReplacement_detectsOnlyTheOwnerOfThisRequest() = memScoped {
+        for (replacement in listOf("", ":1.456")) {
+            val message = assertNotNull(
+                dbus_message_new_signal("/org/freedesktop/DBus", "org.freedesktop.DBus", "NameOwnerChanged"),
+            )
+            try {
+                assertTrue(dbus_message_set_sender(message, "org.freedesktop.DBus") != 0u)
+                val body = alloc<DBusMessageIter>()
+                dbus_message_iter_init_append(message, body.ptr)
+                appendString(body.ptr, "org.freedesktop.portal.Desktop")
+                appendString(body.ptr, ":1.123")
+                appendString(body.ptr, replacement)
+
+                assertTrue(portalOwnerWasLost(message, ":1.123"))
+                // An owner change queued before this request was opened must not fail the new request.
+                assertFalse(portalOwnerWasLost(message, ":1.789"))
+                assertTrue(dbus_message_set_sender(message, ":1.999") != 0u)
+                assertFalse(portalOwnerWasLost(message, ":1.123"))
+            } finally {
+                dbus_message_unref(message)
+            }
+        }
     }
 
     private fun withQueuedResponses(block: MemScope.(CPointer<DBusConnection>, String) -> Unit) = memScoped {
