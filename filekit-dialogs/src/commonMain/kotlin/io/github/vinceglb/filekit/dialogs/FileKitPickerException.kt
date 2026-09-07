@@ -26,3 +26,12 @@ internal const val MACOS_DIRECTORY_PICKER_FAILURE_MESSAGE: String =
 
 internal const val MACOS_FILE_SAVER_FAILURE_MESSAGE: String =
     "The macOS file saver could not complete the operation."
+
+internal const val LINUX_FILE_PICKER_FAILURE_MESSAGE: String =
+    "The Linux file picker could not complete the operation."
+
+internal const val LINUX_DIRECTORY_PICKER_FAILURE_MESSAGE: String =
+    "The Linux directory picker could not complete the operation."
+
+internal const val LINUX_FILE_SAVER_FAILURE_MESSAGE: String =
+    "The Linux file saver could not complete the operation."

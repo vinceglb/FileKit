@@ -1,0 +1,24 @@
+name: Prepare Linux D-Bus headers
+
+on:
+  workflow_call:
+
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install D-Bus development headers
+        run: sudo apt-get update && sudo apt-get install -y libdbus-1-dev
+
+      - name: Stage Linux headers for cross-compilation
+        run: |
+          mkdir -p dbus-headers/dbus
+          cp /usr/include/dbus-1.0/dbus/*.h dbus-headers/dbus/
+          cp "$(pkg-config --variable=libdir dbus-1)/dbus-1.0/include/dbus/dbus-arch-deps.h" dbus-headers/dbus/
+
+      - name: Upload Linux headers
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-dbus-headers
+          path: dbus-headers/
+          if-no-files-found: error

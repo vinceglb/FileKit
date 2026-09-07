@@ -7,7 +7,11 @@ on:
       - published
 
 jobs:
+  linux-dbus-headers:
+    uses: ./.github/workflows/linux-dbus-headers.yaml
+
   publish:
+    needs: linux-dbus-headers
     name: Publish to Sonatype
     runs-on: macos-26
     steps:
@@ -23,8 +27,14 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Download Linux D-Bus headers
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-dbus-headers
+          path: build/dbus-headers
+
       - name: Upload Artifacts
-        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        run: ./gradlew -Pfilekit.dbusHeaders=build/dbus-headers publishAndReleaseToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
