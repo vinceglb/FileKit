@@ -133,16 +133,6 @@ FileKit is designed to be modular, allowing you to include only what you need:
 
 ![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
 
-## Building from source
-
-The development branch uses Kotlin 2.4.20, Compose Multiplatform 1.12.0, and Android compile SDK 37. Use the checked-in Gradle 9.7.1 wrapper to build and test:
-
-```shell
-./gradlew assemble check
-```
-
-The Compose modules are rebuilt against Compose 1.12's Skiko API to fix image encoding compatibility ([#653](https://github.com/vinceglb/FileKit/issues/653)). This applies to the next FileKit release; published 0.15.0 artifacts still use the previous Skiko API.
-
 ## 🙏 Credits
 
 FileKit stands on the shoulders of giants. Special thanks to:
