@@ -14,17 +14,18 @@ import androidx.compose.ui.input.InputMode
 import androidx.compose.ui.input.InputModeManager
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.toComposeEvent
-import androidx.compose.ui.input.pointer.EmptyPointerKeyboardModifiers
 import androidx.compose.ui.input.pointer.MacosCursor
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.PointerKeyboardModifiers
 import androidx.compose.ui.platform.DefaultArchitectureComponentsOwner
+import androidx.compose.ui.platform.FrameRecomposer
 import androidx.compose.ui.platform.PlatformContext
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.scene.CanvasLayersComposeScene
 import androidx.compose.ui.scene.ComposeScene
+import androidx.compose.ui.scene.SingleComposeSceneRenderingScope
 import androidx.compose.ui.text.input.EditCommand
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.ImeOptions
@@ -90,10 +91,17 @@ public class ComposeNSViewDelegate(
     }
 
     private val skiaLayer: SkiaLayer = SkiaLayer()
-    private val scene: ComposeScene = CanvasLayersComposeScene(
+    private val renderingScope: SingleComposeSceneRenderingScope =
+        SingleComposeSceneRenderingScope(scheduleFrame = skiaLayer::needRender)
+    private val frameRecomposer: FrameRecomposer = FrameRecomposer(
         coroutineContext = Dispatchers.Main,
-        platformContext = platformContext,
         invalidate = skiaLayer::needRender,
+    )
+    private val scene: ComposeScene = CanvasLayersComposeScene(
+        frameRecomposer = frameRecomposer,
+        platformContext = platformContext,
+        invalidateLayout = renderingScope::onSceneInvalidation,
+        invalidateDraw = renderingScope::onSceneInvalidation,
     )
     private val renderDelegate: SkikoRenderDelegate = object : SkikoRenderDelegate {
         override fun onRender(canvas: Canvas, width: Int, height: Int, nanoTime: Long) {
@@ -101,7 +109,9 @@ public class ComposeNSViewDelegate(
             windowInfo.containerSize = sizeInPx
             windowInfo.containerDpSize = sizeInPx.toSize().toDpSize(scene.density)
             scene.size = sizeInPx
-            scene.render(canvas.asComposeCanvas(), nanoTime)
+            with(renderingScope) {
+                scene.render(frameRecomposer, canvas.asComposeCanvas(), nanoTime)
+            }
         }
     }
 
@@ -202,6 +212,7 @@ public class ComposeNSViewDelegate(
         architectureComponentsOwner.viewModelStore.clear()
         skiaLayer.detach()
         scene.close()
+        frameRecomposer.close()
         isDisposed = true
     }
 
@@ -296,7 +307,7 @@ private class MacosWindowInfoImpl : WindowInfo {
         }
 
     private companion object {
-        val GlobalKeyboardModifiers = mutableStateOf(EmptyPointerKeyboardModifiers())
+        val GlobalKeyboardModifiers = mutableStateOf(PointerKeyboardModifiers())
     }
 }
 
