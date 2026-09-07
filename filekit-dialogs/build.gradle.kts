@@ -86,8 +86,11 @@ kotlin {
         listOf("main", "test").forEach { compilationName ->
             target.compilations.getByName(compilationName) {
                 cinterops {
-                    create("process") {
-                        defFile(project.file("src/linuxMain/cinterop/process.def"))
+                    // Tests call the Kotlin wrapper and must not link a second copy of the C helper.
+                    if (compilationName == "main") {
+                        create("process") {
+                            defFile(project.file("src/linuxMain/cinterop/process.def"))
+                        }
                     }
                     create("dbus") {
                         defFile(project.file("src/linuxMain/cinterop/dbus.def"))
