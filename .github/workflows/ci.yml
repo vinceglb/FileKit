@@ -47,21 +47,6 @@ jobs:
         env:
           BUILD_TASKS: ${{ matrix.tasks }}
         run: |
-          report_resources() {
-            echo "::group::Build resources $(date -u +%FT%TZ)"
-            free -m
-            df -h / "$RUNNER_TEMP"
-            ps -eo pid,ppid,comm,rss --sort=-rss | head -n 16 || true
-            echo "::endgroup::"
-          }
-          (
-            while true; do
-              report_resources
-              sleep 30
-            done
-          ) &
-          monitor_pid=$!
-          trap 'kill "$monitor_pid" 2>/dev/null || true; report_resources' EXIT
           read -r -a build_tasks <<< "$BUILD_TASKS"
           ./gradlew "${build_tasks[@]}" --max-workers=2
 
