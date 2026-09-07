@@ -27,7 +27,24 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: 🔨 Build project
-        run: ./gradlew assemble
+        shell: bash
+        run: |
+          report_resources() {
+            echo "::group::Build resources $(date -u +%FT%TZ)"
+            free -m
+            df -h / "$RUNNER_TEMP"
+            ps -eo pid,ppid,comm,rss --sort=-rss | head -n 16 || true
+            echo "::endgroup::"
+          }
+          (
+            while true; do
+              report_resources
+              sleep 30
+            done
+          ) &
+          monitor_pid=$!
+          trap 'kill "$monitor_pid" 2>/dev/null || true; report_resources' EXIT
+          ./gradlew assemble --max-workers=2
 
   test-desktop:
     name: 🖥️ Test Desktop
