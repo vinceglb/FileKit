@@ -7,6 +7,7 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialog.documentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.FileKitDialog.phPickerDelegate
 import io.github.vinceglb.filekit.dialogs.FileKitDialog.phPickerDismissDelegate
 import io.github.vinceglb.filekit.dialogs.util.CameraControllerDelegate
+import io.github.vinceglb.filekit.dialogs.util.CameraPresenterWindow
 import io.github.vinceglb.filekit.dialogs.util.DocumentPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDelegate
 import io.github.vinceglb.filekit.dialogs.util.PhPickerDismissDelegate
@@ -287,37 +288,45 @@ public actual suspend fun FileKit.openCameraPicker(
                 null
             }
         }
-        val presentation = prepareAppleCameraPresentation(
-            sourceAvailable = UIImagePickerController.isSourceTypeAvailable(cameraSource),
-            presenter = openCameraSettings.presenterViewController(),
-            requestedCamera = requestedCamera,
-        )
-
-        suspendCancellableCoroutine<UIImage?> { continuation ->
-            cameraControllerDelegate = CameraControllerDelegate(
-                onImagePicked = { image ->
-                    try {
-                        continuation.resume(
-                            requireAppleCameraImage(image),
-                        )
-                    } catch (failure: FileKitDialogException) {
-                        continuation.resumeWithException(failure)
-                    }
-                },
-                onPickerCancelled = { continuation.resume(null) },
+        val presenterWindow = when (openCameraSettings.presenter) {
+            null -> CameraPresenterWindow()
+            else -> null
+        }
+        try {
+            val presentation = prepareAppleCameraPresentation(
+                sourceAvailable = UIImagePickerController.isSourceTypeAvailable(cameraSource),
+                presenter = openCameraSettings.presenter ?: presenterWindow?.attach(),
+                requestedCamera = requestedCamera,
             )
 
-            val pickerController = UIImagePickerController()
-            pickerController.sourceType = cameraSource
-            pickerController.delegate = cameraControllerDelegate
+            suspendCancellableCoroutine<UIImage?> { continuation ->
+                cameraControllerDelegate = CameraControllerDelegate(
+                    onImagePicked = { image ->
+                        try {
+                            continuation.resume(
+                                requireAppleCameraImage(image),
+                            )
+                        } catch (failure: FileKitDialogException) {
+                            continuation.resumeWithException(failure)
+                        }
+                    },
+                    onPickerCancelled = { continuation.resume(null) },
+                )
 
-            presentation.cameraDevice?.let { pickerController.cameraDevice = it }
+                val pickerController = UIImagePickerController()
+                pickerController.sourceType = cameraSource
+                pickerController.delegate = cameraControllerDelegate
 
-            presentation.presenter.presentViewController(
-                pickerController,
-                animated = true,
-                completion = null,
-            )
+                presentation.cameraDevice?.let { pickerController.cameraDevice = it }
+
+                presentation.presenter.presentViewController(
+                    pickerController,
+                    animated = true,
+                    completion = null,
+                )
+            }
+        } finally {
+            presenterWindow?.detach()
         }
     } ?: return null
 
@@ -525,9 +534,6 @@ private fun FileKitDialogSettings.presenterViewController(
     activeViewController: () -> UIViewController? = ::activeAppleViewController,
 ): UIViewController? = presenter ?: activeViewController()
 
-private fun FileKitOpenCameraSettings.presenterViewController(): UIViewController? =
-    presenter ?: UIApplication.sharedApplication.topMostViewController()
-
 private fun FileKitShareSettings.presenterViewController(): UIViewController? =
     presenter ?: UIApplication.sharedApplication.topMostViewController()
 
@@ -720,7 +726,12 @@ private fun callPhPicker(
                                 else -> {
                                     // Must copy the URL here because it becomes invalid outside the loadFileRepresentationForTypeIdentifier callback scope
                                     runCatching {
-                                        copyToTempFile(fileManager, url, tempRoot.lastPathComponent!!)
+                                        copyToTempFile(
+                                            fileManager = fileManager,
+                                            url = url,
+                                            id = tempRoot.lastPathComponent!!,
+                                            index = index,
+                                        )
                                     }.onSuccess(cont::resume)
                                         .onFailure { cont.resumeWithException(it) }
                                 }
@@ -782,22 +793,38 @@ private fun <R> List<R>?.ifNullOrEmpty(block: () -> List<R>): List<R> =
     if (this.isNullOrEmpty()) block() else this
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-private fun copyToTempFile(
+internal fun copyToTempFile(
     fileManager: NSFileManager,
     url: NSURL,
     id: String,
+    index: Int,
 ): NSURL {
-    // Get the temporary directory
-    val fileComponents = fileManager.temporaryDirectory.pathComponents
+    val fileName = url.lastPathComponent ?: "file"
+
+    // Use a per-asset subdirectory so lastPathComponent stays unchanged.
+    val directoryComponents = fileManager.temporaryDirectory.pathComponents
         ?.plus(id)
-        ?.plus(url.lastPathComponent)
+        ?.plus(index.toString())
         ?: throw FileKitPickerException("Failed to resolve the temporary directory for the selected file.")
 
-    // Create a file URL
+    val directoryUrl = NSURL.fileURLWithPathComponents(directoryComponents)
+        ?: throw FileKitPickerException("Failed to create a temporary directory for the selected file.")
+
+    requireApplePickerOperation(
+        message = "Failed to create a temporary directory for the selected file.",
+    ) { error ->
+        fileManager.createDirectoryAtURL(
+            url = directoryUrl,
+            withIntermediateDirectories = true,
+            attributes = null,
+            error = error,
+        )
+    }
+
+    val fileComponents = directoryComponents.plus(fileName)
     val fileUrl = NSURL.fileURLWithPathComponents(fileComponents)
         ?: throw FileKitPickerException("Failed to create a temporary URL for the selected file.")
 
-    // Write the data to the file URL
     requireApplePickerOperation(
         message = "Failed to copy the selected file to a temporary location.",
     ) { error ->

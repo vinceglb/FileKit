@@ -10,15 +10,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: 💆‍♀️ Build FileKit
+  build-modules:
+    name: 🔨 Build ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Libraries
+            tasks: :filekit-core:assemble :filekit-dialogs:assemble :filekit-dialogs-compose:assemble :filekit-coil:assemble
+          - name: Shared sample
+            tasks: :sample:shared:assemble
+          - name: Web sample
+            tasks: :sample:webApp:assemble
+          - name: Android sample
+            tasks: :sample:androidApp:assemble
+          - name: Desktop samples
+            tasks: :sample:desktopApp:assemble :sample:nucleusApp:assemble
+          - name: Windows native sample
+            tasks: :sample:windowsNativeApp:assemble
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -27,21 +43,25 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: 🔨 Build project
-        run: ./gradlew assemble
+        shell: bash
+        env:
+          BUILD_TASKS: ${{ matrix.tasks }}
+        run: |
+          read -r -a build_tasks <<< "$BUILD_TASKS"
+          ./gradlew "${build_tasks[@]}" --max-workers=2
 
   test-desktop:
     name: 🖥️ Test Desktop
-    needs: build
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-26]
     runs-on: ${{ matrix.os }}
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -54,14 +74,13 @@ jobs:
 
   test-android:
     name: 🤖 Test Android
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -74,14 +93,13 @@ jobs:
 
   test-ios:
     name: 🍎 Test iOS
-    needs: build
     runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -94,14 +112,13 @@ jobs:
 
   test-watchos:
     name: ⌚️ Test watchOS
-    needs: build
     runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -114,14 +131,13 @@ jobs:
 
   test-macos:
     name: 🍏 Test macOS
-    needs: build
     runs-on: macos-26
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -136,14 +152,13 @@ jobs:
 
   test-linux:
     name: 🐧 Test Linux
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -159,10 +174,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 🛎️ Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: 🍉 Configure JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -174,7 +189,20 @@ jobs:
           sudo mv ktlint /usr/local/bin/
 
       - name: 👮 Download ktlint-compose rules
-        run: curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.6.0/ktlint-compose-0.6.0-all.jar
+        run: curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.6.6/ktlint-compose-0.6.6-all.jar
 
       - name: 🚨 Run ktlint
-        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.0-all.jar
+        run: ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar
+
+  build:
+    # Keep the existing build check name as the aggregate gate.
+    name: 💆‍♀️ Build FileKit
+    if: ${{ always() }}
+    needs: [build-modules, test-desktop, test-android, test-ios, test-watchos, test-macos, test-linux, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every build and test to succeed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")'

@@ -11,8 +11,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,7 +65,7 @@ private fun DebugScreen(
     var launchImagePickerAfterSheetDismiss by remember { mutableStateOf(false) }
 
     val scope = rememberCoroutineScope()
-    val pickerReproSheetState = rememberModalBottomSheetState()
+    val pickerReproSheetState = rememberBottomSheetState(initialValue = SheetValue.Hidden)
     val picker = rememberFilePickerLauncher(
         onError = { failure ->
             buttonState = AppScreenHeaderButtonState.Enabled
