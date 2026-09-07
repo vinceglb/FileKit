@@ -83,19 +83,15 @@ kotlin {
             linkTaskProvider.configure { enabled = HostManager.hostIsLinux }
         }
         dbusLibDir?.let { libDir -> target.binaries.configureEach { linkerOpts("-L$libDir") } }
-        listOf("main", "test").forEach { compilationName ->
-            target.compilations.getByName(compilationName) {
-                cinterops {
-                    // Tests call the Kotlin wrapper and must not link a second copy of the C helper.
-                    if (compilationName == "main") {
-                        create("process") {
-                            defFile(project.file("src/linuxMain/cinterop/process.def"))
-                        }
-                    }
-                    create("dbus") {
-                        defFile(project.file("src/linuxMain/cinterop/dbus.def"))
-                        compilerOpts(*dbusCompilerOpts)
-                    }
+        // Tests reuse main's bindings; generating either interop twice duplicates native symbols.
+        target.compilations.getByName("main") {
+            cinterops {
+                create("process") {
+                    defFile(project.file("src/linuxMain/cinterop/process.def"))
+                }
+                create("dbus") {
+                    defFile(project.file("src/linuxMain/cinterop/dbus.def"))
+                    compilerOpts(*dbusCompilerOpts)
                 }
             }
         }
