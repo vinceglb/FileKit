@@ -7,17 +7,118 @@ import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
 import java.io.File
+import java.util.zip.ZipFile
+import java.util.zip.ZipInputStream
 import kotlin.coroutines.Continuation
+import kotlin.io.path.createDirectory
 import kotlin.io.path.createTempDirectory
+import kotlin.io.path.writeBytes
+import kotlin.io.path.writeText
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class PlatformFileJvmTest {
+    /**
+     * Nothing in the compression loop suspends on its own, so cancellation only works because the
+     * loop checks for it. Uses real time rather than runTest's virtual clock, which would skip the
+     * delay and cancel before any work had started.
+     */
+    @Test
+    fun PlatformFile_zipTo_cancelledMidEntry_stopsAndLeavesNoArchive() = runBlocking {
+        val root = createTempDirectory("filekit-zip-cancel")
+        try {
+            // Big and barely compressible, so the deflater is still busy when the cancel lands.
+            val payload = ByteArray(64 * 1024 * 1024)
+            var seed = 1L
+            for (index in payload.indices) {
+                seed = seed * 6_364_136_223_846_793_005L + 1_442_695_040_888_963_407L
+                payload[index] = (seed ushr 33).toByte()
+            }
+            val source = root.resolve("big.bin")
+            source.writeBytes(payload)
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            val job = launch(Dispatchers.Default) { PlatformFile(source.toFile()) zipTo archive }
+            delay(100)
+            job.cancelAndJoin()
+
+            // If this fails because the job already finished, the case is no longer being
+            // exercised and the payload needs to grow.
+            assertTrue(job.isCancelled, "zip finished before it could be cancelled")
+            assertFalse(archive.file.exists(), "a cancelled zip should not leave a truncated archive")
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
+    /**
+     * Reads the archive back with java.util.zip, so the format is judged by an implementation that
+     * knows nothing about the one that wrote it.
+     */
+    @Test
+    fun PlatformFile_zipTo_directoryTree_roundTripsThroughJavaUtilZip() = runTest {
+        val root = createTempDirectory("filekit-zip-test")
+        try {
+            val tree = root.resolve("photos").createDirectory()
+            tree.resolve("a.txt").writeText("first")
+            tree.resolve("nested").createDirectory().resolve("b.txt").writeText("second")
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            PlatformFile(tree.toFile()) zipTo archive
+
+            val unpacked = mutableMapOf<String, String>()
+            ZipInputStream(archive.file.inputStream()).use { input ->
+                while (true) {
+                    val entry = input.nextEntry ?: break
+                    unpacked[entry.name] = if (entry.isDirectory) "" else input.readBytes().decodeToString()
+                }
+            }
+
+            assertEquals(
+                expected = setOf("photos/", "photos/a.txt", "photos/nested/", "photos/nested/b.txt"),
+                actual = unpacked.keys,
+            )
+            assertEquals(expected = "first", actual = unpacked.getValue("photos/a.txt"))
+            assertEquals(expected = "second", actual = unpacked.getValue("photos/nested/b.txt"))
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
+    /** ZipFile reads through the central directory and verifies each entry's CRC on close. */
+    @Test
+    fun PlatformFile_zipTo_binaryContent_survivesByteForByteWithMatchingCrc() = runTest {
+        val root = createTempDirectory("filekit-zip-binary")
+        try {
+            val payload = ByteArray(200_000) { (it * 31 % 251).toByte() }
+            val source = root.resolve("payload.bin")
+            source.writeBytes(payload)
+            val archive = PlatformFile(root.resolve("out.zip").toFile())
+
+            PlatformFile(source.toFile()) zipTo archive
+
+            ZipFile(archive.file).use { zip ->
+                val entry = zip.getEntry("payload.bin")
+                assertEquals(expected = payload.size.toLong(), actual = entry.size)
+                assertContentEquals(payload, zip.getInputStream(entry).use { it.readBytes() })
+            }
+        } finally {
+            root.toFile().deleteRecursively()
+        }
+    }
+
     private val resourceDirectory = PlatformFile(Path("src/nonWebTest/resources"))
     private val textFile = PlatformFile(resourceDirectory, "hello.txt")
     private val imageFile = PlatformFile(resourceDirectory, "compose-logo.png")

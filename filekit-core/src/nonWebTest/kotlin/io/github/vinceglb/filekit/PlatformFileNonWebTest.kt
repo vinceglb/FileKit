@@ -110,6 +110,65 @@ class PlatformFileNonWebTest {
     }
 
     @Test
+    fun PlatformFile_zipTo_writesAnArchiveThatStartsAndEndsWithZipSignatures() = runTest {
+        val archive = resourceDirectory / "zip-signatures.zip"
+        try {
+            textFile zipTo archive
+
+            val bytes = archive.readBytes()
+            assertTrue(bytes.size > 4, "archive should not be empty")
+            assertContentEquals(byteArrayOf(0x50, 0x4B, 0x03, 0x04), bytes.copyOfRange(0, 4))
+            // End of central directory, with no trailing comment.
+            assertContentEquals(byteArrayOf(0x50, 0x4B, 0x05, 0x06), bytes.copyOfRange(bytes.size - 22, bytes.size - 18))
+        } finally {
+            archive.delete(mustExist = false)
+        }
+    }
+
+    @Test
+    fun PlatformFile_zipTo_compressesRatherThanStoring() = runTest {
+        val source = resourceDirectory / "zip-compressible.txt"
+        val archive = resourceDirectory / "zip-compressible.zip"
+        try {
+            source.writeString("compress me ".repeat(2_000))
+
+            source zipTo archive
+
+            assertTrue(
+                archive.size() < source.size() / 2,
+                "expected deflate to shrink repetitive text well below half: ${archive.size()} vs ${source.size()}",
+            )
+        } finally {
+            source.delete(mustExist = false)
+            archive.delete(mustExist = false)
+        }
+    }
+
+    @Test
+    fun List_zipTo_emptyList_fails() = runTest {
+        assertFailsWith<FileKitException> {
+            emptyList<PlatformFile>() zipTo (resourceDirectory / "never-written.zip")
+        }
+    }
+
+    @Test
+    fun List_zipTo_duplicateEntryNames_fails() = runTest {
+        assertFailsWith<FileKitException> {
+            listOf(textFile, textFile) zipTo (resourceDirectory / "never-written.zip")
+        }
+    }
+
+    @Test
+    fun PlatformFile_zipTo_missingSource_fails() = runTest {
+        val archive = resourceDirectory / "zip-missing-source.zip"
+        try {
+            assertFailsWith<FileKitException> { notExistingFile zipTo archive }
+        } finally {
+            archive.delete(mustExist = false)
+        }
+    }
+
+    @Test
     fun testPlatformFileReadBytes() = runTest {
         val textFileContent = textFile.readString()
         assertEquals(expected = "Hello, World!", actual = textFileContent)
