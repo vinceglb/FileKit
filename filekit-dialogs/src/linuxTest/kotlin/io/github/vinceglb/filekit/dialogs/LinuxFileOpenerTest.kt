@@ -17,6 +17,14 @@ import kotlin.test.assertFailsWith
 
 class LinuxFileOpenerTest {
     @Test
+    fun LinuxOpener_relativePaths_areUnambiguousFileArguments() {
+        assertEquals("./-report.pdf", xdgOpenFileArgument("-report.pdf"))
+        assertEquals("./https:report.pdf", xdgOpenFileArgument("https:report.pdf"))
+        assertEquals("./folder/report.pdf", xdgOpenFileArgument("folder/report.pdf"))
+        assertEquals("/tmp/report.pdf", xdgOpenFileArgument("/tmp/report.pdf"))
+    }
+
+    @Test
     fun LinuxProcess_childExits_reapsWithoutBlockingCaller() {
         val pid = spawnLinuxProcess("/bin/sleep", listOf("1"))
         assertEquals(0, kill(pid, 0), "The opener should return while its child is running")
