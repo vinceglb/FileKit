@@ -17,6 +17,14 @@ kotlin {
         }
         webMain.get().dependsOn(nonAndroidMain)
 
+        val nonAndroidTest = create("nonAndroidTest") { dependsOn(commonTest.get()) }
+        jvmTest.get().dependsOn(nonAndroidTest)
+        nativeTest.get().dependsOn(nonAndroidTest)
+
+        jvmTest.dependencies {
+            implementation(compose.desktop.currentOs)
+        }
+
         commonMain.dependencies {
             implementation(libs.compose.ui)
             implementation(libs.kotlinx.coroutines.core)
