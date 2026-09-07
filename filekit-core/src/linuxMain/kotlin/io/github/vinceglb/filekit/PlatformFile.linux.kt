@@ -12,17 +12,23 @@ import kotlinx.cinterop.toKString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readString
 import kotlinx.serialization.Serializable
+import platform.posix.ENOENT
+import platform.posix.ENOTDIR
 import platform.posix.S_IFLNK
 import platform.posix.S_IFMT
+import platform.posix.errno
 import platform.posix.fnmatch
 import platform.posix.getcwd
 import platform.posix.lstat
 import platform.posix.stat
+import platform.posix.strerror
+import platform.posix.unlink
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -301,8 +307,17 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
 
 // lstat, not stat: stat would resolve the link and report on its target.
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun PlatformFile.isSymbolicLink(): Boolean = memScoped {
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean = memScoped {
+    val path = absolutePath()
     val statBuf = alloc<stat>()
-    if (lstat(absolutePath(), statBuf.ptr) != 0) return@memScoped false
-    (statBuf.st_mode.toInt() and S_IFMT) == S_IFLNK
+    if (lstat(path, statBuf.ptr) != 0) {
+        if (errno == ENOENT || errno == ENOTDIR) return@memScoped false
+        throw IOException("Could not inspect $path: ${strerror(errno)?.toKString()}")
+    }
+    if ((statBuf.st_mode.toInt() and S_IFMT) != S_IFLNK) return@memScoped false
+
+    if (unlink(path) != 0) {
+        throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
+    }
+    true
 }

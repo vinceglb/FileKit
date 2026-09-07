@@ -8,6 +8,7 @@ import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.OpenableColumns
+import android.system.ErrnoException
 import android.system.Os
 import android.system.OsConstants
 import android.webkit.MimeTypeMap
@@ -19,6 +20,7 @@ import io.github.vinceglb.filekit.utils.div
 import io.github.vinceglb.filekit.utils.toKotlinxPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.asSink
@@ -455,11 +457,13 @@ public actual suspend fun PlatformFile.delete(mustExist: Boolean, recursively: B
     withContext(Dispatchers.IO) {
         when (androidFile) {
             is AndroidFile.FileWrapper -> {
-                if (recursively) deleteChildren()
-                SystemFileSystem.delete(
-                    path = toKotlinxIoPath(),
-                    mustExist = mustExist,
-                )
+                if (!deleteIfSymbolicLink()) {
+                    if (recursively) deleteChildren()
+                    SystemFileSystem.delete(
+                        path = toKotlinxIoPath(),
+                        mustExist = mustExist,
+                    )
+                }
             }
 
             // No recursion here: SAF has no empty-directory rule to work around. Removing a
@@ -1149,13 +1153,21 @@ private fun Uri.toFileOrNull(): File? {
     return File(filePath)
 }
 
-// Os.lstat rather than java.nio.file.Files.isSymbolicLink: the latter needs API 26, and this
-// library still supports 21. lstat reports on the entry itself, where stat would follow the link.
-internal actual fun PlatformFile.isSymbolicLink(): Boolean = when (val file = androidFile) {
-    is AndroidFile.FileWrapper -> runCatching {
-        OsConstants.S_ISLNK(Os.lstat(file.file.absolutePath).st_mode)
-    }.getOrDefault(false)
+// lstat/remove work on API 21 and operate on the link itself, including a dangling link.
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
+    val metadata = try {
+        Os.lstat(file.absolutePath)
+    } catch (error: ErrnoException) {
+        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
+        throw IOException("Could not inspect ${file.absolutePath}", error)
+    }
+    if (!OsConstants.S_ISLNK(metadata.st_mode)) return false
 
-    // A document provider exposes no link concept; an entry is whatever it says it is.
-    is AndroidFile.UriWrapper -> false
+    try {
+        Os.remove(file.absolutePath)
+    } catch (error: ErrnoException) {
+        throw IOException("Could not unlink ${file.absolutePath}", error)
+    }
+    return true
 }

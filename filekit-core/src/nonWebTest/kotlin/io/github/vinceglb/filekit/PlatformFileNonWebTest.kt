@@ -15,7 +15,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class PlatformFileNonWebTest {
+class PlatformFileNonWebTest : PlatformFileTestBase() {
     private val resourceDirectory = FileKit.projectDir / "src/nonWebTest/resources"
     private val textFile = resourceDirectory / "hello.txt"
     private val imageFile = resourceDirectory / "compose-logo.png"

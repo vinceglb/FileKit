@@ -217,7 +217,9 @@ public expect suspend fun PlatformFile.atomicMove(destination: PlatformFile)
  *
  * @param mustExist If `true`, fails if the file does not exist. Defaults to `true`.
  * @param recursively If `true`, a directory is emptied before it is removed. Defaults to `false`,
- * which fails on a directory that still has contents. Symbolic links are unlinked, never followed.
+ * which fails on a filesystem directory that still has contents. Symbolic links (including dangling
+ * links) and Windows directory junctions are unlinked, never followed. Android document URI deletion
+ * is handled by the document provider regardless of this flag.
  */
 public expect suspend fun PlatformFile.delete(
     mustExist: Boolean = true,
@@ -228,22 +230,21 @@ public expect suspend fun PlatformFile.delete(
  * Empties this directory, depth first, leaving the directory itself in place. Does nothing when
  * this is not a directory.
  *
- * A symbolic link is removed as a link and never descended into: following one would delete the
- * contents of whatever it points at, which lives outside the tree the caller asked to remove.
+ * The caller must handle links with [deleteIfSymbolicLink] before entering this function.
  */
 internal suspend fun PlatformFile.deleteChildren() {
-    if (!isDirectory() || isSymbolicLink()) return
+    if (!isDirectory()) return
     list().forEach { child ->
-        child.deleteChildren()
-        child.delete(mustExist = false)
+        child.delete(mustExist = false, recursively = true)
     }
 }
 
 /**
- * Whether this path is a symbolic link, asked without resolving it. [isDirectory] cannot answer
- * this: it follows the link and reports on the target.
+ * Unlinks this entry and returns `true` if it is a symbolic link or a Windows reparse point.
+ * Returns `false` for other entries and missing paths. Inspection and deletion must not follow the
+ * target: it can be missing, cyclic, or outside the tree being deleted. Deletion failures propagate.
  */
-internal expect fun PlatformFile.isSymbolicLink(): Boolean
+internal expect fun PlatformFile.deleteIfSymbolicLink(): Boolean
 
 /**
  * Appends a child path to this [PlatformFile].

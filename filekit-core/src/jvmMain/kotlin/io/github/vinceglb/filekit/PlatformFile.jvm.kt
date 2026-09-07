@@ -1,6 +1,11 @@
 package io.github.vinceglb.filekit
 
 import com.sun.jna.Platform
+import com.sun.jna.platform.win32.Kernel32
+import com.sun.jna.platform.win32.WinBase.INVALID_FILE_ATTRIBUTES
+import com.sun.jna.platform.win32.WinError.ERROR_FILE_NOT_FOUND
+import com.sun.jna.platform.win32.WinError.ERROR_PATH_NOT_FOUND
+import com.sun.jna.platform.win32.WinNT.FILE_ATTRIBUTE_REPARSE_POINT
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionException
 import io.github.vinceglb.filekit.exceptions.BookmarkResolutionFailure
 import io.github.vinceglb.filekit.mimeType.MimeType
@@ -8,6 +13,7 @@ import io.github.vinceglb.filekit.utils.toFile
 import io.github.vinceglb.filekit.utils.toKotlinxIoPath
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
@@ -181,5 +187,22 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
     )
 }
 
-internal actual fun PlatformFile.isSymbolicLink(): Boolean =
-    Files.isSymbolicLink(file.toPath())
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val isLink = if (Platform.isWindows()) {
+        // Files.isSymbolicLink excludes directory junctions. Inspect the entry's reparse attribute.
+        val attributes = Kernel32.INSTANCE.GetFileAttributes(file.absolutePath)
+        if (attributes == INVALID_FILE_ATTRIBUTES) {
+            val error = Kernel32.INSTANCE.GetLastError()
+            if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) return false
+            throw IOException("Could not inspect ${file.absolutePath}: Windows error $error")
+        }
+        (attributes and FILE_ATTRIBUTE_REPARSE_POINT) != 0
+    } else {
+        Files.isSymbolicLink(file.toPath())
+    }
+    if (!isLink) return false
+
+    // Unlike kotlinx-io's delete, this does not check whether the link's target exists first.
+    Files.delete(file.toPath())
+    return true
+}
