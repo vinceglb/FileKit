@@ -25,7 +25,7 @@ kotlinx-io = "0.9.1"
 leakcanaryAndroid = "2.14"
 material-icons-core = "1.7.3"
 nucleus = "2.5.15"
-test-android-robolectric = "4.16.1"
+test-android-robolectric = "4.17"
 vanniktech-mavenPublish = "0.37.0"
 
 [libraries]
