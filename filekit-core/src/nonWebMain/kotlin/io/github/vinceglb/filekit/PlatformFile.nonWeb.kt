@@ -119,7 +119,7 @@ public actual suspend fun PlatformFile.readString(): String =
  *
  * @param bytes The bytes to write.
  */
-public suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
+public actual suspend infix fun PlatformFile.write(bytes: ByteArray): Unit =
     withContext(Dispatchers.IO) {
         this@write
             .sink()
@@ -163,7 +163,7 @@ public suspend infix fun PlatformFile.write(platformFile: PlatformFile): Unit =
  *
  * @param string The string to write.
  */
-public suspend fun PlatformFile.writeString(string: String): Unit =
+public actual suspend fun PlatformFile.writeString(string: String): Unit =
     withContext(Dispatchers.IO) {
         this@writeString
             .sink()
@@ -211,20 +211,6 @@ public expect fun PlatformFile.createDirectories(mustCreate: Boolean = false)
  * @param destination The destination [PlatformFile].
  */
 public expect suspend fun PlatformFile.atomicMove(destination: PlatformFile)
-
-/**
- * Deletes this file.
- *
- * @param mustExist If `true`, fails if the file does not exist. Defaults to `true`.
- * @param recursively If `true`, a directory is emptied before it is removed. Defaults to `false`,
- * which fails on a filesystem directory that still has contents. Symbolic links (including dangling
- * links) and Windows directory junctions are unlinked, never followed. Android document URI deletion
- * is handled by the document provider regardless of this flag.
- */
-public expect suspend fun PlatformFile.delete(
-    mustExist: Boolean = true,
-    recursively: Boolean = false,
-)
 
 /**
  * Empties this directory, depth first, leaving the directory itself in place. Does nothing when
