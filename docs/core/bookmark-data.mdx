@@ -152,7 +152,7 @@ FileKit abstracts away the details, but here's what happens on each platform:
 
 - **Android**: For standard file paths, the path itself is stored. For `content://` URIs from the system picker, FileKit requests persistent URI permissions and stores the URI string. This ensures long-term access.
 
-- **iOS**: Uses Foundation bookmark data and keeps the security-scoped URL behavior supplied by the system document picker. The explicit persistent bookmark flags described below are macOS-only.
+- **iOS**: Uses Foundation bookmark data and retains the restored security-scoped URL for operations on the bookmarked file or directory and its descendants, including after a device restart. Existing stored bookmarks use this behavior without a format migration. The explicit persistent bookmark flags described below are macOS-only.
 
 - **Kotlin/Native macOS**: Uses a native macOS bookmark. FileKit automatically creates an explicit security-scoped bookmark when the running application adopts App Sandbox and a regular native bookmark otherwise.
 
@@ -177,6 +177,18 @@ Persistent access to user-selected locations outside a macOS application's conta
 
 FileKit reads the signed App Sandbox entitlement at runtime and selects security-scoped bookmark creation automatically. When sandboxing is enabled, failure to create scoped bookmark data is reported instead of silently falling back to a bookmark that cannot restore access across launches.
 
+## Security-Scoped Access on Apple Platforms
+
+On iOS, and for security-scoped bookmarks on sandboxed macOS, FileKit shares the restored bookmark's access with descendants created using `/`, `resolve()`, or `list()`. Derive files from the restored `PlatformFile` so that they retain this access:
+
+```kotlin
+val directory = PlatformFile.fromBookmarkData(savedDirectoryBookmark)
+val destination = directory / "backup.db"
+source.atomicMove(destination)
+```
+
+Reconstructing a `PlatformFile` from its path string or `toKotlinxIoPath()` does not preserve the original security-scoped URL. `PlatformFileSerializer` also stores only the path; persist bookmark data instead when access must survive an app restart. Paths outside the bookmarked location do not inherit its access.
+
 Keep security-scoped access balanced. FileKit does this around its own file operations and keeps access active until returned sources and sinks are closed. Use `withScopedAccess` when passing a restored file to another library:
 
 ```kotlin
@@ -185,7 +197,9 @@ restoredFile.withScopedAccess { file ->
 }
 ```
 
-Call `releaseBookmark()` when the restored bookmark is no longer needed. It prevents new scoped operations, which then fail with `FileKitException`, while allowing already-open sources and sinks to close cleanly.
+Call `releaseBookmark()` when the restored bookmark is no longer needed. It also releases access for descendants sharing that bookmark. It prevents new scoped operations, which then fail with `FileKitException`, while allowing already-open sources and sinks to close cleanly.
+
+On iOS, `releaseBookmark()` takes effect for restored bookmarks; it was a no-op in FileKit 0.15.0 and 0.16.0. Release a bookmark only after finishing all operations on it and its descendants. A direct call to `startAccessingSecurityScopedResource()` after release also throws instead of returning `false`.
 
 ## Handling Invalid and Legacy Bookmarks
 

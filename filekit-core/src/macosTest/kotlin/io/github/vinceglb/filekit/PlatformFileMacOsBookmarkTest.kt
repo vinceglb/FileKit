@@ -35,6 +35,30 @@ class PlatformFileMacOsBookmarkTest {
     }
 
     @Test
+    fun PlatformFile_resolveBookmarkData_retainsScopeOnlyForSecurityScopedKind() {
+        val url = FileKit.projectDir.nsUrl
+
+        for (kind in listOf(MacOsBookmarkKind.SecurityScoped, MacOsBookmarkKind.Regular, null)) {
+            val resolution = appleBookmarkResolution(
+                payload = AppleBookmarkPayload(
+                    bytes = byteArrayOf(1, 2, 3),
+                    resolutionOptions = 0u,
+                    isLegacy = kind == null,
+                    kind = kind,
+                ),
+                nativeResolution = AppleBookmarkNativeResolution(url = url, isStale = false),
+            )
+
+            assertEquals(
+                expected = kind == MacOsBookmarkKind.SecurityScoped,
+                actual = resolution.file.appleBookmarkLease != null,
+                message = "Unexpected security-scope retention for bookmark kind $kind",
+            )
+            resolution.file.releaseBookmark()
+        }
+    }
+
+    @Test
     fun PlatformFile_equality_usesUrlPath() {
         val first = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=1")))
         val second = PlatformFile(requireNotNull(NSURL(string = "file:///tmp/filekit-equality?version=2")))
@@ -46,33 +70,33 @@ class PlatformFileMacOsBookmarkTest {
 
     @Test
     fun PlatformFile_derivedPaths_inheritScopeOnlyWithinRoot() {
-        val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
+        val root = PlatformFile.withAppleBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
 
         val child = root / "child"
         val escaped = root / "../outside"
 
-        assertEquals(expected = root.macOsBookmarkLease, actual = child.macOsBookmarkLease)
-        assertNull(actual = escaped.macOsBookmarkLease)
+        assertEquals(expected = root.appleBookmarkLease, actual = child.appleBookmarkLease)
+        assertNull(actual = escaped.appleBookmarkLease)
     }
 
     @Test
     fun PlatformFile_nonExistingDescendant_underSymlinkedPrefix_inheritsScope() {
-        val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath("/tmp"))
+        val root = PlatformFile.withAppleBookmarkLease(NSURL.fileURLWithPath("/tmp"))
 
         val child = root / "filekit-non-existing-descendant"
 
-        assertEquals(expected = root.macOsBookmarkLease, actual = child.macOsBookmarkLease)
+        assertEquals(expected = root.appleBookmarkLease, actual = child.appleBookmarkLease)
     }
 
     @Test
     fun PlatformFile_nonExistingPath_cannotEscapeScopeThroughParentSegments() {
-        val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath("/tmp/filekit-bookmark-root"))
+        val root = PlatformFile.withAppleBookmarkLease(NSURL.fileURLWithPath("/tmp/filekit-bookmark-root"))
 
         val escaped = root.copy(
             NSURL.fileURLWithPath("/tmp/filekit-bookmark-root/missing/../../outside"),
         )
 
-        assertNull(actual = escaped.macOsBookmarkLease)
+        assertNull(actual = escaped.appleBookmarkLease)
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -86,12 +110,12 @@ class PlatformFileMacOsBookmarkTest {
         SystemFileSystem.createDirectories(outsidePath)
         assertEquals(expected = 0, actual = symlink(outsidePath.toString(), linkPath.toString()))
         try {
-            val root = PlatformFile.withMacOsBookmarkLease(NSURL.fileURLWithPath(rootPath.toString()))
+            val root = PlatformFile.withAppleBookmarkLease(NSURL.fileURLWithPath(rootPath.toString()))
             val escaped = root.copy(
                 NSURL.fileURLWithPath("$linkPath/../secret"),
             )
 
-            assertNull(actual = escaped.macOsBookmarkLease)
+            assertNull(actual = escaped.appleBookmarkLease)
         } finally {
             unlink(linkPath.toString())
             SystemFileSystem.delete(rootPath)
@@ -102,7 +126,7 @@ class PlatformFileMacOsBookmarkTest {
 
     @Test
     fun PlatformFile_releaseBookmark_rejectsNewScopedAccessForDerivedFiles() {
-        val root = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
+        val root = PlatformFile.withAppleBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
         val child = root / "child"
 
         root.releaseBookmark()
@@ -114,7 +138,7 @@ class PlatformFileMacOsBookmarkTest {
 
     @Test
     fun PlatformFile_copy_preservesCapabilityOnlyWithinRoot() {
-        val original = PlatformFile.withMacOsBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
+        val original = PlatformFile.withAppleBookmarkLease(FileKit.projectDir.absoluteFile().nsUrl)
         val child = original.copy((original / "child").nsUrl)
         val escaped = original.copy((original / "../outside").nsUrl)
 
@@ -122,8 +146,8 @@ class PlatformFileMacOsBookmarkTest {
         val copied = original.copy()
 
         assertEquals(expected = original.nsUrl, actual = copied.component1())
-        assertEquals(expected = original.macOsBookmarkLease, actual = child.macOsBookmarkLease)
-        assertNull(actual = escaped.macOsBookmarkLease)
+        assertEquals(expected = original.appleBookmarkLease, actual = child.appleBookmarkLease)
+        assertNull(actual = escaped.appleBookmarkLease)
         assertFailsWith<FileKitException> {
             copied.startAccessingSecurityScopedResource()
         }

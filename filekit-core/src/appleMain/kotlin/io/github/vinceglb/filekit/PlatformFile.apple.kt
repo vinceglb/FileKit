@@ -68,7 +68,7 @@ import kotlin.time.Instant
 @Serializable(with = PlatformFileSerializer::class)
 public actual class PlatformFile private constructor(
     public val nsUrl: NSURL,
-    internal val macOsBookmarkLease: MacOsBookmarkLease?,
+    internal val appleBookmarkLease: AppleBookmarkLease?,
 ) {
     public constructor(nsUrl: NSURL) : this(nsUrl, null)
 
@@ -78,7 +78,7 @@ public actual class PlatformFile private constructor(
 
     public fun copy(nsUrl: NSURL = this.nsUrl): PlatformFile = PlatformFile(
         nsUrl = nsUrl,
-        macOsBookmarkLease = macOsBookmarkLease?.takeIf { it.covers(nsUrl) },
+        appleBookmarkLease = appleBookmarkLease?.takeIf { it.covers(nsUrl) },
     )
 
     override fun equals(other: Any?): Boolean {
@@ -90,13 +90,13 @@ public actual class PlatformFile private constructor(
     override fun hashCode(): Int = nsUrl.path.hashCode()
 
     public actual companion object {
-        internal fun withMacOsBookmarkLease(url: NSURL): PlatformFile =
-            PlatformFile(url, MacOsBookmarkLease(url))
+        internal fun withAppleBookmarkLease(url: NSURL): PlatformFile =
+            PlatformFile(url, AppleBookmarkLease(url))
     }
 }
 
 @OptIn(ExperimentalForeignApi::class)
-internal class MacOsBookmarkLease(
+internal class AppleBookmarkLease(
     url: NSURL,
 ) {
     private val lock = NSLock()
@@ -337,10 +337,10 @@ private fun cfStringToKString(cfString: CFStringRef?): String? {
 }
 
 public actual fun PlatformFile.startAccessingSecurityScopedResource(): Boolean =
-    macOsBookmarkLease?.start() ?: nsUrl.startAccessingSecurityScopedResource()
+    appleBookmarkLease?.start() ?: nsUrl.startAccessingSecurityScopedResource()
 
 public actual fun PlatformFile.stopAccessingSecurityScopedResource(): Unit =
-    macOsBookmarkLease?.stop() ?: nsUrl.stopAccessingSecurityScopedResource()
+    appleBookmarkLease?.stop() ?: nsUrl.stopAccessingSecurityScopedResource()
 
 @OptIn(ExperimentalForeignApi::class, UnsafeNumber::class, BetaInteropApi::class)
 public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContext(Dispatchers.IO) {
@@ -365,7 +365,7 @@ public actual suspend fun PlatformFile.bookmarkData(): BookmarkData = withContex
 }
 
 public actual fun PlatformFile.releaseBookmark() {
-    macOsBookmarkLease?.release()
+    appleBookmarkLease?.release()
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class, UnsafeNumber::class)
@@ -389,8 +389,8 @@ internal fun appleBookmarkResolution(
     payload: AppleBookmarkPayload,
     nativeResolution: AppleBookmarkNativeResolution,
 ): BookmarkResolution {
-    val file = if (payload.kind == MacOsBookmarkKind.SecurityScoped) {
-        PlatformFile.withMacOsBookmarkLease(nativeResolution.url)
+    val file = if (payload.retainSecurityScope) {
+        PlatformFile.withAppleBookmarkLease(nativeResolution.url)
     } else {
         PlatformFile(nativeResolution.url)
     }

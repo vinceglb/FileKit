@@ -13,6 +13,7 @@ internal data class AppleBookmarkPayload(
     val resolutionOptions: ULong,
     val isLegacy: Boolean,
     val kind: MacOsBookmarkKind? = null,
+    val retainSecurityScope: Boolean = kind == MacOsBookmarkKind.SecurityScoped,
 )
 
 internal expect fun appleBookmarkCreationConfiguration(): AppleBookmarkCreationConfiguration
