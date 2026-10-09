@@ -173,6 +173,59 @@ class PlatformFileWebTest {
         )
     }
 
+    @Test
+    fun testOriginPrivateFileSystemPathFromRoot() {
+        assertEquals(
+            expected = "hello.txt",
+            actual = "".appendOriginPrivateFileSystemPath("hello.txt"),
+        )
+    }
+
+    @Test
+    fun testOriginPrivateFileSystemPathFromDirectory() {
+        assertEquals(
+            expected = "folder/hello.txt",
+            actual = "folder".appendOriginPrivateFileSystemPath("hello.txt"),
+        )
+    }
+
+    @Test
+    fun testOriginPrivateFileSystemRoot() = runTest {
+        val root = PlatformFile.fromOriginPrivateFileSystem()
+
+        assertTrue(root.isDirectory())
+        assertFalse(root.isRegularFile())
+        assertNull(root.parent())
+    }
+
+    @Test
+    fun testOriginPrivateFileSystemStorageDirectories() = runTest {
+        val filesDir = FileKit.filesDirectory()
+
+        assertTrue(filesDir.isDirectory())
+        assertEquals("", filesDir.path)
+    }
+
+    @Test
+    fun testOriginPrivateFileUpdateRefreshesSnapshotAttributes() = runTest {
+        val root = FileKit.filesDirectory()
+        val name = "filekit-attributes-test.txt"
+        val file = root.file(name, create = true)
+
+        try {
+            file.writeString("Hello")
+
+            assertEquals(0L, file.size())
+
+            file.update()
+
+            assertEquals(5L, file.size())
+            assertTrue(file.lastModified() > Instant.fromEpochMilliseconds(0))
+        } finally {
+            file.delete(mustExist = false)
+        }
+    }
+
     private fun PlatformFile.webFileWrapper(): WebFile.FileWrapper =
         assertIs<WebFile.FileWrapper>(webFile)
 }

@@ -54,11 +54,25 @@ public expect fun PlatformFile.lastModified(): Instant
 public expect suspend fun PlatformFile.readBytes(): ByteArray
 
 /**
+ * Writes the given bytes to this file.
+ *
+ * @param bytes The bytes to write.
+ */
+public expect suspend infix fun PlatformFile.write(bytes: ByteArray): Unit
+
+/**
  * Reads the content of the file as a string.
  *
  * @return The content of the file as a [String].
  */
 public expect suspend fun PlatformFile.readString(): String
+
+/**
+ * Writes the given string to this file.
+ *
+ * @param string The string to write.
+ */
+public expect suspend fun PlatformFile.writeString(string: String): Unit
 
 /**
  * Returns the MIME type of the file.
@@ -109,6 +123,20 @@ public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
  * @return A list of [PlatformFile]s in this directory.
  */
 public expect fun PlatformFile.list(): List<PlatformFile>
+
+/**
+ * Deletes this file.
+ *
+ * @param mustExist If `true`, fails if the file does not exist. Defaults to `true`.
+ * @param recursively If `true`, a directory is emptied before it is removed. Defaults to `false`,
+ * which fails on a filesystem directory that still has contents. Symbolic links (including dangling
+ * links) and Windows directory junctions are unlinked, never followed. Android document URI deletion
+ * is handled by the document provider regardless of this flag.
+ */
+public expect suspend fun PlatformFile.delete(
+    mustExist: Boolean = true,
+    recursively: Boolean = false,
+)
 
 /**
  * Starts accessing a security-scoped resource.

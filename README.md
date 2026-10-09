@@ -105,11 +105,11 @@ val file = FileKit.openFileSaver(
 )
 file?.writeString(contentToSave)
 
-// Work with files
-val myFile = FileKit.filesDir / "document.pdf"
+// Work with application storage on every platform, including the web.
+val myFile = FileKit.filesDirectory().file(name = "document.pdf", create = true)
 println(myFile.name)
-println(myFile.size())
-myFile.writeString("Hello, World!")
+println(myFile.sizeAsync())
+myFile.writeStringAsync("Hello, World!")
 
 // Image operations
 val compressedBytes = FileKit.compressImage(
