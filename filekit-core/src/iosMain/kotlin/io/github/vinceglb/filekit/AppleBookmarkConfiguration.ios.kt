@@ -12,7 +12,14 @@ internal actual fun encodeAppleBookmarkPayload(
 ): ByteArray = payload
 
 internal actual fun decodeAppleBookmarkPayload(bytes: ByteArray): AppleBookmarkPayload =
-    AppleBookmarkPayload(bytes = bytes, resolutionOptions = 0u, isLegacy = false)
+    AppleBookmarkPayload(
+        bytes = bytes,
+        resolutionOptions = 0u,
+        isLegacy = false,
+        // iOS restores the picker URL's scope without the macOS-only bookmark flags.
+        // Descendants must activate this original URL rather than a reconstructed path.
+        retainSecurityScope = true,
+    )
 
 internal actual fun classifyAppleBookmarkResolutionError(error: NSError?): BookmarkResolutionFailure =
     BookmarkResolutionFailure.RESOURCE_UNAVAILABLE
