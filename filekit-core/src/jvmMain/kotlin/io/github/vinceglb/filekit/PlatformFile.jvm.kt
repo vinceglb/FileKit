@@ -206,3 +206,7 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     Files.delete(file.toPath())
     return true
 }
+
+public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
+    sizeRecursivelyImpl()
+}
