@@ -114,13 +114,17 @@ public expect fun PlatformFile.list(): List<PlatformFile>
  * Lazily walks this directory recursively (depth-first).
  * Yields files and subdirectories, but not the starting directory itself.
  */
-public expect fun PlatformFile.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile>
+public fun PlatformFile.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
+    TODO("Not yet implemented")
+}
 
 /**
  * Returns the total size in bytes of all regular files in this tree.
  * For a regular file, returns its own size.
  */
-public expect suspend fun PlatformFile.sizeRecursively(): Long
+public suspend fun PlatformFile.sizeRecursively(): Long {
+    TODO("Not yet implemented")
+}
 
 /**
  * Starts accessing a security-scoped resource.
