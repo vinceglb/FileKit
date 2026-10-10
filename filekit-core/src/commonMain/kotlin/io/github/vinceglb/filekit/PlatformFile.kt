@@ -6,6 +6,11 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 /**
+ * Indicates that the file size could not be determined.
+ */
+internal const val UNKNOWN_FILE_SIZE = -1L
+
+/**
  * Represents a file on a specific platform.
  *
  * This class serves as a common abstraction for file handling across different platforms (Android, iOS, JVM, JS, etc.).
@@ -111,8 +116,20 @@ public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
 public expect fun PlatformFile.list(): List<PlatformFile>
 
 /**
- * Lazily walks this directory recursively (depth-first).
+ * Lazily walks this directory recursively in depth-first order.
+ *
  * Yields files and subdirectories, but not the starting directory itself.
+ * For a regular file, yields only that file.
+ *
+ * On Apple platforms, any required security-scoped access must remain active
+ * during this call and while consuming the sequence.
+ *
+ * @param maxDepth The maximum traversal depth. A value of 1 includes only
+ * immediate children.
+ * @return A sequence of files and subdirectories, or an empty sequence if
+ * the receiver is null or maxDepth is not positive.
+ * @throws IllegalStateException If the receiver is neither a regular file nor
+ * a directory and maxDepth is positive.
  */
 public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
     if(this == null || maxDepth <= 0)
@@ -142,11 +159,55 @@ public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformF
 }
 
 /**
- * Returns the total size in bytes of all regular files in this tree.
- * For a regular file, returns its own size.
+ * Returns the sum of known file sizes in this directory tree, in bytes.
+ *
+ * For a regular file, returns its own size unchanged, including -1L if unknown.
+ * For a directory, ignores entries whose size is unknown, so the result may
+ * be partial. An empty directory returns zero.
+ *
+ * On non-Web platforms, the calculation runs on the IO dispatcher.
+ * Apple platforms maintain security-scoped access throughout the calculation.
+ * Web platforms traverse the directory tree already available in memory.
+ *
+ * @return The file size or directory sum in bytes, or -1L if the receiver is null.
+ * @throws IllegalStateException If the receiver is neither a regular file nor
+ * a directory.
  */
-public suspend fun PlatformFile.sizeRecursively(): Long {
-    TODO("Not yet implemented")
+public expect suspend fun PlatformFile?.sizeRecursively(): Long
+
+/**
+ * Calculates the file size or recursively sums non-directory entry sizes.
+ *
+ * Runs synchronously in the calling context without managing security-scoped access.
+ * For a regular file, returns its own size without applying sanitizeSize.
+ *
+ * @param sanitizeSize A transformation applied to each entry size before summing.
+ * Defaults to replacing an unknown size with zero.
+ * @return The file size or directory sum in bytes, or -1L if the receiver is null.
+ * @throws IllegalStateException If the receiver is neither a regular file nor
+ * a directory.
+ */
+internal fun PlatformFile?.sizeRecursivelyImpl(
+    sanitizeSize: (Long) -> Long = { if (it == UNKNOWN_FILE_SIZE) 0L else it }
+): Long {
+    if(this == null)
+        return -1L
+
+    if(this.isRegularFile())
+        return this.size()
+
+    var size = 0L
+
+    val files = this.walk()
+    files.forEach { file ->
+        if(file.isDirectory())
+            return@forEach
+
+        val fileSize = file.size()
+        size += sanitizeSize(fileSize)
+    }
+
+    return size
 }
 
 /**

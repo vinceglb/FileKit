@@ -12,8 +12,6 @@ import org.khronos.webgl.get
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
-import kotlin.js.ExperimentalWasmJsInterop
-import kotlin.js.unsafeCast
 import kotlin.time.Instant
 
 /**
@@ -136,3 +134,9 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = when (val file =
 
 public actual suspend fun PlatformFile.readString(): String =
     readBytes().decodeToString()
+
+public actual suspend fun PlatformFile?.sizeRecursively(): Long {
+    return sizeRecursivelyImpl(
+        sanitizeSize = { it }
+    )
+}
