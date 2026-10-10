@@ -445,3 +445,11 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     }
     return true
 }
+
+public actual fun PlatformFile.walk(maxDepth: Int): Sequence<PlatformFile> {
+    TODO("Not yet implemented")
+}
+
+public actual suspend fun PlatformFile.sizeRecursively(): Long {
+    TODO("Not yet implemented")
+}

@@ -111,6 +111,18 @@ public expect inline fun PlatformFile.list(block: (List<PlatformFile>) -> Unit)
 public expect fun PlatformFile.list(): List<PlatformFile>
 
 /**
+ * Lazily walks this directory recursively (depth-first).
+ * Yields files and subdirectories, but not the starting directory itself.
+ */
+public expect fun PlatformFile.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile>
+
+/**
+ * Returns the total size in bytes of all regular files in this tree.
+ * For a regular file, returns its own size.
+ */
+public expect suspend fun PlatformFile.sizeRecursively(): Long
+
+/**
  * Starts accessing a security-scoped resource.
  *
  * This is primarily used on Apple platforms (iOS, macOS) to access files outside the app's sandbox.

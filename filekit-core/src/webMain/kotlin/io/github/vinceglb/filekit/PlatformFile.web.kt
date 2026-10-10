@@ -136,3 +136,11 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = when (val file =
 
 public actual suspend fun PlatformFile.readString(): String =
     readBytes().decodeToString()
+
+public actual fun PlatformFile.walk(maxDepth: Int): Sequence<PlatformFile> {
+    TODO("Not yet implemented")
+}
+
+public actual suspend fun PlatformFile.sizeRecursively(): Long {
+    TODO("Not yet implemented")
+}
