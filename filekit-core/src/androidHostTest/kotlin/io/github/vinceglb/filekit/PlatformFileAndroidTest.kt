@@ -563,7 +563,9 @@ private class NullInsertContentProvider : ContentProvider() {
     ): Int = 0
 }
 
-private class NestedTreeContentProvider(private val fileSizes: Map<String, Long> = emptyMap()) : ContentProvider() {
+private class NestedTreeContentProvider(
+    private val fileSizes: Map<String, Long> = emptyMap(),
+) : ContentProvider() {
     private val documents = mutableMapOf(
         "primary:Documents" to TestDocument("primary:Documents", "Documents", true),
         "primary:Documents/Notes" to TestDocument("primary:Documents/Notes", "Notes", true),

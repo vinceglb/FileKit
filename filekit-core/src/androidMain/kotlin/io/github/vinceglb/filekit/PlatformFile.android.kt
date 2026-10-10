@@ -34,7 +34,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
-
 /**
  * Represents a file on the Android platform.
  *
@@ -1187,8 +1186,6 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     return true
 }
 
-public actual suspend fun PlatformFile?.sizeRecursively(): Long {
-    return withContext(Dispatchers.IO) {
-        sizeRecursivelyImpl()
-    }
+public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
+    sizeRecursivelyImpl()
 }

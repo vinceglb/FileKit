@@ -135,8 +135,6 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = when (val file =
 public actual suspend fun PlatformFile.readString(): String =
     readBytes().decodeToString()
 
-public actual suspend fun PlatformFile?.sizeRecursively(): Long {
-    return sizeRecursivelyImpl(
-        sanitizeSize = { it }
-    )
-}
+public actual suspend fun PlatformFile?.sizeRecursively(): Long = sizeRecursivelyImpl(
+    sanitizeSize = { it },
+)

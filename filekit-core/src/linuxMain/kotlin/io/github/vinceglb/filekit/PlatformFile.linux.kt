@@ -322,8 +322,6 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean = memScoped {
     true
 }
 
-public actual suspend fun PlatformFile?.sizeRecursively(): Long {
-    return withContext(Dispatchers.IO) {
-        sizeRecursivelyImpl()
-    }
+public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
+    sizeRecursivelyImpl()
 }

@@ -132,14 +132,17 @@ public expect fun PlatformFile.list(): List<PlatformFile>
  * a directory and maxDepth is positive.
  */
 public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
-    if(this == null || maxDepth <= 0)
+    if (this == null || maxDepth <= 0) {
         return emptySequence()
+    }
 
-    if(this.isRegularFile())
+    if (this.isRegularFile()) {
         return sequenceOf(this)
+    }
 
-    if(!this.isDirectory())
+    if (!this.isDirectory()) {
         throw IllegalStateException("Could not walk in the specified PlatformFile")
+    }
 
     val root = this
     return sequence {
@@ -147,9 +150,9 @@ public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformF
         files.forEach { file ->
             yield(file)
 
-            if(file.isDirectory()) {
+            if (file.isDirectory()) {
                 val subsequence = file.walk(
-                    maxDepth = maxDepth - 1
+                    maxDepth = maxDepth - 1,
                 )
 
                 yieldAll(subsequence)
@@ -188,20 +191,23 @@ public expect suspend fun PlatformFile?.sizeRecursively(): Long
  * a directory.
  */
 internal fun PlatformFile?.sizeRecursivelyImpl(
-    sanitizeSize: (Long) -> Long = { if (it == UNKNOWN_FILE_SIZE) 0L else it }
+    sanitizeSize: (Long) -> Long = { if (it == UNKNOWN_FILE_SIZE) 0L else it },
 ): Long {
-    if(this == null)
+    if (this == null) {
         return -1L
+    }
 
-    if(this.isRegularFile())
+    if (this.isRegularFile()) {
         return this.size()
+    }
 
     var size = 0L
 
     val files = this.walk()
     files.forEach { file ->
-        if(file.isDirectory())
+        if (file.isDirectory()) {
             return@forEach
+        }
 
         val fileSize = file.size()
         size += sanitizeSize(fileSize)
