@@ -685,7 +685,7 @@ private fun MatrixCursor.addDocumentRow(
 
                 else -> null
             }
-        }.toTypedArray()
+        }.toTypedArray<Any?>()
     addRow(row)
 }
 
