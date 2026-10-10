@@ -114,8 +114,31 @@ public expect fun PlatformFile.list(): List<PlatformFile>
  * Lazily walks this directory recursively (depth-first).
  * Yields files and subdirectories, but not the starting directory itself.
  */
-public fun PlatformFile.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
-    TODO("Not yet implemented")
+public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
+    if(this == null || maxDepth <= 0)
+        return emptySequence()
+
+    if(this.isRegularFile())
+        return sequenceOf(this)
+
+    if(!this.isDirectory())
+        throw IllegalStateException("Could not walk in the specified PlatformFile")
+
+    val root = this
+    return sequence {
+        val files = root.list()
+        files.forEach { file ->
+            yield(file)
+
+            if(file.isDirectory()) {
+                val subsequence = file.walk(
+                    maxDepth = maxDepth - 1
+                )
+
+                yieldAll(subsequence)
+            }
+        }
+    }
 }
 
 /**
