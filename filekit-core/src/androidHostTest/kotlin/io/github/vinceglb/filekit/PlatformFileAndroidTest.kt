@@ -20,6 +20,7 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.exceptions.FileKitUriPathNotSupportedException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -260,6 +261,74 @@ class PlatformFileAndroidTest {
     }
 
     @Test
+    fun PlatformFile_walkSafTree_returnsEveryEntryInDepthFirstOrder() {
+        val root = registerTraversalTree()
+
+        assertEquals(
+            listOf("Notes", "note.txt", "parent-only.txt"),
+            root.walk().map { it.name }.toList(),
+        )
+    }
+
+    @Test
+    fun PlatformFile_walkSafTreeWithDepthOne_returnsImmediateChildren() {
+        val root = registerTraversalTree()
+
+        assertEquals(
+            listOf("Notes", "parent-only.txt"),
+            root.walk(maxDepth = 1).map { it.name }.toList(),
+        )
+    }
+
+    @Test
+    fun PlatformFile_sizeRecursivelySafTree_sumsFileSizesOnly() = runTest {
+        val root = registerTraversalTree(
+            fileSizes = mapOf(
+                "primary:Documents" to 2_048L,
+                "primary:Documents/Notes" to 1_024L,
+                "primary:Documents/parent-only.txt" to 5L,
+                "primary:Documents/Notes/note.txt" to 3L,
+            ),
+        )
+
+        assertEquals(8L, root.sizeRecursively())
+    }
+
+    @Test
+    fun PlatformFile_sizeRecursivelySafTreeWithUnknownSize_sumsKnownSizes() = runTest {
+        val root = registerTraversalTree(
+            fileSizes = mapOf("primary:Documents/parent-only.txt" to 5L),
+        )
+
+        assertEquals(5L, root.sizeRecursively())
+    }
+
+    @Test
+    fun PlatformFile_sizeRecursivelySafTreeWithOnlyUnknownSizes_returnsZero() = runTest {
+        val root = registerTraversalTree()
+
+        assertEquals(0L, root.sizeRecursively())
+    }
+
+    @Test
+    fun PlatformFile_sizeRecursivelySafFileWithUnknownSize_returnsMinusOne() = runTest {
+        val root = registerTraversalTree()
+        val file = root / "parent-only.txt"
+
+        assertTrue(file.isRegularFile())
+        assertEquals(-1L, file.sizeRecursively())
+    }
+
+    private fun registerTraversalTree(fileSizes: Map<String, Long> = emptyMap()): PlatformFile {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(fileSizes),
+        )
+        return PlatformFile(treeUri)
+    }
+
+    @Test
     fun PlatformFile_size_uriWithoutSizeColumn_returnsMinusOne() {
         runBlocking {
             val sourceBytes = "filekit-copy-source".encodeToByteArray()
@@ -494,7 +563,7 @@ private class NullInsertContentProvider : ContentProvider() {
     ): Int = 0
 }
 
-private class NestedTreeContentProvider : ContentProvider() {
+private class NestedTreeContentProvider(private val fileSizes: Map<String, Long> = emptyMap()) : ContentProvider() {
     private val documents = mutableMapOf(
         "primary:Documents" to TestDocument("primary:Documents", "Documents", true),
         "primary:Documents/Notes" to TestDocument("primary:Documents/Notes", "Notes", true),
@@ -539,9 +608,9 @@ private class NestedTreeContentProvider : ContentProvider() {
             documents
                 .values
                 .filter { it.parentId == documentId }
-                .forEach { cursor.addDocumentRow(columns, it) }
+                .forEach { cursor.addDocumentRow(columns, it, fileSizes[it.id]) }
         } else if (documentId != null) {
-            documents[documentId]?.let { cursor.addDocumentRow(columns, it) }
+            documents[documentId]?.let { cursor.addDocumentRow(columns, it, fileSizes[it.id]) }
         }
 
         return cursor
@@ -582,8 +651,8 @@ private class NestedTreeContentProvider : ContentProvider() {
     ): Int = 0
 }
 
-private fun createNestedTreeContentProvider(): NestedTreeContentProvider =
-    NestedTreeContentProvider().apply {
+private fun createNestedTreeContentProvider(fileSizes: Map<String, Long> = emptyMap()): NestedTreeContentProvider =
+    NestedTreeContentProvider(fileSizes).apply {
         attachInfo(
             RuntimeEnvironment.getApplication(),
             ProviderInfo().apply {
@@ -595,6 +664,7 @@ private fun createNestedTreeContentProvider(): NestedTreeContentProvider =
 private fun MatrixCursor.addDocumentRow(
     columns: Array<out String>,
     document: TestDocument,
+    size: Long? = null,
 ) {
     val row = columns
         .map { column ->
@@ -609,7 +679,7 @@ private fun MatrixCursor.addDocumentRow(
                     "text/plain"
                 }
 
-                OpenableColumns.SIZE -> null
+                OpenableColumns.SIZE -> size
 
                 else -> null
             }
