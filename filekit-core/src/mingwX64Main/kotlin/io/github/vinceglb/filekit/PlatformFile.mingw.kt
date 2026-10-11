@@ -1,6 +1,7 @@
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.mimeType.MimeType
+import io.github.vinceglb.filekit.path
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.UShortVar
@@ -18,6 +19,7 @@ import kotlinx.io.IOException
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
+import platform.windows.DWORD
 import platform.windows.DWORDVar
 import platform.windows.DeleteFileW
 import platform.windows.ERROR_FILE_NOT_FOUND
@@ -246,12 +248,18 @@ private fun FILETIME.toInstant(): Instant {
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     val path = absolutePath()
-    val attributes = GetFileAttributesW(path)
-    if (attributes == INVALID_FILE_ATTRIBUTES) {
-        val error = GetLastError()
-        if (error == ERROR_FILE_NOT_FOUND.toUInt() || error == ERROR_PATH_NOT_FOUND.toUInt()) return false
-        throw IOException("Could not inspect $path: Windows error $error")
+    if (!isSymbolicLink()) {
+        return false
     }
+
+    val attributes = GetFileAttributesW(path)
+    val validAttributes = attributes.validAttributesOrThrow(
+        errorMessage = { error ->
+            "Could not inspect $path: Windows error $error"
+        },
+    )
+    if (!validAttributes) return false
+
     if ((attributes and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) == 0u) return false
 
     val removed = if ((attributes and FILE_ATTRIBUTE_DIRECTORY.toUInt()) != 0u) {
@@ -267,4 +275,26 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
 
 public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
     sizeRecursivelyImpl()
+}
+
+public actual fun PlatformFile.isSymbolicLink(): Boolean {
+    val attributes = GetFileAttributesW(path)
+    val validAttributes = attributes.validAttributesOrThrow(
+        errorMessage = { error ->
+            "Could not inspect $path: Windows error $error"
+        },
+    )
+    return validAttributes && (attributes and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) != 0u
+}
+
+private fun DWORD.validAttributesOrThrow(
+    errorMessage: ((DWORD) -> String) = { it.toString() },
+): Boolean {
+    if (this == INVALID_FILE_ATTRIBUTES) {
+        val error = GetLastError()
+        if (error == ERROR_FILE_NOT_FOUND.toUInt() || error == ERROR_PATH_NOT_FOUND.toUInt()) return false
+        throw IOException(errorMessage(error))
+    }
+
+    return true
 }

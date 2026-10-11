@@ -121,18 +121,22 @@ public expect fun PlatformFile.list(): List<PlatformFile>
  * Yields files and subdirectories, but not the starting directory itself.
  * For a regular file, yields only that file.
  *
+ * Symbolic links found inside a directory are yielded, but linked directories
+ * are not traversed. A symbolic link receiver returns an empty sequence.
+ * On Windows, this also applies to junctions and other reparse points.
+ *
  * On Apple platforms, any required security-scoped access must remain active
  * during this call and while consuming the sequence.
  *
  * @param maxDepth The maximum traversal depth. A value of 1 includes only
  * immediate children.
  * @return A sequence of files and subdirectories, or an empty sequence if
- * the receiver is null or maxDepth is not positive.
- * @throws IllegalStateException If the receiver is neither a regular file nor
- * a directory and maxDepth is positive.
+ * the receiver is null, a symbolic link, or maxDepth is not positive.
+ * @throws IllegalStateException If the receiver is not a regular file, directory,
+ * or symbolic link and maxDepth is positive.
  */
 public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
-    if (this == null || maxDepth <= 0) {
+    if (this == null || maxDepth <= 0 || isSymbolicLink()) {
         return emptySequence()
     }
 
@@ -168,13 +172,17 @@ public fun PlatformFile?.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformF
  * For a directory, ignores entries whose size is unknown, so the result may
  * be partial. An empty directory returns zero.
  *
+ * Symbolic links to directories are not traversed, including Windows junctions.
+ * A linked directory receiver returns zero. Links to regular files contribute
+ * the target's size, even if the target is also present elsewhere in the tree.
+ *
  * On non-Web platforms, the calculation runs on the IO dispatcher.
  * Apple platforms maintain security-scoped access throughout the calculation.
  * Web platforms traverse the directory tree already available in memory.
  *
  * @return The file size or directory sum in bytes, or -1L if the receiver is null.
- * @throws IllegalStateException If the receiver is neither a regular file nor
- * a directory.
+ * @throws IllegalStateException If the receiver is not a regular file, directory,
+ * or symbolic link.
  */
 public expect suspend fun PlatformFile?.sizeRecursively(): Long
 
@@ -187,8 +195,8 @@ public expect suspend fun PlatformFile?.sizeRecursively(): Long
  * @param sanitizeSize A transformation applied to each entry size before summing.
  * Defaults to replacing an unknown size with zero.
  * @return The file size or directory sum in bytes, or -1L if the receiver is null.
- * @throws IllegalStateException If the receiver is neither a regular file nor
- * a directory.
+ * @throws IllegalStateException If the receiver is not a regular file, directory,
+ * or symbolic link.
  */
 internal fun PlatformFile?.sizeRecursivelyImpl(
     sanitizeSize: (Long) -> Long = { if (it == UNKNOWN_FILE_SIZE) 0L else it },
@@ -253,3 +261,20 @@ public inline fun <T> PlatformFile.withScopedAccess(block: (PlatformFile) -> T):
         }
     }
 }
+
+/**
+ * Checks if this file is a symbolic link without following its target.
+ *
+ * On Windows, returns `true` for any reparse point, including directory junctions
+ * and cloud placeholders. On Web and Android content URIs, always returns `false`.
+ *
+ * Missing paths return `false`, while dangling symbolic links return `true`.
+ * Metadata inspection failures return `false` on Apple and non-Windows JVM
+ * platforms; other filesystem implementations propagate failures.
+ *
+ * @return `true` if this entry is a symbolic link or a Windows reparse point,
+ * `false` otherwise.
+ * @throws kotlinx.io.IOException If inspection fails on an Android filesystem
+ * path, Linux, or Windows for a reason other than a missing path.
+ */
+public expect fun PlatformFile.isSymbolicLink(): Boolean

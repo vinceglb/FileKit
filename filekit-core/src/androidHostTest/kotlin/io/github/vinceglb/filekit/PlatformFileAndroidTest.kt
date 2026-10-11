@@ -271,6 +271,14 @@ class PlatformFileAndroidTest {
     }
 
     @Test
+    fun PlatformFile_isSymbolicLinkSafEntries_returnsFalse() {
+        val root = registerTraversalTree()
+
+        assertFalse(root.isSymbolicLink())
+        assertFalse((root / "parent-only.txt").isSymbolicLink())
+    }
+
+    @Test
     fun PlatformFile_walkSafTreeWithDepthOne_returnsImmediateChildren() {
         val root = registerTraversalTree()
 

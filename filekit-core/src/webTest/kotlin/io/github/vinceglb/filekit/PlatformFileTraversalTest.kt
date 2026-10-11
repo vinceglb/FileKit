@@ -6,10 +6,17 @@ import io.github.vinceglb.filekit.utils.createTestFile
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class PlatformFileTraversalTest {
+    @Test
+    fun PlatformFile_isSymbolicLinkWebEntries_returnsFalse() {
+        assertFalse(createTestFile(name = "file.txt", content = "content").isSymbolicLink())
+        assertFalse(createDirectoryTree().isSymbolicLink())
+    }
+
     @Test
     fun PlatformFile_walkNull_returnsEmptySequence() {
         val file: PlatformFile? = null

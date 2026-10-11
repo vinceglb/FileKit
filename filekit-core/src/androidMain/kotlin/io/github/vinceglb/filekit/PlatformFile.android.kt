@@ -1170,13 +1170,9 @@ private fun Uri.toFileOrNull(): File? {
 // lstat/remove work on API 21 and operate on the link itself, including a dangling link.
 internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
-    val metadata = try {
-        Os.lstat(file.absolutePath)
-    } catch (error: ErrnoException) {
-        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
-        throw IOException("Could not inspect ${file.absolutePath}", error)
+    if (!isSymbolicLink()) {
+        return false
     }
-    if (!OsConstants.S_ISLNK(metadata.st_mode)) return false
 
     try {
         Os.remove(file.absolutePath)
@@ -1188,4 +1184,15 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
 
 public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
     sizeRecursivelyImpl()
+}
+
+public actual fun PlatformFile.isSymbolicLink(): Boolean {
+    val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
+    val metadata = try {
+        Os.lstat(file.absolutePath)
+    } catch (error: ErrnoException) {
+        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
+        throw IOException("Could not inspect ${file.absolutePath}", error)
+    }
+    return OsConstants.S_ISLNK(metadata.st_mode)
 }

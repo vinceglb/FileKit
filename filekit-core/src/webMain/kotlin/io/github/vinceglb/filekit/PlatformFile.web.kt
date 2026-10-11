@@ -138,3 +138,5 @@ public actual suspend fun PlatformFile.readString(): String =
 public actual suspend fun PlatformFile?.sizeRecursively(): Long = sizeRecursivelyImpl(
     sanitizeSize = { it },
 )
+
+public actual fun PlatformFile.isSymbolicLink(): Boolean = false

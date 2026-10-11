@@ -309,12 +309,9 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean = memScoped {
     val path = absolutePath()
-    val statBuf = alloc<stat>()
-    if (lstat(path, statBuf.ptr) != 0) {
-        if (errno == ENOENT || errno == ENOTDIR) return@memScoped false
-        throw IOException("Could not inspect $path: ${strerror(errno)?.toKString()}")
+    if (!isSymbolicLink()) {
+        return@memScoped false
     }
-    if ((statBuf.st_mode.toInt() and S_IFMT) != S_IFLNK) return@memScoped false
 
     if (unlink(path) != 0) {
         throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
@@ -324,4 +321,15 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean = memScoped {
 
 public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
     sizeRecursivelyImpl()
+}
+
+@OptIn(ExperimentalForeignApi::class)
+public actual fun PlatformFile.isSymbolicLink(): Boolean = memScoped {
+    val statBuf = alloc<stat>()
+    if (lstat(path, statBuf.ptr) != 0) {
+        if (errno == ENOENT || errno == ENOTDIR) return@memScoped false
+        throw IOException("Could not inspect $path: ${strerror(errno)?.toKString()}")
+    }
+
+    return@memScoped (statBuf.st_mode.toInt() and S_IFMT) == S_IFLNK
 }
