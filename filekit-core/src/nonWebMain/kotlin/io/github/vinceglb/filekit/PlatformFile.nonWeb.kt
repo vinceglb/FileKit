@@ -306,3 +306,17 @@ public fun PlatformFile.Companion.fromBookmarkData(bytes: ByteArray): PlatformFi
 /** Resolves bookmark data stored as a byte array. */
 public fun PlatformFile.Companion.resolveBookmarkData(bytes: ByteArray): BookmarkResolution =
     resolveBookmarkData(BookmarkData(bytes))
+
+/**
+ * Copies this file or directory tree to [target], which becomes the new root.
+ * Fails on the first error, leaving [target] partially copied.
+ * Symbolic links are skipped. Not available on web.
+ */
+public suspend expect fun PlatformFile.copyRecursively(
+    target: PlatformFile,
+    overwrite: Boolean = false,
+    onFileSkipped: ((PlatformFile) -> Unit)? = null,
+    onFileAdded: ((PlatformFile) -> Unit)? = null,
+    onFileRemoved: ((PlatformFile) -> Unit)? = null,
+    onFileOverwritten: ((PlatformFile) -> Unit)? = null,
+)

@@ -1196,3 +1196,13 @@ public actual fun PlatformFile.isSymbolicLink(): Boolean {
     }
     return OsConstants.S_ISLNK(metadata.st_mode)
 }
+
+public actual suspend fun PlatformFile.copyRecursively(
+    target: PlatformFile,
+    overwrite: Boolean,
+    onFileSkipped: ((PlatformFile) -> Unit)?,
+    onFileAdded: ((PlatformFile) -> Unit)?,
+    onFileRemoved: ((PlatformFile) -> Unit)?,
+    onFileOverwritten: ((PlatformFile) -> Unit)?,
+) {
+}
