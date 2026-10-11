@@ -298,3 +298,14 @@ private fun DWORD.validAttributesOrThrow(
 
     return true
 }
+
+public actual suspend fun PlatformFile.copyRecursively(
+    target: PlatformFile,
+    overwrite: Boolean,
+    onFileSkipped: ((PlatformFile) -> Unit)?,
+    onFileAdded: ((PlatformFile) -> Unit)?,
+    onFileRemoved: ((PlatformFile) -> Unit)?,
+    onFileOverwritten: ((PlatformFile) -> Unit)?,
+) {
+}
+
