@@ -19,9 +19,19 @@ import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.LinkOption
+import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
+import kotlin.io.path.CopyActionResult
+import kotlin.io.path.CopyActionResult.CONTINUE
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.copyTo
+import kotlin.io.path.copyToRecursively
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
+import java.nio.file.Path as JavaPath
 
 /**
  * Represents a file on the JVM platform.
@@ -219,6 +229,7 @@ public actual fun PlatformFile.isSymbolicLink(): Boolean {
     }
 }
 
+@OptIn(ExperimentalPathApi::class)
 public actual suspend fun PlatformFile.copyRecursively(
     target: PlatformFile,
     overwrite: Boolean,
@@ -227,4 +238,80 @@ public actual suspend fun PlatformFile.copyRecursively(
     onFileRemoved: ((PlatformFile) -> Unit)?,
     onFileOverwritten: ((PlatformFile) -> Unit)?,
 ) {
+    val sourceDirectoryPath = this.file.toPath()
+    val destinationDirectoryPath = target.file.toPath()
+
+    sourceDirectoryPath.copyToRecursively(
+        target = destinationDirectoryPath,
+        followLinks = false,
+        copyAction = { source, destination ->
+            if (source.isDirectory(LinkOption.NOFOLLOW_LINKS)) {
+                return@copyToRecursively source.copyToIgnoringExistingDirectory(
+                    target = destination,
+                    followLinks = false
+                )
+            }
+
+            val destinationFile = PlatformFile(
+                file = destination.toFile()
+            )
+
+            if (source.contentEquals(destination)) {
+                onFileSkipped?.invoke(destinationFile)
+
+                return@copyToRecursively CONTINUE
+            }
+
+            if (!destination.exists()) {
+                source.copyAndContinue(
+                    destination = destination,
+                    onCopy = {
+                        onFileAdded?.invoke(destinationFile)
+                    }
+                )
+            } else {
+                if (overwrite) {
+                    source.copyAndContinue(
+                        destination = destination,
+                        onCopy = {
+                            onFileOverwritten?.invoke(destinationFile)
+                        }
+                    )
+                } else {
+                    onFileSkipped?.invoke(destinationFile)
+
+                    CONTINUE
+                }
+            }
+        }
+    )
+}
+
+private fun JavaPath.contentEquals(
+    other: JavaPath?
+): Boolean {
+    if (other == null || !other.exists())
+        return false
+
+    val sizeMismatch = Files.size(this) == Files.size(other)
+    if (!sizeMismatch)
+        return false
+
+    val result = Files.mismatch(this, other)
+    return result == -1L
+}
+
+@OptIn(ExperimentalPathApi::class)
+private fun JavaPath.copyAndContinue(
+    destination: JavaPath,
+    onCopy: (() -> Unit)? = null
+): CopyActionResult {
+    this.copyTo(
+        target = destination,
+        LinkOption.NOFOLLOW_LINKS, StandardCopyOption.REPLACE_EXISTING
+    )
+
+    onCopy?.invoke()
+
+    return CONTINUE
 }
