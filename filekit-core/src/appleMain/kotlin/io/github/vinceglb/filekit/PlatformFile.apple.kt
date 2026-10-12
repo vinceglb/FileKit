@@ -464,14 +464,3 @@ public actual fun PlatformFile.isSymbolicLink(): Boolean = withScopedAccess {
     val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
     attributes?.get(NSFileType) == NSFileTypeSymbolicLink
 }
-
-public actual suspend fun PlatformFile.copyRecursively(
-    target: PlatformFile,
-    overwrite: Boolean,
-    onFileSkipped: ((PlatformFile) -> Unit)?,
-    onFileAdded: ((PlatformFile) -> Unit)?,
-    onFileRemoved: ((PlatformFile) -> Unit)?,
-    onFileOverwritten: ((PlatformFile) -> Unit)?,
-) {
-}
-
