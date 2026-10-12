@@ -9,6 +9,7 @@ import kotlinx.io.RawSink
 import kotlinx.io.RawSource
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
+import kotlinx.io.files.SystemPathSeparator
 import kotlinx.io.readByteArray
 import kotlinx.io.readString
 import kotlinx.io.writeString
@@ -312,11 +313,65 @@ public fun PlatformFile.Companion.resolveBookmarkData(bytes: ByteArray): Bookmar
  * Fails on the first error, leaving [target] partially copied.
  * Symbolic links are skipped. Not available on web.
  */
-public suspend expect fun PlatformFile.copyRecursively(
+public suspend fun PlatformFile.copyRecursively(
     target: PlatformFile,
     overwrite: Boolean = false,
     onFileSkipped: ((PlatformFile) -> Unit)? = null,
     onFileAdded: ((PlatformFile) -> Unit)? = null,
     onFileRemoved: ((PlatformFile) -> Unit)? = null,
     onFileOverwritten: ((PlatformFile) -> Unit)? = null,
-)
+) {
+    require(this != target) {
+        "Target destination must be different from the source"
+    }
+
+    target.createDirectories()
+
+    val sourceFiles = this.walk()
+    sourceFiles.forEach { sourceFile ->
+        if(sourceFile.isSymbolicLink())
+            return@forEach
+
+        val copyFile = sourceFile.asCopyFile(
+            root = this,
+            target = target
+        )
+
+        if(sourceFile.isDirectory()) {
+            copyFile.createDirectories()
+        } else {
+            sourceFile.copyTo(
+                destination = copyFile
+            )
+        }
+    }
+}
+
+private fun PlatformFile.asCopyFile(
+    root: PlatformFile,
+    target: PlatformFile,
+): PlatformFile {
+    val relativePath = this.resolveRelativePath(
+        root = root
+    )
+    val path = "${target.path}$SystemPathSeparator$relativePath"
+
+    return PlatformFile(
+        path = path
+    )
+}
+
+private fun PlatformFile.resolveRelativePath(
+    root: PlatformFile,
+): String {
+    val separator = SystemPathSeparator
+    val rootAbsolutePath = root.absolutePath()
+    val prefix = rootAbsolutePath.trimEnd(separator) + separator
+    val sourcePath = absolutePath()
+
+    require(sourcePath.startsWith(prefix)) {
+        "Source path is outside the root directory."
+    }
+
+    return sourcePath.removePrefix(prefix)
+}
