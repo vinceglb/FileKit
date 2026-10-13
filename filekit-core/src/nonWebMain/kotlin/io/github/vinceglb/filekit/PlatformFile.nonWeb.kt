@@ -317,27 +317,31 @@ public suspend fun PlatformFile.copyRecursively(
     if(this.isSymbolicLink() || target.isSymbolicLink())
         return
 
-    checkIfValidCopyCombination(
-        source = this,
-        target = target
-    )
+    return withScopedAccess {
+        target.withScopedAccess {
+            checkIfValidCopyCombination(
+                source = this,
+                target = target
+            )
 
-    if(this.isRegularFile()) {
-        this.copyAsSingleFile(
-            target = target,
-            overwrite = overwrite,
-            onFileSkipped = onFileSkipped,
-            onFileAdded = onFileAdded,
-            onFileOverwritten = onFileOverwritten
-        )
-    } else {
-        this.copyAsDirectoryToDirectory(
-            target = target,
-            overwrite = overwrite,
-            onFileSkipped = onFileSkipped,
-            onFileAdded = onFileAdded,
-            onFileOverwritten = onFileOverwritten
-        )
+            if(this.isRegularFile()) {
+                this.copyAsSingleFile(
+                    target = target,
+                    overwrite = overwrite,
+                    onFileSkipped = onFileSkipped,
+                    onFileAdded = onFileAdded,
+                    onFileOverwritten = onFileOverwritten
+                )
+            } else {
+                this.copyAsDirectoryToDirectory(
+                    target = target,
+                    overwrite = overwrite,
+                    onFileSkipped = onFileSkipped,
+                    onFileAdded = onFileAdded,
+                    onFileOverwritten = onFileOverwritten
+                )
+            }
+        }
     }
 }
 
