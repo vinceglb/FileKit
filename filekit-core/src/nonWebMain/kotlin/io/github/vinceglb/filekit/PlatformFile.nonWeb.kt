@@ -4,15 +4,9 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import kotlinx.io.Buffer
-import kotlinx.io.RawSink
-import kotlinx.io.RawSource
-import kotlinx.io.buffered
+import kotlinx.io.*
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemPathSeparator
-import kotlinx.io.readByteArray
-import kotlinx.io.readString
-import kotlinx.io.writeString
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -318,11 +312,75 @@ public suspend fun PlatformFile.copyRecursively(
     overwrite: Boolean = false,
     onFileSkipped: ((PlatformFile) -> Unit)? = null,
     onFileAdded: ((PlatformFile) -> Unit)? = null,
-    onFileRemoved: ((PlatformFile) -> Unit)? = null,
     onFileOverwritten: ((PlatformFile) -> Unit)? = null,
 ) {
-    require(this != target) {
+    if(this.isSymbolicLink() || target.isSymbolicLink())
+        return
+
+    checkIfValidCopyCombination(
+        source = this,
+        target = target
+    )
+
+    if(this.isRegularFile()) {
+        this.copyAsSingleFile(
+            target = target,
+            overwrite = overwrite,
+            onFileSkipped = onFileSkipped,
+            onFileAdded = onFileAdded,
+            onFileOverwritten = onFileOverwritten
+        )
+    } else {
+        this.copyAsDirectoryToDirectory(
+            target = target,
+            overwrite = overwrite,
+            onFileSkipped = onFileSkipped,
+            onFileAdded = onFileAdded,
+            onFileOverwritten = onFileOverwritten
+        )
+    }
+}
+
+private fun checkIfValidCopyCombination(
+    source: PlatformFile,
+    target: PlatformFile,
+) {
+    val targetNotExists = !target.exists()
+
+    val directoryToDirectory = source.isDirectory() && (target.isDirectory() || targetNotExists)
+    val fileToFile = source.isRegularFile() && (target.isRegularFile() || targetNotExists)
+    require(directoryToDirectory || fileToFile) {
+        "The allowed combinations are directory to directory or file to file"
+    }
+    require(source != target) {
         "Target destination must be different from the source"
+    }
+}
+
+private suspend fun PlatformFile.copyAsSingleFile(
+    target: PlatformFile,
+    overwrite: Boolean = false,
+    onFileSkipped: ((PlatformFile) -> Unit)? = null,
+    onFileAdded: ((PlatformFile) -> Unit)? = null,
+    onFileOverwritten: ((PlatformFile) -> Unit)? = null,
+) {
+    val parent = target.parent()
+    parent?.createDirectories()
+
+    this.copyTo(
+        destination = target
+    )
+}
+
+private suspend fun PlatformFile.copyAsDirectoryToDirectory(
+    target: PlatformFile,
+    overwrite: Boolean = false,
+    onFileSkipped: ((PlatformFile) -> Unit)? = null,
+    onFileAdded: ((PlatformFile) -> Unit)? = null,
+    onFileOverwritten: ((PlatformFile) -> Unit)? = null,
+) {
+    require(!target.isDescendantOf(this)) {
+        "The target destination cannot be a descendant of the source"
     }
 
     target.createDirectories()
@@ -347,6 +405,18 @@ public suspend fun PlatformFile.copyRecursively(
     }
 }
 
+private fun PlatformFile.isDescendantOf(
+    file: PlatformFile
+): Boolean {
+    if (this == file)
+        return false
+
+    val parent = this.parent() ?: return false
+    return parent == file || parent.isDescendantOf(
+        file = file
+    )
+}
+
 private fun PlatformFile.asCopyFile(
     root: PlatformFile,
     target: PlatformFile,
@@ -354,14 +424,18 @@ private fun PlatformFile.asCopyFile(
     val relativePath = this.resolveRelativePath(
         root = root
     )
-    val path = "${target.path}$SystemPathSeparator$relativePath"
 
     return PlatformFile(
-        path = path
+        base = target,
+        child = relativePath,
     )
 }
 
-private fun PlatformFile.resolveRelativePath(
+internal expect fun PlatformFile.resolveRelativePath(
+    root: PlatformFile,
+): String
+
+internal fun PlatformFile.resolveRelativePathForFileSystem(
     root: PlatformFile,
 ): String {
     val separator = SystemPathSeparator
