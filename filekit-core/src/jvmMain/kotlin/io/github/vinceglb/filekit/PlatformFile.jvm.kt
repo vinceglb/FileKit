@@ -19,19 +19,9 @@ import kotlinx.io.files.SystemFileSystem
 import kotlinx.serialization.Serializable
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.LinkOption
-import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
-import kotlin.io.path.CopyActionResult
-import kotlin.io.path.CopyActionResult.CONTINUE
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.copyTo
-import kotlin.io.path.copyToRecursively
-import kotlin.io.path.exists
-import kotlin.io.path.isDirectory
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
-import java.nio.file.Path as JavaPath
 
 /**
  * Represents a file on the JVM platform.

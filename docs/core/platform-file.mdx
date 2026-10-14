@@ -104,11 +104,6 @@ val absoluteFile: PlatformFile = file.absoluteFile()
 val mimeType: MimeType? = file.mimeType()
 ```
 
-For filesystem paths, `absoluteFile()` resolves symbolic links and references to
-`.` and `..`, and requires the file or directory to exist. `absolutePath()` returns
-an absolute representation without guaranteeing that those references are resolved.
-For Android content URIs, `absoluteFile()` returns the same URI-backed `PlatformFile`.
-
 On Android, `name` is resolved using provider metadata. For Photo Picker URIs, FileKit performs a best-effort lookup of `MediaStore.MediaColumns.DISPLAY_NAME` when providers return synthetic names (for example `18.jpg`), then falls back to a stable provider/URI-derived name if the original filename is not accessible.
 
 For Android content URIs, `parent()` supports external-storage document trees and preserves access to the selected tree. It returns `null` at the selected directory's root and for other content providers whose parent cannot be determined from the URI. Filesystem paths continue to use normal filesystem parents.
@@ -141,9 +136,6 @@ file.createDirectories()
 // Copy the file to a new location
 file.copyTo(newFile)
 
-// Copy to a final destination, skipping existing destination files by default
-file.copyRecursively(newFile)
-
 // Move the file to a new location
 file.atomicMove(newFile)
 
@@ -171,20 +163,6 @@ file.write(bytes)
 // Write string to the file
 file.writeString(content)
 ```
-
-### Recursive Copying
-
-On non-Web targets, `copyRecursively()` copies a file or directory tree to a final
-destination. A directory's contents go directly under the target without adding
-the source directory's name. For a file, the target includes its destination name.
-
-Existing destination files are skipped by default; pass `overwrite = true` to
-replace them. Existing directories are merged. Optional callbacks report skipped
-source entries and successfully added or overwritten destination files. Errors stop
-the operation without rolling back completed copies.
-
-See [Copying Files and Directories Recursively](/core/write-file#copying-files-and-directories-recursively)
-for examples, callback arguments, conflicts, and platform limitations.
 
 ### Determining MIME types
 

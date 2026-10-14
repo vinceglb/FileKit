@@ -1107,13 +1107,7 @@ private fun Uri.isChildDocumentUri(): Boolean {
     return "tree" in segments && "document" in segments && parentDocumentIdAndNameOrNull() != null
 }
 
-/**
- * Extracts a document ID, using the tree ID for a tree-only URI.
- *
- * @return The provider's document ID, which is not treated as a filesystem path.
- * @throws IllegalArgumentException If this URI is neither a document URI nor a tree URI.
- */
-internal fun Uri.documentId(): String = try {
+private fun Uri.documentId(): String = try {
     DocumentsContract.getDocumentId(this)
 } catch (_: IllegalArgumentException) {
     DocumentsContract.getTreeDocumentId(this)
@@ -1158,8 +1152,7 @@ private data class AndroidDocumentInfo(
     val isDirectory: Boolean = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
 }
 
-/** Columns used to identify, name, and classify documents in child queries. */
-internal val ANDROID_DOCUMENT_INFO_PROJECTION = arrayOf(
+private val ANDROID_DOCUMENT_INFO_PROJECTION = arrayOf(
     DocumentsContract.Document.COLUMN_DOCUMENT_ID,
     DocumentsContract.Document.COLUMN_DISPLAY_NAME,
     DocumentsContract.Document.COLUMN_MIME_TYPE,
