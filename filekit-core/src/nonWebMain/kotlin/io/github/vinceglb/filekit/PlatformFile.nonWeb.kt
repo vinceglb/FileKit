@@ -356,7 +356,7 @@ private fun checkIfValidCopyCombination(
     require(directoryToDirectory || fileToFile) {
         "The allowed combinations are directory to directory or file to file"
     }
-    require(source != target) {
+    require(targetNotExists || source.absoluteFile() != target.absoluteFile()) {
         "Target destination must be different from the source"
     }
 }
@@ -402,6 +402,10 @@ private suspend fun PlatformFile.copyAsDirectoryToDirectory(
         if(sourceFile.isDirectory()) {
             copyFile.createDirectories()
         } else {
+            require(!copyFile.isDirectory()) {
+                "Cannot copy a file over a directory"
+            }
+
             sourceFile.copyTo(
                 destination = copyFile
             )
@@ -416,7 +420,9 @@ private fun PlatformFile.isDescendantOf(
         return false
 
     val parent = this.parent() ?: return false
-    return parent == file || parent.isDescendantOf(
+    val isParentFile = parent.exists() && (parent.absoluteFile() == file.absoluteFile())
+
+    return isParentFile || parent.isDescendantOf(
         file = file
     )
 }
