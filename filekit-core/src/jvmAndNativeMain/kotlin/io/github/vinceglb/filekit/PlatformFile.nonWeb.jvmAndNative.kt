@@ -12,9 +12,7 @@ package io.github.vinceglb.filekit
  * the absolute directory prefix of [root].
  */
 internal actual fun PlatformFile.resolveRelativePath(
-    root: PlatformFile
-): String {
-    return resolveRelativePathForFileSystem(
-        root = root
-    )
-}
+    root: PlatformFile,
+): String = resolveRelativePathForFileSystem(
+    root = root,
+)

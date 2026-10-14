@@ -252,8 +252,15 @@ class PlatformFileCopyRecursivelyAndroidTest {
  * which is the destination profile currently supported by FileKit. Robolectric does not
  * enforce picker permissions, so denied queries are injected at the provider boundary.
  */
-private class CopyDocumentsProvider(private val storage: File) : DocumentsProvider() {
-    private data class Entry(val id: String, val name: String, val parentId: String?, val bytes: File?)
+private class CopyDocumentsProvider(
+    private val storage: File,
+) : DocumentsProvider() {
+    private data class Entry(
+        val id: String,
+        val name: String,
+        val parentId: String?,
+        val bytes: File?,
+    )
 
     private val entries = linkedMapOf<String, Entry>()
     var unreadableDocumentId: String? = null
@@ -313,16 +320,42 @@ private class CopyDocumentsProvider(private val storage: File) : DocumentsProvid
         return MatrixCursor(columns).apply {
             for (entry in selected) {
                 addRow(
-                    columns.map { column ->
-                        if (column == missingColumn) null else when (column) {
-                            Document.COLUMN_DOCUMENT_ID -> entry.id
-                            Document.COLUMN_DISPLAY_NAME -> entry.name
-                            Document.COLUMN_MIME_TYPE -> if (entry.bytes == null) Document.MIME_TYPE_DIR else "application/octet-stream"
-                            Document.COLUMN_SIZE -> entry.bytes?.length() ?: 0L
-                            Document.COLUMN_FLAGS -> Document.FLAG_SUPPORTS_WRITE or Document.FLAG_DIR_SUPPORTS_CREATE
-                            else -> null
-                        }
-                    }.toTypedArray<Any?>(),
+                    columns
+                        .map { column ->
+                            if (column == missingColumn) {
+                                null
+                            } else {
+                                when (column) {
+                                    Document.COLUMN_DOCUMENT_ID -> {
+                                        entry.id
+                                    }
+
+                                    Document.COLUMN_DISPLAY_NAME -> {
+                                        entry.name
+                                    }
+
+                                    Document.COLUMN_MIME_TYPE -> {
+                                        if (entry.bytes == null) {
+                                            Document.MIME_TYPE_DIR
+                                        } else {
+                                            "application/octet-stream"
+                                        }
+                                    }
+
+                                    Document.COLUMN_SIZE -> {
+                                        entry.bytes?.length() ?: 0L
+                                    }
+
+                                    Document.COLUMN_FLAGS -> {
+                                        Document.FLAG_SUPPORTS_WRITE or Document.FLAG_DIR_SUPPORTS_CREATE
+                                    }
+
+                                    else -> {
+                                        null
+                                    }
+                                }
+                            }
+                        }.toTypedArray<Any?>(),
                 )
             }
         }

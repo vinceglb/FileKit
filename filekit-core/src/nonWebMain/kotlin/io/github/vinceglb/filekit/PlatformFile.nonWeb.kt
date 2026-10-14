@@ -4,9 +4,15 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
-import kotlinx.io.*
+import kotlinx.io.Buffer
+import kotlinx.io.RawSink
+import kotlinx.io.RawSource
+import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemPathSeparator
+import kotlinx.io.readByteArray
+import kotlinx.io.readString
+import kotlinx.io.writeString
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -349,7 +355,7 @@ public suspend fun PlatformFile.copyRecursively(
     onFileAdded: ((PlatformFile) -> Unit)? = null,
     onFileOverwritten: ((PlatformFile) -> Unit)? = null,
 ) {
-    if(this.isSymbolicLink() || target.isSymbolicLink()) {
+    if (this.isSymbolicLink() || target.isSymbolicLink()) {
         onFileSkipped?.invoke(this)
         return
     }
@@ -358,16 +364,16 @@ public suspend fun PlatformFile.copyRecursively(
         target.withScopedAccess {
             checkIfValidCopyCombination(
                 source = this,
-                target = target
+                target = target,
             )
 
-            if(this.isRegularFile()) {
+            if (this.isRegularFile()) {
                 this.copyAsSingleFile(
                     target = target,
                     overwrite = overwrite,
                     onFileSkipped = onFileSkipped,
                     onFileAdded = onFileAdded,
-                    onFileOverwritten = onFileOverwritten
+                    onFileOverwritten = onFileOverwritten,
                 )
             } else {
                 this.copyAsDirectoryToDirectory(
@@ -375,7 +381,7 @@ public suspend fun PlatformFile.copyRecursively(
                     overwrite = overwrite,
                     onFileSkipped = onFileSkipped,
                     onFileAdded = onFileAdded,
-                    onFileOverwritten = onFileOverwritten
+                    onFileOverwritten = onFileOverwritten,
                 )
             }
         }
@@ -438,7 +444,7 @@ private suspend fun PlatformFile.copyAsSingleFile(
         overwrite = overwrite,
         onFileSkipped = onFileSkipped,
         onFileAdded = onFileAdded,
-        onFileOverwritten = onFileOverwritten
+        onFileOverwritten = onFileOverwritten,
     )
 }
 
@@ -472,17 +478,17 @@ private suspend fun PlatformFile.copyAsDirectoryToDirectory(
 
     val sourceFiles = this.walk()
     sourceFiles.forEach { sourceFile ->
-        if(sourceFile.isSymbolicLink()) {
+        if (sourceFile.isSymbolicLink()) {
             onFileSkipped?.invoke(sourceFile)
             return@forEach
         }
 
         val copyFile = sourceFile.asCopyFile(
             root = this,
-            target = target
+            target = target,
         )
 
-        if(sourceFile.isDirectory()) {
+        if (sourceFile.isDirectory()) {
             copyFile.createDirectories()
         } else {
             require(!copyFile.isDirectory()) {
@@ -494,7 +500,7 @@ private suspend fun PlatformFile.copyAsDirectoryToDirectory(
                 overwrite = overwrite,
                 onFileSkipped = onFileSkipped,
                 onFileAdded = onFileAdded,
-                onFileOverwritten = onFileOverwritten
+                onFileOverwritten = onFileOverwritten,
             )
         }
     }
@@ -511,16 +517,17 @@ private suspend fun PlatformFile.copyAsDirectoryToDirectory(
  * @return `true` if a matching ancestor is found, or `false` if none can be resolved.
  */
 private fun PlatformFile.isDescendantOf(
-    file: PlatformFile
+    file: PlatformFile,
 ): Boolean {
-    if (this == file)
+    if (this == file) {
         return false
+    }
 
     val parent = this.parent() ?: return false
     val isParentFile = parent.exists() && (parent.absoluteFile() == file.absoluteFile())
 
     return isParentFile || parent.isDescendantOf(
-        file = file
+        file = file,
     )
 }
 
@@ -539,7 +546,7 @@ private fun PlatformFile.asCopyFile(
     target: PlatformFile,
 ): PlatformFile {
     val relativePath = this.resolveRelativePath(
-        root = root
+        root = root,
     )
 
     return PlatformFile(
@@ -615,10 +622,10 @@ private suspend fun PlatformFile.copyTo(
     }
 
     this.copyTo(
-        destination = target
+        destination = target,
     )
 
-    if(targetExists) {
+    if (targetExists) {
         onFileOverwritten?.invoke(target)
     } else {
         onFileAdded?.invoke(target)
