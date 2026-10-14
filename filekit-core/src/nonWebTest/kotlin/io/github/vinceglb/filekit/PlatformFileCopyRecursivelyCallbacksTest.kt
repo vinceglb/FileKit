@@ -7,9 +7,66 @@ import kotlinx.io.files.SystemTemporaryDirectory
 import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class PlatformFileCopyRecursivelyCallbacksTest : PlatformFileTestBase() {
+    @Test
+    fun PlatformFile_copyRecursivelyExistingFileWithoutOverwrite_callsOnlyOnFileSkipped() = runTest {
+        withTemporaryDirectory { root ->
+            val source = root / "source.txt"
+            val target = root / "target.txt"
+            var skippedCalled = false
+            var addedCalled = false
+            var overwrittenCalled = false
+            source.writeString("new content")
+            target.writeString("original content")
+
+            source.copyRecursively(
+                target = target,
+                onFileSkipped = { skippedCalled = true },
+                onFileAdded = { addedCalled = true },
+                onFileOverwritten = { overwrittenCalled = true },
+            )
+
+            assertEquals("original content", target.readString())
+            assertEquals("new content", source.readString())
+            assertTrue(skippedCalled)
+            assertFalse(addedCalled)
+            assertFalse(overwrittenCalled)
+        }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursivelyMixedTreeWithoutOverwrite_callsOnFileSkippedAndOnFileAdded() = runTest {
+        withTemporaryDirectory { root ->
+            val source = root / "source"
+            val target = root / "target"
+            var skippedCalled = false
+            var addedCalled = false
+            var overwrittenCalled = false
+            source.createDirectories()
+            target.createDirectories()
+            (source / "new.txt").writeString("added content")
+            (source / "existing.txt").writeString("source content")
+            (target / "existing.txt").writeString("original content")
+
+            source.copyRecursively(
+                target = target,
+                onFileSkipped = { skippedCalled = true },
+                onFileAdded = { addedCalled = true },
+                onFileOverwritten = { overwrittenCalled = true },
+            )
+
+            assertEquals("added content", (target / "new.txt").readString())
+            assertEquals("original content", (target / "existing.txt").readString())
+            assertEquals("source content", (source / "existing.txt").readString())
+            assertTrue(skippedCalled)
+            assertTrue(addedCalled)
+            assertFalse(overwrittenCalled)
+        }
+    }
+
     @Test
     fun PlatformFile_copyRecursivelyNewFile_callsOnFileAdded() = runTest {
         withTemporaryDirectory { root ->
