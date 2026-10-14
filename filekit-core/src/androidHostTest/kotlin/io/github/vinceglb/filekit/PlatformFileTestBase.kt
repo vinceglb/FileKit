@@ -5,5 +5,5 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [36], shadows = [NoFollowOsShadow::class])
 actual abstract class PlatformFileTestBase actual constructor()

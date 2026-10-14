@@ -90,14 +90,14 @@ class PlatformFileCopyRecursivelyTest : PlatformFileTestBase() {
     }
 
     @Test
-    fun PlatformFile_copyRecursivelyFileWithoutOverwrite_preservesExistingDestinationAndThrows() = runTest {
+    fun PlatformFile_copyRecursivelyFileWithoutOverwrite_skipsAndPreservesExistingDestination() = runTest {
         withTemporaryDirectory { root ->
             val source = root / "source.txt"
             val target = root / "target.txt"
             source.writeString("new content")
             target.writeString("original content")
 
-            assertFails { source.copyRecursively(target) }
+            source.copyRecursively(target)
 
             assertEquals("original content", target.readString())
             assertEquals("new content", source.readString())
@@ -120,7 +120,7 @@ class PlatformFileCopyRecursivelyTest : PlatformFileTestBase() {
     }
 
     @Test
-    fun PlatformFile_copyRecursivelyDirectoryWithoutOverwrite_stopsAtFirstConflict() = runTest {
+    fun PlatformFile_copyRecursivelyDirectoryWithoutOverwrite_preservesAllConflictingFiles() = runTest {
         withTemporaryDirectory { root ->
             val source = root / "source"
             val target = root / "target"
@@ -131,7 +131,7 @@ class PlatformFileCopyRecursivelyTest : PlatformFileTestBase() {
                 (target / name).writeString("original $name")
             }
 
-            assertFails { source.copyRecursively(target) }
+            source.copyRecursively(target)
 
             for (name in listOf("a.txt", "b.txt")) {
                 assertEquals("original $name", (target / name).readString())
@@ -162,7 +162,7 @@ class PlatformFileCopyRecursivelyTest : PlatformFileTestBase() {
     }
 
     @Test
-    fun PlatformFile_copyRecursivelyConflictAfterSuccessfulCopy_keepsPartialDestinationAndStops() = runTest {
+    fun PlatformFile_copyRecursivelyMixedTreeWithoutOverwrite_skipsConflictAndCopiesRemainingFiles() = runTest {
         withTemporaryDirectory { root ->
             val source = root / "source"
             val target = root / "target"
@@ -175,11 +175,11 @@ class PlatformFileCopyRecursivelyTest : PlatformFileTestBase() {
             val conflict = target / files[1].name
             conflict.writeString("original conflict")
 
-            assertFails { source.copyRecursively(target) }
+            source.copyRecursively(target)
 
             assertEquals(files[0].readString(), (target / files[0].name).readString())
             assertEquals("original conflict", conflict.readString())
-            assertFalse((target / files[2].name).exists())
+            assertEquals(files[2].readString(), (target / files[2].name).readString())
             for (file in files) {
                 assertEquals("content ${file.name}", file.readString())
             }
