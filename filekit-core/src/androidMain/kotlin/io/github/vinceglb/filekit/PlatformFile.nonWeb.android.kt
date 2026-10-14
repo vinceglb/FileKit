@@ -21,19 +21,17 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
  */
 internal actual fun PlatformFile.resolveRelativePath(
     root: PlatformFile,
-): String {
-    return when (val file = androidFile) {
-        is AndroidFile.FileWrapper -> {
-            resolveRelativePathForFileSystem(
-                root = root,
-            )
-        }
+): String = when (val file = androidFile) {
+    is AndroidFile.FileWrapper -> {
+        resolveRelativePathForFileSystem(
+            root = root,
+        )
+    }
 
-        is AndroidFile.UriWrapper -> {
-            val rootUri = (root.androidFile as? AndroidFile.UriWrapper)?.uri
-                ?: throw IllegalArgumentException("Root must be a document URI")
-            file.uri.resolveRelativePath(rootUri)
-        }
+    is AndroidFile.UriWrapper -> {
+        val rootUri = (root.androidFile as? AndroidFile.UriWrapper)?.uri
+            ?: throw IllegalArgumentException("Root must be a document URI")
+        file.uri.resolveRelativePath(rootUri)
     }
 }
 
