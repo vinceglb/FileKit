@@ -178,6 +178,25 @@ jobs:
       - name: 🧪 Run Linux Native Tests
         run: dbus-run-session -- ./gradlew linuxX64Test --no-daemon
 
+  test-web:
+    name: 🌐 Test Web
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛎️ Check out repository
+        uses: actions/checkout@v7
+
+      - name: 🍉 Configure JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: 🧪 Run JS and Wasm Browser Tests
+        run: ./gradlew jsBrowserTest wasmJsBrowserTest
+
   test-linux-publications:
     name: Verify Linux publications on macOS
     needs: linux-dbus-headers
@@ -238,7 +257,7 @@ jobs:
     # Keep the existing build check name as the aggregate gate.
     name: 💆‍♀️ Build FileKit
     if: ${{ always() }}
-    needs: [build-modules, test-desktop, test-android, test-ios, test-watchos, test-macos, test-linux, lint]
+    needs: [build-modules, test-desktop, test-android, test-ios, test-watchos, test-macos, test-linux, test-web, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Require every build and test to succeed
