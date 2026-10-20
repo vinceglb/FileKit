@@ -170,6 +170,33 @@ try {
 
 <DownloadFilesWeb/>
 
+## Storing files on web
+
+On web targets, FileKit can write to the browser's
+[origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
+(OPFS), a private storage area for each site. Browser APIs to reach it are asynchronous, so the
+web API uses suspend functions instead of `FileKit.filesDir` and `/`:
+
+```kotlin
+val root = FileKit.originPrivateDirectory()
+val notes = root.directory("notes", create = true)
+val file = notes.file("today.txt", create = true)
+
+file.writeString("Hello, FileKit!")
+println(file.size()) // 15
+println(file.readString())
+
+notes.listEntries() // [today.txt]
+notes.delete(recursively = true)
+```
+
+<Note>
+Only OPFS files can be written or deleted; files returned by browser pickers stay read-only. A file's
+`size()` and `lastModified()` reflect its last FileKit write or the moment it was opened, so changes
+made from another tab show up after you open the file again. OPFS requires a secure context, and
+browsers may clear it under storage pressure unless the app requests persistent storage.
+</Note>
+
 ## Example: Creating a Simple Logger
 
 ```kotlin

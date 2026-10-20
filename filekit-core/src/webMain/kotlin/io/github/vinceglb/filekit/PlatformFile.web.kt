@@ -131,7 +131,7 @@ public actual fun PlatformFile.list(): List<PlatformFile> = when (val file = web
     }
 
     is WebFile.OriginPrivateDirectory -> {
-        throw FileKitException("Origin private file system directories must be listed asynchronously")
+        throw FileKitException("Origin private file system directories must be listed with listEntries()")
     }
 }
 
@@ -193,42 +193,48 @@ private suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers
     }
 }
 
-public actual suspend infix fun PlatformFile.write(bytes: ByteArray) {
-    when (webFile) {
-        is WebFile.OriginPrivateFile -> webFile.write(bytes)
-        else -> throw FileKitException("This file is not a writable origin private file system file")
+/**
+ * Replaces the contents of this origin private file system (OPFS) file with [bytes].
+ *
+ * Only files obtained from [FileKit.originPrivateDirectory] can be written. Files returned by
+ * browser pickers are read-only snapshots.
+ *
+ * @param bytes The bytes to write.
+ */
+public suspend infix fun PlatformFile.write(bytes: ByteArray) {
+    when (val file = webFile) {
+        is WebFile.OriginPrivateFile -> file.write(bytes)
+        else -> throw FileKitException("Only origin private file system files can be written")
     }
 }
 
-public actual suspend fun PlatformFile.writeString(string: String) {
+/**
+ * Replaces the contents of this origin private file system (OPFS) file with [string].
+ *
+ * @param string The string to write.
+ */
+public suspend fun PlatformFile.writeString(string: String) {
     write(string.encodeToByteArray())
 }
 
-@OptIn(ExperimentalWasmJsInterop::class)
-public actual suspend fun PlatformFile.delete(mustExist: Boolean, recursively: Boolean) {
-    when (val file = webFile) {
-        is WebFile.OriginPrivateFile -> {
-            val parent = file.parent
-                ?: throw FileKitException("Cannot delete the origin private file system root")
-            if (mustExist) {
-                parent.handle.removeEntry(file.name).await()
-            } else {
-                runCatching { parent.handle.removeEntry(file.name).await() }
-            }
-        }
-
-        is WebFile.OriginPrivateDirectory -> {
-            val parent = file.parent
-                ?: throw FileKitException("Cannot delete the origin private file system root")
-            if (mustExist) {
-                parent.handle.removeEntry(file.name).await()
-            } else {
-                runCatching { parent.handle.removeEntry(file.name).await() }
-            }
-        }
-
-        else -> {
-            throw FileKitException("This file is not a writable origin private file system entry")
-        }
+/**
+ * Deletes this origin private file system (OPFS) entry.
+ *
+ * @param mustExist If `true`, fails if the entry does not exist. Defaults to `true`.
+ * @param recursively If `true`, a directory is removed with its contents. Defaults to `false`,
+ * which fails on a directory that still has contents.
+ */
+public suspend fun PlatformFile.delete(
+    mustExist: Boolean = true,
+    recursively: Boolean = false,
+) {
+    val (parent, name) = when (val file = webFile) {
+        is WebFile.OriginPrivateFile -> file.parent to file.name
+        is WebFile.OriginPrivateDirectory -> file.parent to file.name
+        else -> throw FileKitException("Only origin private file system entries can be deleted")
     }
+    if (parent == null) {
+        throw FileKitException("Cannot delete the origin private file system root")
+    }
+    parent.removeEntry(name = name, recursively = recursively, mustExist = mustExist)
 }

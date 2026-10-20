@@ -8,18 +8,16 @@ import kotlin.js.JsName
 import kotlin.js.Promise
 
 /**
- * Reads the root directory of the browser's origin private file system (OPFS).
+ * Returns the root directory of the browser's origin private file system (OPFS).
  *
- * The returned [PlatformFile] retains a live OPFS directory handle. Use
- * [listAsync], [file], and
- * [directory] to interact with its entries
- * asynchronously.
+ * OPFS gives each origin a private, persistent storage area that FileKit can read, write, and
+ * delete. Browsers may evict it under storage pressure unless the app requests persistent storage.
+ * It is available only in secure contexts in browsers that implement the File System API.
  *
- * OPFS is available only in secure contexts in browsers that implement the File
- * System API.
+ * Navigate it with [file], [directory], and [listEntries].
  */
 @OptIn(ExperimentalWasmJsInterop::class)
-internal suspend fun PlatformFile.Companion.fromOriginPrivateFileSystem(): PlatformFile {
+public suspend fun FileKit.originPrivateDirectory(): PlatformFile {
     val root = browserNavigator.storage.getDirectory().await()
     return PlatformFile(
         WebFile.OriginPrivateDirectory(
@@ -30,8 +28,47 @@ internal suspend fun PlatformFile.Companion.fromOriginPrivateFileSystem(): Platf
     )
 }
 
+/**
+ * Returns the file named [name] in this origin private file system directory.
+ *
+ * @param create If `true`, creates the file when it does not exist. Otherwise a missing file fails.
+ */
+public suspend fun PlatformFile.file(
+    name: String,
+    create: Boolean = false,
+): PlatformFile = when (val directory = webFile) {
+    is WebFile.OriginPrivateDirectory -> directory.file(name, create)
+    else -> throw FileKitException("Only origin private file system directories can open children")
+}
+
+/**
+ * Returns the directory named [name] in this origin private file system directory.
+ *
+ * @param create If `true`, creates the directory when it does not exist. Otherwise a missing
+ * directory fails.
+ */
+public suspend fun PlatformFile.directory(
+    name: String,
+    create: Boolean = false,
+): PlatformFile = when (val directory = webFile) {
+    is WebFile.OriginPrivateDirectory -> directory.directory(name, create)
+    else -> throw FileKitException("Only origin private file system directories can open children")
+}
+
+/**
+ * Lists the current entries of this directory.
+ *
+ * Works for origin private file system directories, which can only be read asynchronously, and for
+ * directories returned by browser pickers.
+ */
+public suspend fun PlatformFile.listEntries(): List<PlatformFile> = when (val directory = webFile) {
+    is WebFile.OriginPrivateDirectory -> directory.list()
+    is WebFile.DirectoryWrapper -> directory.children.map { it.toPlatformFile() }
+    else -> throw FileKitException("Cannot list a regular file")
+}
+
 @OptIn(ExperimentalWasmJsInterop::class)
-internal suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
+private suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
     val iterator = handle.values()
     val entries = mutableListOf<PlatformFile>()
 
@@ -72,11 +109,10 @@ internal suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
     return entries
 }
 
-/** Returns an OPFS file in this directory, creating it when [create] is true. */
 @OptIn(ExperimentalWasmJsInterop::class)
-internal suspend fun WebFile.OriginPrivateDirectory.file(
+private suspend fun WebFile.OriginPrivateDirectory.file(
     name: String,
-    create: Boolean = false,
+    create: Boolean,
 ): PlatformFile {
     val fileHandle = handle.getFileHandle(name, FileSystemGetHandleOptions(create)).await()
     return PlatformFile(
@@ -89,11 +125,10 @@ internal suspend fun WebFile.OriginPrivateDirectory.file(
     )
 }
 
-/** Returns an OPFS directory in this directory, creating it when [create] is true. */
 @OptIn(ExperimentalWasmJsInterop::class)
-internal suspend fun WebFile.OriginPrivateDirectory.directory(
+private suspend fun WebFile.OriginPrivateDirectory.directory(
     name: String,
-    create: Boolean = false,
+    create: Boolean,
 ): PlatformFile = PlatformFile(
     WebFile.OriginPrivateDirectory(
         handle = handle.getDirectoryHandle(name, FileSystemGetHandleOptions(create)).await(),
@@ -102,16 +137,40 @@ internal suspend fun WebFile.OriginPrivateDirectory.directory(
     ),
 )
 
-/** Replaces the contents of this live OPFS file with [bytes]. */
+/**
+ * Replaces the contents of this file with [bytes], then refreshes its metadata snapshot so that
+ * `size()` and `lastModified()` reflect the write.
+ */
 @OptIn(ExperimentalWasmJsInterop::class)
-public suspend fun WebFile.OriginPrivateFile.write(bytes: ByteArray) {
+internal suspend fun WebFile.OriginPrivateFile.write(bytes: ByteArray) {
     val writable = handle.createWritable().await()
     try {
         writable.write(bytes.toWebBytes()).await()
     } finally {
         writable.close().await()
     }
+    updateSnapshot(handle.getFile().await())
 }
+
+@OptIn(ExperimentalWasmJsInterop::class)
+internal suspend fun WebFile.OriginPrivateDirectory.removeEntry(
+    name: String,
+    recursively: Boolean,
+    mustExist: Boolean,
+) {
+    removeEntry(handle, name, recursively, mustExist).await()
+}
+
+/** Removes an entry; a missing entry fails only when [mustExist] is `true`. */
+@OptIn(ExperimentalWasmJsInterop::class)
+private fun removeEntry(
+    directory: FileSystemDirectoryHandle,
+    name: String,
+    recursive: Boolean,
+    mustExist: Boolean,
+): Promise<JsAny?> = js(
+    "directory.removeEntry(name, { recursive: recursive }).catch(function (error) { if (!mustExist && error.name === 'NotFoundError') return null; throw error; })",
+)
 
 internal fun String.appendOriginPrivateFileSystemPath(child: String): String =
     if (isEmpty()) child else "$this/$child"
@@ -150,8 +209,6 @@ internal external interface FileSystemDirectoryHandle : FileSystemHandle {
     fun getFileHandle(name: String, options: FileSystemGetHandleOptions): Promise<FileSystemFileHandle>
 
     fun getDirectoryHandle(name: String, options: FileSystemGetHandleOptions): Promise<FileSystemDirectoryHandle>
-
-    fun removeEntry(name: String): Promise<JsAny?>
 }
 
 @OptIn(ExperimentalWasmJsInterop::class)

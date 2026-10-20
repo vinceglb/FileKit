@@ -13,13 +13,10 @@ import kotlin.time.Instant
 public sealed class WebFile {
     @OptIn(ExperimentalWasmJsInterop::class)
     public class FileWrapper(
-        file: BrowserFile,
+        public val file: BrowserFile,
         path: String? = file.webkitRelativePath,
         public val parent: DirectoryWrapper? = null,
     ) : WebFile() {
-        public var file: BrowserFile = file
-            internal set
-
         public val path: String = path?.takeIf { it.isNotBlank() } ?: file.name
 
         public val name: String
@@ -48,6 +45,13 @@ public sealed class WebFile {
         public val lastModified: Instant = WEB_DIRECTORY_LAST_MODIFIED
     }
 
+    /**
+     * A file in the origin private file system (OPFS).
+     *
+     * Its metadata comes from a snapshot taken when the file was opened, listed, or last written by
+     * FileKit. Changes made elsewhere, such as in another tab or worker, are visible after the file
+     * is opened again.
+     */
     @OptIn(ExperimentalWasmJsInterop::class)
     public class OriginPrivateFile internal constructor(
         internal val handle: FileSystemFileHandle,
@@ -73,6 +77,7 @@ public sealed class WebFile {
         }
     }
 
+    /** A directory in the origin private file system (OPFS). */
     public class OriginPrivateDirectory internal constructor(
         internal val handle: FileSystemDirectoryHandle,
         public val path: String,
