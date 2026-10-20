@@ -827,7 +827,7 @@ private object UriMetadataResolver {
 }
 
 private fun Uri.toDocumentUriForMetadata(): Uri {
-    if (!isTreeUriCompat()) return this
+    if (!isTreeUri()) return this
 
     val documentId = try {
         DocumentsContract.getDocumentId(this)
@@ -932,7 +932,7 @@ internal fun Uri.listDocuments(): List<PlatformFile> {
 }
 
 private fun Uri.findChildDocumentInfo(): AndroidDocumentInfo? {
-    if (!isTreeUriCompat()) {
+    if (!isTreeUri()) {
         return null
     }
 
@@ -1060,7 +1060,7 @@ private fun Uri.queryDocumentInfos(childrenUri: Uri): List<AndroidDocumentInfo> 
 private fun Uri.parentDocumentUriOrNull(): Uri? {
     // External storage document IDs have the form volume:path.
     // Other providers may use opaque IDs that do not encode a parent.
-    if (!isTreeUriCompat() || authority != "com.android.externalstorage.documents") {
+    if (!isTreeUri() || authority != "com.android.externalstorage.documents") {
         return null
     }
 
@@ -1089,7 +1089,7 @@ private fun Uri.parentDocumentIdAndNameOrNull(): Pair<String, String>? {
         return null
     }
     // The selected tree root has no parent within the grant, even if its ID contains '/'.
-    if (isTreeUriCompat() && documentId == treeDocumentId()) {
+    if (isTreeUri() && documentId == treeDocumentId()) {
         return null
     }
     val parentDocumentId = documentId.substringBeforeLast('/', missingDelimiterValue = "")
@@ -1116,14 +1116,8 @@ private fun Uri.documentId(): String = try {
 private fun Uri.treeDocumentId(): String =
     DocumentsContract.getTreeDocumentId(this)
 
-private fun Uri.isTreeUriCompat(): Boolean {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-        return DocumentsContract.isTreeUri(this)
-    }
-
-    val segments = pathSegments ?: return false
-    return segments.isNotEmpty() && segments[0] == "tree"
-}
+private fun Uri.isTreeUri(): Boolean =
+    DocumentsContract.isTreeUri(this)
 
 private fun getDocumentFile(uri: Uri): DocumentFile? {
     val context = FileKit.context
@@ -1132,7 +1126,7 @@ private fun getDocumentFile(uri: Uri): DocumentFile? {
             DocumentFile.fromSingleUri(context, uri)
         }
 
-        uri.isTreeUriCompat() -> {
+        uri.isTreeUri() -> {
             DocumentFile.fromTreeUri(context, uri)
         }
 

@@ -27,7 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [23, 36], shadows = [NoFollowOsShadow::class])
+@Config(sdk = [24, 36], shadows = [NoFollowOsShadow::class])
 class PlatformFileDeletionTest {
     @Test
     fun PlatformFile_deleteRecursively_links_areUnlinkedWithoutFollowingTargets() = runTest {

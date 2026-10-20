@@ -83,8 +83,8 @@ class PlatformFileParentAndroidTest {
     }
 
     @Test
-    @Config(sdk = [23])
-    fun PlatformFile_parent_childOfNestedSelectionOnApi23_listsSelectedDirectory() {
+    @Config(sdk = [24])
+    fun PlatformFile_parent_childOfNestedSelectionOnApi24_listsSelectedDirectory() {
         val selected = selectTree("primary:Documents/Notes")
         val child = selected.list().single { it.name == "Drafts" }
 
