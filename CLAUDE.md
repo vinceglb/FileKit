@@ -56,7 +56,7 @@ Tests are organized by platform with shared test resources in `nonWebTest/resour
 ## Development Notes
 
 - Uses explicit API mode (`explicitApi()`)
-- Supports Android (minSdk 21), iOS, macOS, JVM, JS, and WASM
+- Supports Android (minSdk 24), iOS, macOS, JVM, JS, and WASM
 - Version managed in `gradle.properties` (VERSION_NAME=0.16.0)
 - Uses Gradle version catalogs in `gradle/libs.versions.toml`
 

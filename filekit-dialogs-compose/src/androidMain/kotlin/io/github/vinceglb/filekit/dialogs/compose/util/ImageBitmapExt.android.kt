@@ -3,7 +3,6 @@ package io.github.vinceglb.filekit.dialogs.compose.util
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.os.Build
 import androidx.annotation.IntRange
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -70,40 +69,25 @@ private fun PlatformFile.decodeBitmap(): Bitmap = when (val androidFile = androi
     }
 }
 
-private fun PlatformFile.getExifOrientation(): Int {
-    return try {
-        when (val androidFile = androidFile) {
-            is AndroidFile.FileWrapper -> {
-                ExifInterface(absolutePath())
-            }
+private fun PlatformFile.getExifOrientation(): Int = try {
+    when (val androidFile = androidFile) {
+        is AndroidFile.FileWrapper -> {
+            ExifInterface(absolutePath())
+        }
 
-            is AndroidFile.UriWrapper -> {
-                FileKit.context.contentResolver
-                    .openInputStream(androidFile.uri)
-                    ?.use { inputStream ->
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            ExifInterface(inputStream)
-                        } else {
-                            // Before API 24, ExifInterface didn't support InputStream.
-                            // We need the file path, which might not be available for all URIs.
-                            // Attempting to get path; fallback to default orientation if unavailable.
-                            val path = androidFile.uri.path // This might be null or inaccurate
-                            if (path != null) {
-                                ExifInterface(path)
-                            } else {
-                                // Cannot determine orientation from URI on older APIs without a direct path
-                                return ExifInterface.ORIENTATION_NORMAL // Or throw? Return default for now.
-                            }
-                        }
-                    }
-                    ?: throw IOException("Could not open InputStream for URI to read EXIF: ${androidFile.uri}")
-            }
-        }.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-    } catch (e: Exception) {
-        // Log error or handle it as needed
-        println("Error reading EXIF data: ${e.message}")
-        ExifInterface.ORIENTATION_NORMAL // Fallback to default orientation in case of error
-    }
+        is AndroidFile.UriWrapper -> {
+            FileKit.context.contentResolver
+                .openInputStream(androidFile.uri)
+                ?.use { inputStream ->
+                    ExifInterface(inputStream)
+                }
+                ?: throw IOException("Could not open InputStream for URI to read EXIF: ${androidFile.uri}")
+        }
+    }.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+} catch (e: Exception) {
+    // Log error or handle it as needed
+    println("Error reading EXIF data: ${e.message}")
+    ExifInterface.ORIENTATION_NORMAL // Fallback to default orientation in case of error
 }
 
 private fun rotateBitmapIfRequired(bitmap: Bitmap, orientation: Int): Bitmap {

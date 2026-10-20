@@ -425,8 +425,8 @@ class PlatformFileAndroidTest {
     }
 
     @Test
-    @Config(sdk = [23])
-    fun PlatformFile_exists_bookmarkedTreeUriOnApi23_returnsTrue() {
+    @Config(sdk = [24])
+    fun PlatformFile_exists_bookmarkedTreeUriOnApi24_returnsTrue() {
         val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
         ShadowContentResolver.registerProviderInternal(
             "com.android.externalstorage.documents",
@@ -455,8 +455,8 @@ class PlatformFileAndroidTest {
     }
 
     @Test
-    @Config(sdk = [23])
-    fun PlatformFile_fromBookmarkData_bookmarkedTreeUriOnApi23_restoresAccessibleFile() {
+    @Config(sdk = [24])
+    fun PlatformFile_fromBookmarkData_bookmarkedTreeUriOnApi24_restoresAccessibleFile() {
         val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
         ShadowContentResolver.registerProviderInternal(
             "com.android.externalstorage.documents",
