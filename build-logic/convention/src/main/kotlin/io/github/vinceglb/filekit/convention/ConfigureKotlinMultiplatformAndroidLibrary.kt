@@ -2,6 +2,7 @@ package io.github.vinceglb.filekit.convention
 
 import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryExtension
 import org.gradle.api.Project
+import org.gradle.api.tasks.testing.Test
 
 @Suppress("ktlint:standard:chain-method-continuation")
 internal fun Project.configureKotlinMultiplatformAndroidLibrary(
@@ -21,4 +22,11 @@ internal fun Project.configureKotlinMultiplatformAndroidLibrary(
 
     // Add Android Unit tests
     withHostTest {}
+
+    // Robolectric 4.17+ (SDK 36) reads FileDescriptor internals through jdk.internal.access
+    tasks.withType(Test::class.java).configureEach {
+        if (name.contains("AndroidHostTest")) {
+            jvmArgs("--add-exports=java.base/jdk.internal.access=ALL-UNNAMED")
+        }
+    }
 }
