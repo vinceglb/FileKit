@@ -183,13 +183,13 @@ jobs:
     needs: linux-dbus-headers
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v6
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: linux-dbus-headers
           path: build/dbus-headers

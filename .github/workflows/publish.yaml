@@ -28,7 +28,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v6
 
       - name: Download Linux D-Bus headers
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-dbus-headers
           path: build/dbus-headers
