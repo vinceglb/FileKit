@@ -201,7 +201,8 @@ change in a future release.
 </Warning>
 
 <Note>
-Only OPFS files can be written or deleted; files returned by browser pickers stay read-only. A file's
+Only OPFS files can be written, and only OPFS files and directories (other than the root) can be
+deleted; files returned by browser pickers stay read-only. A file's
 `size()` and `lastModified()` reflect its last FileKit write or the moment it was resolved, so changes
 made from another tab show up after you resolve the file again. OPFS requires a secure context, and
 browsers may clear it under storage pressure unless the app requests persistent storage.
