@@ -170,6 +170,64 @@ try {
 
 <DownloadFilesWeb/>
 
+## Storing files on web
+
+<Check>Supported on JS and WASM targets</Check>
+
+On the web, FileKit stores files in the browser's
+[origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
+(OPFS): a private storage space for your site, hidden from the user and from other sites.
+
+<Warning>
+This API is experimental. Opt in with `@OptIn(ExperimentalFileKitApi::class)`. Its signatures may
+change in a future release.
+</Warning>
+
+### Getting a file
+
+Browsers can't open a file from a path the way `FileKit.filesDir / "notes/today.txt"` does on other
+platforms. Ask `FileKit.originPrivateDir` for it instead:
+
+```kotlin
+// Creates the file, and the "notes" directory, if they don't exist
+val file = FileKit.originPrivateDir.resolveFile("notes/today.txt", create = true)
+
+// Without create = true, a missing file throws an exception
+val existing = FileKit.originPrivateDir.resolveFile("notes/today.txt")
+```
+
+`resolveDirectory` works the same way for directories.
+
+### Reading and writing
+
+Once you have the file, read and write it as on other platforms:
+
+```kotlin
+file.writeString("Hello, FileKit!")
+val text = file.readString()
+```
+
+### Listing and deleting
+
+```kotlin
+val notes = FileKit.originPrivateDir.resolveDirectory("notes")
+
+val entries = notes.listEntries() // list() can't read OPFS directories
+notes.delete(recursively = true)
+```
+
+### Good to know
+
+- Only files and directories from `FileKit.originPrivateDir` can be written or deleted. Files from
+  pickers stay read-only, and the root directory itself can't be deleted.
+- `size()` and `lastModified()` are up to date after each FileKit write. If another tab changes a
+  file, resolve it again to see the change.
+- OPFS only works on HTTPS pages and local addresses such as `localhost` or `127.0.0.1`.
+- Browsers may clear OPFS when the device runs low on storage. To prevent this, request persistent
+  storage with
+  [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist):
+  the data is protected only if it returns `true`, as the browser can refuse.
+
 ## Example: Creating a Simple Logger
 
 ```kotlin
