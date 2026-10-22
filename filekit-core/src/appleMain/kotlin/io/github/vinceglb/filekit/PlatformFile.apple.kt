@@ -437,11 +437,30 @@ private fun NSError?.toBookmarkResolutionException(): BookmarkResolutionExceptio
 @OptIn(ExperimentalForeignApi::class)
 internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     val path = nsUrl.path ?: return false
-    val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
-    if (attributes?.get(NSFileType) != NSFileTypeSymbolicLink) return false
+    if (!isSymbolicLink()) {
+        return false
+    }
 
     if (unlink(path) != 0) {
         throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
     }
     return true
+}
+
+public actual suspend fun PlatformFile?.sizeRecursively(): Long {
+    if (this == null) {
+        return -1L
+    }
+
+    return withScopedAccess {
+        withContext(Dispatchers.IO) {
+            sizeRecursivelyImpl()
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+public actual fun PlatformFile.isSymbolicLink(): Boolean = withScopedAccess {
+    val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
+    attributes?.get(NSFileType) == NSFileTypeSymbolicLink
 }

@@ -1107,7 +1107,13 @@ private fun Uri.isChildDocumentUri(): Boolean {
     return "tree" in segments && "document" in segments && parentDocumentIdAndNameOrNull() != null
 }
 
-private fun Uri.documentId(): String = try {
+/**
+ * Extracts a document ID, using the tree ID for a tree-only URI.
+ *
+ * @return The provider's document ID, which is not treated as a filesystem path.
+ * @throws IllegalArgumentException If this URI is neither a document URI nor a tree URI.
+ */
+internal fun Uri.documentId(): String = try {
     DocumentsContract.getDocumentId(this)
 } catch (_: IllegalArgumentException) {
     DocumentsContract.getTreeDocumentId(this)
@@ -1146,7 +1152,8 @@ private data class AndroidDocumentInfo(
     val isDirectory: Boolean = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
 }
 
-private val ANDROID_DOCUMENT_INFO_PROJECTION = arrayOf(
+/** Columns used to identify, name, and classify documents in child queries. */
+internal val ANDROID_DOCUMENT_INFO_PROJECTION = arrayOf(
     DocumentsContract.Document.COLUMN_DOCUMENT_ID,
     DocumentsContract.Document.COLUMN_DISPLAY_NAME,
     DocumentsContract.Document.COLUMN_MIME_TYPE,
@@ -1164,13 +1171,9 @@ private fun Uri.toFileOrNull(): File? {
 // lstat/remove work on API 21 and operate on the link itself, including a dangling link.
 internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
     val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
-    val metadata = try {
-        Os.lstat(file.absolutePath)
-    } catch (error: ErrnoException) {
-        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
-        throw IOException("Could not inspect ${file.absolutePath}", error)
+    if (!isSymbolicLink()) {
+        return false
     }
-    if (!OsConstants.S_ISLNK(metadata.st_mode)) return false
 
     try {
         Os.remove(file.absolutePath)
@@ -1178,4 +1181,19 @@ internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
         throw IOException("Could not unlink ${file.absolutePath}", error)
     }
     return true
+}
+
+public actual suspend fun PlatformFile?.sizeRecursively(): Long = withContext(Dispatchers.IO) {
+    sizeRecursivelyImpl()
+}
+
+public actual fun PlatformFile.isSymbolicLink(): Boolean {
+    val file = (androidFile as? AndroidFile.FileWrapper)?.file ?: return false
+    val metadata = try {
+        Os.lstat(file.absolutePath)
+    } catch (error: ErrnoException) {
+        if (error.errno == OsConstants.ENOENT || error.errno == OsConstants.ENOTDIR) return false
+        throw IOException("Could not inspect ${file.absolutePath}", error)
+    }
+    return OsConstants.S_ISLNK(metadata.st_mode)
 }

@@ -104,6 +104,11 @@ val absoluteFile: PlatformFile = file.absoluteFile()
 val mimeType: MimeType? = file.mimeType()
 ```
 
+For filesystem paths, `absoluteFile()` resolves symbolic links and references to
+`.` and `..`, and requires the file or directory to exist. `absolutePath()` returns
+an absolute representation without guaranteeing that those references are resolved.
+For Android content URIs, `absoluteFile()` returns the same URI-backed `PlatformFile`.
+
 On Android, `name` is resolved using provider metadata. For Photo Picker URIs, FileKit performs a best-effort lookup of `MediaStore.MediaColumns.DISPLAY_NAME` when providers return synthetic names (for example `18.jpg`), then falls back to a stable provider/URI-derived name if the original filename is not accessible.
 
 For Android content URIs, `parent()` supports external-storage document trees and preserves access to the selected tree. It returns `null` at the selected directory's root and for other content providers whose parent cannot be determined from the URI. Filesystem paths continue to use normal filesystem parents.
@@ -124,6 +129,9 @@ val isFile: Boolean = file.isRegularFile()
 // Check if it's a directory
 val isDirectory: Boolean = file.isDirectory()
 
+// Check if it's a symbolic link
+val isSymbolicLink: Boolean = file.isSymbolicLink()
+
 // Check if it's an absolute path
 val isAbsolute: Boolean = file.isAbsolute()
 
@@ -132,6 +140,9 @@ file.createDirectories()
 
 // Copy the file to a new location
 file.copyTo(newFile)
+
+// Copy to a final destination, skipping existing destination files by default
+file.copyRecursively(newFile)
 
 // Move the file to a new location
 file.atomicMove(newFile)
@@ -161,6 +172,20 @@ file.write(bytes)
 file.writeString(content)
 ```
 
+### Recursive Copying
+
+On non-Web targets, `copyRecursively()` copies a file or directory tree to a final
+destination. A directory's contents go directly under the target without adding
+the source directory's name. For a file, the target includes its destination name.
+
+Existing destination files are skipped by default; pass `overwrite = true` to
+replace them. Existing directories are merged. Optional callbacks report skipped
+source entries and successfully added or overwritten destination files. Errors stop
+the operation without rolling back completed copies.
+
+See [Copying Files and Directories Recursively](/core/write-file#copying-files-and-directories-recursively)
+for examples, callback arguments, conflicts, and platform limitations.
+
 ### Determining MIME types
 
 Use `mimeType()` to ask the underlying platform for the best-known media type. It returns `null` when the value is unknown (for example, directories or proprietary containers).
@@ -171,6 +196,14 @@ Use `mimeType()` to ask the underlying platform for the best-known media type. I
 - **Kotlin/Native Linux**: FileKit matches the filename against the system shared MIME database, with `/etc/mime.types` as a fallback.
 
 This utility is helpful when you need to validate file types, populate upload headers, or customise previews based on content.
+
+### Detecting symbolic links
+
+`isSymbolicLink()` inspects the entry itself without following its target. It returns `true` for a dangling symbolic link and `false` for a missing path.
+
+On Windows, this check includes all reparse points, such as directory junctions and cloud placeholders. On JS/WASM and Android content URIs, it always returns `false` because these representations do not expose filesystem links.
+
+If filesystem metadata cannot be read, Android filesystem paths, Kotlin/Native Linux, and Windows propagate an `IOException`. Apple platforms and non-Windows JVM platforms return `false` for metadata inspection failures.
 
 ## Working with directories
 
@@ -190,6 +223,46 @@ val file2 = baseDir.resolve("subdirectory/file.txt")
 val relativeDir = PlatformFile("/path/to/relative")
 val absoluteDir: PlatformFile = relativeDir.absoluteFile()
 ```
+
+### Recursive traversal
+
+Use `walk()` to enumerate files and subdirectories lazily in depth-first order. The starting directory is excluded, while a regular file produces a sequence containing that file. `maxDepth = 1` includes only immediate children:
+
+```kotlin
+val directory = PlatformFile("/path/to/base")
+
+directory.walk(maxDepth = 2).forEach { entry ->
+    println(entry.path)
+}
+```
+
+Links inside a directory appear in the sequence, but linked directories are not traversed. This prevents cycles through links back to an ancestor. Calling `walk()` directly on a symbolic link returns an empty sequence. On Windows, the same rules apply to junctions and other reparse points.
+
+A null receiver or non-positive `maxDepth` produces an empty sequence. A missing path throws `IllegalStateException`.
+
+<Note>
+On Apple platforms, keep security-scoped access active while creating and consuming the sequence. Consume it inside the block rather than returning a lazy sequence from it:
+
+```kotlin
+val entries = directory.withScopedAccess { file ->
+    file.walk().toList()
+}
+```
+</Note>
+
+### Recursive file size
+
+Use the suspending `sizeRecursively()` function to sum the known file sizes in a directory tree:
+
+```kotlin
+val totalBytes: Long = directory.sizeRecursively()
+```
+
+Directory metadata sizes are excluded, and entries with unknown sizes are ignored. Empty directories return `0L`. A null receiver returns `-1L`; a regular file returns its own size, including `-1L` when unknown.
+
+Linked directories and Windows junctions are not traversed; calling `sizeRecursively()` on a linked directory returns `0L`. Links to regular files contribute the target's size, even if the target is also present elsewhere in the tree. Dangling links contribute no size.
+
+On non-Web targets, size calculation runs on the IO dispatcher. Apple platforms maintain security-scoped access throughout the calculation. JS/WASM traverses the virtual directory tree supplied by the browser.
 
 ## Converting to kotlinx-io
 
