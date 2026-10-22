@@ -222,10 +222,11 @@ notes.delete(recursively = true)
   pickers stay read-only, and the root directory itself can't be deleted.
 - `size()` and `lastModified()` are up to date after each FileKit write. If another tab changes a
   file, resolve it again to see the change.
-- OPFS only works on HTTPS pages and `localhost`.
-- Browsers may clear OPFS when the device runs low on storage, unless your app requests persistent
+- OPFS only works on HTTPS pages and local addresses such as `localhost` or `127.0.0.1`.
+- Browsers may clear OPFS when the device runs low on storage. To prevent this, request persistent
   storage with
-  [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist).
+  [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist):
+  the data is protected only if it returns `true`, as the browser can refuse.
 
 ## Example: Creating a Simple Logger
 

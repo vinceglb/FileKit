@@ -60,7 +60,8 @@ val file = PlatformFile(nsUrl)
 val file = FileKit.openFilePicker()
 val directory = FileKit.openDirectoryPicker()
 
-// ...or from the browser's private storage (see "Storing files on web")
+// ...or from the browser's private storage (see "Storing files on web").
+// This API is experimental and requires @OptIn(ExperimentalFileKitApi::class).
 val stored = FileKit.originPrivateDir.resolveFile("notes/today.txt")
 ```
 </CodeGroup>
