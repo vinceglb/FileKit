@@ -172,41 +172,60 @@ try {
 
 ## Storing files on web
 
-On web targets, FileKit can write to the browser's
+<Check>Supported on JS and WASM targets</Check>
+
+On the web, FileKit stores files in the browser's
 [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
-(OPFS), a private storage area for each site. The browser only hands out entries asynchronously, so
-instead of `FileKit.filesDir / "notes/today.txt"`, you resolve entries with suspend functions:
-
-```kotlin
-@OptIn(ExperimentalFileKitApi::class)
-suspend fun saveNote() {
-    val file = FileKit.originPrivateDir.resolveFile("notes/today.txt", create = true)
-
-    file.writeString("Hello, FileKit!")
-    println(file.size()) // 15
-    println(file.readString())
-
-    val notes = FileKit.originPrivateDir.resolveDirectory("notes")
-    notes.listEntries() // [notes/today.txt]
-    notes.delete(recursively = true)
-}
-```
-
-`resolveFile` and `resolveDirectory` accept a path relative to the directory. With `create = true`,
-they create the entry and any missing parent directories; otherwise a missing entry fails.
+(OPFS): a private storage space for your site, hidden from the user and from other sites.
 
 <Warning>
-This API is experimental: opt in with `@OptIn(ExperimentalFileKitApi::class)`. Its signatures may
+This API is experimental. Opt in with `@OptIn(ExperimentalFileKitApi::class)`. Its signatures may
 change in a future release.
 </Warning>
 
-<Note>
-Only OPFS files can be written, and only OPFS files and directories (other than the root) can be
-deleted; files returned by browser pickers stay read-only. A file's
-`size()` and `lastModified()` reflect its last FileKit write or the moment it was resolved, so changes
-made from another tab show up after you resolve the file again. OPFS requires a secure context, and
-browsers may clear it under storage pressure unless the app requests persistent storage.
-</Note>
+### Getting a file
+
+Browsers can't open a file from a path the way `FileKit.filesDir / "notes/today.txt"` does on other
+platforms. Ask `FileKit.originPrivateDir` for it instead:
+
+```kotlin
+// Creates the file, and the "notes" directory, if they don't exist
+val file = FileKit.originPrivateDir.resolveFile("notes/today.txt", create = true)
+
+// Without create = true, a missing file throws an exception
+val existing = FileKit.originPrivateDir.resolveFile("notes/today.txt")
+```
+
+`resolveDirectory` works the same way for directories.
+
+### Reading and writing
+
+Once you have the file, read and write it as on other platforms:
+
+```kotlin
+file.writeString("Hello, FileKit!")
+val text = file.readString()
+```
+
+### Listing and deleting
+
+```kotlin
+val notes = FileKit.originPrivateDir.resolveDirectory("notes")
+
+val entries = notes.listEntries() // list() can't read OPFS directories
+notes.delete(recursively = true)
+```
+
+### Good to know
+
+- Only files and directories from `FileKit.originPrivateDir` can be written or deleted. Files from
+  pickers stay read-only, and the root directory itself can't be deleted.
+- `size()` and `lastModified()` are up to date after each FileKit write. If another tab changes a
+  file, resolve it again to see the change.
+- OPFS only works on HTTPS pages and `localhost`.
+- Browsers may clear OPFS when the device runs low on storage, unless your app requests persistent
+  storage with
+  [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist).
 
 ## Example: Creating a Simple Logger
 

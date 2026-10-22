@@ -56,9 +56,12 @@ val file = PlatformFile(nsUrl)
 ```
 
 ```kotlin JS/WASM
-// Web files and virtual directories are provided by FileKit pickers.
+// Web files come from FileKit pickers...
 val file = FileKit.openFilePicker()
 val directory = FileKit.openDirectoryPicker()
+
+// ...or from the browser's private storage (see "Storing files on web")
+val stored = FileKit.originPrivateDir.resolveFile("notes/today.txt")
 ```
 </CodeGroup>
 
