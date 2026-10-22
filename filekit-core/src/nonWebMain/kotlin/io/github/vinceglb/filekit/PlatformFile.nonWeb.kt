@@ -114,6 +114,9 @@ public actual suspend fun PlatformFile.readString(): String =
             .use { it.readString() }
     }
 
+public actual suspend fun PlatformFile.sizeRecursively(): Long =
+    withContext(Dispatchers.IO) { computeSizeRecursively() }
+
 /**
  * Writes the given bytes to this file.
  *

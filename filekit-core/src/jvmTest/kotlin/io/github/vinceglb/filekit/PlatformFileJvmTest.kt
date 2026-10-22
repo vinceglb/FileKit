@@ -43,6 +43,33 @@ class PlatformFileJvmTest {
         }
     }
 
+    @Test
+    fun PlatformFile_walk_symbolicLinks_areNotFollowed() = runTest {
+        val tempRoot = createTempDirectory("filekit-walk-cycle")
+        try {
+            val outside = tempRoot.resolve("outside").createDirectory()
+            outside.resolve("big.txt").writeText("not counted")
+            val tree = tempRoot.resolve("tree").createDirectory()
+            tree.resolve("file.txt").writeText("abc")
+            Files.createSymbolicLink(tree.resolve("loop"), tree)
+            Files.createSymbolicLink(tree.resolve("link.txt"), outside.resolve("big.txt"))
+
+            val root = PlatformFile(tree.toFile())
+
+            assertEquals(setOf("file.txt", "loop", "link.txt"), root.walk().map { it.name }.toSet())
+            assertEquals(3L, root.sizeRecursively())
+
+            // A link passed as the receiver is not followed either.
+            for (name in listOf("loop", "link.txt")) {
+                val link = PlatformFile(tree.resolve(name).toFile())
+                assertEquals(listOf(name), link.walk().map { it.name }.toList())
+                assertEquals(0L, link.sizeRecursively())
+            }
+        } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
     private val resourceDirectory = PlatformFile(Path("src/nonWebTest/resources"))
     private val textFile = PlatformFile(resourceDirectory, "hello.txt")
     private val imageFile = PlatformFile(resourceDirectory, "compose-logo.png")

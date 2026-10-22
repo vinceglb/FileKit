@@ -244,15 +244,23 @@ private fun FILETIME.toInstant(): Instant {
 // Windows models symlinks and junctions as reparse points, and GetFileAttributesW reports on the
 // entry itself rather than on whatever it redirects to.
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
-    val path = absolutePath()
+private fun reparsePointAttributesOrNull(path: String): UInt? {
     val attributes = GetFileAttributesW(path)
     if (attributes == INVALID_FILE_ATTRIBUTES) {
         val error = GetLastError()
-        if (error == ERROR_FILE_NOT_FOUND.toUInt() || error == ERROR_PATH_NOT_FOUND.toUInt()) return false
+        if (error == ERROR_FILE_NOT_FOUND.toUInt() || error == ERROR_PATH_NOT_FOUND.toUInt()) return null
         throw IOException("Could not inspect $path: Windows error $error")
     }
-    if ((attributes and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) == 0u) return false
+    return attributes.takeIf { (it and FILE_ATTRIBUTE_REPARSE_POINT.toUInt()) != 0u }
+}
+
+internal actual fun PlatformFile.isSymbolicLink(): Boolean =
+    reparsePointAttributesOrNull(absolutePath()) != null
+
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    val path = absolutePath()
+    val attributes = reparsePointAttributesOrNull(path) ?: return false
 
     val removed = if ((attributes and FILE_ATTRIBUTE_DIRECTORY.toUInt()) != 0u) {
         RemoveDirectoryW(path)

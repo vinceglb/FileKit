@@ -195,6 +195,24 @@ val relativeDir = PlatformFile("/path/to/relative")
 val absoluteDir: PlatformFile = relativeDir.absoluteFile()
 ```
 
+### Walking a directory tree
+
+`walk()` lazily yields every file and subdirectory below a directory, depth-first, without the directory itself. `sizeRecursively()` returns the total size of the regular files in the tree:
+
+```kotlin
+val fileCount = directory.walk().count { it.isRegularFile() }
+val children = directory.walk(maxDepth = 1).toList() // like list()
+val totalBytes: Long = directory.sizeRecursively()
+```
+
+- Symbolic links are listed but never followed, so a link can't cause an infinite loop. They add nothing to `sizeRecursively()`. This also applies when you call either function on a link.
+- On a regular file, `walk()` yields only that file and `sizeRecursively()` returns its size. `maxDepth` must be positive.
+- `walk()` is synchronous, like `list()`: on non-web platforms, iterate it on `Dispatchers.IO`. `sizeRecursively()` is a suspend function that switches to `Dispatchers.IO` itself on non-web platforms.
+- **Android**: each subdirectory of a document tree costs provider queries, so large trees are slow. Files whose provider doesn't report a size count as 0.
+- **Apple platforms**: keep security-scoped access to the root active while iterating `walk()`, for example inside `withScopedAccess { }`.
+- **Windows**: every reparse point counts as a link, including directory junctions and OneDrive Files On-Demand folders. `walk()` lists such a folder without its contents, and `sizeRecursively()` doesn't count them.
+- **Web**: works on directories picked with the directory picker, whose tree is already in memory. Both functions run on the caller's dispatcher. Origin private file system directories aren't supported.
+
 ## Converting to kotlinx-io
 
 `PlatformFile` provides built-in integration with [kotlinx-io](https://github.com/Kotlin/kotlinx-io).
