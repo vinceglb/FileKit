@@ -30,9 +30,11 @@ import org.robolectric.shadows.ShadowContentResolver
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileNotFoundException
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertIsNot
@@ -187,6 +189,71 @@ class PlatformFileAndroidTest {
 
         assertEquals(listOf("Notes", "note.txt", "parent-only.txt"), base.walk().map { it.name }.toList())
         assertEquals(0L, base.sizeRecursively())
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_localTreeToUriTree_createsNestedDocuments() = runBlocking {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val target = PlatformFile(treeUri) / "Backup"
+        val source = PlatformFile(createTempDirectory("filekit-copy-source").toFile())
+        try {
+            (source / "Nested").createDirectories()
+            (source / "Nested" / "deep.txt").writeString("deep")
+            (source / "top.txt").writeString("top")
+
+            source.copyRecursively(target)
+
+            assertEquals(setOf("Nested", "deep.txt", "top.txt"), target.walk().map { it.name }.toSet())
+            assertEquals("deep", (target / "Nested" / "deep.txt").readString())
+            assertEquals("top", (target / "top.txt").readString())
+        } finally {
+            source.delete(mustExist = false, recursively = true)
+        }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_sameDocumentThroughAnotherTree_throws() = runBlocking<Unit> {
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val documents = PlatformFile(
+            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments"),
+        )
+        val notes = PlatformFile(
+            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FNotes"),
+        )
+
+        assertFailsWith<FileKitException> {
+            (documents / "Notes" / "note.txt").copyRecursively(notes / "note.txt", overwrite = true)
+        }
+        assertFailsWith<FileKitException> { documents.copyRecursively(notes / "copy") }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_unsafeProviderNames_throwBeforeWriting() = runBlocking {
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val root = PlatformFile(createTempDirectory("filekit-copy-untrusted").toFile())
+        try {
+            // A name that would escape the target, then two siblings with the same name.
+            for (tree in listOf("Untrusted", "Duplicates")) {
+                val source = PlatformFile(
+                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3A$tree"),
+                )
+                assertFailsWith<FileKitException> { source.copyRecursively(root / tree, overwrite = true) }
+                assertFalse((root / tree).exists())
+            }
+            assertFalse((root / "escape.txt").exists())
+        } finally {
+            root.delete(mustExist = false, recursively = true)
+        }
     }
 
     @Test
@@ -508,6 +575,7 @@ private class NullInsertContentProvider : ContentProvider() {
 }
 
 private class NestedTreeContentProvider : ContentProvider() {
+    private val contents = mutableMapOf<String, File>()
     private val documents = mutableMapOf(
         "primary:Documents" to TestDocument("primary:Documents", "Documents", true),
         "primary:Documents/Notes" to TestDocument("primary:Documents/Notes", "Notes", true),
@@ -517,6 +585,11 @@ private class NestedTreeContentProvider : ContentProvider() {
             false,
         ),
         "primary:Documents/Notes/note.txt" to TestDocument("primary:Documents/Notes/note.txt", "note.txt", false),
+        "primary:Untrusted" to TestDocument("primary:Untrusted", "Untrusted", true),
+        "primary:Untrusted/evil.txt" to TestDocument("primary:Untrusted/evil.txt", "../escape.txt", false),
+        "primary:Duplicates" to TestDocument("primary:Duplicates", "Duplicates", true),
+        "primary:Duplicates/1" to TestDocument("primary:Duplicates/1", "same.txt", false),
+        "primary:Duplicates/2" to TestDocument("primary:Duplicates/2", "same.txt", false),
         "primary:Download/bonjour/document.pdf" to TestDocument(
             "primary:Download/bonjour/document.pdf",
             "document.pdf",
@@ -579,6 +652,13 @@ private class NestedTreeContentProvider : ContentProvider() {
         return Bundle().apply {
             putParcelable(DOCUMENTS_CONTRACT_EXTRA_URI, uri)
         }
+    }
+
+    override fun openFile(uri: Uri, mode: String): ParcelFileDescriptor {
+        val file = contents.getOrPut(DocumentsContract.getDocumentId(uri)) {
+            File.createTempFile("filekit-document-", ".bin").apply { deleteOnExit() }
+        }
+        return ParcelFileDescriptor.open(file, ParcelFileDescriptor.parseMode(mode))
     }
 
     override fun getType(uri: Uri): String? = null

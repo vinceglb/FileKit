@@ -187,6 +187,111 @@ public suspend infix fun PlatformFile.copyTo(destination: PlatformFile) {
     resolvedDestination write this
 }
 
+/**
+ * Copies this file or directory tree to [target], which becomes the new root (`source/a.txt` is
+ * copied to `target/a.txt`). Missing parent directories are created and existing directories are
+ * merged. Runs on `Dispatchers.IO`.
+ *
+ * Fails on the first error, leaving [target] partially copied. Symbolic links (and Windows reparse
+ * points) inside the tree are skipped, never followed; copying a link itself throws, as does copying
+ * a tree into itself. On Android, new subdirectories can only be created in a `content://` [target]
+ * whose provider uses path-based document IDs, such as device storage; other providers throw.
+ *
+ * @param target The root of the copy.
+ * @param overwrite If `true`, replaces existing files. If `false`, throws on the first existing
+ * file. A file never replaces a directory, or the other way around.
+ */
+public suspend fun PlatformFile.copyRecursively(
+    target: PlatformFile,
+    overwrite: Boolean = false,
+): Unit = withContext(Dispatchers.IO) {
+    val source = this@copyRecursively
+    source.withScopedAccess {
+        target.withScopedAccess {
+            if (source.isSymbolicLink()) throw FileKitException("Cannot copy a symbolic link: $source")
+            if (!source.exists()) throw FileKitException("Source does not exist: $source")
+            if (target.isSameOrInside(source)) throw FileKitException("Cannot copy $source into itself: $target")
+
+            if (!source.isDirectory()) target.parent()?.createDirectories()
+            // Snapshot the tree before writing: even through an alias that can't be resolved (such as a
+            // Windows junction), the copy never reaches its own output.
+            val entries = mutableListOf<CopyEntry>()
+            source.collectCopyEntries(target, entries)
+            entries.forEach { it.copy(root = source, overwrite) }
+        }
+    }
+}
+
+private class CopyEntry(
+    val source: PlatformFile,
+    val target: PlatformFile,
+    val isDirectory: Boolean,
+)
+
+private fun PlatformFile.collectCopyEntries(target: PlatformFile, entries: MutableList<CopyEntry>) {
+    val isDirectory = isDirectory()
+    entries += CopyEntry(this, target, isDirectory)
+    if (!isDirectory) return
+    val names = mutableSetOf<String>()
+    list().forEach { child ->
+        // Check for a link first: isDirectory() resolves the link and touches its target.
+        if (child.isSymbolicLink()) return@forEach
+        // Android document providers choose their own names: never let one escape the target, and
+        // never let two siblings with the same name overwrite each other.
+        val name = child.name
+        if (name.isEmpty() || name == "." || name == ".." || '/' in name || !names.add(name)) {
+            throw FileKitException("Cannot copy an entry named \"$name\" from $this")
+        }
+        child.collectCopyEntries(target / name, entries)
+    }
+}
+
+// Each existing target is resolved against the whole source tree: a link in the target can point
+// into any part of it, not only into the entry being copied.
+private suspend fun CopyEntry.copy(root: PlatformFile, overwrite: Boolean) {
+    if (isDirectory) {
+        if (target.isRegularFile()) throw FileKitException("Cannot replace file $target with directory $source")
+        target.createDirectories()
+        // Now that the target exists, resolve links and ".." that could make it alias the source.
+        if (target.isResolvedInside(root)) throw FileKitException("Cannot copy $root into itself: $target")
+    } else {
+        if (target.isDirectory()) throw FileKitException("Cannot replace directory $target with file $source")
+        if (target.exists()) {
+            if (!overwrite) throw FileKitException("Destination already exists: $target")
+            if (target.isResolvedInside(root)) throw FileKitException("Cannot copy $root into itself: $target")
+        }
+        target write source
+    }
+}
+
+private fun PlatformFile.isSameOrInside(directory: PlatformFile): Boolean =
+    comparablePath().isSameOrInside(directory.comparablePath())
+
+private fun PlatformFile.isResolvedInside(directory: PlatformFile): Boolean =
+    absoluteFile().isSameOrInside(directory.absoluteFile())
+
+// An Android document can be reached through several tree URIs: identify it by authority and ID.
+private fun PlatformFile.comparablePath(): String {
+    val path = absolutePath()
+    if (!path.startsWith("content://")) return path
+    val authority = path.removePrefix("content://").substringBefore('/')
+    return "content://$authority/" + path.substringAfterLast("/document/", path.substringAfterLast("/tree/"))
+}
+
+private fun String.isSameOrInside(directory: String): Boolean {
+    // Only Windows paths use backslashes, and only Android document IDs encode "/" as "%2F".
+    val isWindows = directory.getOrNull(1) == ':' || directory.startsWith("\\\\")
+    val separators = when {
+        directory.startsWith("content://") -> listOf("/", "%2F")
+        isWindows -> listOf("/", "\\")
+        else -> listOf("/")
+    }
+    val trailing = if (isWindows) charArrayOf('/', '\\') else charArrayOf('/')
+    val path = trimEnd(*trailing)
+    val root = directory.trimEnd(*trailing)
+    return path == root || separators.any { path.startsWith(root + it) }
+}
+
 private fun PlatformFile.isSameLogicalFileAs(other: PlatformFile): Boolean {
     val thisAbsolute = absolutePath()
     val otherAbsolute = other.absolutePath()
