@@ -187,6 +187,59 @@ public suspend infix fun PlatformFile.copyTo(destination: PlatformFile) {
     resolvedDestination write this
 }
 
+/**
+ * Copies this file or directory tree to [target], which becomes the new root (`source/a.txt` is
+ * copied to `target/a.txt`). Missing parent directories are created and existing directories are
+ * merged. Runs on `Dispatchers.IO`.
+ *
+ * Fails on the first error, leaving [target] partially copied. Symbolic links (and Windows reparse
+ * points) inside the tree are skipped, never followed; copying a link itself throws, as does copying
+ * a tree into itself. On Android, new subdirectories can only be created in a `content://` [target]
+ * whose provider uses path-based document IDs, such as device storage; other providers throw.
+ *
+ * @param target The root of the copy.
+ * @param overwrite If `true`, replaces existing files. If `false`, throws on the first existing
+ * file. A file never replaces a directory, or the other way around.
+ */
+public suspend fun PlatformFile.copyRecursively(
+    target: PlatformFile,
+    overwrite: Boolean = false,
+): Unit = withContext(Dispatchers.IO) {
+    val source = this@copyRecursively
+    source.withScopedAccess {
+        target.withScopedAccess {
+            if (source.isSymbolicLink()) throw FileKitException("Cannot copy a symbolic link: $source")
+            if (!source.exists()) throw FileKitException("Source does not exist: $source")
+            if (target.isSameOrInside(source)) throw FileKitException("Cannot copy $source into itself: $target")
+
+            if (!source.isDirectory()) target.parent()?.createDirectories()
+            source.copyTreeTo(target, overwrite)
+        }
+    }
+}
+
+private suspend fun PlatformFile.copyTreeTo(target: PlatformFile, overwrite: Boolean) {
+    if (isDirectory()) {
+        if (target.isRegularFile()) throw FileKitException("Cannot replace file $target with directory $this")
+        target.createDirectories()
+        list().forEach { child ->
+            // Check for a link first: isDirectory() resolves the link and touches its target.
+            if (!child.isSymbolicLink()) child.copyTreeTo(target / child.name, overwrite)
+        }
+    } else {
+        if (target.isDirectory()) throw FileKitException("Cannot replace directory $target with file $this")
+        if (!overwrite && target.exists()) throw FileKitException("Destination already exists: $target")
+        target write this
+    }
+}
+
+private fun PlatformFile.isSameOrInside(directory: PlatformFile): Boolean {
+    val path = absolutePath().trimEnd('/', '\\')
+    val root = directory.absolutePath().trimEnd('/', '\\')
+    // "%2F" separates path segments in Android document URIs.
+    return path == root || listOf("/", "\\", "%2F").any { path.startsWith(root + it) }
+}
+
 private fun PlatformFile.isSameLogicalFileAs(other: PlatformFile): Boolean {
     val thisAbsolute = absolutePath()
     val otherAbsolute = other.absolutePath()
