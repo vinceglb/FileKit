@@ -140,6 +140,22 @@ class PlatformFileWebTest {
     }
 
     @Test
+    fun testWebDirectoryWalkAndSizeRecursively() = runTest {
+        val rootFile = createTestFile(name = "root.txt", content = "Root", relativePath = "picked/root.txt")
+        val nestedFile = createTestFile(
+            name = "nested.txt",
+            content = "Nested",
+            relativePath = "picked/folder/nested.txt",
+        )
+        val directory = PlatformFile.fromWebDirectoryFiles(
+            listOf(rootFile.webFileWrapper(), nestedFile.webFileWrapper()),
+        )!!
+
+        assertEquals(listOf("root.txt", "folder", "nested.txt"), directory.walk().map { it.name }.toList())
+        assertEquals(10L, directory.sizeRecursively())
+    }
+
+    @Test
     fun testWebDirectoryEmptyFileListReturnsNull() {
         assertNull(PlatformFile.fromWebDirectoryFiles(emptyList()))
     }

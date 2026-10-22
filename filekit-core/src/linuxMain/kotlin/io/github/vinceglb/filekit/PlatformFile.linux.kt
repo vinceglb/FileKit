@@ -307,17 +307,23 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
 
 // lstat, not stat: stat would resolve the link and report on its target.
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean = memScoped {
+internal actual fun PlatformFile.isSymbolicLink(): Boolean = memScoped {
     val path = absolutePath()
     val statBuf = alloc<stat>()
     if (lstat(path, statBuf.ptr) != 0) {
         if (errno == ENOENT || errno == ENOTDIR) return@memScoped false
         throw IOException("Could not inspect $path: ${strerror(errno)?.toKString()}")
     }
-    if ((statBuf.st_mode.toInt() and S_IFMT) != S_IFLNK) return@memScoped false
+    (statBuf.st_mode.toInt() and S_IFMT) == S_IFLNK
+}
 
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    if (!isSymbolicLink()) return false
+
+    val path = absolutePath()
     if (unlink(path) != 0) {
         throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
     }
-    true
+    return true
 }

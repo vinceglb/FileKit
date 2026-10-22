@@ -187,20 +187,21 @@ public actual fun PlatformFile.Companion.resolveBookmarkData(
     )
 }
 
-internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
-    val isLink = if (Platform.isWindows()) {
-        // Files.isSymbolicLink excludes directory junctions. Inspect the entry's reparse attribute.
-        val attributes = Kernel32.INSTANCE.GetFileAttributes(file.absolutePath)
-        if (attributes == INVALID_FILE_ATTRIBUTES) {
-            val error = Kernel32.INSTANCE.GetLastError()
-            if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) return false
-            throw IOException("Could not inspect ${file.absolutePath}: Windows error $error")
-        }
-        (attributes and FILE_ATTRIBUTE_REPARSE_POINT) != 0
-    } else {
-        Files.isSymbolicLink(file.toPath())
+internal actual fun PlatformFile.isSymbolicLink(): Boolean {
+    if (!Platform.isWindows()) return Files.isSymbolicLink(file.toPath())
+
+    // Files.isSymbolicLink excludes directory junctions. Inspect the entry's reparse attribute.
+    val attributes = Kernel32.INSTANCE.GetFileAttributes(file.absolutePath)
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        val error = Kernel32.INSTANCE.GetLastError()
+        if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) return false
+        throw IOException("Could not inspect ${file.absolutePath}: Windows error $error")
     }
-    if (!isLink) return false
+    return (attributes and FILE_ATTRIBUTE_REPARSE_POINT) != 0
+}
+
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    if (!isSymbolicLink()) return false
 
     // Unlike kotlinx-io's delete, this does not check whether the link's target exists first.
     Files.delete(file.toPath())

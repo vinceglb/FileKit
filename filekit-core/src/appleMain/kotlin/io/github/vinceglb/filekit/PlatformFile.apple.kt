@@ -435,11 +435,17 @@ private fun NSError?.toBookmarkResolutionException(): BookmarkResolutionExceptio
 // attributesOfItemAtPath does not resolve the link, so a symlink reports its own type here rather
 // than the type of whatever it points at.
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+internal actual fun PlatformFile.isSymbolicLink(): Boolean {
     val path = nsUrl.path ?: return false
     val attributes = NSFileManager.defaultManager.attributesOfItemAtPath(path, error = null)
-    if (attributes?.get(NSFileType) != NSFileTypeSymbolicLink) return false
+    return attributes?.get(NSFileType) == NSFileTypeSymbolicLink
+}
 
+@OptIn(ExperimentalForeignApi::class)
+internal actual fun PlatformFile.deleteIfSymbolicLink(): Boolean {
+    if (!isSymbolicLink()) return false
+
+    val path = nsUrl.path ?: return false
     if (unlink(path) != 0) {
         throw IOException("Could not unlink $path: ${strerror(errno)?.toKString()}")
     }

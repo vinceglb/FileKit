@@ -177,6 +177,19 @@ class PlatformFileAndroidTest {
     }
 
     @Test
+    fun PlatformFile_walkUriTree_yieldsDescendantsAndCountsUnknownSizesAsZero() = runBlocking {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
+        ShadowContentResolver.registerProviderInternal(
+            "com.android.externalstorage.documents",
+            createNestedTreeContentProvider(),
+        )
+        val base = PlatformFile(treeUri)
+
+        assertEquals(listOf("Notes", "note.txt", "parent-only.txt"), base.walk().map { it.name }.toList())
+        assertEquals(0L, base.sizeRecursively())
+    }
+
+    @Test
     fun createDirectories_onNestedUriChild_createsMissingParents() {
         val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
         ShadowContentResolver.registerProviderInternal(

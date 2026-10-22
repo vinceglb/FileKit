@@ -147,3 +147,65 @@ public inline fun <T> PlatformFile.withScopedAccess(block: (PlatformFile) -> T):
         }
     }
 }
+
+/**
+ * Lazily walks this directory recursively (depth-first). Yields files and subdirectories, but not
+ * the starting directory itself. If this is a regular file or a symbolic link, yields only this
+ * entry.
+ *
+ * Symbolic links (and Windows reparse points) are yielded but never followed, including this
+ * entry. Errors throw, like [list]. On non-web platforms the walk does blocking I/O, so iterate it
+ * on an IO dispatcher. On Apple platforms, keep security-scoped access to the root active while
+ * iterating (see [withScopedAccess]).
+ *
+ * @param maxDepth The maximum depth to walk. `1` yields only the direct children. Must be positive.
+ * @return A lazy [Sequence] of the entries in this tree.
+ */
+public fun PlatformFile.walk(maxDepth: Int = Int.MAX_VALUE): Sequence<PlatformFile> {
+    require(maxDepth > 0) { "maxDepth must be positive, but was $maxDepth." }
+    return sequence {
+        if (isSymbolicLink() || isRegularFile()) yield(this@walk) else yieldDescendants(this@walk, maxDepth)
+    }
+}
+
+private suspend fun SequenceScope<PlatformFile>.yieldDescendants(directory: PlatformFile, maxDepth: Int) {
+    directory.list().forEach { child ->
+        yield(child)
+        // Check for a link first: isDirectory() resolves the link and touches its target.
+        if (maxDepth > 1 && !child.isSymbolicLink() && child.isDirectory()) {
+            yieldDescendants(child, maxDepth - 1)
+        }
+    }
+}
+
+/**
+ * Returns the total size in bytes of all regular files in this tree. For a regular file, returns
+ * its own size.
+ *
+ * Symbolic links, including this entry, are never followed and add nothing to the total. Files
+ * whose size is unknown (for example, from Android document providers that don't report one) count
+ * as 0. Errors throw, like [list]. Runs on `Dispatchers.IO` on non-web platforms.
+ */
+public expect suspend fun PlatformFile.sizeRecursively(): Long
+
+internal fun PlatformFile.computeSizeRecursively(): Long = withScopedAccess {
+    when {
+        isSymbolicLink() -> 0
+        isRegularFile() -> size().coerceAtLeast(0)
+        else -> sizeOfDescendants()
+    }
+}
+
+private fun PlatformFile.sizeOfDescendants(): Long = list().sumOf { child ->
+    when {
+        child.isSymbolicLink() -> 0
+        child.isDirectory() -> child.sizeOfDescendants()
+        else -> child.size().coerceAtLeast(0)
+    }
+}
+
+/**
+ * Returns `true` if this entry is a symbolic link or a Windows reparse point, without following it.
+ * Returns `false` for missing paths and on platforms without links.
+ */
+internal expect fun PlatformFile.isSymbolicLink(): Boolean
