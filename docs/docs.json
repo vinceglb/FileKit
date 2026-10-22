@@ -60,7 +60,8 @@
         "group": "Cookbook",
         "pages": [
           "cookbook/datastore",
-          "cookbook/test-resources"
+          "cookbook/test-resources",
+          "cookbook/zip-archives"
         ]
       }
     ]
