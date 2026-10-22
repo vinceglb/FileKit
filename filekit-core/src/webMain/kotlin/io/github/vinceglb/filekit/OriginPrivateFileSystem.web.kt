@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFileKitApi::class)
+
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -8,51 +10,57 @@ import kotlin.js.JsName
 import kotlin.js.Promise
 
 /**
- * Returns the root directory of the browser's origin private file system (OPFS).
+ * The root directory of the browser's origin private file system (OPFS).
  *
  * OPFS gives each origin a private, persistent storage area that FileKit can read, write, and
  * delete. Browsers may evict it under storage pressure unless the app requests persistent storage.
- * It is available only in secure contexts in browsers that implement the File System API.
+ * It is available only in secure contexts in browsers that implement the File System API; the
+ * browser is first contacted when the directory is used.
  *
- * Navigate it with [file], [directory], and [listEntries].
+ * Navigate it with [resolveFile], [resolveDirectory], and [listEntries].
  */
-@OptIn(ExperimentalWasmJsInterop::class)
-public suspend fun FileKit.originPrivateDirectory(): PlatformFile {
-    val root = browserNavigator.storage.getDirectory().await()
-    return PlatformFile(
-        WebFile.OriginPrivateDirectory(
-            handle = root,
-            path = "",
-            parent = null,
-        ),
-    )
+@ExperimentalFileKitApi
+public val FileKit.originPrivateDir: PlatformFile
+    get() = originPrivateRoot
+
+private val originPrivateRoot: PlatformFile = PlatformFile(
+    WebFile.OriginPrivateDirectory(
+        resolvedHandle = null,
+        path = "",
+        parent = null,
+    ),
+)
+
+/**
+ * Returns the file at [relative] inside this origin private file system directory.
+ *
+ * @param relative A path relative to this directory, such as `"notes/today.txt"`.
+ * @param create If `true`, creates the file and its missing parent directories. Otherwise a missing
+ * entry fails.
+ */
+@ExperimentalFileKitApi
+public suspend fun PlatformFile.resolveFile(
+    relative: String,
+    create: Boolean = false,
+): PlatformFile {
+    val (parent, name) = resolveParent(relative, create)
+    return PlatformFile(parent.file(name, create))
 }
 
 /**
- * Returns the file named [name] in this origin private file system directory.
+ * Returns the directory at [relative] inside this origin private file system directory.
  *
- * @param create If `true`, creates the file when it does not exist. Otherwise a missing file fails.
+ * @param relative A path relative to this directory, such as `"notes/2026"`.
+ * @param create If `true`, creates the directory and its missing parent directories. Otherwise a
+ * missing entry fails.
  */
-public suspend fun PlatformFile.file(
-    name: String,
+@ExperimentalFileKitApi
+public suspend fun PlatformFile.resolveDirectory(
+    relative: String,
     create: Boolean = false,
-): PlatformFile = when (val directory = webFile) {
-    is WebFile.OriginPrivateDirectory -> directory.file(name, create)
-    else -> throw FileKitException("Only origin private file system directories can open children")
-}
-
-/**
- * Returns the directory named [name] in this origin private file system directory.
- *
- * @param create If `true`, creates the directory when it does not exist. Otherwise a missing
- * directory fails.
- */
-public suspend fun PlatformFile.directory(
-    name: String,
-    create: Boolean = false,
-): PlatformFile = when (val directory = webFile) {
-    is WebFile.OriginPrivateDirectory -> directory.directory(name, create)
-    else -> throw FileKitException("Only origin private file system directories can open children")
+): PlatformFile {
+    val (parent, name) = resolveParent(relative, create)
+    return PlatformFile(parent.directory(name, create))
 }
 
 /**
@@ -61,15 +69,34 @@ public suspend fun PlatformFile.directory(
  * Works for origin private file system directories, which can only be read asynchronously, and for
  * directories returned by browser pickers.
  */
+@ExperimentalFileKitApi
 public suspend fun PlatformFile.listEntries(): List<PlatformFile> = when (val directory = webFile) {
     is WebFile.OriginPrivateDirectory -> directory.list()
     is WebFile.DirectoryWrapper -> directory.children.map { it.toPlatformFile() }
     else -> throw FileKitException("Cannot list a regular file")
 }
 
+/** Returns the directory that contains [relative], and the name of its last segment. */
+private suspend fun PlatformFile.resolveParent(
+    relative: String,
+    create: Boolean,
+): Pair<WebFile.OriginPrivateDirectory, String> {
+    val directory = webFile as? WebFile.OriginPrivateDirectory
+        ?: throw FileKitException("Only origin private file system directories can resolve entries")
+    val segments = relative.split('/').filter { it.isNotEmpty() }
+    require(segments.isNotEmpty()) { "The relative path must name an entry: \"$relative\"" }
+    require(segments.none { it == "." || it == ".." }) {
+        "The relative path cannot contain \".\" or \"..\": \"$relative\""
+    }
+    val parent = segments.dropLast(1).fold(directory) { current, segment ->
+        current.directory(segment, create)
+    }
+    return parent to segments.last()
+}
+
 @OptIn(ExperimentalWasmJsInterop::class)
 private suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
-    val iterator = handle.values()
+    val iterator = handle().values()
     val entries = mutableListOf<PlatformFile>()
 
     while (true) {
@@ -93,7 +120,7 @@ private suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
 
                 "directory" -> {
                     WebFile.OriginPrivateDirectory(
-                        handle = handle.unsafeCast<FileSystemDirectoryHandle>(),
+                        resolvedHandle = handle.unsafeCast<FileSystemDirectoryHandle>(),
                         path = path,
                         parent = this,
                     )
@@ -113,15 +140,13 @@ private suspend fun WebFile.OriginPrivateDirectory.list(): List<PlatformFile> {
 private suspend fun WebFile.OriginPrivateDirectory.file(
     name: String,
     create: Boolean,
-): PlatformFile {
-    val fileHandle = handle.getFileHandle(name, FileSystemGetHandleOptions(create)).await()
-    return PlatformFile(
-        WebFile.OriginPrivateFile(
-            handle = fileHandle,
-            fileSnapshot = fileHandle.getFile().await(),
-            path = path.appendOriginPrivateFileSystemPath(name),
-            parent = this,
-        ),
+): WebFile.OriginPrivateFile {
+    val fileHandle = handle().getFileHandle(name, FileSystemGetHandleOptions(create)).await()
+    return WebFile.OriginPrivateFile(
+        handle = fileHandle,
+        fileSnapshot = fileHandle.getFile().await(),
+        path = path.appendOriginPrivateFileSystemPath(name),
+        parent = this,
     )
 }
 
@@ -129,12 +154,10 @@ private suspend fun WebFile.OriginPrivateDirectory.file(
 private suspend fun WebFile.OriginPrivateDirectory.directory(
     name: String,
     create: Boolean,
-): PlatformFile = PlatformFile(
-    WebFile.OriginPrivateDirectory(
-        handle = handle.getDirectoryHandle(name, FileSystemGetHandleOptions(create)).await(),
-        path = path.appendOriginPrivateFileSystemPath(name),
-        parent = this,
-    ),
+): WebFile.OriginPrivateDirectory = WebFile.OriginPrivateDirectory(
+    resolvedHandle = handle().getDirectoryHandle(name, FileSystemGetHandleOptions(create)).await(),
+    path = path.appendOriginPrivateFileSystemPath(name),
+    parent = this,
 )
 
 /**
@@ -158,7 +181,7 @@ internal suspend fun WebFile.OriginPrivateDirectory.removeEntry(
     recursively: Boolean,
     mustExist: Boolean,
 ) {
-    removeEntry(handle, name, recursively, mustExist).await()
+    removeEntry(handle(), name, recursively, mustExist).await()
 }
 
 /** Removes an entry; a missing entry fails only when [mustExist] is `true`. */
@@ -177,15 +200,15 @@ internal fun String.appendOriginPrivateFileSystemPath(child: String): String =
 
 @OptIn(ExperimentalWasmJsInterop::class)
 @JsName("navigator")
-private external val browserNavigator: BrowserNavigator
+internal external val browserNavigator: BrowserNavigator
 
 @OptIn(ExperimentalWasmJsInterop::class)
-private external interface BrowserNavigator : JsAny {
+internal external interface BrowserNavigator : JsAny {
     val storage: BrowserStorageManager
 }
 
 @OptIn(ExperimentalWasmJsInterop::class)
-private external interface BrowserStorageManager : JsAny {
+internal external interface BrowserStorageManager : JsAny {
     fun getDirectory(): Promise<FileSystemDirectoryHandle>
 }
 

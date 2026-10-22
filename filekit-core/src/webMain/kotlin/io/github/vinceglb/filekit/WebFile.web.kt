@@ -1,5 +1,6 @@
 package io.github.vinceglb.filekit
 
+import kotlinx.coroutines.await
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.toDouble
 import kotlin.time.Instant
@@ -48,10 +49,11 @@ public sealed class WebFile {
     /**
      * A file in the origin private file system (OPFS).
      *
-     * Its metadata comes from a snapshot taken when the file was opened, listed, or last written by
-     * FileKit. Changes made elsewhere, such as in another tab or worker, are visible after the file
-     * is opened again.
+     * Its metadata comes from a snapshot taken when the file was resolved, listed, or last written
+     * by FileKit. Changes made elsewhere, such as in another tab or worker, are visible after the
+     * file is resolved again. Two instances are equal when they have the same [path].
      */
+    @ExperimentalFileKitApi
     @OptIn(ExperimentalWasmJsInterop::class)
     public class OriginPrivateFile internal constructor(
         internal val handle: FileSystemFileHandle,
@@ -75,16 +77,37 @@ public sealed class WebFile {
         internal fun updateSnapshot(fileSnapshot: BrowserFile) {
             this.fileSnapshot = fileSnapshot
         }
+
+        override fun equals(other: Any?): Boolean = other is OriginPrivateFile && other.path == path
+
+        override fun hashCode(): Int = path.hashCode()
     }
 
-    /** A directory in the origin private file system (OPFS). */
+    /**
+     * A directory in the origin private file system (OPFS).
+     *
+     * Two instances are equal when they have the same [path]. The root has an empty path and name.
+     */
+    @ExperimentalFileKitApi
+    @OptIn(ExperimentalWasmJsInterop::class)
     public class OriginPrivateDirectory internal constructor(
-        internal val handle: FileSystemDirectoryHandle,
+        // Null only for the root, whose handle is requested from the browser on first use.
+        private var resolvedHandle: FileSystemDirectoryHandle?,
         public val path: String,
         public val parent: OriginPrivateDirectory?,
     ) : WebFile() {
         public val name: String
-            get() = handle.name
+            get() = path.substringAfterLast('/')
+
+        internal suspend fun handle(): FileSystemDirectoryHandle =
+            resolvedHandle ?: browserNavigator.storage
+                .getDirectory()
+                .await()
+                .also { resolvedHandle = it }
+
+        override fun equals(other: Any?): Boolean = other is OriginPrivateDirectory && other.path == path
+
+        override fun hashCode(): Int = path.hashCode()
     }
 }
 

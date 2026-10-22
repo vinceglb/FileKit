@@ -174,26 +174,36 @@ try {
 
 On web targets, FileKit can write to the browser's
 [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
-(OPFS), a private storage area for each site. Browser APIs to reach it are asynchronous, so the
-web API uses suspend functions instead of `FileKit.filesDir` and `/`:
+(OPFS), a private storage area for each site. The browser only hands out entries asynchronously, so
+instead of `FileKit.filesDir / "notes/today.txt"`, you resolve entries with suspend functions:
 
 ```kotlin
-val root = FileKit.originPrivateDirectory()
-val notes = root.directory("notes", create = true)
-val file = notes.file("today.txt", create = true)
+@OptIn(ExperimentalFileKitApi::class)
+suspend fun saveNote() {
+    val file = FileKit.originPrivateDir.resolveFile("notes/today.txt", create = true)
 
-file.writeString("Hello, FileKit!")
-println(file.size()) // 15
-println(file.readString())
+    file.writeString("Hello, FileKit!")
+    println(file.size()) // 15
+    println(file.readString())
 
-notes.listEntries() // [today.txt]
-notes.delete(recursively = true)
+    val notes = FileKit.originPrivateDir.resolveDirectory("notes")
+    notes.listEntries() // [notes/today.txt]
+    notes.delete(recursively = true)
+}
 ```
+
+`resolveFile` and `resolveDirectory` accept a path relative to the directory. With `create = true`,
+they create the entry and any missing parent directories; otherwise a missing entry fails.
+
+<Warning>
+This API is experimental: opt in with `@OptIn(ExperimentalFileKitApi::class)`. Its signatures may
+change in a future release.
+</Warning>
 
 <Note>
 Only OPFS files can be written or deleted; files returned by browser pickers stay read-only. A file's
-`size()` and `lastModified()` reflect its last FileKit write or the moment it was opened, so changes
-made from another tab show up after you open the file again. OPFS requires a secure context, and
+`size()` and `lastModified()` reflect its last FileKit write or the moment it was resolved, so changes
+made from another tab show up after you resolve the file again. OPFS requires a secure context, and
 browsers may clear it under storage pressure unless the app requests persistent storage.
 </Note>
 

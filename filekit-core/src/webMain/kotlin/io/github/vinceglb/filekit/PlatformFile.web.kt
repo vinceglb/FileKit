@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalFileKitApi::class)
+
 package io.github.vinceglb.filekit
 
 import io.github.vinceglb.filekit.exceptions.FileKitException
@@ -196,11 +198,12 @@ private suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers
 /**
  * Replaces the contents of this origin private file system (OPFS) file with [bytes].
  *
- * Only files obtained from [FileKit.originPrivateDirectory] can be written. Files returned by
+ * Only files obtained from [FileKit.originPrivateDir] can be written. Files returned by
  * browser pickers are read-only snapshots.
  *
  * @param bytes The bytes to write.
  */
+@ExperimentalFileKitApi
 public suspend infix fun PlatformFile.write(bytes: ByteArray) {
     when (val file = webFile) {
         is WebFile.OriginPrivateFile -> file.write(bytes)
@@ -213,6 +216,7 @@ public suspend infix fun PlatformFile.write(bytes: ByteArray) {
  *
  * @param string The string to write.
  */
+@ExperimentalFileKitApi
 public suspend fun PlatformFile.writeString(string: String) {
     write(string.encodeToByteArray())
 }
@@ -224,6 +228,7 @@ public suspend fun PlatformFile.writeString(string: String) {
  * @param recursively If `true`, a directory is removed with its contents. Defaults to `false`,
  * which fails on a directory that still has contents.
  */
+@ExperimentalFileKitApi
 public suspend fun PlatformFile.delete(
     mustExist: Boolean = true,
     recursively: Boolean = false,
