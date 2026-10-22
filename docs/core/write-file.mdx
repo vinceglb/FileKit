@@ -94,6 +94,23 @@ destinationFile.write(sourceFile)
 sourceFile.copyTo(destinationFile)
 ```
 
+### Copying a directory tree
+
+`copyRecursively()` copies a file or a whole directory tree. Unlike `copyTo()`, the target becomes the new root rather than a folder to copy into, as with Kotlin's `File.copyRecursively()`:
+
+```kotlin
+source.copyRecursively(target)                   // source/a.txt -> target/a.txt
+source.copyRecursively(target, overwrite = true) // merge into target, replacing existing files
+file.copyRecursively(targetFile)                 // also works on a regular file
+```
+
+- Missing parent directories are created and existing directories are merged. Without `overwrite`, the copy throws on the first file that already exists. A file never replaces a directory, or the other way around.
+- The copy stops at the first error and leaves `target` partially copied: there is no rollback.
+- Symbolic links inside the tree are skipped, never followed. Calling it on a link, or copying a directory into itself, throws.
+- It runs on `Dispatchers.IO`. On Apple platforms, it holds security-scoped access to the source and the target for the whole copy.
+- **Android**: `content://` document trees work as a source. As a target, new subdirectories can only be created by providers whose document IDs are paths, such as device storage; with other providers, the copy throws when it needs a new subdirectory. Each entry costs provider queries, so large trees are slow.
+- **Web**: not available, like `copyTo()`.
+
 ## Moving Files
 
 You can move a file from one location to another using the `atomicMove` function:

@@ -70,6 +70,30 @@ class PlatformFileJvmTest {
         }
     }
 
+    @Test
+    fun PlatformFile_copyRecursively_symbolicLinks_areSkipped() = runTest {
+        val tempRoot = createTempDirectory("filekit-copy-links")
+        try {
+            val outside = tempRoot.resolve("outside").createDirectory()
+            outside.resolve("big.txt").writeText("not copied")
+            val tree = tempRoot.resolve("tree").createDirectory()
+            tree.resolve("file.txt").writeText("abc")
+            Files.createSymbolicLink(tree.resolve("loop"), tree)
+            Files.createSymbolicLink(tree.resolve("link.txt"), outside.resolve("big.txt"))
+            val target = PlatformFile(tempRoot.resolve("copy").toFile())
+
+            PlatformFile(tree.toFile()).copyRecursively(target)
+
+            assertEquals(listOf("file.txt"), target.list().map { it.name })
+            // A link passed as the source throws instead of silently copying nothing.
+            assertFailsWith<FileKitException> {
+                PlatformFile(tree.resolve("loop").toFile()).copyRecursively(target / "loop")
+            }
+        } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
     private val resourceDirectory = PlatformFile(Path("src/nonWebTest/resources"))
     private val textFile = PlatformFile(resourceDirectory, "hello.txt")
     private val imageFile = PlatformFile(resourceDirectory, "compose-logo.png")
