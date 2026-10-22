@@ -71,6 +71,20 @@ class OriginPrivateFileSystemTest {
     }
 
     @Test
+    fun PlatformFile_resolveFile_emptySegments_areIgnored() = runTest {
+        val directory = createTestDirectory("empty-segments")
+        try {
+            val file = directory.resolveFile("/a//b.txt", create = true)
+
+            assertEquals("empty-segments/a/b.txt", file.path)
+            assertEquals(file, directory.resolveFile("a/b.txt"))
+            assertEquals(directory.resolveDirectory("a"), directory.resolveDirectory("a/"))
+        } finally {
+            directory.delete(recursively = true)
+        }
+    }
+
+    @Test
     fun PlatformFile_resolve_missingWithoutCreate_fails() = runTest {
         val directory = createTestDirectory("missing")
         try {

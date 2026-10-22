@@ -35,6 +35,8 @@ private val originPrivateRoot: PlatformFile = PlatformFile(
  * Returns the file at [relative] inside this origin private file system directory.
  *
  * @param relative A path relative to this directory, such as `"notes/today.txt"`.
+ * Empty segments, from a leading, trailing, or repeated `/`, are ignored, as with `resolve` on
+ * other platforms.
  * @param create If `true`, creates the file and its missing parent directories. Otherwise a missing
  * entry fails.
  */
@@ -51,6 +53,8 @@ public suspend fun PlatformFile.resolveFile(
  * Returns the directory at [relative] inside this origin private file system directory.
  *
  * @param relative A path relative to this directory, such as `"notes/2026"`.
+ * Empty segments, from a leading, trailing, or repeated `/`, are ignored, as with `resolve` on
+ * other platforms.
  * @param create If `true`, creates the directory and its missing parent directories. Otherwise a
  * missing entry fails.
  */
