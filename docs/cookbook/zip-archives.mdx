@@ -68,6 +68,10 @@ private fun ZipOutputStream.putFile(file: PlatformFile, entryName: String) {
 
 Files are streamed into the archive, so large files are never fully loaded into memory.
 
+<Note>
+Save the archive outside the files and folders you are zipping. Otherwise, `zip` can read the archive while writing it, or overwrite a source file before reading it.
+</Note>
+
 ## Extracting an archive
 
 <Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
@@ -121,6 +125,8 @@ private fun String.safePathSegments(): List<String> {
 
 <Warning>
 Always validate entry names before extracting an archive you didn't create. A malicious archive can contain names such as `../../file.txt` to write files outside the destination folder ([Zip Slip](https://security.snyk.io/research/zip-slip-vulnerability)). This is what `safePathSegments()` prevents.
+
+Untrusted archives can also be decompression bombs: a few kilobytes that extract to gigabytes. kmp-zip doesn't limit the extracted size, so count the bytes you write and stop above a maximum. See the [kmp-zip threat model](https://github.com/henrik242/kmp-zip#threat-model) for an example.
 </Warning>
 
 ## Example: Zipping files picked by the user
