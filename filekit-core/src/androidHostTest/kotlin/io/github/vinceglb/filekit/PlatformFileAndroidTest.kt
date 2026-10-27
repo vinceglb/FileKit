@@ -216,40 +216,29 @@ class PlatformFileAndroidTest {
     }
 
     @Test
-    fun PlatformFile_copyRecursively_sameDocumentThroughAnotherTree_throws() = runBlocking<Unit> {
+    fun PlatformFile_copyRecursively_uriTargetInsideSource_throws() = runBlocking<Unit> {
+        val treeUri = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments")
         ShadowContentResolver.registerProviderInternal(
             "com.android.externalstorage.documents",
             createNestedTreeContentProvider(),
         )
-        val documents = PlatformFile(
-            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments"),
-        )
-        val notes = PlatformFile(
-            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3ADocuments%2FNotes"),
-        )
+        val source = PlatformFile(treeUri)
 
-        assertFailsWith<FileKitException> {
-            (documents / "Notes" / "note.txt").copyRecursively(notes / "note.txt", overwrite = true)
-        }
-        assertFailsWith<FileKitException> { documents.copyRecursively(notes / "copy") }
+        assertFailsWith<FileKitException> { source.copyRecursively(source / "Notes" / "copy") }
     }
 
     @Test
-    fun PlatformFile_copyRecursively_unsafeProviderNames_throwBeforeWriting() = runBlocking {
+    fun PlatformFile_copyRecursively_providerNameWithParentSegment_throws() = runBlocking {
         ShadowContentResolver.registerProviderInternal(
             "com.android.externalstorage.documents",
             createNestedTreeContentProvider(),
         )
+        val source = PlatformFile(
+            Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AUntrusted"),
+        )
         val root = PlatformFile(createTempDirectory("filekit-copy-untrusted").toFile())
         try {
-            // A name that would escape the target, then two siblings with the same name.
-            for (tree in listOf("Untrusted", "Duplicates")) {
-                val source = PlatformFile(
-                    Uri.parse("content://com.android.externalstorage.documents/tree/primary%3A$tree"),
-                )
-                assertFailsWith<FileKitException> { source.copyRecursively(root / tree, overwrite = true) }
-                assertFalse((root / tree).exists())
-            }
+            assertFailsWith<FileKitException> { source.copyRecursively(root / "copy") }
             assertFalse((root / "escape.txt").exists())
         } finally {
             root.delete(mustExist = false, recursively = true)
@@ -587,9 +576,6 @@ private class NestedTreeContentProvider : ContentProvider() {
         "primary:Documents/Notes/note.txt" to TestDocument("primary:Documents/Notes/note.txt", "note.txt", false),
         "primary:Untrusted" to TestDocument("primary:Untrusted", "Untrusted", true),
         "primary:Untrusted/evil.txt" to TestDocument("primary:Untrusted/evil.txt", "../escape.txt", false),
-        "primary:Duplicates" to TestDocument("primary:Duplicates", "Duplicates", true),
-        "primary:Duplicates/1" to TestDocument("primary:Duplicates/1", "same.txt", false),
-        "primary:Duplicates/2" to TestDocument("primary:Duplicates/2", "same.txt", false),
         "primary:Download/bonjour/document.pdf" to TestDocument(
             "primary:Download/bonjour/document.pdf",
             "document.pdf",

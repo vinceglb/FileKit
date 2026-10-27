@@ -232,14 +232,12 @@ private fun PlatformFile.collectCopyEntries(target: PlatformFile, entries: Mutab
     val isDirectory = isDirectory()
     entries += CopyEntry(this, target, isDirectory)
     if (!isDirectory) return
-    val names = mutableSetOf<String>()
     list().forEach { child ->
         // Check for a link first: isDirectory() resolves the link and touches its target.
         if (child.isSymbolicLink()) return@forEach
-        // Android document providers choose their own names: never let one escape the target, and
-        // never let two siblings with the same name overwrite each other.
+        // Android document providers choose their own names: never let one escape the target.
         val name = child.name
-        if (name.isEmpty() || name == "." || name == ".." || '/' in name || !names.add(name)) {
+        if (name.isEmpty() || name == "." || name == ".." || '/' in name) {
             throw FileKitException("Cannot copy an entry named \"$name\" from $this")
         }
         child.collectCopyEntries(target / name, entries)
@@ -265,18 +263,10 @@ private suspend fun CopyEntry.copy(root: PlatformFile, overwrite: Boolean) {
 }
 
 private fun PlatformFile.isSameOrInside(directory: PlatformFile): Boolean =
-    comparablePath().isSameOrInside(directory.comparablePath())
+    absolutePath().isSameOrInside(directory.absolutePath())
 
 private fun PlatformFile.isResolvedInside(directory: PlatformFile): Boolean =
     absoluteFile().isSameOrInside(directory.absoluteFile())
-
-// An Android document can be reached through several tree URIs: identify it by authority and ID.
-private fun PlatformFile.comparablePath(): String {
-    val path = absolutePath()
-    if (!path.startsWith("content://")) return path
-    val authority = path.removePrefix("content://").substringBefore('/')
-    return "content://$authority/" + path.substringAfterLast("/document/", path.substringAfterLast("/tree/"))
-}
 
 private fun String.isSameOrInside(directory: String): Boolean {
     // Only Windows paths use backslashes, and only Android document IDs encode "/" as "%2F".
