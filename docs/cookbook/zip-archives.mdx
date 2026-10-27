@@ -1,0 +1,187 @@
+---
+title: 'Zip Archives'
+description: 'Create and extract zip archives with FileKit and kmp-zip'
+---
+
+FileKit doesn't create or extract archives itself. [kmp-zip](https://github.com/henrik242/kmp-zip) is a Kotlin Multiplatform zip library that works well with FileKit, because both use [kotlinx-io](https://github.com/Kotlin/kotlinx-io) streams.
+
+This recipe works with any `PlatformFile`, including files and folders returned by FileKit dialogs, such as Android `content://` documents.
+
+## Dependencies
+
+Add kmp-zip and its kotlinx-io adapters alongside FileKit Core:
+
+```kotlin
+commonMain.dependencies {
+    // FileKit Core
+    implementation("io.github.vinceglb:filekit-core:<version>")
+
+    // kmp-zip
+    implementation("no.synth:kmp-zip:<version>")
+    implementation("no.synth:kmp-zip-kotlinx:<version>")
+}
+```
+
+## Creating an archive
+
+<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
+
+The `zip` function below writes files and folders into an archive. Each folder keeps its name as the top-level entry, so extracting the archive recreates the folder:
+
+```kotlin
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.isDirectory
+import io.github.vinceglb.filekit.list
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.sink
+import io.github.vinceglb.filekit.source
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import kotlinx.io.buffered
+import no.synth.kmpzip.kotlinx.asOutputStream
+import no.synth.kmpzip.kotlinx.asSink
+import no.synth.kmpzip.zip.ZipEntry
+import no.synth.kmpzip.zip.ZipOutputStream
+
+suspend fun zip(
+    sources: List<PlatformFile>,
+    archive: PlatformFile,
+): Unit = withContext(Dispatchers.IO) {
+    val names = sources.map { it.name }
+    require(names.size == names.toSet().size) { "Sources must have distinct names: $names" }
+
+    ZipOutputStream(archive.sink().buffered().asOutputStream()).use { zip ->
+        sources.forEach { source -> zip.putFile(source, entryName = source.name) }
+    }
+}
+
+private fun ZipOutputStream.putFile(file: PlatformFile, entryName: String) {
+    if (file.isDirectory()) {
+        putNextEntry(ZipEntry("$entryName/"))
+        closeEntry()
+        file.list().forEach { child -> putFile(child, entryName = "$entryName/${child.name}") }
+    } else {
+        putNextEntry(ZipEntry(entryName))
+        file.source().buffered().use { source -> source.transferTo(asSink()) }
+        closeEntry()
+    }
+}
+```
+
+Files are streamed into the archive, so large files are never fully loaded into memory. Sources must have distinct names, otherwise their entries would overwrite each other on extraction.
+
+<Note>
+A few things to keep in mind:
+
+- Save the archive outside the files and folders you are zipping. Otherwise, `zip` can read the archive while writing it, or overwrite a source file before reading it.
+- Symbolic links are followed. A link to a parent folder makes `zip` loop through the same folders until it fails.
+- kmp-zip doesn't support ZIP64. Each file and the archive must stay under 4 GB, with at most 65,535 entries.
+</Note>
+
+## Extracting an archive
+
+<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
+
+The `unzip` function extracts every entry into a destination folder:
+
+```kotlin
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.createDirectories
+import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.sink
+import io.github.vinceglb.filekit.source
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
+import kotlinx.io.buffered
+import no.synth.kmpzip.kotlinx.asInputStream
+import no.synth.kmpzip.kotlinx.asSource
+import no.synth.kmpzip.zip.ZipInputStream
+
+suspend fun unzip(
+    archive: PlatformFile,
+    destination: PlatformFile,
+): Unit = withContext(Dispatchers.IO) {
+    ZipInputStream(archive.source().buffered().asInputStream()).use { zip ->
+        while (true) {
+            val entry = zip.nextEntry ?: break
+            val segments = entry.name.safePathSegments()
+            val parent = segments.dropLast(1).fold(destination) { dir, segment -> dir / segment }
+            val target = parent / segments.last()
+
+            if (entry.isDirectory) {
+                target.createDirectories()
+            } else {
+                parent.createDirectories()
+                target.sink().buffered().use { sink -> sink.transferFrom(zip.asSource()) }
+            }
+        }
+    }
+}
+
+private fun String.safePathSegments(): List<String> {
+    val path = replace('\\', '/')
+    val segments = path.split('/').filter { it.isNotEmpty() && it != "." }
+    require(!path.startsWith('/') && segments.isNotEmpty() && segments.none { it == ".." || ':' in it }) {
+        "Unsafe zip entry: $this"
+    }
+    return segments
+}
+```
+
+<Warning>
+Always validate entry names before extracting an archive you didn't create. A malicious archive can contain names such as `../../file.txt` to write files outside the destination folder ([Zip Slip](https://security.snyk.io/research/zip-slip-vulnerability)). This is what `safePathSegments()` prevents. Extract these archives into a new, empty folder: if the destination already contains a symbolic link, an entry could still be written through it.
+
+Untrusted archives can also be decompression bombs: a few kilobytes that extract to gigabytes. kmp-zip doesn't limit the extracted size, so count the bytes you write and stop above a maximum. See the [kmp-zip threat model](https://github.com/henrik242/kmp-zip#threat-model) for an example.
+</Warning>
+
+## Example: Zipping files picked by the user
+
+Combined with [FileKit Dialogs](/dialogs/setup), you can let the user pick files and choose where to save the archive:
+
+```kotlin
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple()) ?: return
+val archive = FileKit.openFileSaver(suggestedName = "archive", defaultExtension = "zip") ?: return
+
+zip(files, archive)
+```
+
+To zip a whole folder, use `FileKit.openDirectoryPicker()` and pass the folder to `zip`.
+
+## Web
+
+<Check>Supported on JS and WASM targets</Check>
+
+`source()` and `sink()` are not available on web. You can still build the archive in memory and download it with `FileKit.download`:
+
+```kotlin
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.PlatformFile
+import io.github.vinceglb.filekit.download
+import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.readBytes
+import no.synth.kmpzip.io.ByteArrayOutputStream
+import no.synth.kmpzip.zip.ZipEntry
+import no.synth.kmpzip.zip.ZipOutputStream
+
+suspend fun zipToBytes(files: List<PlatformFile>): ByteArray {
+    val bytes = ByteArrayOutputStream()
+    ZipOutputStream(bytes).use { zip ->
+        files.forEach { file ->
+            zip.putNextEntry(ZipEntry(file.name))
+            zip.write(file.readBytes())
+            zip.closeEntry()
+        }
+    }
+    return bytes.toByteArray()
+}
+
+FileKit.download(zipToBytes(files), "archive.zip")
+```
+
+The whole archive is kept in memory, so this approach is best suited for small files. See the [kmp-zip documentation](https://github.com/henrik242/kmp-zip#js-and-wasmjs-notes) for more details about web support.
+
+## Going further
+
+kmp-zip also supports password-protected archives (AES and legacy ZipCrypto), GZIP, and reading a single entry without extracting the whole archive. Check out the [kmp-zip documentation](https://github.com/henrik242/kmp-zip) for more details.
