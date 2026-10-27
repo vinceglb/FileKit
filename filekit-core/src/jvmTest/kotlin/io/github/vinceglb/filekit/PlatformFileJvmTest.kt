@@ -9,17 +9,20 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path
+import org.junit.Assume.assumeTrue
 import java.io.File
 import java.nio.file.Files
 import kotlin.coroutines.Continuation
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createTempDirectory
 import kotlin.io.path.exists
+import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class PlatformFileJvmTest {
@@ -66,6 +69,87 @@ class PlatformFileJvmTest {
                 assertEquals(0L, link.sizeRecursively())
             }
         } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_symbolicLinks_areSkipped() = runTest {
+        val tempRoot = createTempDirectory("filekit-copy-links")
+        try {
+            val outside = tempRoot.resolve("outside").createDirectory()
+            outside.resolve("big.txt").writeText("not copied")
+            val tree = tempRoot.resolve("tree").createDirectory()
+            tree.resolve("file.txt").writeText("abc")
+            Files.createSymbolicLink(tree.resolve("loop"), tree)
+            Files.createSymbolicLink(tree.resolve("link.txt"), outside.resolve("big.txt"))
+            val target = PlatformFile(tempRoot.resolve("copy").toFile())
+
+            PlatformFile(tree.toFile()).copyRecursively(target)
+
+            assertEquals(listOf("file.txt"), target.list().map { it.name })
+            // A link passed as the source throws instead of silently copying nothing.
+            assertFailsWith<FileKitException> {
+                PlatformFile(tree.resolve("loop").toFile()).copyRecursively(target / "loop")
+            }
+            // A target that reaches the tree through a link is rejected instead of copied into itself.
+            val alias = Files.createSymbolicLink(tempRoot.resolve("alias"), tree)
+            assertFailsWith<FileKitException> {
+                PlatformFile(tree.toFile()).copyRecursively(PlatformFile(alias.resolve("copy").toFile()))
+            }
+        } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_targetLinkIntoAnotherSourceDirectory_throws() = runTest {
+        val tempRoot = createTempDirectory("filekit-copy-target-link")
+        try {
+            val tree = tempRoot.resolve("tree").createDirectory()
+            tree.resolve("a").createDirectory()
+            tree.resolve("b").createDirectory()
+            tree.resolve("a/f.txt").writeText("a")
+            tree.resolve("b/f.txt").writeText("b")
+            val target = tempRoot.resolve("copy").createDirectory()
+            // target/a points to tree/b, so target/a/f.txt is tree/b/f.txt.
+            Files.createSymbolicLink(target.resolve("a"), tree.resolve("b"))
+
+            assertFailsWith<FileKitException> {
+                PlatformFile(tree.toFile()).copyRecursively(PlatformFile(target.toFile()), overwrite = true)
+            }
+            assertEquals("b", tree.resolve("b/f.txt").readText())
+        } finally {
+            tempRoot.toFile().deleteRecursively()
+        }
+    }
+
+    @Test
+    fun PlatformFile_copyRecursively_windowsJunctionIntoSource_neverCopiesItsOwnOutput() = runTest {
+        assumeTrue("Directory junctions are specific to Windows", Platform.isWindows())
+        val tempRoot = createTempDirectory("filekit-copy-junction")
+        val tree = tempRoot.resolve("tree").createDirectory()
+        tree.resolve("sub").createDirectory()
+        tree.resolve("file.txt").writeText("abc")
+        val junction = tempRoot.resolve("alias")
+        try {
+            val process = ProcessBuilder("cmd", "/c", "mklink", "/J", junction.toString(), tree.toString())
+                .redirectErrorStream(true)
+                .start()
+            val output = process.inputStream.bufferedReader().use { it.readText() }
+            assertEquals(0, process.waitFor(), "Could not create a junction: $output")
+
+            // The target lands in tree/sub/copy. Whether or not the alias is detected, the copy must end
+            // without copying its own output.
+            val target = PlatformFile(junction.resolve("sub").resolve("copy").toFile())
+            runCatching { PlatformFile(tree.toFile()).copyRecursively(target) }
+                .exceptionOrNull()
+                ?.let { assertIs<FileKitException>(it) }
+
+            assertFalse(tree.resolve("sub/copy/sub/copy").exists())
+        } finally {
+            // Remove the junction itself before cleaning up; never traverse it, even on failure.
+            Files.deleteIfExists(junction)
             tempRoot.toFile().deleteRecursively()
         }
     }
