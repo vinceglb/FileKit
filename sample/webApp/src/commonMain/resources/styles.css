@@ -5,3 +5,30 @@ html, body {
     padding: 0;
     overflow: hidden;
 }
+
+body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fffbfe;
+}
+
+.loader-track {
+    stroke: #ccc;
+}
+
+.loader-arc {
+    stroke: #333;
+}
+
+html.dark body {
+    background: #1c1b1f;
+}
+
+html.dark .loader-track {
+    stroke: #444;
+}
+
+html.dark .loader-arc {
+    stroke: #ddd;
+}

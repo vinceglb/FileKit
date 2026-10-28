@@ -1,0 +1,25 @@
+---
+title: 'Try FileKit in your browser'
+sidebarTitle: 'Live demo'
+description: 'Run the FileKit sample app in your browser: file picker, directory picker, file saver and more'
+---
+
+import { FileKitDemo } from "/snippets/demo-embed.jsx"
+
+The FileKit sample app is built with Compose Multiplatform and compiled to WebAssembly. It runs the same code as the Android, iOS and desktop samples, with FileKit handling every dialog through the browser APIs.
+
+<FileKitDemo title="FileKit sample" height={680} />
+
+<Note>
+The browser limits what a web page can do with files. File and directory pickers work in modern browsers, while the camera picker, file saver dialog and share sheet are only available on native platforms, so the sample marks them as unsupported here. On the web, use [`FileKit.download()`](/dialogs/file-saver) to save files. Each page lists the supported platforms.
+</Note>
+
+## Run it locally
+
+The source lives in [`sample/webApp`](https://github.com/vinceglb/FileKit/tree/main/sample/webApp) and [`sample/shared`](https://github.com/vinceglb/FileKit/tree/main/sample/shared).
+
+```bash
+./gradlew :sample:webApp:wasmJsBrowserDevelopmentRun
+```
+
+Add `?demo=file-picker` to the URL to open a screen directly. The available screens are `file-picker`, `gallery-picker`, `directory-picker`, `camera-picker`, `file-saver` and `share-file`.

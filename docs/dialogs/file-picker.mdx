@@ -4,6 +4,8 @@ sidebarTitle: 'File picker'
 description: 'Open a file picker dialog in a Kotlin Multiplatform project'
 ---
 
+import { FileKitDemo } from "/snippets/demo-embed.jsx"
+
 <Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
 
 ## Quick start
@@ -32,6 +34,12 @@ Button(onClick = { launcher.launch() }) {
 The shorter Compose overload without `onError` remains available for source and binary compatibility. It ignores operational picker failures without logging. New integrations should use the explicit form shown above.
 
 See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
+
+## Try it
+
+This is the FileKit sample running in your browser. Pick files, switch the selection mode or restrict extensions, then open a file to inspect its metadata.
+
+<FileKitDemo demo="file-picker" title="File picker" />
 
 <Warning>
 On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not

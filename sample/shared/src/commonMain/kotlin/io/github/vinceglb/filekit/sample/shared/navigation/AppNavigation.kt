@@ -14,6 +14,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.savedstate.serialization.SavedStateConfiguration
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
+import io.github.vinceglb.filekit.sample.shared.AppDemo
 import io.github.vinceglb.filekit.sample.shared.ui.screens.bookmarks.BookmarksRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.camerapicker.CameraPickerRoute
 import io.github.vinceglb.filekit.sample.shared.ui.screens.debug.DebugRoute
@@ -65,7 +66,9 @@ private data class FileDetails(
 internal fun AppNavigation(
     modifier: Modifier = Modifier,
     dialogSettingsTransform: (FileKitDialogSettings) -> FileKitDialogSettings = { it },
+    startDemo: AppDemo? = null,
 ) {
+    val initialKeys = listOfNotNull(Home, startDemo?.toNavKey())
     val backStack = rememberNavBackStack(
         configuration = SavedStateConfiguration {
             serializersModule = SerializersModule {
@@ -83,7 +86,7 @@ internal fun AppNavigation(
                 }
             }
         },
-        Home,
+        *initialKeys.toTypedArray(),
     )
     val bottomSheetStrategy = remember { BottomSheetSceneStrategy<NavKey>() }
 
@@ -190,4 +193,13 @@ internal fun AppNavigation(
         },
         modifier = Modifier.fillMaxSize(),
     )
+}
+
+private fun AppDemo.toNavKey(): NavKey = when (this) {
+    AppDemo.FilePicker -> FilePicker
+    AppDemo.GalleryPicker -> GalleryPicker
+    AppDemo.DirectoryPicker -> DirectoryPicker
+    AppDemo.CameraPicker -> CameraPicker
+    AppDemo.FileSaver -> FileSaver
+    AppDemo.ShareFile -> ShareFile
 }

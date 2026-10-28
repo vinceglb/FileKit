@@ -1,40 +1,59 @@
-name: Deploy Preview
+name: 🌐 Deploy web sample
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - '.github/workflows/deploy-preview.yaml'
+      - 'build-logic/**'
+      - 'filekit-*/**'
+      - 'gradle/**'
+      - 'sample/shared/**'
+      - 'sample/webApp/**'
+      - '*.gradle.kts'
+  pull_request:
+    paths:
+      - '.github/workflows/deploy-preview.yaml'
+      - 'sample/shared/**'
+      - 'sample/webApp/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel a Pages deployment midway, only superseded PR builds
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    name: Build
+    name: 🔨 Build web sample
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 🛎️ Check out repository
         uses: actions/checkout@v7
 
-      - name: Configure JDK
+      - name: 🍉 Configure JDK 21
         uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
-      - name: Setup Gradle
+      - name: 🐘 Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
-      - name: Build
-        run: ./gradlew sample:sample-compose:composeApp:wasmJsBrowserDistribution
+      - name: 🔨 Build wasm distribution
+        run: ./gradlew :sample:webApp:wasmJsBrowserDistribution --max-workers=2
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-
-      - name: Upload Artifact
+      - name: 📦 Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
         with:
-          path: 'sample/sample-compose/composeApp/build/dist/wasmJs/productionExecutable'
+          path: 'sample/webApp/build/dist/wasmJs/productionExecutable'
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: 🚀 Deploy to GitHub Pages
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     needs: build
     permissions:
@@ -44,6 +63,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
