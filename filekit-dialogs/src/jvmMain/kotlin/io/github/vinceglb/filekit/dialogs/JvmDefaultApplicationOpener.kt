@@ -7,13 +7,14 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-internal const val XDG_OPEN_EXIT_TIMEOUT_MILLIS: Long = 3_000
+// Long enough to catch xdg-open failing fast (missing file or tool), short enough for a click handler.
+internal const val XDG_OPEN_EXIT_TIMEOUT_MILLIS: Long = 500
 
 /**
  * Opens files with the default application on the JVM.
  *
  * Uses `java.awt.Desktop` when it can open files. Otherwise, on Linux, starts `xdg-open` and waits
- * a bounded time for it to report an error. Throws [FileKitDialogException] when neither works.
+ * at most [XDG_OPEN_EXIT_TIMEOUT_MILLIS] for it to report an error. Throws [FileKitDialogException] when neither works.
  */
 internal class JvmDefaultApplicationOpener(
     private val isDesktopOpenSupported: () -> Boolean,

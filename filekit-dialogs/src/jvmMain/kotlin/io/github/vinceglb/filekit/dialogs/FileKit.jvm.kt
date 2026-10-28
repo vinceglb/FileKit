@@ -97,7 +97,7 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
  * Opens a file with the default application associated with its file type.
  *
  * Uses `java.awt.Desktop` when it supports opening files. Otherwise, on Linux, falls back to
- * `xdg-open` and waits a few seconds at most for it to report an error.
+ * `xdg-open` and waits half a second at most for it to report an error.
  *
  * @param file The file to open.
  * @param openFileSettings Platform-specific settings for opening the file.

@@ -45,7 +45,7 @@ Failures are reported differently on each platform. Only the JVM wraps some of t
 | Android | Sends an `ACTION_VIEW` intent with the MIME type of the file extension. Throws `ActivityNotFoundException` when no app handles that type, and `IllegalArgumentException` for a file outside the directories its FileProvider covers. |
 | iOS | Calls `openURL`. If that fails, shows the "Open in" menu (`UIDocumentInteractionController`) so the user can pick an app. Reports no error. |
 | macOS | Uses `NSWorkspace`. Reports no error. |
-| JVM | Uses `java.awt.Desktop.open` when the desktop supports opening files. Otherwise (headless setups, Linux without GNOME libraries), on Linux it falls back to `xdg-open` and waits up to 3 seconds for it to report an error. Throws `FileKitDialogException` when neither works: `Desktop` cannot open files and `xdg-open` is missing, cannot start, or exits with an error code. Errors from `Desktop.open` itself are not wrapped, such as `IOException` when no app is associated. |
+| JVM | Uses `java.awt.Desktop.open` when the desktop supports opening files. Otherwise (headless setups, Linux without GNOME libraries), on Linux it falls back to `xdg-open` and waits up to half a second for it to report an error. Throws `FileKitDialogException` when neither works: `Desktop` cannot open files and `xdg-open` is missing, cannot start, or exits with an error code. Errors from `Desktop.open` itself are not wrapped, such as `IOException` when no app is associated. |
 | Linux native | Starts `xdg-open` without waiting for it. Throws `FileKitException` only if the process cannot start. |
 | Windows native | Calls `ShellExecuteW` with the `open` verb. Reports no error. |
 | Web | Not available. |
