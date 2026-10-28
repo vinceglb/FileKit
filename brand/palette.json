@@ -1,0 +1,51 @@
+{
+  "$comment": "Single source of truth for FileKit brand colors. Edit, then run `npm run render`.",
+  "docs": {
+    "primary": "#1A7F4B",
+    "light": "#E3C266",
+    "dark": "#1A7F4B"
+  },
+  "ink": "#07160E",
+  "mark": [
+    "#0F5A36",
+    "#2E9A5C",
+    "#E7C25E"
+  ],
+  "markOnDark": [
+    "#1A7F4B",
+    "#3DBA6E",
+    "#F2D37A"
+  ],
+  "background": {
+    "dark": {
+      "stops": [
+        "#07160E",
+        "#0F4A2F",
+        "#2E8A55",
+        "#D8B24C",
+        "#FFE6A6"
+      ],
+      "seed": 2.4,
+      "grain": 0.1,
+      "focus": -0.2,
+      "text": "#FFF1D0",
+      "blend": "overlay",
+      "guideOpacity": 0.8
+    },
+    "light": {
+      "stops": [
+        "#8FC88E",
+        "#B9DFAA",
+        "#E2EFC8",
+        "#F5DE96",
+        "#FFF4D6"
+      ],
+      "seed": 2.4,
+      "grain": 0.08,
+      "focus": 0.0,
+      "text": "#3E9A66",
+      "blend": "multiply",
+      "guideOpacity": 0.9
+    }
+  }
+}
