@@ -6,3 +6,4 @@ ktlint_standard_function-signature = disabled
 max_line_length = 140
 compose_preview_naming_enabled = true
 compose_preview_naming_strategy = suffix
+compose_allowed_composition_locals = LocalAppEmbedded

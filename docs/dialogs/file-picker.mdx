@@ -4,6 +4,8 @@ sidebarTitle: 'File picker'
 description: 'Open a file picker dialog in a Kotlin Multiplatform project'
 ---
 
+import { FileKitDemo } from "/snippets/demo-embed.jsx"
+
 <Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
 
 ## Quick start
@@ -38,6 +40,12 @@ On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not
 inside transient surfaces such as `ModalBottomSheet`, dialogs, popups, or
 dropdowns. [Learn more in GitHub issue #547](https://github.com/vinceglb/FileKit/issues/547).
 </Warning>
+
+## Try it
+
+This is the FileKit sample running in your browser. Pick files, switch the selection mode or restrict extensions, then open a file to inspect its metadata.
+
+<FileKitDemo demo="file-picker" title="File picker" />
 
 ## Selection mode
 

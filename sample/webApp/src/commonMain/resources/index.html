@@ -3,13 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample</title>
+    <title>FileKit sample</title>
+    <meta name="description" content="Try FileKit, the Kotlin Multiplatform file picker and file system library, in your browser.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link type="text/css" rel="stylesheet" href="styles.css">
+    <script>
+        // Embed bridge for the documentation, read by main.kt. It runs before the app downloads, so theme
+        // messages sent while the app is loading are kept, and it only accepts them from the embedding page.
+        (function () {
+            var root = document.documentElement;
+            var params = new URLSearchParams(window.location.search);
+            var themePrefix = "filekit-demo:theme=";
+            root.dataset.demo = params.get("demo") || "";
+            root.dataset.embed = params.get("embed") === "true" ? "true" : "false";
+
+            function applyTheme(theme) {
+                if (theme !== "light" && theme !== "dark") return;
+                root.dataset.theme = theme;
+                root.classList.toggle("dark", theme === "dark");
+                window.dispatchEvent(new Event("filekit-demo-theme"));
+            }
+
+            var theme = params.get("theme");
+            if (theme === "light" || theme === "dark") {
+                applyTheme(theme);
+            } else {
+                root.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
+            }
+
+            window.addEventListener("message", function (event) {
+                if (window.parent === window || event.source !== window.parent) return;
+                if (typeof event.data === "string" && event.data.indexOf(themePrefix) === 0) {
+                    applyTheme(event.data.slice(themePrefix.length));
+                }
+            });
+        })();
+    </script>
 </head>
-<body style="text-align: center; align-content: center">
-<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
-    <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="4" fill="none"/>
-    <circle cx="25" cy="25" r="20" stroke="#333" stroke-width="4" fill="none" stroke-linecap="round"
+<body>
+<svg class="loader" xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 50 50" role="presentation">
+    <circle class="loader-track" cx="25" cy="25" r="20" stroke-width="4" fill="none"/>
+    <circle class="loader-arc" cx="25" cy="25" r="20" stroke-width="4" fill="none" stroke-linecap="round"
             stroke-dasharray="90 125">
         <animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s"
                           repeatCount="indefinite"/>

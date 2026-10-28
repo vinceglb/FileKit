@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import io.github.vinceglb.filekit.sample.shared.LocalAppEmbedded
 import io.github.vinceglb.filekit.sample.shared.ui.icons.BookOpenText
 import io.github.vinceglb.filekit.sample.shared.ui.icons.ChevronLeft
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
@@ -44,10 +45,13 @@ internal fun AppPickerTopBar(
                 icon = LucideIcons.ChevronLeft,
                 onClick = onNavigateBack,
             )
-            AppPickerTopBarButton(
-                icon = LucideIcons.BookOpenText,
-                onClick = onOpenDocumentation,
-            )
+            // Embedded in the documentation, the reader is already on the right page
+            if (!LocalAppEmbedded.current) {
+                AppPickerTopBarButton(
+                    icon = LucideIcons.BookOpenText,
+                    onClick = onOpenDocumentation,
+                )
+            }
         }
     }
 }
