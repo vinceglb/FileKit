@@ -80,6 +80,10 @@ Sharing has no result: a completed share and a dismissed sheet look the same. Fa
 
 <AndroidFileProviderSetup />
 
+<Note>
+A custom `authority` applies to every file in the share. If you share files from several directories at once, for example `filesDir` and `getExternalFilesDir()`, your provider's `file_paths.xml` must cover all of them. Otherwise FileKit throws an `IllegalArgumentException` before the share sheet opens.
+</Note>
+
 ## Related
 
 - [Open with default app](/dialogs/open-file) to view a file instead of sending it.

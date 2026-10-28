@@ -110,7 +110,7 @@ kotlin {
 }
 ```
 
-Keep only the targets your project declares, and add others (such as `macosMain` or `linuxMain`) the same way. Code in `nonWebMain` can then call `FileKit.openFileSaver()`, and code in `mobileMain` can call `FileKit.openCameraPicker()`.
+Keep only the targets your project declares, and add others (such as `macosMain` or `linuxMain`) the same way. Kotlin doesn't support a source set shared only by Android and JVM: if those are your only non-web targets, call these APIs from `androidMain` and `jvmMain`, or wrap them in an `expect`/`actual` function. Code in `nonWebMain` can then call `FileKit.openFileSaver()`, and code in `mobileMain` can call `FileKit.openCameraPicker()`.
 
 ## Notes
 
