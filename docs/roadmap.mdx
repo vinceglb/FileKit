@@ -13,66 +13,66 @@ FileKit is already used in production on Android, iOS, desktop and the web. The 
 
 | Step | Version | Focus | Can it break your code? |
 | --- | --- | --- | --- |
-| 1. Latest release | 0.17 | Recursive file helpers, web storage, iOS fixes | No |
+| 1. Release 0.17 | 0.17 | Recursive file helpers, web storage, iOS fixes | No API removals. Android `minSdk` goes from 23 to 24 |
 | 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes, for the last time** |
-| 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | Only to fix problems found in the RCs |
+| 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | No removals. Only fixes for problems found in the RCs |
 | 4. FileKit 1.0 | 1.0.0 | Stable release and stabilization period | No |
-| 5. After 1.0 | 1.x | New features and platforms | No |
+| 5. After 1.0 | 1.x | New features and platforms | No API or binary breaks. Minimum Kotlin, SDK or JDK versions may rise |
 
 <Tip>
   **What should I do today?**
 
-  - Upgrade to the latest release and **fix your deprecation warnings**: deprecated APIs are removed in 0.18.
-  - Check where you opt in to `@ExperimentalFileKitApi`: those APIs may still change.
-  - If a name, default or behavior feels wrong, [tell us now](https://github.com/vinceglb/FileKit/discussions). After 1.0 it gets much harder to change.
+  - Move to 0.17 (plan for Android `minSdk` 24) and **fix your deprecation warnings**: deprecated APIs are removed in 0.18.
+  - Look for `@ExperimentalFileKitApi` warnings and opt-ins in your code: those APIs may still change.
+  - If a name, default or behavior feels wrong, [tell us now](https://github.com/vinceglb/FileKit/discussions).
 </Tip>
 
 ## Guiding principle
 
-Breaking changes happen **before** 1.0, always with a deprecation cycle and migration guidance. After 1.0, they wait for 2.0.
+Removals and breaking changes to stable APIs happen **before** 1.0, with migration notes for every change. After 1.0, they wait for 2.0.
 
 Everything additive, like a new function, a new platform implementation or a new integration, doesn't break anyone. So it can ship in any 1.x release and doesn't need to block 1.0.
 
 ## The plan
 
-### 1. Latest release: 0.17
+### 1. Release 0.17
 
-Adds recursive helpers (`walk()`, `sizeRecursively()`, `copyRecursively()`), an experimental Origin Private File System API on the web, and a fix for persisted folder access on iOS. See the [releases](https://github.com/vinceglb/FileKit/releases) for details.
+Adds recursive helpers (`walk()`, `sizeRecursively()`, `copyRecursively()`), an experimental Origin Private File System API on the web, and a fix for iOS folder access persisted across restarts. It also raises Android `minSdk` from 23 to 24. See the [releases](https://github.com/vinceglb/FileKit/releases) for details.
 
 ### 2. API freeze: 0.18
 
-The last release that is allowed to break things.
+The last release that removes APIs.
 
-- **Public API review** of `filekit-core`, `filekit-dialogs`, `filekit-dialogs-compose` and `filekit-coil`, against the [Kotlin library authors' guidelines](https://kotlinlang.org/docs/api-guidelines-introduction.html): naming, defaults, nullability, exceptions and visibility.
 - **Deprecated APIs removed**, such as the old `downloadDir`, `pictureDir` and `videoDir` desktop properties and the file saver overloads that take `extension` instead of `defaultExtension`.
+- **Public API review** of `filekit-core`, `filekit-dialogs`, `filekit-dialogs-compose` and `filekit-coil`, against the [Kotlin library authors' guidelines](https://kotlinlang.org/docs/api-guidelines-introduction.html): naming, defaults, nullability, exceptions and visibility. If the review finds a better name, the old one is deprecated with an IDE replacement and keeps compiling until 2.0.
 - **Automatic API checks in CI**, so every change to the public API is visible in review and accidental breaking changes fail the build.
 - **Experimental APIs reviewed.** Each `@ExperimentalFileKitApi` declaration is either promoted to stable or explicitly stays experimental through 1.0.
 - **Compatibility policy** published in these docs (see "What 1.0 guarantees" below).
 
 ### 3. Release candidates: 1.0.0-RC
 
-The API is frozen. The focus moves to reliability and documentation, with builds you can try in your app or library.
+No more removals: existing APIs stay as they were in 0.18, except to fix problems found in the RCs. The focus moves to reliability and documentation, with builds you can try in your app or library.
 
 - **Regression tests** where users report the most issues: Android content URIs and picker lifecycle, Apple security-scoped resources and bookmarks, desktop dialogs, and browser file handling. Manual verification steps are documented where system UI cannot be automated.
 - **Fixes for the highest-impact confirmed bugs** on stable platforms, for example missing dismissal events from some iOS pickers ([#138](https://github.com/vinceglb/FileKit/issues/138)).
 - **Platform support matrix**: every feature, on every platform, with its known limitations.
-- **1.0 migration guide** covering every API removed or renamed since 0.17.
+- **1.0 migration guide** covering every API removed in 0.18 and every API deprecated since 0.17.
 - **API reference** generated from KDoc and published next to these docs.
 
-### 4. FileKit 1.0
-
-The stable release, followed by a stabilization period focused on regressions.
-
-These additions are targeted for 1.0 and included if they are ready. Otherwise, they ship in a 1.x release:
+These additions are targeted for the release candidates. They are additive, so if they are not ready by the last RC, they ship in a 1.x release instead:
 
 - **Native save dialog on the web** ([#348](https://github.com/vinceglb/FileKit/issues/348)), using the File System Access API where available, with the current download behavior as a fallback.
 - **Blob and W3C `File` interop on the web** ([#173](https://github.com/vinceglb/FileKit/issues/173)), so web code can move between browser types and `PlatformFile` without boilerplate.
+
+### 4. FileKit 1.0
+
+The stable release, with the guarantees below, followed by a stabilization period focused on regressions.
 
 ### 5. After 1.0: 1.x
 
 - **Chunked reading on the web**, for uploading or processing large files without loading them fully in memory.
 - **More consistent image processing** across platforms, for compression and resizing results that match more closely.
-- **Kotlin/Native targets promoted to stable** as their test coverage and real-world usage grow. That includes validating Linux distributions such as Aurora OS ([#609](https://github.com/vinceglb/FileKit/issues/609)).
+- **Kotlin/Native targets promoted to stable** as their test coverage and real-world usage grow. `linuxX64` and `linuxArm64` are already published. The open part of [#609](https://github.com/vinceglb/FileKit/issues/609) is validation on distributions such as Aurora OS.
 - **More integrations and recipes** with popular Kotlin Multiplatform libraries.
 
 ## What 1.0 guarantees
@@ -82,10 +82,10 @@ These additions are targeted for 1.0 and included if they are ready. Otherwise, 
 | Tier | Platforms | What it means |
 | --- | --- | --- |
 | **Stable** | Android, iOS, JVM desktop (Windows, macOS, Linux), JS, Wasm | Covered by the compatibility policy below. Regressions are treated as bugs. |
-| **Experimental** | Kotlin/Native macOS (`macosArm64`), Linux (`linuxX64`, `linuxArm64`), Windows (`mingwX64`) and watchOS | Published and tested in CI, but not covered by the compatibility policy: APIs and behavior on these targets may change in minor releases. They can move to Stable in any 1.x release. |
+| **Experimental** | Kotlin/Native macOS (`macosArm64`), Linux (`linuxX64`, `linuxArm64`), Windows (`mingwX64`) and watchOS | Published and built in CI, with tests on some targets, but not covered by the compatibility policy: APIs and behavior on these targets may change in minor releases. They can move to Stable in any 1.x release. |
 
 <Note>
-  Compose Multiplatform desktop apps run on the JVM, so they are in the **Stable** tier on Windows, macOS and Linux. The Experimental tier only concerns apps compiled with Kotlin/Native for those systems.
+  Compose Multiplatform desktop apps run on the JVM, so they are in the **Stable** tier on Windows, macOS and Linux. The Experimental tier only concerns apps compiled with Kotlin/Native for those systems. Not every module ships every Kotlin/Native target: watchOS is available in `filekit-core` only, and Linux and Windows native in `filekit-core` and `filekit-dialogs`.
 </Note>
 
 ### Compatibility policy
@@ -93,14 +93,15 @@ These additions are targeted for 1.0 and included if they are ready. Otherwise, 
 From 1.0 on, FileKit follows [semantic versioning](https://semver.org/) for stable APIs on stable platforms:
 
 - **Patch releases** (1.0.x) contain bug fixes only.
-- **Minor releases** (1.x.0) add features without breaking your code or the libraries you depend on.
-- **Major releases** (2.0.0) are the only ones allowed to remove APIs or break compatibility.
-- **Deprecations come first.** An API that goes away is first deprecated, with an automatic replacement in your IDE and a migration note. It may become a compilation error in a later 1.x release, but it stays binary compatible and is only removed in a major release.
+- **Minor releases** (1.x.0) add features. They don't change or remove existing stable APIs, and libraries built against an earlier 1.x keep working.
+- **Major releases** (2.0.0) are the only ones allowed to remove APIs or break source or binary compatibility.
+- **Deprecations come first.** An API that will go away is deprecated in a 1.x release, with a migration note and an IDE replacement when there is a mechanical one. Your code keeps compiling, and removal waits for the next major release.
 - **Checked automatically.** CI compares the public API with the previous release, so accidental breaking changes fail the build instead of reaching you.
+- **Fixes land in the latest 1.x release.** Older minor versions are not patched.
 
 ### Not covered
 
-- APIs marked with `@ExperimentalFileKitApi`. They require an explicit opt-in and may change in minor releases.
+- APIs marked with `@ExperimentalFileKitApi`. Using them shows a compiler warning until you opt in, and they may change in minor releases.
 - APIs marked with `@FileKitDialogsInternalApi`. They exist for coordination between FileKit modules and are not meant for apps.
 - Platforms in the Experimental tier.
 - **Toolchain requirements.** Minimum Kotlin, Compose Multiplatform, Android SDK or JDK versions may be raised in minor releases, to keep up with the ecosystem. Every bump is called out in the release notes.
@@ -108,14 +109,14 @@ From 1.0 on, FileKit follows [semantic versioning](https://semver.org/) for stab
 ## How to help
 
 <CardGroup cols={2}>
-  <Card title="Try the release candidates" icon="flask" href="https://github.com/vinceglb/FileKit/releases">
-    Test the 1.0 RCs in your app or library and report anything that breaks or behaves differently from one platform to another.
+  <Card title="Review the API" icon="comments" href="https://github.com/vinceglb/FileKit/discussions">
+    If a name, default or behavior feels wrong, now is the time to say it. After 1.0 it gets much harder to change.
   </Card>
   <Card title="Report platform bugs" icon="bug" href="https://github.com/vinceglb/FileKit/issues">
     Include the FileKit version, the platform and OS version, and a minimal reproduction. A sample project helps the most.
   </Card>
-  <Card title="Review the API" icon="comments" href="https://github.com/vinceglb/FileKit/discussions">
-    If a name, default or behavior feels wrong, now is the time to say it. After 1.0 it gets much harder to change.
+  <Card title="Try the release candidates" icon="flask" href="https://github.com/vinceglb/FileKit/releases">
+    Test the 1.0 RCs in your app or library when they land, and report anything that breaks or behaves differently from one platform to another.
   </Card>
   <Card title="Contribute" icon="code-pull-request" href="https://github.com/vinceglb/FileKit/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+help%22">
     Issues labeled `needs help` are open for contributions. Comment on the issue first so we can agree on the approach.
