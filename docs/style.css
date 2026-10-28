@@ -1,0 +1,4 @@
+/* The brand logo is cropped tight to its ink, so the default navbar height (28px) renders it too large */
+img.nav-logo {
+  height: 1.375rem;
+}

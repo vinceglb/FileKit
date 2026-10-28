@@ -6,6 +6,7 @@ description: 'Let users pick photos and videos with the native gallery on Androi
 
 import { Platforms } from '/snippets/platforms.jsx'
 import DialogResult from '/snippets/dialog-result.mdx'
+import { FileKitDemo } from '/snippets/demo-embed.jsx'
 
 <Platforms scope="dialogs" supported="android ios" partial={{ macos: 'File dialog filtered by extension', jvm: 'File dialog filtered by extension', linux: 'File dialog filtered by extension', windows: 'File dialog filtered by extension', web: 'File input filtered by image/* and video/*' }} anchor="filekit-dialogs" />
 
@@ -37,6 +38,12 @@ val image: PlatformFile? = FileKit.openFilePicker(type = FileKitType.Image)
 <DialogResult />
 
 Every [file picker option](/dialogs/file-picker#options) applies, including the state-tracking modes.
+
+## Try it
+
+This is the FileKit sample running in your browser. Choose images, videos, or both, switch the selection mode, then open a file to inspect its metadata. In a browser the picker is a file input filtered to media files.
+
+<FileKitDemo demo="gallery-picker" title="Gallery picker" />
 
 ## What users see
 
