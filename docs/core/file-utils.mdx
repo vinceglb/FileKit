@@ -20,7 +20,7 @@ val thumbnail = FileKit.cacheDir / "thumb.jpg"
 val database = FileKit.databasesDir / "app.db"
 ```
 
-On JVM, Linux native, and Windows native, call `FileKit.init(appId)` before reading any of these directories. `FileKit.init(appId, filesDir, cacheDir)` overrides the locations. See [Core setup](/core/setup).
+On JVM, Linux native, and Windows native, call `FileKit.init(appId)` before reading any of these directories. `FileKit.init(appId, filesDir, cacheDir)` overrides the locations, and `FileKit.init(filesDir, cacheDir)` sets both without an app ID. See [Core setup](/core/setup).
 
 ## Directory locations
 
