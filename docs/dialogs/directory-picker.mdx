@@ -6,6 +6,7 @@ description: 'Let users pick a folder with the native directory dialog'
 
 import { Platforms } from '/snippets/platforms.jsx'
 import DialogResult from '/snippets/dialog-result.mdx'
+import { FileKitDemo } from '/snippets/demo-embed.jsx'
 
 <Platforms scope="dialogs" supported="android ios macos jvm windows" partial={{ linux: 'Needs the XDG Desktop Portal', web: 'Read-only tree; an empty folder returns null' }} anchor="filekit-dialogs" />
 
@@ -34,6 +35,12 @@ val directory: PlatformFile? = FileKit.openDirectoryPicker()
 </CodeGroup>
 
 <DialogResult />
+
+## Try it
+
+This is the FileKit sample running in your browser. Pick a folder to browse its contents as a tree, then open a file to inspect its metadata.
+
+<FileKitDemo demo="directory-picker" title="Directory picker" />
 
 ## Options
 
