@@ -22,10 +22,19 @@ FileKit.openFileWithDefaultApplication(file)
 
 ## Options
 
-| Parameter | Values | Default | Notes |
-| --- | --- | --- | --- |
-| `file` | `PlatformFile` | Required | The file must exist. |
-| `openFileSettings` | `FileKitOpenFileSettings` | `createDefault()` | Only Android has a property: `authority`, the FileProvider authority for files outside `filesDir` and `cacheDir`. Defaults to `${applicationId}.FileKitFileProvider`. |
+<ResponseField name="file" type="PlatformFile" post={["required"]}>
+  The file to open. It must exist.
+</ResponseField>
+
+<ResponseField name="openFileSettings" type="FileKitOpenFileSettings" default="createDefault()">
+  Platform-specific settings.
+
+  <Expandable title="properties">
+    <ResponseField name="authority" type="String?" default="null" post={["Android"]}>
+      FileProvider authority, only needed for files outside `filesDir` and `cacheDir`. When `null`, FileKit uses its bundled `${applicationId}.FileKitFileProvider`. See [Android setup](#android-setup).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Platform notes
 

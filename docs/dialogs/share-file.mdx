@@ -43,18 +43,31 @@ Sharing has no result: a completed share and a dismissed sheet look the same. Fa
 
 ## Options
 
-| Parameter | Values | Default | Where (Compose) | Notes |
-| --- | --- | --- | --- | --- |
-| `file` or `files` | `PlatformFile` or `List<PlatformFile>` | Required | `launch()` | An empty list does nothing. |
-| `shareSettings` | `FileKitShareSettings` | `createDefault()` | `rememberShareFileLauncher` | Platform-specific properties below. |
+<ResponseField name="file / files" type="PlatformFile | List<PlatformFile>" post={["required", "launch()"]}>
+  What to share. An empty list does nothing.
+</ResponseField>
 
-| Property | Platform | Default | Effect |
-| --- | --- | --- | --- |
-| `authority` | Android | `${applicationId}.FileKitFileProvider` | FileProvider authority for files outside `filesDir` and `cacheDir`. |
-| `addOptionChooseIntent` | Android | No-op | Customizes the chooser `Intent` before it launches. |
-| `addOptionUIActivityViewController` | iOS | No-op | Customizes the `UIActivityViewController` before it appears, for example `excludedActivityTypes`. |
-| `presenter` | iOS | `null` | `UIViewController` that presents the sheet. When `null`, the suspend API uses the top-most view controller and the Compose launcher uses the current `LocalUIViewController`. |
-| `metaTitle` | iOS | `"Share File"` | Accepted but currently not applied to the share sheet. |
+<ResponseField name="shareSettings" type="FileKitShareSettings" default="createDefault()" post={["rememberShareFileLauncher"]}>
+  Platform-specific settings. In the suspend API, pass it to `shareFile()`.
+
+  <Expandable title="properties">
+    <ResponseField name="authority" type="String?" default="null" post={["Android"]}>
+      FileProvider authority, only needed for files outside `filesDir` and `cacheDir`. When `null`, FileKit uses its bundled `${applicationId}.FileKitFileProvider`.
+    </ResponseField>
+    <ResponseField name="addOptionChooseIntent" type="(Intent) -> Unit" default="no-op" post={["Android"]}>
+      Customizes the chooser `Intent` before it launches.
+    </ResponseField>
+    <ResponseField name="addOptionUIActivityViewController" type="(UIActivityViewController) -> Unit" default="no-op" post={["iOS"]}>
+      Customizes the share sheet before it appears, for example `excludedActivityTypes`.
+    </ResponseField>
+    <ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
+      View controller that presents the sheet. When `null`, the suspend API uses the top-most view controller and the Compose launcher uses the current `LocalUIViewController`.
+    </ResponseField>
+    <ResponseField name="metaTitle" type="String" default="&quot;Share File&quot;" post={["iOS"]}>
+      Accepted but currently not applied to the share sheet.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Platform notes
 

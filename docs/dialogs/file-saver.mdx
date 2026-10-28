@@ -40,15 +40,25 @@ file?.writeString("Hello FileKit!")
 
 ## Options
 
-| Parameter | Values | Default | Where (Compose) | Notes |
-| --- | --- | --- | --- | --- |
-| `suggestedName` | `String` | Required | `launch()` | File name without the extension. |
-| `defaultExtension` | `String`, without the dot | `null` | `launch()` | Appended to `suggestedName`. |
-| `allowedExtensions` | `Set<String>`, without dots | `null` | `launch()` | Save types offered by the dialog. A hint, not a validation. |
-| `directory` | `PlatformFile` | `null` | `launch()` | Initial folder. Ignored on Android. |
-| `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | `rememberFileSaverLauncher` | Required by the Compose launcher. See [Dialog settings](/dialogs/dialog-settings). |
+<ResponseField name="suggestedName" type="String" post={["required", "launch()"]}>
+  File name without the extension.
+</ResponseField>
 
-In a Compose Desktop `Window`, `WindowScope.rememberFileSaverLauncher` makes `dialogSettings` optional and parents the dialog to the window.
+<ResponseField name="defaultExtension" type="String?" default="null" post={["launch()"]}>
+  Extension without the dot, appended to `suggestedName`.
+</ResponseField>
+
+<ResponseField name="allowedExtensions" type="Set<String>?" default="null" post={["launch()"]}>
+  Save types offered by the dialog, without dots. A hint, not a validation.
+</ResponseField>
+
+<ResponseField name="directory" type="PlatformFile?" default="null" post={["launch()"]}>
+  Initial folder. Ignored on Android.
+</ResponseField>
+
+<ResponseField name="dialogSettings" type="FileKitDialogSettings" default="createDefault()" post={["rememberFileSaverLauncher"]}>
+  Required by the Compose launcher. In a Compose Desktop `Window`, `WindowScope.rememberFileSaverLauncher` makes it optional and parents the dialog to the window. See [Dialog settings](/dialogs/dialog-settings).
+</ResponseField>
 
 ## Offer several file types
 

@@ -26,12 +26,21 @@ Pass `bytes = imageBytes` instead of `file` when the image is already in memory.
 
 ## Options
 
-| Parameter | Values | Default | Notes |
-| --- | --- | --- | --- |
-| `file` or `bytes` | `PlatformFile` or `ByteArray` | Required | The source image. |
-| `imageFormat` | `ImageFormat.JPEG`, `ImageFormat.PNG` | `JPEG` | Output format. |
-| `quality` | `0` to `100` | `80` | Applies to JPEG only. |
-| `maxWidth`, `maxHeight` | `Int?` | `null` | Downscales to fit, keeping the aspect ratio. Smaller images are never upscaled. |
+<ResponseField name="file / bytes" type="PlatformFile | ByteArray" post={["required"]}>
+  The source image.
+</ResponseField>
+
+<ResponseField name="imageFormat" type="ImageFormat" default="JPEG">
+  Output format: `ImageFormat.JPEG` or `ImageFormat.PNG`.
+</ResponseField>
+
+<ResponseField name="quality" type="Int" default="80">
+  `0` to `100`. Applies to JPEG only.
+</ResponseField>
+
+<ResponseField name="maxWidth / maxHeight" type="Int?" default="null">
+  Downscales to fit, keeping the aspect ratio. Smaller images are never upscaled.
+</ResponseField>
 
 On Android, the EXIF orientation is applied before resizing, so the output is upright.
 

@@ -12,15 +12,42 @@ import { Platforms } from '/snippets/platforms.jsx'
 
 ## Settings
 
-| Setting | Platforms | Effect |
-| --- | --- | --- |
-| `title` | JVM, macOS, Linux native, Windows native | Dialog title. macOS shows it as the panel message. Some save dialogs ignore it, see [File saver](/dialogs/file-saver#platform-notes). |
-| `parent` | JVM | Window that owns the dialog, for modality and stacking. See [Parent window (JVM)](#parent-window-jvm). |
-| `macOS = FileKitMacOSSettings(...)` | JVM on macOS | `canCreateDirectories` (default `true`) shows the New Folder button. `resolvesAliases` (default `null`, system behavior) controls alias resolution in open panels. |
-| `canCreateDirectories` | macOS native | Shows the New Folder button. Default `true`. |
-| `assetRepresentationMode` | iOS | Photos picker format: `Automatic` (default), `Current` (avoid transcoding), or `Compatible` (transcode to a widely supported format, for example when a library can't decode HEIC). |
-| `presenter` | iOS | `UIViewController` that presents the dialog. When `null`, the suspend API uses the top-most view controller and Compose launchers use the current `LocalUIViewController`. |
-| `title`, `canCreateDirectories` | iOS | Accepted for parity, currently ignored. |
+<ResponseField name="title" type="String?" default="null" post={["JVM", "macOS", "Linux native", "Windows native"]}>
+  Dialog title. macOS shows it as the panel message. Some save dialogs ignore it: see [File saver](/dialogs/file-saver#platform-notes).
+</ResponseField>
+
+<ResponseField name="parent" type="FileKitDialogParent?" default="null" post={["JVM"]}>
+  Window that owns the dialog, for modality and stacking. See [Parent window (JVM)](#parent-window-jvm).
+</ResponseField>
+
+<ResponseField name="macOS" type="FileKitMacOSSettings" default="FileKitMacOSSettings()" post={["JVM on macOS"]}>
+  Native panel options when a JVM app runs on macOS.
+
+  <Expandable title="properties">
+    <ResponseField name="canCreateDirectories" type="Boolean" default="true">
+      Shows the New Folder button.
+    </ResponseField>
+    <ResponseField name="resolvesAliases" type="Boolean?" default="null">
+      Alias resolution in open panels. `null` keeps the system behavior.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="canCreateDirectories" type="Boolean" default="true" post={["macOS native"]}>
+  Shows the New Folder button.
+</ResponseField>
+
+<ResponseField name="assetRepresentationMode" type="FileKitAssetRepresentationMode" default="Automatic" post={["iOS"]}>
+  Photos picker format: `Automatic`, `Current` (avoid transcoding), or `Compatible` (transcode to a widely supported format, for example when a library can't decode HEIC).
+</ResponseField>
+
+<ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
+  View controller that presents the dialog. When `null`, the suspend API uses the top-most view controller and Compose launchers use the current `LocalUIViewController`.
+</ResponseField>
+
+<ResponseField name="title, canCreateDirectories" post={["iOS"]}>
+  Accepted for parity, currently ignored.
+</ResponseField>
 
 Android and the web have no settings: use `createDefault()`.
 

@@ -54,8 +54,8 @@ val photo: PlatformFile? = FileKit.openCameraPicker()
   Platform-specific settings. In the suspend API, pass it to `openCameraPicker()`.
 
   <Expandable title="properties">
-    <ResponseField name="authority" type="String" default="${applicationId}.FileKitFileProvider" post={["Android"]}>
-      FileProvider authority. Only needed for a `destinationFile` outside `filesDir` and `cacheDir`: see [Android setup](#android-setup).
+    <ResponseField name="authority" type="String?" default="null" post={["Android"]}>
+      FileProvider authority, only needed for a `destinationFile` outside `filesDir` and `cacheDir`. When `null`, FileKit uses its bundled `${applicationId}.FileKitFileProvider`. See [Android setup](#android-setup).
     </ResponseField>
     <ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
       View controller that presents the camera. When `null`, the suspend API presents from its own window above your app, and the Compose launcher uses the current `LocalUIViewController`.

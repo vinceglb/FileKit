@@ -37,12 +37,15 @@ val directory: PlatformFile? = FileKit.openDirectoryPicker()
 
 ## Options
 
-| Parameter | Values | Default | Notes |
-| --- | --- | --- | --- |
-| `directory` | `PlatformFile?` | `null` | Folder the dialog opens in. Ignored on the web. |
-| `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | Title, parent window, and other [per-platform settings](/dialogs/dialog-settings). |
-
 In Compose, pass these options to `rememberDirectoryPickerLauncher`. `launch()` takes no arguments.
+
+<ResponseField name="directory" type="PlatformFile?" default="null">
+  Folder the dialog opens in. Ignored on the web.
+</ResponseField>
+
+<ResponseField name="dialogSettings" type="FileKitDialogSettings" default="createDefault()">
+  Title, parent window, and other [per-platform settings](/dialogs/dialog-settings).
+</ResponseField>
 
 ## Read the folder's contents
 

@@ -23,13 +23,25 @@ pickedFile.copyTo(reports)
 
 ## Options
 
-| Parameter | Function | Default | Notes |
-| --- | --- | --- | --- |
-| `maxDepth` | `walk` | `Int.MAX_VALUE` | `1` yields only the direct children. Must be positive. |
-| `mustCreate` | `createDirectories` | `false` | `true` throws if the directory already exists. |
-| `overwrite` | `copyRecursively` | `false` | `true` replaces existing files. See [Copy a directory tree](#copy-a-directory-tree). |
-| `mustExist` | `delete` | `true` | `true` throws if the file doesn't exist. |
-| `recursively` | `delete` | `false` | `true` empties a directory before removing it. |
+<ResponseField name="maxDepth" type="Int" default="Int.MAX_VALUE" post={["walk"]}>
+  `1` yields only the direct children. Must be positive.
+</ResponseField>
+
+<ResponseField name="mustCreate" type="Boolean" default="false" post={["createDirectories"]}>
+  `true` throws if the directory already exists.
+</ResponseField>
+
+<ResponseField name="overwrite" type="Boolean" default="false" post={["copyRecursively"]}>
+  `true` replaces existing files. See [Copy a directory tree](#copy-a-directory-tree).
+</ResponseField>
+
+<ResponseField name="mustExist" type="Boolean" default="true" post={["delete"]}>
+  `true` throws if the file doesn't exist.
+</ResponseField>
+
+<ResponseField name="recursively" type="Boolean" default="false" post={["delete"]}>
+  `true` empties a directory before removing it.
+</ResponseField>
 
 ## List a directory
 
