@@ -1,0 +1,51 @@
+name: ✨ Feature request
+description: Suggest a new API, platform, or improvement for FileKit.
+labels: ["feature request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Please search [existing issues](https://github.com/vinceglb/FileKit/issues?q=is%3Aissue) first.
+        For open-ended ideas you would like to discuss before proposing something concrete, start a [Discussion](https://github.com/vinceglb/FileKit/discussions/categories/ideas).
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do, and why is it hard or impossible with FileKit today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you like it to work? An API sketch is welcome.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives and workarounds
+      description: What do you do today instead? Have you seen this solved in another library?
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Platforms
+      description: Which platforms does this concern?
+      options:
+        - label: Android
+        - label: iOS
+        - label: macOS
+        - label: watchOS
+        - label: JVM desktop
+        - label: Linux (native)
+        - label: Windows (native)
+        - label: Web (JS / Wasm)
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to work on this and open a pull request.
