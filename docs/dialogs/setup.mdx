@@ -19,7 +19,7 @@ Both artifacts include `filekit-core`. Check the [platform support matrix](/plat
 
 ## Android setup
 
-Only Android needs an init step for dialogs, and only when you use `filekit-dialogs` without Compose. Register your activity so FileKit can reach its `ActivityResultRegistry`:
+Only Android needs an init step for dialogs, and only when you call the suspend APIs (`FileKit.openFilePicker()`…). Compose launchers register the activity for you, but a suspend call made before any launcher is composed throws `FileKitNotInitializedException`. Register your activity so FileKit can reach its `ActivityResultRegistry`:
 
 ```kotlin MainActivity.kt
 class MainActivity : ComponentActivity() {

@@ -21,6 +21,7 @@ val launcher = rememberFileSaverLauncher(
     dialogSettings = FileKitDialogSettings.createDefault(),
     onError = { failure -> showError(failure.message) },
 ) { file ->
+    // onError covers the dialog only: handle write errors (IOException) here
     scope.launch { file?.writeString("Hello FileKit!") }
 }
 

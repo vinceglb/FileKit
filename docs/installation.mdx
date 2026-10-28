@@ -7,7 +7,7 @@ import VersionCore from '/snippets/version-core.mdx'
 import VersionDialogs from '/snippets/version-dialogs.mdx'
 import VersionCoil from '/snippets/version-coil.mdx'
 
-FileKit is published on Maven Central under the `io.github.vinceglb` group. Add the modules you need to your shared module's `commonMain` dependencies.
+FileKit is published on Maven Central under the `io.github.vinceglb` group. Add the modules you need to your shared module's `commonMain` dependencies. If some of your targets aren't supported by a module (for example `filekit-dialogs` on watchOS, or Compose modules on Linux and Windows native), add it to an [intermediate source set](/platform-support#use-platform-specific-apis-from-shared-code) instead.
 
 ## Choose your modules
 
@@ -57,10 +57,10 @@ Most targets need no setup. Do these steps once per app:
 
 | Platform | `filekit-core` | `filekit-dialogs` | `filekit-dialogs-compose` |
 | --- | --- | --- | --- |
-| Android | Automatic (App Startup) | `FileKit.init(activity)` in your activity | Automatic |
-| JVM desktop | `FileKit.init(appId)` | `FileKit.init(appId)`, plus `jdk.security.auth` on Linux | Same as dialogs |
-| Linux native | `FileKit.init(appId)` | `FileKit.init(appId)`, plus `libdbus-1` | Not available |
-| Windows native | `FileKit.init(appId)` | `FileKit.init(appId)` | Not available |
+| Android | Automatic (App Startup) | `FileKit.init(activity)` in your activity | Automatic for launchers. `FileKit.init(activity)` if you also call suspend dialog APIs |
+| JVM desktop | `FileKit.init(appId)` for app directories | None, plus `jdk.security.auth` on Linux | Same as dialogs |
+| Linux native | `FileKit.init(appId)` for app directories | None, plus `libdbus-1` | Not available |
+| Windows native | `FileKit.init(appId)` for app directories | None | Not available |
 | iOS, macOS, JS, Wasm | None | None | None |
 | watchOS | None | Not available | Not available |
 

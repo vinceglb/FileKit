@@ -87,9 +87,10 @@ If your project uses an `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or Copilot in
   `io.github.vinceglb.filekit.dialogs`, `io.github.vinceglb.filekit.dialogs.compose`, or `io.github.vinceglb.filekit.coil`.
 - Use `PlatformFile`, not `java.io.File` or `NSURL`, in shared code. Reading and writing (`readBytes()`, `readString()`,
   `write()`, `writeString()`) are `suspend` functions.
-- Pickers return `null` when the user cancels. Prefer Compose launcher overloads that take `onError`.
-- Platform setup: `FileKit.init(appId = ...)` on JVM desktop and Linux native. On Android, `FileKit.init(activity)` only
-  when using `filekit-dialogs` without Compose.
+- Pickers return `null` when the user cancels, except `SingleWithState`/`MultipleWithState`, which emit
+  `FileKitPickerState.Cancelled`. Prefer Compose launcher overloads that take `onError`.
+- Platform setup: `FileKit.init(appId = ...)` on JVM desktop, Linux native, and Windows native before using app
+  directories. On Android, `FileKit.init(activity)` before calling suspend dialog APIs (Compose launchers do it for you).
 - Some APIs are platform-specific (for example, the file saver is not available on JS/Wasm; use `FileKit.download`).
   Check https://filekit.mintlify.app/platform-support before using an API in `commonMain`.
 ```

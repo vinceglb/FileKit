@@ -16,7 +16,7 @@ og:title: FileKit
 
 ## FileKit in 30 seconds
 
-Let the user pick a photo, then show it, copy it into your app's storage, or upload its bytes.
+Let the user pick a photo, then show it or read its bytes.
 
 <CodeGroup>
 
@@ -46,12 +46,8 @@ suspend fun importPhoto() {
 
     println("${photo.name}: ${photo.size()} bytes")
 
-    // Read it or upload it
+    // Read it, then upload it or store it
     val bytes: ByteArray = photo.readBytes()
-
-    // Copy it into your app's storage (all targets except the web)
-    val copy = FileKit.filesDir / photo.name
-    copy write photo
 }
 ```
 
@@ -95,7 +91,7 @@ suspend fun importPhoto() {
 | :-----: | :-: | :---: | :---------: | :----------: | :------------: | :-: | :--: | :-----: |
 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Core only |
 
-Every target uses the platform's native dialogs. Some features are platform-specific: the camera and share sheet are mobile-only, the file saver is not available in browsers, and Compose and Coil support follows Compose Multiplatform's targets. See the [platform support matrix](/platform-support) for a feature-by-feature breakdown.
+Every target with `filekit-dialogs` uses the platform's native dialogs (watchOS has FileKit Core only). Some features are platform-specific: the camera and share sheet are mobile-only, the file saver is not available in browsers, and Compose and Coil support follows Compose Multiplatform's targets. See the [platform support matrix](/platform-support) for a feature-by-feature breakdown.
 
 ## Modules
 

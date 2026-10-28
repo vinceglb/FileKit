@@ -43,7 +43,16 @@ suspend fun loadLastFile(): PlatformFile? {
         bookmarkFile.delete() // gone or no longer accessible: ask the user again
         return null
     }
-    if (resolution.shouldRefresh) saveLastFile(resolution.file)
+    if (resolution.shouldRefresh) {
+        // Best effort: keep the old bookmark if the refresh fails
+        try {
+            saveLastFile(resolution.file)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // Ignore and retry on the next launch
+        }
+    }
     return resolution.file
 }
 ```

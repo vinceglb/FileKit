@@ -24,9 +24,9 @@ Want to see FileKit before installing it? [Try it in your browser](/live-demo): 
 
     <Tabs>
       <Tab title="Android">
-        With `filekit-dialogs-compose`, nothing to do.
+        If you only use Compose launchers (`remember…Launcher`), nothing to do.
 
-        With `filekit-dialogs` only, register your activity so FileKit can launch dialogs:
+        If you call the suspend dialog APIs (`FileKit.openFilePicker()`…), register your activity so FileKit can launch dialogs:
 
         ```kotlin MainActivity.kt
         class MainActivity : ComponentActivity() {
@@ -95,17 +95,19 @@ Want to see FileKit before installing it? [Try it in your browser](/live-demo): 
   </Step>
 
   <Step title="Read it">
-    `PlatformFile` exposes the same read API on every platform:
+    `PlatformFile` exposes the same read API on every platform. Read the file once the picker returns it: inside `onResult` (with `scope.launch`) in Compose, or after `openFilePicker()` returns a non-null file:
 
     ```kotlin
-    val name: String = file.name
-    val size: Long = file.size()
+    suspend fun readPicked(file: PlatformFile) {
+        val name: String = file.name
+        val size: Long = file.size()
 
-    val text: String = file.readString()
-    val bytes: ByteArray = file.readBytes()
+        val text: String = file.readString()
+        val bytes: ByteArray = file.readBytes()
+    }
     ```
 
-    For an image in Compose, call `file.toImageBitmap()` or use the [Coil](/integrations/coil).
+    For an image in Compose, call `file.toImageBitmap()` or use [Coil](/integrations/coil).
   </Step>
 
   <Step title="Save a file">

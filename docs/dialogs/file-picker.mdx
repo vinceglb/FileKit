@@ -127,7 +127,7 @@ val files = FileKit.openFilePicker(mode = FileKitMode.Multiple(maxItems = 10))
 
 </CodeGroup>
 
-Gallery pickers on Android and iOS enforce `maxItems` in their UI. Other dialogs have no native limit, so FileKit keeps the first `maxItems` files in the order the platform returns them.
+The iOS gallery picker and the Android Photo Picker enforce `maxItems` in their UI. Other dialogs, including Android's document picker fallback, have no native limit, so FileKit keeps the first `maxItems` files in the order the platform returns them.
 
 ## Track progress
 

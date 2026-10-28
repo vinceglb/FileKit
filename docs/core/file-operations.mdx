@@ -6,9 +6,9 @@ description: 'List, walk, copy, move, and delete files and directories with Plat
 
 import { Platforms } from '/snippets/platforms.jsx'
 
-<Platforms scope="core" supported="android ios macos jvm linux windows watchos" partial={{ web: 'Only list, walk, and sizeRecursively, on picked folders' }} anchor="filekit-core" />
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos" partial={{ web: 'list, walk and sizeRecursively on picked folders; delete on OPFS entries' }} anchor="filekit-core" />
 
-These functions manage files and directory trees on disk. On the web, only `list()`, `walk()`, and `sizeRecursively()` exist (on folders from the directory picker): call the others from `nonWebMain` or a platform source set.
+These functions manage files and directory trees on disk. On the web, `list()`, `walk()`, and `sizeRecursively()` work on folders from the directory picker, and the experimental [origin private file system](/core/web#store-files-in-the-origin-private-file-system) adds `listEntries()` and `delete()`. Call the other functions from `nonWebMain` or a platform source set.
 
 ## Usage
 

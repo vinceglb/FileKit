@@ -56,7 +56,7 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | [`compressImage`](/core/image-and-video-utils) | ✅ | ✅ | ⚠️ <sup>5</sup> | ✅ | ❌ <sup>6</sup> | ❌ <sup>6</sup> | ❌ <sup>6</sup> | ❌ |
 | `saveImageToGallery`, `saveVideoToGallery` | ✅ | ✅ | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ❌ <sup>6</sup> | ❌ |
 | [Bookmark data](/core/bookmark-data) (persistent access) | ✅ | ✅ | ✅ | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ✅ | ❌ |
-| `PlatformFile` serialization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `PlatformFile` serialization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ <sup>16</sup> |
 | [`FileKit.download`](/core/web#download-files) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 | [Origin private file system (OPFS)](/core/web#store-files-in-the-origin-private-file-system) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ <sup>2</sup> |
 
@@ -129,5 +129,6 @@ Keep only the targets your project declares, and add others (such as `macosMain`
 13. **Web directory picker** returns a read-only tree of the selected folder. An empty folder returns `null`, like a cancellation.
 14. **Mobile savers:** on Android, several `allowedExtensions` fall back to the `*/*` MIME type. On iOS, `allowedExtensions` is ignored.
 15. **iOS dialog settings:** the presenter view controller and asset representation mode are applied; `title` and `canCreateDirectories` are currently ignored.
+16. **Web serialization compiles but fails:** `PlatformFileSerializer` is declared for JS and Wasm, but serializing or deserializing a `PlatformFile` throws at runtime. Store something else, such as the file name or bytes.
 
 Something wrong or missing? [Open an issue](https://github.com/vinceglb/FileKit/issues) and include the platform and FileKit version.

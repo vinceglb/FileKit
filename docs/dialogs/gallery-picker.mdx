@@ -60,7 +60,7 @@ val media: List<PlatformFile>? = FileKit.openFilePicker(
 )
 ```
 
-The Android and iOS pickers enforce the limit in their UI. File dialogs on other targets can't, so FileKit keeps the first `maxItems` files.
+The iOS picker and the Android Photo Picker enforce the limit in their UI. When Android falls back to the document picker, and on other targets, the dialog can't limit the selection, so FileKit keeps the first `maxItems` files.
 
 <Tip>
 iOS can return photos as HEIC, which some image decoders and servers can't read. In `iosMain`, pass `FileKitDialogSettings(assetRepresentationMode = FileKitAssetRepresentationMode.Compatible)` as `dialogSettings` so iOS transcodes them to a more compatible format.
