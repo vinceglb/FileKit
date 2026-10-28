@@ -6,7 +6,7 @@ description: 'How FileKit dialogs report results, cancellation, and failures in 
 
 import { Platforms } from '/snippets/platforms.jsx'
 
-<Platforms scope="dialogs" supported="android ios macos jvm linux windows web" anchor="filekit-dialogs" />
+<Platforms scope="dialogs" supported="android ios macos jvm windows web" partial={{ linux: 'Needs the XDG Desktop Portal' }} anchor="filekit-dialogs" />
 
 Every FileKit dialog separates three outcomes: a value, a user cancellation (`null`), and an operational failure (a `FileKitDialogException`). Invalid arguments and unexpected defects are never converted into failures: they propagate as the original exception.
 

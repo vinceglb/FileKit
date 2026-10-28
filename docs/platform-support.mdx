@@ -8,7 +8,7 @@ FileKit gives you one API, but platforms differ: browsers can't write arbitrary 
 **Legend:** ✅ supported · ⚠️ supported with limitations (see the numbered notes) · ❌ not available
 
 <Tip>
-An API marked ❌ is usually not declared at all for that target, so calling it from `commonMain` won't compile. Call it from a source set that only includes supported targets, such as `nonWebMain` or `mobileMain`.
+An API marked ❌ is usually not declared at all for that target, so calling it from `commonMain` won't compile. Call it from a source set that only includes supported targets. See [Use platform-specific APIs from shared code](#use-platform-specific-apis-from-shared-code).
 </Tip>
 
 ## Targets per module
@@ -86,6 +86,31 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | [Coil](/integrations/coil) `AsyncImage(model = platformFile)` | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 Compose Multiplatform has no Linux native, Windows native, or watchOS targets, so `filekit-dialogs-compose` and `filekit-coil` don't either. On macOS native, Compose itself is experimental.
+
+## Use platform-specific APIs from shared code
+
+Kotlin's default hierarchy gives you `appleMain`, `iosMain`, `nativeMain`, and `webMain`, but no source set for "everything except the web" or "Android and iOS". Create them in your shared module, following [Kotlin's guide to additional source sets](https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets):
+
+```kotlin build.gradle.kts
+kotlin {
+    applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        // File saver, open with default app, file operations, app directories
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        iosMain.get().dependsOn(nonWebMain)
+
+        // Camera picker, share sheet
+        val mobileMain by creating { dependsOn(nonWebMain) }
+        androidMain.get().dependsOn(mobileMain)
+        iosMain.get().dependsOn(mobileMain)
+    }
+}
+```
+
+Keep only the targets your project declares, and add others (such as `macosMain` or `linuxMain`) the same way. Code in `nonWebMain` can then call `FileKit.openFileSaver()`, and code in `mobileMain` can call `FileKit.openCameraPicker()`.
 
 ## Notes
 

@@ -3,6 +3,7 @@
 //   import { Platforms } from '/snippets/platforms.jsx'
 //   <Platforms scope="dialogs" supported="android ios macos jvm windows" partial={{ linux: 'Needs the XDG Desktop Portal', web: 'No directory or dialog settings' }} />
 // Platforms of the scope that are neither supported nor partial render as unavailable.
+// When only one platform is available, the row shows just that platform ("Web only").
 export const Platforms = ({ scope = 'core', supported = '', partial = {}, anchor }) => {
   const labels = {
     android: 'Android',
@@ -20,6 +21,10 @@ export const Platforms = ({ scope = 'core', supported = '', partial = {}, anchor
     compose: ['android', 'ios', 'macos', 'jvm', 'web'],
   }[scope] || []
   const yes = supported.split(/\s+/).filter(Boolean)
+  const stateOf = (key) => (yes.includes(key) ? 'yes' : partial[key] ? 'partial' : 'no')
+  const available = columns.filter((key) => stateOf(key) !== 'no')
+  // A single available platform reads better as "Web only" than as a row of struck-through pills
+  const shown = available.length === 1 ? available : columns
 
   const styles = {
     yes: { background: 'rgba(16, 185, 129, 0.14)', color: 'rgb(5, 150, 105)', border: '1px solid rgba(16, 185, 129, 0.35)' },
@@ -35,12 +40,14 @@ export const Platforms = ({ scope = 'core', supported = '', partial = {}, anchor
       title="See the platform support matrix"
       style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', margin: '4px 0 20px', textDecoration: 'none', borderBottom: 'none' }}
     >
-      {columns.map((key) => {
-        const state = yes.includes(key) ? 'yes' : partial[key] ? 'partial' : 'no'
+      {shown.map((key) => {
+        const state = stateOf(key)
+        const description = state === 'partial' ? `Partial: ${partial[key]}` : titles[state]
         return (
           <span
             key={key}
-            title={state === 'partial' ? `Partial: ${partial[key]}` : titles[state]}
+            title={description}
+            aria-label={`${labels[key]}: ${description}`}
             style={{
               ...styles[state],
               display: 'inline-flex',
@@ -56,6 +63,7 @@ export const Platforms = ({ scope = 'core', supported = '', partial = {}, anchor
           >
             <span aria-hidden="true">{icons[state]}</span>
             {labels[key]}
+            {shown.length === 1 ? ' only' : ''}
           </span>
         )
       })}

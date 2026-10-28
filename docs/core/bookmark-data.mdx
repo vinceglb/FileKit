@@ -28,7 +28,8 @@ Both functions are declared in `nonWebMain`. `bookmarkData()` is a suspend funct
 A bookmark breaks when the user deletes the file, revokes your app's access, or (on path-based platforms) moves it. Handle failure and ask the user to pick the file again. This helper stores one bookmark in your app's files directory:
 
 ```kotlin nonWebMain
-private val bookmarkFile = FileKit.filesDir / "last-file.bookmark"
+// A getter, so FileKit.filesDir is only read after FileKit.init on desktop
+private val bookmarkFile get() = FileKit.filesDir / "last-file.bookmark"
 
 suspend fun saveLastFile(file: PlatformFile) {
     bookmarkFile.write(file.bookmarkData().bytes)
@@ -56,7 +57,7 @@ suspend fun loadLastFile(): PlatformFile? {
 
 Refreshing is best effort: the old bytes may still work, and `bookmarkData()` can fail if the file disappeared or macOS already revoked access. Use `fromBookmarkData` when you only need the file.
 
-## Platform behavior
+## Platform notes
 
 | Platform | Stored as | Security-scoped | Survives a move |
 | --- | --- | --- | --- |

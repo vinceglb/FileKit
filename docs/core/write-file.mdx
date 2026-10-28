@@ -22,7 +22,7 @@ file.write("Hello again".encodeToByteArray())
 Both are suspend functions that switch to `Dispatchers.IO`. The parent directory must exist: create it first with [`createDirectories()`](/core/file-operations#create-directories). Failures throw `kotlinx.io.IOException` or `FileKitException`.
 
 <Note>
-These functions are declared for every platform except the web, so call them from `nonWebMain` or a platform source set. On the web, picked files are read-only: see [Write on the web](#write-on-the-web).
+These functions are not declared in `commonMain`. Call them from `nonWebMain` or a platform source set. The web has separate, experimental versions for the origin private file system: see [Write on the web](#write-on-the-web).
 </Note>
 
 ## Copy another file's content

@@ -10,7 +10,7 @@ import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
 <Platforms scope="dialogs" supported="android ios" anchor="filekit-dialogs" />
 
-Open the system camera to take a photo. FileKit writes the photo to a file and returns it as a `PlatformFile`. Call it from a source set that only includes Android and iOS, such as `mobileMain`.
+Open the system camera to take a photo. FileKit writes the photo to a file and returns it as a `PlatformFile`. Call it from a source set that only includes Android and iOS, such as `mobileMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
 ## Usage
 
@@ -18,7 +18,7 @@ Open the system camera to take a photo. FileKit writes the photo to a file and r
 
 ```kotlin Compose
 val launcher = rememberCameraPickerLauncher(
-    onError = { failure -> println("Camera failed: ${failure.message}") },
+    onError = { failure -> showError(failure.message) },
 ) { photo ->
     // photo is a PlatformFile, or null if the user cancelled
 }
@@ -94,4 +94,6 @@ With Compose, pass the same `openCameraSettings` to `rememberCameraPickerLaunche
 
 ## Related
 
-[Gallery picker](/dialogs/gallery-picker) to pick existing photos, [Share file](/dialogs/share-file) to send the photo to another app, and [Results and errors](/dialogs/error-handling).
+- [Gallery picker](/dialogs/gallery-picker) to pick existing photos.
+- [Share file](/dialogs/share-file) to send the photo to another app.
+- [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

@@ -9,7 +9,7 @@ import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
 <Platforms scope="dialogs" supported="android ios" anchor="filekit-dialogs" />
 
-Open the system share sheet so the user can send files to another app. Call it from a source set that only includes Android and iOS, such as `mobileMain`.
+Open the system share sheet so the user can send files to another app. Call it from a source set that only includes Android and iOS, such as `mobileMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
 <div className="flex justify-center gap-6">
   <img height="200" width="200" noZoom src="/images/share-file-ios.png" alt="iOS share sheet for a JPEG image, with Reminders, Copy, Print, and Assign to Contact actions" />
@@ -22,7 +22,7 @@ Open the system share sheet so the user can send files to another app. Call it f
 
 ```kotlin Compose
 val launcher = rememberShareFileLauncher(
-    onError = { failure -> println("Share failed: ${failure.message}") },
+    onError = { failure -> showError(failure.message) },
 )
 
 Button(onClick = { launcher.launch(FileKit.filesDir / "report.pdf") }) {
@@ -69,4 +69,5 @@ Sharing has no result: a completed share and a dismissed sheet look the same. Fa
 
 ## Related
 
-[Open with default app](/dialogs/open-file) to view a file instead of sending it, and [Camera picker](/dialogs/camera-picker) to capture a photo to share.
+- [Open with default app](/dialogs/open-file) to view a file instead of sending it.
+- [Camera picker](/dialogs/camera-picker) to capture a photo to share.

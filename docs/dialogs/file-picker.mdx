@@ -51,6 +51,8 @@ This is the FileKit sample running in your browser. Pick files, switch the selec
 | `directory` | `PlatformFile?` | `null` | Folder the dialog opens in. Ignored on Android and the web. |
 | `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | Title, parent window, and other [per-platform settings](/dialogs/dialog-settings). |
 
+In Compose, pass these options to `rememberFilePickerLauncher`. `launch()` takes no arguments.
+
 ## Filter by extension
 
 Pass the extensions without the dot:
@@ -130,5 +132,5 @@ Progress matters most for iOS gallery picks, where FileKit copies each item befo
 ## Related
 
 - [Gallery picker](/dialogs/gallery-picker) for photos and videos.
-- [Read a file](/core/read-file) once the user has picked it.
+- [Reading files](/core/read-file) once the user has picked it.
 - [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

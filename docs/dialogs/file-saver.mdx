@@ -9,7 +9,7 @@ import DialogResult from '/snippets/dialog-result.mdx'
 
 <Platforms scope="dialogs" supported="macos jvm windows" partial={{ android: 'Several allowedExtensions fall back to */*', ios: 'allowedExtensions is ignored', linux: 'Needs the XDG Desktop Portal' }} anchor="filekit-dialogs" />
 
-Open the native save dialog. FileKit returns the location the user picked as a `PlatformFile`, and you write your data to it. The file saver is not available on the web, so call it from a non-web source set such as `nonWebMain`.
+Open the native save dialog. FileKit returns the location the user picked as a `PlatformFile`, and you write your data to it. The file saver is not available on the web, so call it from a non-web source set such as `nonWebMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
 ## Usage
 
@@ -19,7 +19,7 @@ Open the native save dialog. FileKit returns the location the user picked as a `
 val scope = rememberCoroutineScope()
 val launcher = rememberFileSaverLauncher(
     dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure -> println("Saver failed: ${failure.message}") },
+    onError = { failure -> showError(failure.message) },
 ) { file ->
     scope.launch { file?.writeString("Hello FileKit!") }
 }
@@ -84,4 +84,5 @@ Browsers don't let you choose a save location: use `FileKit.download` to send by
 
 ## Related
 
-[Writing files](/core/write-file) for streaming large content, and [Dialog settings](/dialogs/dialog-settings) for titles and parent windows.
+- [Writing files](/core/write-file) for streaming large content.
+- [Dialog settings](/dialogs/dialog-settings) for titles and parent windows.

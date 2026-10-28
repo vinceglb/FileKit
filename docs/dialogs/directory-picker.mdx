@@ -42,15 +42,18 @@ val directory: PlatformFile? = FileKit.openDirectoryPicker()
 | `directory` | `PlatformFile?` | `null` | Folder the dialog opens in. Ignored on the web. |
 | `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | Title, parent window, and other [per-platform settings](/dialogs/dialog-settings). |
 
+In Compose, pass these options to `rememberDirectoryPickerLauncher`. `launch()` takes no arguments.
+
 ## Read the folder's contents
 
-Call `list()` for the direct children or `walk()` for the whole tree. See [PlatformFile](/core/platform-file) for directory operations.
+Call `list()` for the direct children or `walk()` for the whole tree. See [File operations](/core/file-operations#list-a-directory).
 
 ## Keep access across launches
 
 A picked folder is only accessible for the current session on Android and Apple platforms. Save its bookmark to reopen it after a restart:
 
 ```kotlin nonWebMain
+val directory = FileKit.openDirectoryPicker() ?: return
 val bookmark = directory.bookmarkData()
 saveBytes("project_folder", bookmark.bytes)
 
@@ -70,7 +73,7 @@ val restored = PlatformFile.fromBookmarkData(loadBytes("project_folder"))
 | JVM | Native dialog on macOS and Windows, and the XDG Desktop Portal on Linux with a Swing fallback when no portal runs. |
 | Linux native | XDG Desktop Portal only, with no fallback dialog. See [Linux setup](/dialogs/setup#linux-setup). |
 | Windows native | `IFileDialog` in folder mode. |
-| Web | Browsers expose the folder as a flat file list, so FileKit rebuilds a read-only tree from relative paths. Empty subfolders are missing, folder `lastModified()` values are synthetic, and an empty folder returns `null`, like a cancellation. |
+| Web | Browsers expose the folder as a flat file list, so FileKit rebuilds a read-only tree from relative paths. Empty subfolders are missing, folders report a `lastModified()` of epoch `0`, and an empty folder returns `null`, like a cancellation. |
 
 ## Related
 

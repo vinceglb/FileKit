@@ -84,7 +84,7 @@ val bitmap: ImageBitmap = file.toImageBitmap()
 val png: ByteArray = bitmap.encodeToByteArray(format = ImageFormat.PNG)
 ```
 
-Both are suspend functions. `encodeToByteArray` defaults to `ImageFormat.JPEG` with `quality = 100`. To display a file in an `Image`, the [Coil integration](/integrations/coil) loads it for you, with caching.
+Both are suspend functions. `encodeToByteArray` defaults to `ImageFormat.JPEG` with `quality = 100`. To display a file in an `Image`, the [Coil](/integrations/coil) loads it for you, with caching.
 
 ## Related
 

@@ -98,18 +98,7 @@ fun main() {
 
 ## ProGuard
 
-If you shrink or obfuscate your JVM app, keep the classes FileKit loads through JNA and D-Bus:
-
-```proguard proguard-rules.pro
-# Required on JVM for JNA-based integrations.
--keep class com.sun.jna.** { *; }
--keep class * implements com.sun.jna.** { *; }
-
-# Required when using FileKit Dialogs on Linux (XDG Desktop Portal / DBus).
--keep class org.freedesktop.dbus.** { *; }
--keep class io.github.vinceglb.filekit.dialogs.platform.xdg.** { *; }
--keepattributes Signature,InnerClasses,RuntimeVisibleAnnotations
-```
+If you shrink or obfuscate your JVM app, add the JNA and D-Bus keep rules from [Core setup](/core/setup#proguard).
 
 ## Related
 

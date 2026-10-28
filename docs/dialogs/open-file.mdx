@@ -9,7 +9,7 @@ import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
 <Platforms scope="dialogs" supported="android ios macos jvm linux windows" anchor="filekit-dialogs" />
 
-Hand a file to the app the system associates with its type: a PDF viewer for `.pdf`, an image viewer for `.jpg`. Your app doesn't read the content. The function is not available on the web, so call it from a non-web source set such as `nonWebMain`.
+Hand a file to the app the system associates with its type: a PDF viewer for `.pdf`, an image viewer for `.jpg`. Your app doesn't read the content. The function is not available on the web, so call it from a non-web source set such as `nonWebMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
 ## Usage
 
@@ -47,4 +47,5 @@ Failures are not wrapped in `FileKitDialogException`. Each platform reports them
 
 ## Related
 
-[Share file](/dialogs/share-file) to send a file to another app, and [File picker](/dialogs/file-picker) to let the user choose one.
+- [Share file](/dialogs/share-file) to send a file to another app.
+- [File picker](/dialogs/file-picker) to let the user choose one.
