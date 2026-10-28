@@ -25,7 +25,7 @@
             }
 
             var theme = params.get("theme");
-            if (theme) {
+            if (theme === "light" || theme === "dark") {
                 applyTheme(theme);
             } else {
                 root.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
