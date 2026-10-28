@@ -22,3 +22,4 @@ node_modules/
 #So we don't accidentally commit our private keys
 *.gpg
 ktlint-compose-*-all.jar
+/ktlint

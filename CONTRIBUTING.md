@@ -39,8 +39,6 @@ cd FileKit
 | `docs/`                   | User documentation (Mintlify site published at https://filekit.mintlify.app)     |
 | `build-logic/`            | Gradle convention plugins shared by the modules                                  |
 
-`documentation-v0.8.8.md` is a legacy snapshot of the old docs; do not update it.
-
 ### Source-set hierarchy
 
 Each library module uses intermediate source sets above the platform ones, for example `nonWebMain`,
@@ -106,14 +104,16 @@ Formatting is enforced by [ktlint](https://pinterest.github.io/ktlint/) with the
 [Compose rules](https://github.com/mrmans0n/compose-rules). The CI lint job is the source of truth for the versions:
 
 ```shell
-# Download the Compose rules once (version used by CI)
+# Download ktlint and the Compose rules once (versions used by CI)
+curl -sSLO https://github.com/pinterest/ktlint/releases/download/1.8.0/ktlint
+chmod a+x ktlint
 curl -sSLO https://github.com/mrmans0n/compose-rules/releases/download/v0.6.6/ktlint-compose-0.6.6-all.jar
 
 # Check
-ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar
+./ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar
 
 # Auto-fix
-ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar --format
+./ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar --format
 ```
 
 Public APIs need KDoc. FileKit uses explicit API mode, so every public declaration needs an explicit visibility

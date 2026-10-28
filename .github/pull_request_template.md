@@ -21,7 +21,7 @@ Closes #
 
 ## Checklist
 
-- [ ] Tests cover the change, including at least one non-JVM target for new features
+- [ ] Tests cover the change, or are not needed (new features include at least one non-JVM target)
 - [ ] `ktlint` passes (see [CONTRIBUTING.md](https://github.com/vinceglb/FileKit/blob/main/CONTRIBUTING.md#code-style))
 - [ ] Documentation in `docs/` is updated, or not needed
 - [ ] The sample app is updated, or not needed

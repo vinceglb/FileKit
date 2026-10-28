@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-FileKit is split across multiplatform modules: `filekit-core` holds the `PlatformFile` abstraction and file operations, while dialogs, Compose bindings, and Coil integration live in `filekit-dialogs`, `filekit-dialogs-compose`, and `filekit-coil`. Source sets follow a hierarchy of intermediate sets (`nonWebMain`, `jvmAndNativeMain`, `webMain`, `mobileMain`, `nonAndroidMain`, …) above the platform sets; put code in the widest set whose platforms share the implementation. Platform tests live in sibling `src/*Test` directories, with shared test fixtures in `src/nonWebTest/resources/`. The sample app lives under `sample/` (`shared` plus one app module per platform); update it alongside library changes when user-facing behaviour shifts. User documentation is the Mintlify site in `docs/`; `documentation-v0.8.8.md` is a legacy snapshot.
+FileKit is split across multiplatform modules: `filekit-core` holds the `PlatformFile` abstraction and file operations, while dialogs, Compose bindings, and Coil integration live in `filekit-dialogs`, `filekit-dialogs-compose`, and `filekit-coil`. Source sets follow a hierarchy of intermediate sets (`nonWebMain`, `jvmAndNativeMain`, `webMain`, `mobileMain`, `nonAndroidMain`, …) above the platform sets; put code in the widest set whose platforms share the implementation. Platform tests live in sibling `src/*Test` directories, with shared test fixtures in `src/nonWebTest/resources/`. The sample app lives under `sample/` (`shared` plus one app module per platform); update it alongside library changes when user-facing behaviour shifts. User documentation is the Mintlify site in `docs/`.
 
 ## Build, Test, and Development Commands
 Keep local validation scoped to the changed module and one relevant target, with `--max-workers=1`; run checks sequentially. For example, use `./gradlew :filekit-core:jvmTest --tests '*PlatformFileDeletionTest*' --max-workers=1` for a deletion regression.
@@ -10,7 +10,7 @@ Keep local validation scoped to the changed module and one relevant target, with
 
 Exercise sample apps only when needed for the change. For local publishing smoke tests, scope publishing to the required module and platform instead of publishing every artifact.
 
-For Kotlin formatting/linting, run `ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.4.28-all.jar`. To auto-fix issues, add `--format` to that command.
+For Kotlin formatting/linting, run `ktlint '**/*.kt' '**/*.kts' '!**/build/**' -R ktlint-compose-0.6.6-all.jar`. To auto-fix issues, add `--format` to that command.
 
 ## Coding Style & Naming Conventions
 Follow Kotlin official style: four-space indentation, trailing commas where helpful, and `UpperCamelCase` for public APIs. Keep expect/actual implementations mirrored across targets and group platform-specific helpers under the corresponding `src/<platform>Main` directory. Compose functions remain PascalCase and should take a `modifier` parameter when rendering UI. Prefer descriptive file names that match the primary type, and keep shared constants in `commonMain` to minimise duplication.
