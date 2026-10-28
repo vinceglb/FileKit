@@ -38,19 +38,30 @@ val photo: PlatformFile? = FileKit.openCameraPicker()
 
 ## Options
 
-| Parameter | Values | Default | Where (Compose) | Notes |
-| --- | --- | --- | --- | --- |
-| `type` | `FileKitCameraType.Photo` | `Photo` | `launch()` | Video capture is not available yet. |
-| `cameraFacing` | `System`, `Front`, `Back` | `System` | `launch()` | `System` lets the camera app choose. See the Android note below. |
-| `destinationFile` | `PlatformFile` | `FileKit.cacheDir / "<random UUID>.jpg"` | `launch()` | Where the photo is written. |
-| `openCameraSettings` | `FileKitOpenCameraSettings` | `createDefault()` | `rememberCameraPickerLauncher` | Android: `authority`. iOS: `presenter`. |
+<ResponseField name="type" type="FileKitCameraType" default="Photo" post={["launch()"]}>
+  What to capture. Only `Photo` is available: video capture is not supported yet.
+</ResponseField>
 
-`FileKitOpenCameraSettings` has one property per platform:
+<ResponseField name="cameraFacing" type="FileKitCameraFacing" default="System" post={["launch()"]}>
+  `System` lets the camera app choose, or force `Front` or `Back`. Best effort on Android: see [Platform notes](#platform-notes).
+</ResponseField>
 
-| Property | Platform | Default | Effect |
-| --- | --- | --- | --- |
-| `authority` | Android | `${applicationId}.FileKitFileProvider` | FileProvider authority for a `destinationFile` outside `filesDir` and `cacheDir`. |
-| `presenter` | iOS | `null` | `UIViewController` that presents the camera. When `null`, the suspend API presents from its own window above your app and the Compose launcher uses the current `LocalUIViewController`. |
+<ResponseField name="destinationFile" type="PlatformFile" default="FileKit.cacheDir / &quot;<random UUID>.jpg&quot;" post={["launch()"]}>
+  Where the photo is written. Files in `filesDir` and `cacheDir` need no Android setup.
+</ResponseField>
+
+<ResponseField name="openCameraSettings" type="FileKitOpenCameraSettings" default="createDefault()" post={["rememberCameraPickerLauncher"]}>
+  Platform-specific settings. In the suspend API, pass it to `openCameraPicker()`.
+
+  <Expandable title="properties">
+    <ResponseField name="authority" type="String" default="${applicationId}.FileKitFileProvider" post={["Android"]}>
+      FileProvider authority. Only needed for a `destinationFile` outside `filesDir` and `cacheDir`: see [Android setup](#android-setup).
+    </ResponseField>
+    <ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
+      View controller that presents the camera. When `null`, the suspend API presents from its own window above your app, and the Compose launcher uses the current `LocalUIViewController`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 ## Keep the photo
 

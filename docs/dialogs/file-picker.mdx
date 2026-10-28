@@ -44,14 +44,44 @@ This is the FileKit sample running in your browser. Pick files, switch the selec
 
 ## Options
 
-| Parameter | Values | Default | Notes |
-| --- | --- | --- | --- |
-| `type` | `FileKitType.File(extensions)`, `Image`, `Video`, `ImageAndVideo` | `File()` (any file) | Media types open the [gallery picker](/dialogs/gallery-picker) on Android and iOS. |
-| `mode` | `FileKitMode.Single`, `Multiple(maxItems)`, `SingleWithState`, `MultipleWithState(maxItems)` | `Single` | The result type follows the mode. `maxItems` is `1` to `50`, or `null` for no limit. |
-| `directory` | `PlatformFile?` | `null` | Folder the dialog opens in. Ignored on Android and the web. |
-| `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | Title, parent window, and other [per-platform settings](/dialogs/dialog-settings). |
-
 In Compose, pass these options to `rememberFilePickerLauncher`. `launch()` takes no arguments.
+
+<ResponseField name="type" type="FileKitType" default="File()">
+  Which files the user can pick. `File()` allows any file.
+
+  <Expandable title="values">
+    <ResponseField name="File(extensions)" type="FileKitType">
+      Files with the given extensions, without the dot: `FileKitType.File("pdf", "docx")`. See [Filter by extension](#filter-by-extension).
+    </ResponseField>
+    <ResponseField name="Image, Video, ImageAndVideo" type="FileKitType">
+      Media files. Opens the native [gallery picker](/dialogs/gallery-picker) on Android and iOS, and a filtered file dialog elsewhere.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="mode" type="FileKitMode" default="Single">
+  How many files the user can pick. The result type follows the mode.
+
+  <Expandable title="values">
+    <ResponseField name="Single" type="PlatformFile?">
+      One file.
+    </ResponseField>
+    <ResponseField name="Multiple(maxItems)" type="List<PlatformFile>?">
+      Several files. `maxItems` is `1` to `50`, or `null` for no limit. See [Pick multiple files](#pick-multiple-files).
+    </ResponseField>
+    <ResponseField name="SingleWithState, MultipleWithState(maxItems)" type="FileKitPickerState">
+      Reports progress while picked files are prepared. The suspend API returns a `Flow`. See [Track progress](#track-progress).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="directory" type="PlatformFile?" default="null">
+  Folder the dialog opens in. Ignored on Android and the web.
+</ResponseField>
+
+<ResponseField name="dialogSettings" type="FileKitDialogSettings" default="createDefault()">
+  Title, parent window, and other [per-platform settings](/dialogs/dialog-settings).
+</ResponseField>
 
 ## Filter by extension
 
