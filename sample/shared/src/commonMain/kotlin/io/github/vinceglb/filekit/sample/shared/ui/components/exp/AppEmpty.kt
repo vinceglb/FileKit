@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.AndroidUiModes
@@ -35,7 +36,6 @@ import io.github.vinceglb.filekit.sample.shared.ui.components.AppTextButton
 import io.github.vinceglb.filekit.sample.shared.ui.icons.ArrowUpRight
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
-import io.github.vinceglb.filekit.sample.shared.ui.theme.LocalDarkTheme
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -64,9 +64,11 @@ internal fun AppEmpty(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
+                // The brand mark has a light and a dark version; pick the one for the current scheme.
+                val darkScheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
                 Image(
                     painter = painterResource(
-                        if (LocalDarkTheme.current) Res.drawable.filekit_mark_dark else Res.drawable.filekit_mark_light,
+                        if (darkScheme) Res.drawable.filekit_mark_dark else Res.drawable.filekit_mark_light,
                     ),
                     contentDescription = null,
                     modifier = Modifier

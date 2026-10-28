@@ -7,8 +7,6 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -86,21 +84,16 @@ internal val DarkColorScheme = darkColorScheme(
 
 internal val AppMaxWidth = 500.dp
 
-/** Whether [AppTheme] uses the dark scheme, for assets that come in a light and a dark version. */
-internal val LocalDarkTheme = staticCompositionLocalOf { false }
-
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalDarkTheme provides darkTheme) {
-        MaterialExpressiveTheme(
-            motionScheme = MotionScheme.expressive(),
-            colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-            typography = geistTypography(),
-            content = content,
-        )
-    }
+    MaterialExpressiveTheme(
+        motionScheme = MotionScheme.expressive(),
+        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+        typography = geistTypography(),
+        content = content,
+    )
 }
