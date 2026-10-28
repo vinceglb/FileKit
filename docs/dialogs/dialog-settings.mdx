@@ -1,224 +1,160 @@
 ---
 title: 'Dialog settings'
-description: 'Customize the dialogs with platform-specific settings'
+sidebarTitle: 'Dialog settings'
+description: 'Customize picker and saver dialogs per platform with FileKitDialogSettings'
 ---
-FileKit allows you to customize dialog behavior with platform-specific settings. Each platform has its own settings class that can be configured according to your needs.
 
-## Platform-Specific Settings
+import { Platforms } from '/snippets/platforms.jsx'
 
-### JVM Settings
+<Platforms scope="dialogs" supported="macos jvm" partial={{ ios: 'title and canCreateDirectories are ignored', linux: 'Title only', windows: 'Title only' }} anchor="filekit-dialogs" />
 
-On JVM platforms (Windows, macOS, Linux), you can customize:
+`FileKitDialogSettings` customizes the file picker, directory picker, gallery picker, and file saver. Each platform has its own constructor, so build custom settings in platform code. `FileKitDialogSettings.createDefault()` works everywhere.
 
-- `title`: Set a custom title for the dialog
-- `parent`: Set the typed parent window identity used for modality and stacking
-- `macOS`: Configure macOS-specific settings
+## Settings
 
-```kotlin
-val settings = FileKitDialogSettings(
-    title = "Select a file",
-    parent = FileKitDialogParent.awt(window),
-    macOS = FileKitMacOSSettings(
-        resolvesAliases = false,
-        canCreateDirectories = true
-    )
-)
-```
+<ResponseField name="title" type="String?" default="null" post={["JVM", "macOS", "Linux native", "Windows native"]}>
+  Dialog title. macOS shows it as the panel message. Some save dialogs ignore it: see [File saver](/dialogs/file-saver#platform-notes).
+</ResponseField>
 
-`FileKitDialogParent` represents one canonical parent, with factories for each
-supported JVM window system:
+<ResponseField name="parent" type="FileKitDialogParent?" default="null" post={["JVM"]}>
+  Window that owns the dialog, for modality and stacking. See [Parent window (JVM)](#parent-window-jvm).
+</ResponseField>
 
-```kotlin
-FileKitDialogParent.awt(window)
-FileKitDialogParent.windows(hwnd)
-FileKitDialogParent.x11(xid)
-FileKitDialogParent.wayland(exportedHandle)
-```
+<ResponseField name="macOS" type="FileKitMacOSSettings" default="FileKitMacOSSettings()" post={["JVM on macOS"]}>
+  Native panel options when a JVM app runs on macOS.
 
-The parent is borrowed. Keep the AWT window, HWND, X11 window, or Wayland export
-alive until the suspending picker call completes. FileKit never takes ownership
-or extends its lifetime.
+  <Expandable title="properties">
+    <ResponseField name="canCreateDirectories" type="Boolean" default="true">
+      Shows the New Folder button.
+    </ResponseField>
+    <ResponseField name="resolvesAliases" type="Boolean?" default="null">
+      Alias resolution in open panels. `null` keeps the system behavior.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
-| Active JVM picker | Accepted parents | Notes |
-| --- | --- | --- |
-| Windows | AWT, Windows HWND, or no parent | An AWT window is resolved to an HWND when the dialog opens. |
-| Linux XDG portal | AWT, X11 XID, Wayland export, or no parent | X11 identifiers are sent as lowercase hexadecimal. |
-| Linux AWT fallback | AWT `Frame`/`Dialog`, or no parent | A native X11 or Wayland parent fails if the portal is unavailable; it is not silently dropped. |
-| Linux Swing directory fallback | Any AWT `Window`, or no parent | Native X11 and Wayland parents are not compatible. |
-| macOS on JVM | AWT, or no parent | The current `runModal()` implementation is application-modal and does not establish a window-modal sheet. |
+<ResponseField name="canCreateDirectories" type="Boolean" default="true" post={["macOS native"]}>
+  Shows the New Folder button.
+</ResponseField>
 
-<Note>
-`wayland()` accepts the unprefixed opaque handle exported through
-`xdg_foreign`. FileKit adds the `wayland:` portal prefix without trimming or
-normalizing the value. A raw `wl_surface*`, a Tao handle, and a string that you
-invented from a pointer are not exported Wayland handles.
-</Note>
+<ResponseField name="assetRepresentationMode" type="FileKitAssetRepresentationMode" default="Automatic" post={["iOS"]}>
+  Photos picker format: `Automatic`, `Current` (avoid transcoding), or `Compatible` (transcode to a widely supported format, for example when a library can't decode HEIC).
+</ResponseField>
 
-Invalid factory arguments, such as a zero HWND, an out-of-range XID, or an empty
-Wayland handle, throw `IllegalArgumentException`. A valid parent that the active
-picker cannot use, or an AWT parent that cannot resolve to a native identifier,
-throws `FileKitPickerException` before opening the dialog.
+<ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
+  View controller that presents the dialog. When `null`, the suspend API uses the top-most view controller and Compose launchers use the current `LocalUIViewController`.
+</ResponseField>
 
-#### Compose Desktop
+<ResponseField name="title, canCreateDirectories" post={["iOS"]}>
+  Accepted for parity, currently ignored.
+</ResponseField>
 
-The `WindowScope.remember*Launcher` extensions automatically use the scope's AWT
-window and replace any parent already present in the supplied settings. For a
-plain launcher or direct picker call, provide it explicitly:
+Android and the web have no settings: use `createDefault()`.
 
-```kotlin
-Window(onCloseRequest = ::exitApplication) {
-    val dialogSettings = FileKitDialogSettings(
-        parent = FileKitDialogParent.awt(this.window)
-    )
-    App(dialogSettings)
-}
-```
+## Share settings across platforms
 
-#### Migrating from FileKit 0.14
+Declare a function in `commonMain` and implement it per platform:
 
-The JVM settings API intentionally changed in FileKit 0.15. Replace:
+<CodeGroup>
 
-```kotlin
-FileKitDialogSettings(parentWindow = window)
-```
-
-with:
-
-```kotlin
-FileKitDialogSettings(parent = FileKitDialogParent.awt(window))
-```
-
-There is no compatibility `parentWindow` property or constructor.
-
-#### Nucleus with the Tao backend
-
-Nucleus 2.3.2 exposes the native identities needed to parent Tao dialogs on
-Windows and Linux/X11. Adapt the framework-specific window locally and pass the
-resulting settings to a plain, non-`WindowScope` launcher:
-
-```kotlin
-private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
-    unsafe.awtWindow?.let { return FileKitDialogParent.awt(it) }
-
-    return when (Platform.Current) {
-        Platform.Windows -> unsafe.taoWindow
-            ?.nativeHandle
-            ?.takeIf { it != 0L }
-            ?.let(FileKitDialogParent::windows)
-        Platform.Linux -> unsafe.taoWindow
-            ?.x11WindowId
-            ?.let(FileKitDialogParent::x11)
-        else -> null
-    }
-}
-
-val settings = FileKitDialogSettings(parent = nucleusWindow.fileKitDialogParent())
-val launcher = rememberFilePickerLauncher(
-    dialogSettings = settings,
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Use the selected file, or null when the user cancelled.
-    },
-)
-```
-
-Do not pass `nucleusWindow.unsafe.taoHandle`: it is an opaque Tao event-loop
-identity, not an operating-system dialog parent. On Wayland, `x11WindowId` is
-`null`, so this adapter deliberately opens an unparented dialog. Wayland parent
-exports and macOS NSWindow sheets are deferred pending community feedback; both
-require lifecycle handling beyond these direct Windows and X11 conversions.
-The dialog also remains unparented when the Nucleus window has not exposed a
-supported identity yet.
-
-### iOS and macOS Settings
-
-On iOS and macOS, you can configure:
-
-- `title`: Set a custom title for the dialog
-- `canCreateDirectories`: Allow or prevent directory creation in dialogs (default: true)
-
-On iOS, you can also configure:
-
-- `assetRepresentationMode`: Choose the Photos picker asset representation mode (default: `Automatic`)
-- `presenter`: Set the `UIViewController` used to present native dialogs. If null, FileKit uses the current top-most controller.
-
-```kotlin
-val settings = FileKitDialogSettings(
-    title = "Save document",
-    canCreateDirectories = true,
-    assetRepresentationMode = FileKitAssetRepresentationMode.Automatic
-)
-```
-
-The iOS Photos picker supports these asset representation modes:
-
-- `Automatic`: Let the system choose the best representation
-- `Current`: Prefer the original/current representation and avoid transcoding when possible
-- `Compatible`: Prefer a broadly compatible representation, even if transcoding is required
-
-Use `Compatible` when picked image bytes need to be decoded by libraries that may not support every Apple-native image format, such as HEIF/HEIC.
-
-### Android, Web, and WASM
-
-These platforms currently don't have any specific settings to configure. Use the default settings:
-
-```kotlin
-val settings = FileKitDialogSettings.createDefault()
-```
-
-## Using DialogSettings in KMP
-
-When working with Kotlin Multiplatform projects, you might need to handle platform-specific settings differently. Here's how to use expect/actual to manage dialog settings:
-
-For platforms that need specific configuration, use **expect/actual**:
-
-```kotlin
-// commonMain
+```kotlin commonMain
 expect fun createDialogSettings(): FileKitDialogSettings
-
-// desktopMain
-actual fun createDialogSettings(): FileKitDialogSettings {
-    return FileKitDialogSettings(
-        title = "Select a file",
-        parent = FileKitDialogParent.awt(window),
-        macOS = FileKitMacOSSettings(
-            canCreateDirectories = true
-        )
-    )
-}
-
-// iosMain
-actual fun createDialogSettings(): FileKitDialogSettings {
-    return FileKitDialogSettings(
-        assetRepresentationMode = FileKitAssetRepresentationMode.Automatic
-    )
-}
-
-// androidMain, jsMain
-actual fun createDialogSettings(): FileKitDialogSettings {
-    return FileKitDialogSettings.createDefault()
-}
 ```
 
-You can then use the platform-specific settings in your shared code:
+```kotlin jvmMain
+actual fun createDialogSettings() = FileKitDialogSettings(
+    title = "Select a file",
+    macOS = FileKitMacOSSettings(canCreateDirectories = false),
+)
+```
+
+```kotlin iosMain
+actual fun createDialogSettings() = FileKitDialogSettings(
+    assetRepresentationMode = FileKitAssetRepresentationMode.Compatible,
+)
+```
+
+```kotlin Other targets
+// androidMain, webMain (or jsMain and wasmJsMain), macosMain, linuxMain, mingwX64Main
+actual fun createDialogSettings() = FileKitDialogSettings.createDefault()
+```
+
+</CodeGroup>
+
+Shared code then passes the result to any dialog:
 
 ```kotlin
-class SharedViewModel {
-    private val dialogSettings = createDialogSettings()
-    
-    suspend fun pickFile() {
-        FileKit.openFilePicker(
-            dialogSettings = dialogSettings
-        )
-    }
-}
+suspend fun pickDocument(): PlatformFile? =
+    FileKit.openFilePicker(dialogSettings = createDialogSettings())
 ```
 
-This approach allows you to:
-- Keep your common code platform-agnostic
-- Provide platform-specific configurations where needed
-- Maintain type safety across platforms
+## Parent window (JVM)
 
-<Note>
-Platform-specific settings are continuously evolving. You can ask for a feature or report a bug on the [GitHub repository](https://github.com/vinceglb/FileKit/issues).
-</Note>
+Inside a Compose Desktop `Window`, the `WindowScope` versions of `rememberFilePickerLauncher`, `rememberDirectoryPickerLauncher`, and `rememberFileSaverLauncher` parent the dialog to that window, replacing any `parent` in your settings.
+
+Elsewhere, pass the parent yourself:
+
+```kotlin jvmMain
+fun dialogSettingsFor(window: java.awt.Window) = FileKitDialogSettings(
+    parent = FileKitDialogParent.awt(window),
+)
+```
+
+`FileKitDialogParent` also has `windows(hwnd)`, `x11(xid)`, and `wayland(exportedHandle)` factories for non-AWT windows. FileKit borrows the parent: keep the window alive until the dialog call returns. Invalid factory arguments and a parent the active dialog can't use both throw `IllegalArgumentException`.
+
+<AccordionGroup>
+  <Accordion title="Supported parents per JVM dialog">
+    | Active JVM dialog | Accepted parents | Notes |
+    | --- | --- | --- |
+    | Windows | AWT, Windows HWND, or none | An AWT window is resolved to an HWND when the dialog opens. |
+    | Linux XDG portal | AWT, X11 XID, Wayland export, or none | X11 identifiers are sent as lowercase hexadecimal. |
+    | Linux AWT fallback | AWT `Frame` or `Dialog`, or none | An X11 or Wayland parent fails when the portal is unavailable; it is not dropped silently. |
+    | Linux Swing directory fallback | Any AWT `Window`, or none | X11 and Wayland parents are not compatible. |
+    | macOS | AWT, or none | The dialog is application-modal, not a window-modal sheet. |
+  </Accordion>
+  <Accordion title="Wayland handles">
+    `wayland()` takes the unprefixed opaque handle exported through `xdg_foreign`. FileKit adds the `wayland:` portal prefix without normalizing the value. A raw `wl_surface*`, a Tao handle, or a string built from a pointer is not an exported Wayland handle. Empty handles and handles containing NUL are rejected.
+  </Accordion>
+  <Accordion title="Nucleus with the Tao backend">
+    Nucleus 2.3.2 exposes the native identities needed to parent dialogs on Windows and Linux/X11. Convert the window yourself and pass the settings to a plain (non-`WindowScope`) launcher:
+
+    ```kotlin jvmMain
+    private fun NucleusWindow.fileKitDialogParent(): FileKitDialogParent? {
+        unsafe.awtWindow?.let { return FileKitDialogParent.awt(it) }
+
+        return when (Platform.Current) {
+            Platform.Windows -> unsafe.taoWindow
+                ?.nativeHandle
+                ?.takeIf { it != 0L }
+                ?.let(FileKitDialogParent::windows)
+            Platform.Linux -> unsafe.taoWindow
+                ?.x11WindowId
+                ?.let(FileKitDialogParent::x11)
+            else -> null
+        }
+    }
+
+    val settings = FileKitDialogSettings(parent = nucleusWindow.fileKitDialogParent())
+    ```
+
+    Don't pass `nucleusWindow.unsafe.taoHandle`: it identifies the Tao event loop, not an operating-system window. On Wayland, `x11WindowId` is `null`, so this adapter opens an unparented dialog. The dialog is also unparented until the Nucleus window exposes a supported identity.
+  </Accordion>
+</AccordionGroup>
+
+## Other settings classes
+
+| Class | Used by | Properties |
+| --- | --- | --- |
+| `FileKitOpenCameraSettings` | [Camera picker](/dialogs/camera-picker) | Android `authority`, iOS `presenter` |
+| `FileKitShareSettings` | [Share file](/dialogs/share-file) | Android `authority`, `addOptionChooseIntent`; iOS `presenter`, `addOptionUIActivityViewController`, `metaTitle` |
+| `FileKitOpenFileSettings` | [Open with default app](/dialogs/open-file) | Android `authority` |
+
+<Accordion title="Upgrading from older versions">
+  FileKit 0.15 replaced the JVM `parentWindow` property. Replace `FileKitDialogSettings(parentWindow = window)` with `FileKitDialogSettings(parent = FileKitDialogParent.awt(window))`. There is no compatibility property or constructor.
+</Accordion>
+
+## Related
+
+- [File picker](/dialogs/file-picker)
+- [Directory picker](/dialogs/directory-picker)
+- [File saver](/dialogs/file-saver)

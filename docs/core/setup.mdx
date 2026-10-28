@@ -1,54 +1,158 @@
 ---
-title: 'Setup'
-description: 'Setup FileKit Core in your Kotlin Multiplatform project'
+title: 'Core setup'
+sidebarTitle: 'Setup'
+description: 'Initialize FileKit Core on each platform, choose app directories, and add ProGuard rules'
 ---
 
-import VersionCore from '/snippets/version-core.mdx'
-import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
+import { Platforms } from '/snippets/platforms.jsx'
 
-## Installation
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos web" anchor="filekit-core" />
 
-<VersionCore/>
+`filekit-core` works without setup on most targets. JVM desktop, Linux native, and Windows native need an application ID so FileKit can resolve `FileKit.filesDir`, `FileKit.cacheDir`, and `FileKit.databasesDir`. Add the dependency first: see [Installation](/installation).
 
-FileKit Core provides the fundamental file operations for your Kotlin Multiplatform project. It's designed to work across all supported platforms with a unified API.
+## Initialize FileKit
 
-## Platform-specific setup
+<Tabs>
+  <Tab title="Android">
+    Nothing to do. FileKit Core initializes itself with [App Startup](https://developer.android.com/topic/libraries/app-startup).
 
-FileKit Core is designed to work out of the box for most platforms, but some targets require additional setup.
+    | Directory | Location |
+    | --- | --- |
+    | `filesDir` | `Context.filesDir` (app-private internal storage) |
+    | `cacheDir` | `Context.cacheDir` |
+    | `databasesDir` | The parent of `Context.getDatabasePath(...)` (`databases/`) |
 
-### Android setup
+    These directories can't be changed. If you disable App Startup in your app, initialize FileKit Core yourself before using it:
 
-FileKit Core is **automatically initialized** in Android applications. It uses [App Startup](https://developer.android.com/topic/libraries/app-startup) to initialize the library, ensuring that it is ready to use when your app starts.
-
-If for some reason you want to disable App Startup in your app, you can initialize FileKit manually by calling `FileKit.manualFileKitCoreInitialization(context)` in your `MainActivity` or `Application` class.
-
-```kotlin
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        // Initialize FileKit
-        FileKit.manualFileKitCoreInitialization(this)
+    ```kotlin MainActivity.kt
+    class MainActivity : ComponentActivity() {
+        override fun onCreate(savedInstanceState: Bundle?) {
+            super.onCreate(savedInstanceState)
+            FileKit.manualFileKitCoreInitialization(this)
+        }
     }
-}
+    ```
+
+    Dialogs need their own registration when you use `filekit-dialogs` without Compose. See [Dialogs setup](/dialogs/setup).
+  </Tab>
+  <Tab title="JVM desktop">
+    Call `FileKit.init` once at startup, before you read any app directory:
+
+    ```kotlin main.kt
+    fun main() {
+        FileKit.init(appId = "com.example.myapp")
+
+        application {
+            Window(onCloseRequest = ::exitApplication) { App() }
+        }
+    }
+    ```
+
+    | Directory | Windows | macOS | Linux |
+    | --- | --- | --- | --- |
+    | `filesDir` | `%APPDATA%\<appId>` | `~/Library/Application Support/<appId>` | `$XDG_DATA_HOME/<appId>`, or `~/.local/share/<appId>` |
+    | `cacheDir` | `%LOCALAPPDATA%\<appId>\Cache` | `~/Library/Caches/<appId>` | `$XDG_CACHE_HOME/<appId>`, or `~/.cache/<appId>` |
+    | `databasesDir` | `filesDir/databases` | `filesDir/databases` | `filesDir/databases` |
+
+    To use your own locations (for a portable app, for example), pass `java.io.File` values. A directory you leave out keeps its default:
+
+    ```kotlin main.kt
+    val appDir = File(System.getProperty("user.home"), ".myapp")
+    FileKit.init(
+        appId = "com.example.myapp",
+        filesDir = File(appDir, "data"),
+        cacheDir = File(appDir, "cache"),
+    )
+    ```
+
+    `FileKit.init(filesDir = ..., cacheDir = ...)` without an `appId` also works when you set both directories.
+  </Tab>
+  <Tab title="Linux native">
+    For `linuxX64` and `linuxArm64`, call `FileKit.init` once at startup:
+
+    ```kotlin main.kt
+    fun main() {
+        FileKit.init(appId = "com.example.myapp")
+    }
+    ```
+
+    | Directory | Location |
+    | --- | --- |
+    | `filesDir` | `$XDG_DATA_HOME/<appId>`, or `~/.local/share/<appId>` |
+    | `cacheDir` | `$XDG_CACHE_HOME/<appId>`, or `~/.cache/<appId>` |
+    | `databasesDir` | `filesDir/databases` |
+
+    A relative `XDG_*` value is ignored, as the XDG spec requires. When `HOME` is unset, FileKit reads the home directory from the passwd database.
+
+    To use your own locations, pass `PlatformFile` values:
+
+    ```kotlin main.kt
+    FileKit.init(
+        appId = "com.example.myapp",
+        filesDir = PlatformFile("/opt/myapp/data"),
+        cacheDir = PlatformFile("/opt/myapp/cache"),
+    )
+    ```
+  </Tab>
+  <Tab title="Windows native">
+    For `mingwX64`, call `FileKit.init` once at startup:
+
+    ```kotlin main.kt
+    fun main() {
+        FileKit.init(appId = "com.example.myapp")
+    }
+    ```
+
+    | Directory | Location |
+    | --- | --- |
+    | `filesDir` | `%APPDATA%\<appId>` |
+    | `cacheDir` | `%LOCALAPPDATA%\<appId>\Cache` |
+    | `databasesDir` | `filesDir\databases` |
+
+    To use your own locations, pass `PlatformFile` values:
+
+    ```kotlin main.kt
+    FileKit.init(
+        appId = "com.example.myapp",
+        filesDir = PlatformFile("C:\\MyApp\\data"),
+        cacheDir = PlatformFile("C:\\MyApp\\cache"),
+    )
+    ```
+  </Tab>
+  <Tab title="iOS, macOS, watchOS, web">
+    Nothing to do. Directories follow the platform conventions and can't be changed.
+
+    | Platform | `filesDir` | `cacheDir` |
+    | --- | --- | --- |
+    | iOS, watchOS | The app's `Documents` directory | The app's `Caches` directory |
+    | macOS | `~/Library/Application Support/<bundle id>` | `~/Library/Caches` (the container's `Caches` when sandboxed) |
+
+    `databasesDir` is `filesDir/databases` on Apple platforms. On macOS, `filesDir` uses the app bundle identifier and throws if the executable has none.
+
+    Browsers have no app directories. To store files on the web, use the [origin private file system](/core/web#store-files-in-the-origin-private-file-system).
+  </Tab>
+</Tabs>
+
+<Note>
+On JVM, Linux native, and Windows native, reading `FileKit.filesDir`, `cacheDir`, or `databasesDir` before `FileKit.init` throws. FileKit creates `filesDir` and `cacheDir` the first time you read them.
+</Note>
+
+## ProGuard
+
+If you shrink or obfuscate a JVM desktop app, add these rules to your `proguard-rules.pro`:
+
+```proguard proguard-rules.pro
+# Required on JVM for JNA-based integrations.
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+
+# Required when using FileKit Dialogs on Linux (XDG Desktop Portal / DBus).
+-keep class org.freedesktop.dbus.** { *; }
+-keep class io.github.vinceglb.filekit.dialogs.platform.xdg.** { *; }
+-keepattributes Signature,InnerClasses,RuntimeVisibleAnnotations
 ```
 
-### JVM setup
+## Related
 
-<SetupJVMCore/>
-
-### Linux Native setup
-
-For `linuxX64` and `linuxArm64`, initialize FileKit with your application ID before accessing the standard application directories:
-
-```kotlin
-fun main() {
-    FileKit.init(appId = "my.application.id")
-}
-```
-
-FileKit uses the XDG data and cache directories by default. You can instead pass explicit `PlatformFile` values for `filesDir` and `cacheDir`.
-
-### iOS, macOS, JS, WASM setup
-
-No additional setup is needed for iOS, macOS, JS, and WASM targets. FileKit Core works out of the box on these platforms.
+- [App directories](/core/file-utils): app directories and user folders such as Downloads.
+- [Dialogs setup](/dialogs/setup): Android activity registration and Linux packaging.

@@ -1,274 +1,72 @@
 ---
 title: 'Writing files'
-description: 'Write files with FileKit Core in Kotlin Multiplatform'
+sidebarTitle: 'Write files'
+description: 'Write bytes, text, or a kotlinx-io stream to a PlatformFile'
 ---
 
-import DownloadFilesWeb from '/snippets/download-files-web.mdx'
+import { Platforms } from '/snippets/platforms.jsx'
 
-<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos" partial={{ web: 'Origin private file system only, experimental' }} anchor="filekit-core" />
 
-FileKit Core provides a consistent API for writing files across all platforms. The `PlatformFile` class offers multiple methods to write data to files, from simple strings to binary data and streaming operations.
+`write()` and `writeString()` replace the content of a file, creating it if needed. For large or incremental writes, stream with `sink()`.
 
-## Writing from ByteArray
+## Usage
 
-The most common way to write data to a file is using the `write()` infix function with a `ByteArray`:
+```kotlin nonWebMain
+val file = FileKit.filesDir / "notes.txt"
 
-```kotlin
-val file = PlatformFile(FileKit.filesDir, "image.jpg")
-
-// Write the bytes
-file.write(bytes)
-```
-
-## Writing from String
-
-You can also write a string to a file using the `writeString()` function:
-
-```kotlin
-val file = PlatformFile(FileKit.filesDir, "document.txt")
-
-// Write the string
 file.writeString("Hello, FileKit!")
+file.write("Hello again".encodeToByteArray())
 ```
 
-## Using Sink
-
-For more advanced use cases or when working with large files, you can use the `sink()` method:
-
-```kotlin
-fun writeLargeFile() {
-    val file = PlatformFile("/path/to/large-file.dat")
-    
-    // Get a raw sink for the file (overwrites existing file)
-    val sink = file.sink(append = false).buffered()
-    
-    // Use the sink to write in chunks
-    sink.use { bufferedSink ->
-        // Write a string
-        bufferedSink.writeString("Line 1\n")
-        
-        // Write bytes
-        val bytes = ByteArray(1024) { it.toByte() }
-        bufferedSink.write(bytes)
-    }
-
-    // Copy from another source file (safe for unknown-size provider-backed files)
-    val sourceFile = PlatformFile("/path/to/source.dat")
-    sourceFile.copyTo(file)
-}
-```
+Both are suspend functions that switch to `Dispatchers.IO`. The parent directory must exist: create it first with [`createDirectories()`](/core/file-operations#create-directories). Failures throw `kotlinx.io.IOException` or `FileKitException`.
 
 <Note>
-Some provider-backed files (for example, certain Android `content://` URIs) may not expose a reliable size ahead of time. Prefer `destination.write(sourceFile)` or `sourceFile.copyTo(destination)` for robust streaming copy behavior.
+These functions are not declared in `commonMain`. Call them from `nonWebMain` or a platform source set. The web has separate, experimental versions for the origin private file system: see [Write on the web](#write-on-the-web).
 </Note>
 
-## Appending to Files
+## Copy another file's content
 
-To append data to an existing file instead of overwriting it, use the `append` parameter:
+`write` also takes a `PlatformFile` and streams its content into the destination, without loading it into memory:
 
-```kotlin
-fun appendToFile() {
-    val file = PlatformFile("/path/to/log.txt")
-    
-    // Get a sink that appends to the file
-    val sink = file.sink(append = true).buffered()
-    
-    sink.use { bufferedSink ->
-        bufferedSink.writeUtf8("New log entry: ${Clock.System.now()}\n")
+```kotlin nonWebMain
+val destination = FileKit.filesDir / "copy.pdf"
+destination write pickedFile
+```
+
+This works when the source size is unknown, as with some Android `content://` files. It throws if the source is a directory or the same file as the destination. To copy into a folder or copy a whole tree, see [File operations](/core/file-operations#copy-a-file).
+
+## Stream with a sink
+
+`sink()` returns a kotlinx-io `RawSink`. Pass `append = true` to add to the end of the file instead of replacing it:
+
+```kotlin nonWebMain
+suspend fun appendLog(file: PlatformFile, line: String) = withContext(Dispatchers.IO) {
+    file.sink(append = true).buffered().use { sink ->
+        sink.writeString("$line\n")
     }
 }
 ```
 
-## Copying Files
+`sink()` does blocking I/O: call it on `Dispatchers.IO`, and close it with `use` so the data is flushed.
 
-You can easily copy the contents of one file to another using the `write` infix function with another `PlatformFile` or the `copyTo` function:
+## Write on the web
 
-```kotlin
-val sourceFile = PlatformFile("/path/to/source.txt")
-val destinationFile = PlatformFile("/path/to/destination.txt")
+Browsers don't let a page write to the user's files. On JS and Wasm you have two options:
 
-// Method 1: Using write
-destinationFile.write(sourceFile)
+- Give the user a file with `FileKit.download(bytes, fileName)`: see [Download files](/core/web#download-files).
+- Store files in the browser's private storage with the experimental origin private file system API, which provides its own `write`, `writeString`, and `delete`: see [Files on the web](/core/web#store-files-in-the-origin-private-file-system).
 
-// Method 2: Using copyTo
-sourceFile.copyTo(destinationFile)
-```
+## Platform notes
 
-### Copying a directory tree
+| Platform | Behavior |
+| --- | --- |
+| Android | Writing to a `content://` file truncates it first (`append = false`), including on providers such as Google Drive. A file you create with `/` inside a picked folder is created as a new document. |
+| iOS, macOS | Security-scoped access is started and stopped for you, also for `sink()` until you close it. |
+| Web | Only origin private file system files can be written. Writing to a picked file throws. |
 
-`copyRecursively()` copies a file or a whole directory tree. Unlike `copyTo()`, the target becomes the new root rather than a folder to copy into, as with Kotlin's `File.copyRecursively()`:
+## Related
 
-```kotlin
-source.copyRecursively(target)                   // source/a.txt -> target/a.txt
-source.copyRecursively(target, overwrite = true) // merge into target, replacing existing files
-file.copyRecursively(targetFile)                 // also works on a regular file
-```
-
-- Missing parent directories are created and existing directories are merged. Without `overwrite`, the copy throws on the first file that already exists. A file never replaces a directory, or the other way around.
-- The copy stops at the first error and leaves `target` partially copied: there is no rollback.
-- `overwrite = true` can't tell that an existing target file is the source itself when it's reached through a hard link or a Windows junction. Copying would then truncate the source file.
-- Symbolic links inside the tree are skipped, never followed. Calling it on a link, or copying a directory into itself, throws.
-- It runs on `Dispatchers.IO`. On Apple platforms, it holds security-scoped access to the source and the target for the whole copy.
-- **Android**: `content://` document trees work as a source. As a target, new subdirectories can only be created by providers whose document IDs are paths, such as device storage; with other providers, the copy throws when it needs a new subdirectory. An entry whose provider-supplied name is `.`, `..`, contains `/` or is shared by a sibling makes the copy throw before anything is written. Copying into itself is detected only for providers whose document IDs are paths. Each entry costs provider queries, so large trees are slow.
-- **Windows**: a target that reaches the source through a directory junction isn't detected as being inside it, so the copy doesn't throw. It still ends, without copying its own output.
-- **Web**: not available, like `copyTo()`.
-
-## Moving Files
-
-You can move a file from one location to another using the `atomicMove` function:
-
-```kotlin
-val sourceFile = PlatformFile("/path/to/source.txt")
-val destinationFile = PlatformFile("/path/to/destination.txt")
-
-// Move the file
-sourceFile.atomicMove(destinationFile)
-```
-
-## Deleting Files
-
-FileKit also provides a method to delete files:
-
-```kotlin
-val file = PlatformFile(FileKit.cacheDir, "temporary.txt")
-
-// Delete the file (throws if file doesn't exist)
-file.delete()
-
-// Or specify that the file doesn't need to exist
-file.delete(mustExist = false)
-```
-
-To delete a directory and its contents, opt into recursive deletion:
-
-```kotlin
-val directory = PlatformFile(FileKit.cacheDir, "temporary-downloads")
-directory.delete(recursively = true)
-```
-
-For filesystem paths, `recursively` defaults to `false`, so deleting a non-empty
-directory fails unless you enable it. Symbolic links (including dangling links)
-and Windows directory junctions are removed as links; their targets are left
-untouched. Android document URIs continue to use the document provider's deletion
-behavior.
-
-## Creating Directories
-
-Before writing to a file, you may need to ensure its parent directory exists:
-
-```kotlin
-val directory = PlatformFile(FileKit.filesDir, "reports/2023/q4")
-
-// Create the directory and all parent directories if they don't exist
-if (!directory.exists()) {
-    directory.createDirectories()
-}
-
-// Now we can write to a file in this directory
-val reportFile = directory / "summary.txt"
-reportFile.writeString("Quarterly Report")
-```
-
-## Error Handling
-
-When writing files, you should handle potential errors:
-
-```kotlin
-val file = PlatformFile(FileKit.filesDir, "document.txt")
-val content = "Hello, FileKit!"
-
-try {        
-    file.writeString(content)
-    println("File written successfully")
-} catch (e: Exception) {
-    println("Error writing file: ${e.message}")
-}
-```
-
-## Downloading files from web
-
-<DownloadFilesWeb/>
-
-## Storing files on web
-
-<Check>Supported on JS and WASM targets</Check>
-
-On the web, FileKit stores files in the browser's
-[origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system)
-(OPFS): a private storage space for your site, hidden from the user and from other sites.
-
-<Warning>
-This API is experimental. Opt in with `@OptIn(ExperimentalFileKitApi::class)`. Its signatures may
-change in a future release.
-</Warning>
-
-### Getting a file
-
-Browsers can't open a file from a path the way `FileKit.filesDir / "notes/today.txt"` does on other
-platforms. Ask `FileKit.originPrivateDir` for it instead:
-
-```kotlin
-// Creates the file, and the "notes" directory, if they don't exist
-val file = FileKit.originPrivateDir.resolveFile("notes/today.txt", create = true)
-
-// Without create = true, a missing file throws an exception
-val existing = FileKit.originPrivateDir.resolveFile("notes/today.txt")
-```
-
-`resolveDirectory` works the same way for directories.
-
-### Reading and writing
-
-Once you have the file, read and write it as on other platforms:
-
-```kotlin
-file.writeString("Hello, FileKit!")
-val text = file.readString()
-```
-
-### Listing and deleting
-
-```kotlin
-val notes = FileKit.originPrivateDir.resolveDirectory("notes")
-
-val entries = notes.listEntries() // list() can't read OPFS directories
-notes.delete(recursively = true)
-```
-
-### Good to know
-
-- Only files and directories from `FileKit.originPrivateDir` can be written or deleted. Files from
-  pickers stay read-only, and the root directory itself can't be deleted.
-- `size()` and `lastModified()` are up to date after each FileKit write. If another tab changes a
-  file, resolve it again to see the change.
-- OPFS only works on HTTPS pages and local addresses such as `localhost` or `127.0.0.1`.
-- Browsers may clear OPFS when the device runs low on storage. To prevent this, request persistent
-  storage with
-  [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist):
-  the data is protected only if it returns `true`, as the browser can refuse.
-
-## Example: Creating a Simple Logger
-
-```kotlin
-class SimpleLogger(private val logFile: PlatformFile) {
-    fun log(message: String) {
-        // Get current timestamp
-        val timestamp = Clock.System.now()
-        val logEntry = "[$timestamp] $message\n"
-
-        // Append to log file
-        val sink = logFile.sink(append = true).buffered()
-        sink.use { it.writeString(logEntry) }
-    }
-}
-
-// Usage
-fun main() {
-    val logger = SimpleLogger(PlatformFile(FileKit.filesDir, "app.log"))
-    logger.log("Application started")
-}
-```
-
-<Note>
-See also: [Reading Files](/core/read-file) for information on how to read files after writing them.
-</Note>
+- [Reading files](/core/read-file)
+- [File operations](/core/file-operations): copy, move, delete, and create directories
+- [File saver](/dialogs/file-saver): let the user choose where to save

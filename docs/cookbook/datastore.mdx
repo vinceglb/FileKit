@@ -1,97 +1,70 @@
 ---
 title: 'DataStore'
-description: 'Simplify DataStore setup in Kotlin Multiplatform'
+sidebarTitle: 'DataStore'
+description: 'Create a Preferences DataStore from common code with FileKit.databasesDir'
 ---
 
-Setting up [DataStore](https://developer.android.com/kotlin/multiplatform/datastore) in Kotlin Multiplatform typically requires platform-specific code for each target. FileKit simplifies this by providing a unified path API.
+import { Platforms } from '/snippets/platforms.jsx'
 
-## The Problem
+<Platforms scope="core" supported="android ios macos jvm linux watchos" anchor="filekit-core" />
 
-The [official DataStore setup](https://developer.android.com/kotlin/multiplatform/datastore) requires `expect`/`actual` declarations with platform-specific implementations:
-
-- **Android** needs `Context.filesDir`
-- **iOS** needs `NSDocumentDirectory`  
-- **JVM** needs `System.getProperty("java.io.tmpdir")` or a custom path
-
-This means writing and maintaining code in `androidMain`, `iosMain`, and `jvmMain` source sets.
-
-## The Solution
-
-With FileKit, you can define everything in `commonMain`:
-
-```kotlin
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.databasesDir
-import kotlinx.io.files.Path
-
-fun createDataStore(fileName: String = "settings.preferences_pb"): DataStore<Preferences> =
-    PreferenceDataStoreFactory.createWithPath {
-        FileKit.databasesDir.resolve(fileName).path.toPath()
-    }
-```
-
-That's it! No platform-specific code needed.
-
-## Complete Example
-
-Here's a complete setup for a preferences manager:
-
-```kotlin
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import io.github.vinceglb.filekit.FileKit
-import io.github.vinceglb.filekit.databasesDir
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-
-object AppPreferences {
-    private val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.createWithPath {
-        FileKit.databasesDir.resolve("app.preferences_pb").path.toPath()
-    }
-
-    private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
-
-    val darkMode: Flow<Boolean> = dataStore.data.map { preferences ->
-        preferences[DARK_MODE_KEY] ?: false
-    }
-
-    suspend fun setDarkMode(enabled: Boolean) {
-        dataStore.edit { preferences ->
-            preferences[DARK_MODE_KEY] = enabled
-        }
-    }
-}
-```
-
-## Why `databasesDir`?
-
-`FileKit.databasesDir` returns a platform-appropriate location for persistent data:
-
-| Platform | Location |
-|----------|----------|
-| Android  | App's internal databases directory |
-| iOS      | `NSDocumentDirectory` |
-| macOS    | `~/Library/Application Support/{bundle-id}` |
-| JVM      | User's app data directory |
-
-This ensures your preferences are stored in a safe, persistent location on each platform.
+The [official DataStore setup](https://developer.android.com/kotlin/multiplatform/datastore) needs an `expect`/`actual` function to find a file path on each platform. `FileKit.databasesDir` gives you that path from shared code, so the whole setup fits in one file.
 
 ## Dependencies
 
-Add the DataStore dependencies alongside FileKit Core:
-
-```kotlin
+```kotlin build.gradle.kts
 commonMain.dependencies {
-    // FileKit Core
     implementation("io.github.vinceglb:filekit-core:<version>")
-
-    // DataStore
     implementation("androidx.datastore:datastore-preferences:<version>")
 }
 ```
+
+`datastore-preferences` 1.3.0 publishes no Windows native or web targets, and `databasesDir` doesn't exist on the web. If your app has those targets, add the dependency and the code below to a source set shared only by the platforms above instead of `commonMain`.
+
+## Create the DataStore
+
+```kotlin
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import io.github.vinceglb.filekit.FileKit
+import io.github.vinceglb.filekit.databasesDir
+import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.resolve
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import okio.Path.Companion.toPath
+
+object AppPreferences {
+    private val dataStore: DataStore<Preferences> = PreferenceDataStoreFactory.createWithPath(
+        produceFile = { FileKit.databasesDir.resolve("app.preferences_pb").path.toPath() },
+    )
+
+    private val darkModeKey = booleanPreferencesKey("dark_mode")
+
+    val darkMode: Flow<Boolean> = dataStore.data.map { it[darkModeKey] ?: false }
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        dataStore.edit { it[darkModeKey] = enabled }
+    }
+}
+```
+
+DataStore expects an okio `Path`, so the last step converts FileKit's path string with okio's `toPath()`. DataStore creates the parent folder when it first writes, so `databasesDir` doesn't need to exist yet on desktop.
+
+Create only one DataStore per file. A singleton `object`, or a single instance from your dependency injection, keeps that guarantee.
+
+On JVM and Linux native, call `FileKit.init(appId)` before the first read. See [Core setup](/core/setup).
+
+## Where the file goes
+
+| Platform | `databasesDir` |
+| --- | --- |
+| Android | The app's `databases/` directory |
+| iOS, watchOS | `Documents/databases/` |
+| macOS | `~/Library/Application Support/<bundle id>/databases/` |
+| JVM, Linux native | `<filesDir>/databases/`, for example `~/.local/share/<appId>/databases/` on Linux |
+
+See [App directories](/core/file-utils#directory-locations) for every platform.

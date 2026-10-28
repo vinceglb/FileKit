@@ -1,147 +1,102 @@
 ---
-title: 'Image and Video utilities'
-description: 'Utilities for working with image & Video in Kotlin Multiplatform'
+title: 'Image and video utilities'
+sidebarTitle: 'Image and video utilities'
+description: 'Compress and resize images, save images and videos to the gallery, and convert files to ImageBitmap'
 ---
 
-<Check>Supported on Android, iOS, macOS, JVM targets</Check>
+import { Platforms } from '/snippets/platforms.jsx'
 
-FileKit Core provides powerful utilities for working with images across platforms. These utilities enable common image operations like compression, resizing, and saving to the device gallery, with a consistent API across all supported platforms.
+<Platforms scope="core" supported="android ios jvm" partial={{ macos: 'Output size depends on the screen backing scale' }} anchor="filekit-core" />
 
-## Compressing Images
+`FileKit.compressImage` re-encodes an image as JPEG or PNG, optionally downscaled, and returns the new bytes. It is declared in `nonWebMain` and throws a `FileKitException` on Linux native, Windows native, and watchOS.
 
-You can compress images to reduce their file size while maintaining acceptable quality:
+## Usage
 
-```kotlin
-suspend fun compressAndSaveImage() {
-    // Read an image file
-    val originalImageFile = PlatformFile("/path/to/original.jpg")
-    val imageBytes = originalImageFile.readBytes()
-    
-    // Compress the image
-    val compressedBytes = FileKit.compressImage(
-        bytes = imageBytes,
-        quality = 80, // 0-100, where 100 is highest quality
-        maxWidth = 1024, // Optional maximum width
-        maxHeight = 1024, // Optional maximum height
-        imageFormat = ImageFormat.JPEG // JPEG or PNG
-    )
-    
-    // Save the compressed image
-    val compressedFile = PlatformFile(FileKit.filesDir, "compressed.jpg")
-    compressedFile.write(compressedBytes)
-}
+```kotlin nonWebMain
+val compressed: ByteArray = FileKit.compressImage(
+    file = photo,
+    quality = 80,
+    maxWidth = 1024,
+    maxHeight = 1024,
+)
+(FileKit.cacheDir / "photo-small.jpg").write(compressed)
 ```
 
-The `compressImage` function provides several key features:
-- **Quality control**: Reduces the image quality based on the `quality` parameter (0-100)
-- **Resizing**: Resizes the image if `maxWidth` or `maxHeight` is specified, maintaining the aspect ratio
-- **Format conversion**: Converts the image to the specified format (JPEG or PNG)
-- **Metadata handling**: On Android, automatically handles EXIF orientation metadata
+Pass `bytes = imageBytes` instead of `file` when the image is already in memory.
 
-## Saving Images to Gallery
+## Options
 
-FileKit provides a way to save images to the device's photo gallery:
+<ResponseField name="file / bytes" type="PlatformFile | ByteArray" post={["required"]}>
+  The source image.
+</ResponseField>
 
-```kotlin
-suspend fun saveImageToDeviceGallery() {
-    // Read an image file
-    val imageFile = PlatformFile(FileKit.filesDir, "photo.jpg")
+<ResponseField name="imageFormat" type="ImageFormat" default="JPEG">
+  Output format: `ImageFormat.JPEG` or `ImageFormat.PNG`.
+</ResponseField>
 
-    // Save to the device's photo gallery
-    val result = FileKit.saveImageToGallery(file = imageFile)
-    result.onFailure { error ->
-        println("Failed to save image: ${error.message}")
-    }
-}
+<ResponseField name="quality" type="Int" default="80">
+  `0` to `100`. Applies to JPEG only.
+</ResponseField>
+
+<ResponseField name="maxWidth / maxHeight" type="Int?" default="null">
+  Downscales to fit, keeping the aspect ratio. Smaller images are never upscaled.
+</ResponseField>
+
+On Android, the EXIF orientation is applied before resizing, so the output is upright.
+
+## Save to the gallery
+
+<Platforms scope="core" supported="android ios" partial={{ macos: 'Writes to the Pictures or Videos folder', jvm: 'Writes to the Pictures or Videos folder', linux: 'Writes to the Pictures or Videos folder', windows: 'Writes to the Pictures or Videos folder' }} anchor="filekit-core" />
+
+`saveImageToGallery` and `saveVideoToGallery` return a `Result<Unit>` instead of throwing:
+
+```kotlin nonWebMain
+FileKit.saveImageToGallery(file = photo)
+    .onFailure { error -> showError(error.message) }
+
+FileKit.saveVideoToGallery(file = video, filename = "holiday.mp4")
 ```
 
-The behavior of `saveImageToGallery` varies slightly by platform:
+`filename` defaults to the file's name. `saveImageToGallery(bytes, filename)` saves an image from memory.
 
-| Platform | Behavior |
-|----------|----------|
-| Android | Saves to the device's Pictures directory and makes it visible in the gallery app |
-| iOS | Saves to the device's Camera Roll |
-| macOS/JVM | Saves to the user's Pictures directory |
-| JS/WASM | Not supported (no-op) |
+| Platform | Destination |
+| --- | --- |
+| Android | MediaStore, in `DCIM/<app name>` on Android 10 and later. |
+| iOS | The Photos library. `filename` is ignored. |
+| macOS, JVM, Linux native, Windows native | The user's Pictures folder for images and Videos (Movies on macOS) folder for videos. |
+| watchOS | Returns a failed `Result`. |
+| Web | Not declared. |
 
-## Saving Videos to Gallery
+<Warning>
+On iOS, add `NSPhotoLibraryAddUsageDescription` to your `Info.plist` before saving to the gallery. Without it, the system terminates your app on the first save.
+</Warning>
 
-FileKit provides a way to save videos to the device's gallery:
+<Note>
+On Android 9 and lower, writing to MediaStore requires the `WRITE_EXTERNAL_STORAGE` permission. FileKit doesn't declare it, so add it to your manifest with `android:maxSdkVersion="28"` if you support those versions.
+</Note>
 
-```kotlin
-suspend fun saveVideoToDeviceGallery() {
-    // Read a video file
-    val videoFile = PlatformFile(FileKit.filesDir, "movie.mp4")
+## Convert to and from ImageBitmap in Compose
 
-    // Save to the device's video gallery
-    val result = FileKit.saveVideoToGallery(file = videoFile)
-    result.onFailure { error ->
-        println("Failed to save video: ${error.message}")
-    }
-}
+<Platforms scope="compose" supported="android ios macos jvm web" anchor="compose-and-coil" />
+
+`PlatformFile.toImageBitmap()` and `ImageBitmap.encodeToByteArray()` come from `filekit-dialogs-compose`, not `filekit-core`. Add it to `commonMain` (see [Installation](/installation) for the current version):
+
+```kotlin build.gradle.kts
+implementation("io.github.vinceglb:filekit-dialogs-compose:<version>")
 ```
 
-The behavior of `saveVideoToGallery` varies slightly by platform:
-
-| Platform | Behavior |
-|----------|----------|
-| Android | Saves to the device's Videos directory and makes it visible in the gallery app |
-| iOS | Saves to the device's Camera Roll |
-| macOS/JVM | Saves to the user's videos directory |
-| JS/WASM | Not supported (no-op) |
-
-## Encoding and Converting Images
-
-FileKit provides utilities for encoding `ImageBitmap` objects into byte arrays and converting `PlatformFile` objects into `ImageBitmap` instances. These methods are useful for image manipulation and storage across platforms.
-
-### Encoding an ImageBitmap to ByteArray
-
-The `ImageBitmap.encodeToByteArray` method allows you to encode an `ImageBitmap` into a `ByteArray` using a specified format and quality.
-
 ```kotlin
-suspend fun encodeImageToByteArray(imageBitmap: ImageBitmap): ByteArray {
-    return imageBitmap.encodeToByteArray(
-        format = ImageFormat.JPEG, // JPEG or PNG
-        quality = 90 // Compression quality (0-100)
-    )
-}
+import io.github.vinceglb.filekit.dialogs.compose.util.encodeToByteArray
+import io.github.vinceglb.filekit.dialogs.compose.util.toImageBitmap
+
+val bitmap: ImageBitmap = file.toImageBitmap()
+val png: ByteArray = bitmap.encodeToByteArray(format = ImageFormat.PNG)
 ```
 
-### Converting a PlatformFile to ImageBitmap
+Both are suspend functions. `encodeToByteArray` defaults to `ImageFormat.JPEG` with `quality = 100`. To display a file in an `Image`, the [Coil](/integrations/coil) loads it for you, with caching.
 
-The `PlatformFile.toImageBitmap` method converts a file into an `ImageBitmap` for use in Compose UI or other image operations.
+## Related
 
-```kotlin
-suspend fun convertFileToImageBitmap(file: PlatformFile): ImageBitmap {
-    return file.toImageBitmap()
-}
-```
-
-## Example: Creating a Thumbnail
-
-This function creates a thumbnail version of an image by resizing it to a maximum dimension while maintaining the aspect ratio.
-
-```kotlin
-suspend fun createThumbnail(originalImageFile: PlatformFile, maxSize: Int = 200): PlatformFile {
-    // Read the original image
-    val imageBytes = originalImageFile.readBytes()
-    
-    // Create a thumbnail by compressing and resizing
-    val thumbnailBytes = FileKit.compressImage(
-        bytes = imageBytes,
-        quality = 85,
-        maxWidth = maxSize,
-        maxHeight = maxSize,
-        imageFormat = ImageFormat.JPEG
-    )
-    
-    // Save the thumbnail
-    val thumbnailFile = PlatformFile(
-        FileKit.cacheDir,
-        "thumb_${originalImageFile.nameWithoutExtension}.jpg"
-    )
-    thumbnailFile write thumbnailBytes
-    
-    return thumbnailFile
-}
-```
+- [Gallery picker](/dialogs/gallery-picker) to let users pick photos and videos.
+- [Camera picker](/dialogs/camera-picker) to take a photo.
+- [Coil](/integrations/coil) to display a `PlatformFile` image.

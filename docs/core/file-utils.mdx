@@ -1,134 +1,96 @@
 ---
-title: 'File utilities'
-description: 'Utility functions for working with files in Kotlin Multiplatform'
+title: 'App directories'
+sidebarTitle: 'App directories'
+description: 'Find the app files, cache, and databases directories, plus Downloads and other user folders'
 ---
 
-import DownloadFilesWeb from '/snippets/download-files-web.mdx'
+import { Platforms } from '/snippets/platforms.jsx'
 
-## Standard Directories
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos" anchor="filekit-core" />
 
-<Check>Supported on Android, iOS, macOS, JVM, and Kotlin/Native Linux targets</Check>
+`FileKit.filesDir`, `FileKit.cacheDir`, and `FileKit.databasesDir` return the app's private directories as `PlatformFile`s, mapped to each platform's conventions. They are declared in `nonWebMain`, so call them from any source set without JS or Wasm.
 
-FileKit provides access to standard platform-specific directories:
+## Usage
 
-```kotlin
-// Get the application's files directory
-val filesDir: PlatformFile = FileKit.filesDir
+```kotlin nonWebMain
+val config = FileKit.filesDir / "config.json"
+config.writeString("""{"version": 1}""")
 
-// Get the application's cache directory
-val cacheDir: PlatformFile = FileKit.cacheDir
-
-// Get the application's databases directory
-val databasesDir: PlatformFile = FileKit.databasesDir
+val thumbnail = FileKit.cacheDir / "thumb.jpg"
+val database = FileKit.databasesDir / "app.db"
 ```
 
-These directories are automatically created if they don't exist and are properly sandboxed on each platform.
+On JVM, Linux native, and Windows native, call `FileKit.init(appId)` before reading any of these directories. `FileKit.init(appId, filesDir, cacheDir)` overrides the locations, and `FileKit.init(filesDir, cacheDir)` sets both without an app ID. See [Core setup](/core/setup).
 
-### Platform-specific Directory Behavior
+## Directory locations
 
-Each platform maps these standard directories to different locations according to platform conventions:
+| Platform | `filesDir` | `cacheDir` | `databasesDir` |
+| --- | --- | --- | --- |
+| Android | `Context.filesDir` | `Context.cacheDir` | `databases/` in the app data directory |
+| iOS, watchOS | `Documents/` (included in backups) | `Library/Caches/` (not backed up, may be purged) | `Documents/databases/` |
+| macOS | `~/Library/Application Support/<bundle id>/` | `~/Library/Caches/` (in the container when sandboxed) | `<filesDir>/databases/` |
+| JVM on macOS | `~/Library/Application Support/<appId>/` | `~/Library/Caches/<appId>/` | `<filesDir>/databases/` |
+| JVM on Linux, Linux native | `$XDG_DATA_HOME/<appId>/`, default `~/.local/share/<appId>/` | `$XDG_CACHE_HOME/<appId>/`, default `~/.cache/<appId>/` | `<filesDir>/databases/` |
+| JVM on Windows, Windows native | `%APPDATA%\<appId>\` | `%LOCALAPPDATA%\<appId>\Cache\` | `<filesDir>\databases\` |
 
-**Android**
-- **filesDir**: Maps to `context.filesDir`, which is the app's private internal storage
-- **cacheDir**: Maps to `context.cacheDir`, which is the app's private cache directory
-- **databasesDir**: Maps to a `databases` subdirectory in the app's internal storage
-
-**iOS**
-- **filesDir**: Maps to the app's Documents directory, which is backed up with iCloud
-- **cacheDir**: Maps to the app's Caches directory, which isn't backed up and may be cleared by the system
-- **databasesDir**: Maps to a `databases` subdirectory in the app's Documents directory
-
-**macOS**
-- **filesDir**: Maps to `~/Library/Application Support/<app-id>/`, requiring FileKit initialization with an app ID
-- **cacheDir**: Maps to `~/Library/Caches/<app-id>/`
-- **databasesDir**: Maps to a `databases` subdirectory in the application support directory
-
-**JVM (Desktop)**
-- **filesDir**: Maps to platform-specific app data locations:
-  - Linux: `~/.local/share/<app-id>/`
-  - macOS: `~/Library/Application Support/<app-id>/`
-  - Windows: `%APPDATA%/<app-id>/`
-- **cacheDir**: Maps to platform-specific cache locations:
-  - Linux: `~/.cache/<app-id>/`
-  - macOS: `~/Library/Caches/<app-id>/`
-  - Windows: `%LOCALAPPDATA%/<app-id>/Cache/`
-- **databasesDir**: Maps to a `databases` subdirectory within filesDir
-
-**Kotlin/Native Linux (`linuxX64`, `linuxArm64`)**
-- **filesDir**: Maps to `$XDG_DATA_HOME/<app-id>/`, or `~/.local/share/<app-id>/` when `XDG_DATA_HOME` is unset
-- **cacheDir**: Maps to `$XDG_CACHE_HOME/<app-id>/`, or `~/.cache/<app-id>/` when `XDG_CACHE_HOME` is unset
-- **databasesDir**: Maps to a `databases` subdirectory within filesDir
+`filesDir` and `cacheDir` always exist when you read them: FileKit creates them on desktop targets if needed. Android and Apple platforms also create `databasesDir` for you.
 
 <Note>
-On JVM, macOS, and Kotlin/Native Linux platforms, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
+On JVM, Linux native, and Windows native, `databasesDir` is not created automatically. Call `FileKit.databasesDir.createDirectories()` before writing into it.
 </Note>
 
-### Additional Directories
+On macOS native, `cacheDir` is the shared user Caches folder, not a per-app subfolder. Add your own subfolder, such as `FileKit.cacheDir / "com.example.myapp"`, when your app isn't sandboxed.
 
-On desktop platforms (JVM, macOS, and Kotlin/Native Linux), FileKit provides access to common user directories:
+## Use the temporary directory on Apple platforms
 
-```kotlin
-// Typed API
-val downloads: PlatformFile = FileKit.userDirectory(FileKitUserDirectory.Downloads)
-val pictures: PlatformFile = FileKit.userDirectory(FileKitUserDirectory.Pictures)
-val videos: PlatformFile = FileKit.userDirectory(FileKitUserDirectory.Videos)
-val music: PlatformFile = FileKit.userDirectory(FileKitUserDirectory.Music)
-val documents: PlatformFile = FileKit.userDirectory(FileKitUserDirectory.Documents)
+`FileKit.tempDir` returns `NSFileManager.temporaryDirectory`. It is declared for iOS, macOS, and watchOS only, so call it from an Apple source set such as `appleMain` or `iosMain`:
 
-// Convenience wrappers
-val downloadsDir: PlatformFile = FileKit.downloadsDir
-val picturesDir: PlatformFile = FileKit.picturesDir
-val videosDir: PlatformFile = FileKit.videosDir
-val musicDir: PlatformFile = FileKit.musicDir
-val documentsDir: PlatformFile = FileKit.documentsDir
+```kotlin iosMain
+val scratch = FileKit.tempDir / "upload.tmp"
 ```
 
-Use `FileKit.userDirectoryOrNull(...)` when you prefer nullable handling instead of exceptions.
+The system can delete this directory's contents when your app is not running.
 
-### Directory Usage Example
+## Get the project directory in tests
 
-```kotlin
-// Store app configuration
-val configFile = FileKit.filesDir / "config.json"
-configFile.writeString("{\"version\": 1}")
+`FileKit.projectDir` exists on every non-web target, but it only makes sense during development and tests:
 
-// Store temporary processing data
-val tempFile = FileKit.cacheDir / "temp_data.bin"
-tempFile.write(processingData)
+| Platform | Returns |
+| --- | --- |
+| Android, JVM, macOS, Linux native, Windows native | `PlatformFile(".")`: the process working directory. Gradle runs JVM and native host tests from the module directory. On an Android device, `.` is not your project. |
+| iOS, watchOS | The folder four levels above the app bundle. For a test binary on the simulator, that is the module directory. On a real device, it doesn't point to your project. |
 
-```kotlin
-// Access a database file
-val dbFile = FileKit.databasesDir / "app.db" 
-// Use the database file with your preferred database library
+See [Test resources](/cookbook/test-resources) to read fixture files with it. Don't use `projectDir` in production code.
+
+## Open user folders on desktop
+
+On JVM, macOS, Linux native, and Windows native, FileKit resolves the user's Downloads, Pictures, Videos, Music, and Documents folders:
+
+```kotlin jvmMain
+val downloads: PlatformFile = FileKit.downloadsDir
+val pictures = FileKit.userDirectory(FileKitUserDirectory.Pictures)
+
+// Returns null instead of throwing when the folder can't be resolved
+val music: PlatformFile? = FileKit.userDirectoryOrNull(FileKitUserDirectory.Music)
 ```
 
-## Scoped Resource Access (iOS/macOS)
+The shortcuts are `downloadsDir`, `picturesDir`, `videosDir`, `musicDir`, and `documentsDir`. They throw a `FileKitException` when the folder can't be resolved. These APIs are not declared on Android, iOS, watchOS, or the web.
 
-On iOS and macOS, some files may require security-scoped access to be read or written. FileKit provides utilities to manage this:
+| Platform | Resolution |
+| --- | --- |
+| macOS native | Foundation search paths (`Videos` is `~/Movies`). |
+| JVM on macOS | `$HOME/<name>`, with `Videos` mapped to `Movies`. |
+| JVM on Linux, Linux native | `XDG_<NAME>_DIR` environment variables, then `~/.config/user-dirs.dirs`, then `$HOME/<name>`. |
+| JVM on Windows, Windows native | Windows known folders (`SHGetKnownFolderPath`), then `%USERPROFILE%\<name>`. |
 
-```kotlin
-// Start accessing a security-scoped resource
-val success = platformFile.startAccessingSecurityScopedResource()
-if (success) {
-    try {
-        // Perform file operations
-    } finally {
-        // Stop accessing the resource
-        platformFile.stopAccessingSecurityScopedResource()
-    }
-}
-```
+On JVM, Linux native, and Windows native, a missing folder is created when you read it.
 
-To simplify this pattern, you can use the `withScopedAccess` method:
+## Download a file on the web
 
-```kotlin
-platformFile.withScopedAccess { file ->
-    // Perform file operations with scoped access
-}
-```
+Browsers have no app directories. To save bytes to the user's Downloads folder, use `FileKit.download`. See [Files on the web](/core/web#download-files).
 
-These methods ensure that security-scoped resources are properly accessed and released, preventing potential resource leaks.
+## Related
 
-## Downloading files from web
-
-<DownloadFilesWeb/>
+- [Core setup](/core/setup) to set the application ID or custom directories.
+- [Writing files](/core/write-file) into these directories.
+- [Bookmark data](/core/bookmark-data) to keep access to files outside them.

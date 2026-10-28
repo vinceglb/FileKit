@@ -1,162 +1,156 @@
 ---
-title: FileKit Introduction
+title: FileKit
 sidebarTitle: Introduction
-description: Cross-Platform File Operations Made Simple for Kotlin Multiplatform
+description: Pick, save, read, and write files with one Kotlin Multiplatform API, using each platform's native dialogs.
 og:title: FileKit
 ---
 
 <Frame>
   <img
     src="/images/hero-13.png"
-    alt="FileKit Logo - File picker and utilities for Kotlin Multiplatform KMP, Compose Multiplatform CMP"
+    alt="FileKit logo: file picker and utilities for Kotlin Multiplatform KMP, Compose Multiplatform CMP"
   />
 </Frame>
 
-FileKit is a lightweight yet powerful library that simplifies file operations across multiple platforms using Kotlin Multiplatform. 
+**FileKit is the file layer for Kotlin Multiplatform.** Open native file, photo, directory, and camera pickers, save and share files, and read or write them through a single `PlatformFile` type. The same code runs on Android, iOS, macOS, desktop JVM (Windows, macOS, Linux), Linux and Windows native, JS, and Wasm, and FileKit Core also runs on watchOS.
 
-Whether you need to pick files, save documents, access photos, or manage directories, FileKit provides a consistent API that works seamlessly on Android, iOS, macOS, JVM (Windows, macOS, Linux), JS, and WASM.
+## FileKit in 30 seconds
 
-```kotlin
-// Pick an image file
-val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
+Let the user pick a photo, then show it or read its bytes.
 
-// Pick multiple files
-val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+<CodeGroup>
 
-// Pick a directory
-val directory = FileKit.openDirectoryPicker()
+```kotlin Compose
+@Composable
+fun PhotoPicker() {
+    val scope = rememberCoroutineScope()
+    var photo by remember { mutableStateOf<ImageBitmap?>(null) }
 
-// Save a file
-PlatformFile(directory, "image.png").write(imageFile)
+    val launcher = rememberFilePickerLauncher(
+        type = FileKitType.Image,
+        onError = { failure -> println("Picker failed: ${failure.message}") },
+    ) { file ->
+        // null when the user cancels
+        if (file != null) scope.launch { photo = file.toImageBitmap() }
+    }
+
+    Button(onClick = { launcher.launch() }) { Text("Pick a photo") }
+    photo?.let { Image(bitmap = it, contentDescription = null) }
+}
 ```
 
-## Why Choose FileKit?
+```kotlin Suspend API
+suspend fun importPhoto() {
+    // Native picker on every platform; null when the user cancels
+    val photo = FileKit.openFilePicker(type = FileKitType.Image) ?: return
+
+    println("${photo.name}: ${photo.size()} bytes")
+
+    // Read it, then upload it or store it
+    val bytes: ByteArray = photo.readBytes()
+}
+```
+
+</CodeGroup>
 
 <CardGroup cols={2}>
-  <Card
-    title="Cross-Platform"
-    icon="globe"
-  >
-    One API for all platforms: Android, iOS, macOS, JVM, JS, and WASM
+  <Card title="Try it in your browser" icon="play" href="/live-demo">
+    Run the FileKit sample app live, with no install.
   </Card>
-  <Card
-    title="Native experience"
-    icon="puzzle-piece"
-  >
-    Uses platform-native file pickers for the best user experience
-  </Card>
-  <Card
-    title="Lightweight"
-    icon="feather"
-  >
-    Minimal dependencies to keep your app fast and lean
-  </Card>
-  <Card
-    title="Integrations"
-    icon="sparkles"
-  >
-    Seamless integration with Compose Multiplatform, Coroutines, kotlinx-io, Coil...
+  <Card title="Run it in two minutes" icon="rocket" href="/quickstart">
+    Add one dependency, do the per-platform setup, and pick your first file.
   </Card>
 </CardGroup>
 
-## Who's Using FileKit
-
-FileKit is trusted by developers building amazing cross-platform applications:
-
-- **[Heron](https://github.com/tunjid/heron)** - KMP Bluesky client using FileKit for image preview when uploading images or videos
-- **[Rush](https://github.com/shub39/Rush)** - Lyrics search app like Spotify
-- **[Composables SVG to Compose](https://composables.com/svg-to-compose)** - Web tool to convert SVG to Compose code in seconds
-- **[Twine](https://github.com/msasikanth/twine)** - A multiplatform RSS reader built using Kotlin and Compose
-- **[Butler](https://github.com/HLCaptain/butler)** - AI Chat App supporting image uploads across iOS, Android, Desktop, and WasmJS
-- **[PixelSafe](https://github.com/StefanOltmann/pixelsafe)** - Free steganography tool for PNG images
-- **[AndroidToolKit](https://github.com/LazyIonEs/AndroidToolKit)** - Desktop tools applicable to Android development, supporting Windows, Mac and Linux
-- **[Splital](https://splital.com/)** - Easily track and manage your shared expenses, quickly, simply, and hassle-free on [Android](https://play.google.com/store/apps/details?id=com.splital.project) and [iOS](https://apps.apple.com/us/app/splital-settle-up-easily/id6501984581)
-- **[Tracker - Manager for Bluesky](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer)** - Track and manage your Bluesky followers, unfollowers, blockers, and post analytics — all in real time! On [Android](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) and [iOS](https://apps.apple.com/us/app/tracker-manager-for-bluesky/id6740998282).
-- **[Parrot Workout Tracker](https://parrotworkouttracker.com/)** - The ultimate fitness log and exercise tracker to crush your goals on [Android](https://play.google.com/store/apps/details?id=de.kreiniker.parrotworkouttracker) and [iOS](https://apps.apple.com/us/app/workout-tracker-log-parrot/id6741729053).
-- **[Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer)** - Photo management software for organizing and searching large photo collections
-- **[AB Download Manager](https://github.com/amir1376/ab-download-manager/)** - A Download Manager that speeds up your downloads
-- **[Edconv](https://github.com/edneyosf/Edconv)** - A user-friendly interface that simplifies the power of FFmpeg. It's designed for fast and efficient conversion of video and audio files.
-- **[Gluky](https://github.com/N7ghtm4r3/Gluky)**, **[Refy](https://github.com/N7ghtm4r3/Refy)**, **[Pandoro](https://github.com/N7ghtm4r3/Pandoro)**, **[Neutron](https://github.com/N7ghtm4r3/Neutron)**, and **[Brownie](https://github.com/N7ghtm4r3/Brownie)** - Self-hosted applications using FileKit for profile pictures and file uploads
-- **[Keyguard](https://github.com/AChep/keyguard-app)** - Alternative client for the Bitwarden platform and KeePass (KDBX)
-- **[HowMarket](https://github.com/dududaa/howmarket)** - Cross-platform Point of Sale (PoS) software for small and growing businesses, using FileKit to upload and manage product and user images
-- **[Authmeister](https://monoroh.com/authmeister)** - Multiplatform OTP authenticator supporting TOTP and HOTP, available on [Android](https://play.google.com/store/apps/details?id=com.kopylovis.authmeister) and [iOS](https://apps.apple.com/us/app/authmeister/id6742833866)
-- **[Dancing Decibels](https://www.dancingdecibels.com)** - Multi-platform app for music festivals and live entertainment experiences, using FileKit for image imports and schedule import/export
-- **[Kai](https://github.com/SimonSchubert/Kai)** - OpenClaw alternative in your pocket, using FileKit in production across Android, iOS, desktop, and web
-- **[Hammer Editor](https://github.com/Wavesonics/hammer-editor)** - Multi-platform tool for writing stories and novels, using FileKit to select project directories and images
-- **[DevAnalyzer](https://github.com/Coding-Meet/DevAnalyzer)** - Developer productivity tool for analyzing and understanding software projects, using FileKit for file and directory handling in its project analysis workflow
-
-## Key Features
-
-FileKit offers a comprehensive suite of tools for handling files across platforms:
-
-<Frame>
-  <img
-    src="/images/intro-illu.png"
-    alt="FileKit illustration"
-  />
-</Frame>
-
-### File Operations
-- **File & Media Pickers**: Open files, images, videos, or any document type with platform-native pickers
-- **Directory Selection**: Access directories easily with native folder pickers
-- **File Saving**: Save files to user-selected locations
-- **Cross-Platform API**: Write once, run everywhere with consistent behavior
-
-### Integration & Utilities
-- **Compose Multiplatform Support**: Seamless integration with Compose UI
-- **Coroutines Support**: Asynchronous file operations with Kotlin coroutines
-- **Platform File Abstraction**: Work with files consistently across platforms
-- **Coil Integration**: Display images from files easily in your Compose UI
-
-## Getting Started
-
-Get up and running with FileKit in minutes with our comprehensive guides:
+## What you can build
 
 <CardGroup cols={2}>
-  <Card
-      title="Quick Start"
-      icon="rocket"
-      href="/quickstart"
-    >
-    Get started with FileKit in minutes
+  <Card title="Photo and file uploads" icon="cloud-arrow-up" href="/dialogs/file-picker">
+    Open the native file picker or the Android and iOS photo picker, then read the bytes to upload them.
   </Card>
-  <Card
-    title="Installation"
-    icon="download"
-    href="/installation"
-  >
-    Add FileKit to your Kotlin Multiplatform
+  <Card title="Export and save documents" icon="floppy-disk" href="/dialogs/file-saver">
+    Ask the user where to save a file, then write text, bytes, or a stream to it.
   </Card>
-  <Card
-    title="Core Concepts"
-    icon="book"
-    href="/core/platform-file"
-  >
-    Learn about PlatformFile and essential FileKit concepts
+  <Card title="Work with project folders" icon="folder-open" href="/dialogs/directory-picker">
+    Let users pick a folder, then list, walk, and copy its contents. Keep access across launches with bookmarks.
   </Card>
-  <Card
-    title="Dialogs setup"
-    icon="window"
-    href="/dialogs/setup"
-  >
-    Pick files, save files, and more with FileKit Dialogs
+  <Card title="Camera capture and photo processing" icon="camera" href="/dialogs/camera-picker">
+    Take a photo, compress or resize it, and save it to the user's gallery.
+  </Card>
+  <Card title="Share and open files" icon="share-nodes" href="/dialogs/share-file">
+    Send a file to the system share sheet or open it in the default app.
+  </Card>
+  <Card title="Local app storage" icon="hard-drive" href="/core/file-utils">
+    Store files in the app's files, cache, and databases directories. The same paths work with DataStore or Room.
   </Card>
 </CardGroup>
 
-## Modular Structure
+## Platforms
 
-FileKit is designed to be modular, allowing you to include only what you need:
+| Android | iOS | macOS | JVM desktop | Linux native | Windows native | JS | Wasm | watchOS |
+| :-----: | :-: | :---: | :---------: | :----------: | :------------: | :-: | :--: | :-----: |
+| ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Core only |
+
+Every target with `filekit-dialogs` uses the platform's native dialogs (watchOS has FileKit Core only). Some features are platform-specific: the camera and share sheet are mobile-only, the file saver is not available in browsers, and Compose and Coil support follows Compose Multiplatform's targets. See the [platform support matrix](/platform-support) for a feature-by-feature breakdown.
+
+## Modules
+
+Add only the modules you need. Each module pulls in the ones it builds on.
+
+| Artifact | What it gives you | Add it when |
+| --- | --- | --- |
+| `filekit-core` | `PlatformFile`, reading and writing, file system operations, app directories, image utilities, bookmarks | You work with files and don't need dialogs |
+| `filekit-dialogs` | Native file, gallery, directory, and camera pickers, plus the file saver, share, and open-file dialogs, as `suspend` functions | You open dialogs from shared code, ViewModels, or non-Compose UI |
+| `filekit-dialogs-compose` | `remember…Launcher` APIs and `PlatformFile.toImageBitmap()` | Your UI uses Compose Multiplatform |
+| `filekit-coil` | `PlatformFile` support in Coil 3 `AsyncImage` | You display images with Coil |
 
 ```mermaid
-graph TD
-    A[FileKit Core] --> B[FileKit Dialogs]
-    B --> C[FileKit Dialogs Compose]
-    A --> E[FileKit Coil]
+graph LR
+    A[filekit-core] --> B[filekit-dialogs]
+    B --> C[filekit-dialogs-compose]
+    A --> D[filekit-coil]
 ```
 
-- **FileKit Core**: Basic file operations and the `PlatformFile` abstraction
-- **FileKit Dialogs**: File pickers and save dialogs without UI dependencies
-- **FileKit Dialogs Compose**: Compose Multiplatform integration for file operations
-- **FileKit Coil**: Integration with Coil for image loading
+## Next steps
 
-Check out our [sample projects](https://github.com/vinceglb/FileKit/tree/main/samples) to see FileKit in action across different platforms.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Pick and read your first file.
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Dependencies and per-platform setup.
+  </Card>
+  <Card title="Platform support" icon="table-cells" href="/platform-support">
+    See which features each platform supports.
+  </Card>
+  <Card title="Use FileKit with AI assistants" icon="robot" href="/ai-assistants">
+    Give your coding assistant the FileKit docs through MCP, `llms.txt`, or Markdown.
+  </Card>
+</CardGroup>
+
+## Used in production
+
+<CardGroup cols={3}>
+  <Card title="Heron" href="https://github.com/tunjid/heron">
+    Bluesky client for Android, iOS, and desktop
+  </Card>
+  <Card title="Twine" href="https://github.com/msasikanth/twine">
+    Multiplatform RSS reader
+  </Card>
+  <Card title="Keyguard" href="https://github.com/AChep/keyguard-app">
+    Bitwarden and KeePass client
+  </Card>
+  <Card title="Ashampoo Photo Organizer" href="https://www.ashampoo.com/en-us/photo-organizer">
+    Photo management for large collections
+  </Card>
+  <Card title="AB Download Manager" href="https://github.com/amir1376/ab-download-manager/">
+    Desktop download manager
+  </Card>
+  <Card title="SVG to Compose" href="https://composables.com/svg-to-compose">
+    Web tool by Composables
+  </Card>
+</CardGroup>
+
+[See all projects using FileKit →](/showcase)
+
+Browse the [sample apps](https://github.com/vinceglb/FileKit/tree/main/sample) to see FileKit running on each platform.

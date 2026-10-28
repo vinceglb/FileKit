@@ -1,44 +1,60 @@
 ---
-title: 'Open file dialog'
-sidebarTitle: 'Open file'
-description: 'Open a file with the default application in a Kotlin Multiplatform project'
+title: 'Open with default app'
+sidebarTitle: 'Open with default app'
+description: 'Open a file in the app the system associates with its type, such as a PDF viewer'
 ---
 
+import { Platforms } from '/snippets/platforms.jsx'
 import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
-<Check>Supported on Android, iOS, macOS and JVM targets</Check>
+<Platforms scope="dialogs" supported="android ios macos jvm linux windows" anchor="filekit-dialogs" />
 
-## Quick start
+Hand a file to the app the system associates with its type: a PDF viewer for `.pdf`, an image viewer for `.jpg`. Your app doesn't read the content. The function is not available on the web, so call it from a non-web source set such as `nonWebMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
-The open file function allows you to open any file with the default application associated with that file type on the user's device. This is useful for viewing documents, images, or any other file type without handling the content within your app.
+## Usage
 
-```kotlin filekit-dialogs
-val file = PlatformFile("/path/to/document.pdf")
+`openFileWithDefaultApplication` is a regular function, not a suspend function, so you can call it directly from a click handler. There is no Compose launcher.
+
+```kotlin
+val file = FileKit.filesDir / "report.pdf"
 FileKit.openFileWithDefaultApplication(file)
 ```
 
-This will open the file using the system's default application for that file type - for example, a PDF viewer for `.pdf` files, an image viewer for `.jpg` files, or a text editor for `.txt` files.
+## Options
 
-<Info>
-Ensure the file you are trying to open exists and is accessible. Attempting to open a non-existent file will result in an error.
-</Info>
+<ResponseField name="file" type="PlatformFile" post={["required"]}>
+  The file to open. It must exist.
+</ResponseField>
+
+<ResponseField name="openFileSettings" type="FileKitOpenFileSettings" default="createDefault()">
+  Platform-specific settings.
+
+  <Expandable title="properties">
+    <ResponseField name="authority" type="String?" default="null" post={["Android"]}>
+      FileProvider authority, only needed for files outside `filesDir` and `cacheDir`. When `null`, FileKit uses its bundled `${applicationId}.FileKitFileProvider`. See [Android setup](#android-setup).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Platform notes
+
+Failures are not wrapped in `FileKitDialogException`. Each platform reports them its own way:
+
+| Platform | Behavior |
+| --- | --- |
+| Android | Sends an `ACTION_VIEW` intent with the MIME type of the file extension. Throws `ActivityNotFoundException` when no app handles that type, and `IllegalArgumentException` for a file outside the directories its FileProvider covers. |
+| iOS | Calls `openURL`. If that fails, shows the "Open in" menu (`UIDocumentInteractionController`) so the user can pick an app. Reports no error. |
+| macOS | Uses `NSWorkspace`. Reports no error. |
+| JVM | Uses `java.awt.Desktop.open` without checking `Desktop.isDesktopSupported()`. Throws on headless setups (`HeadlessException`), when the action is unsupported (`UnsupportedOperationException`), or when no app is associated (`IOException`). |
+| Linux native | Starts `xdg-open` without waiting for it. Throws `FileKitException` only if the process cannot start. |
+| Windows native | Calls `ShellExecuteW` with the `open` verb. Reports no error. |
+| Web | Not available. |
 
 ## Android setup
 
 <AndroidFileProviderSetup />
 
-3. When opening files from custom locations, provide the `openFileSettings` parameter with your app's FileProvider authority:
+## Related
 
-```kotlin filekit-dialogs
-val file = FileKit.filesDir / "document.pdf"
-FileKit.openFileWithDefaultApplication(
-    file = file,
-    openFileSettings = FileKitOpenFileSettings(
-        authority = "${context.packageName}.fileprovider"
-    )
-)
-```
-
-<Warning>
-If you don't provide the correct FileProvider authority when opening files from custom locations on Android, the operation will fail with a `FileUriExposedException` on Android 7.0 and above.
-</Warning>
+- [Share file](/dialogs/share-file) to send a file to another app.
+- [File picker](/dialogs/file-picker) to let the user choose one.

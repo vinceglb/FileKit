@@ -1,0 +1,96 @@
+---
+title: 'Use FileKit with AI assistants'
+sidebarTitle: 'AI assistants'
+description: 'Connect Claude, ChatGPT, Cursor, VS Code, and other AI tools to the FileKit documentation'
+---
+
+AI coding assistants often learn older APIs from their training data. Point your assistant at the current FileKit docs so its code matches the version you use.
+
+## MCP server
+
+The FileKit docs run a hosted [Model Context Protocol](https://modelcontextprotocol.io) server. Once connected, your assistant can search and read the docs while it writes code.
+
+```text
+https://filekit.mintlify.app/mcp
+```
+
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add --transport http filekit https://filekit.mintlify.app/mcp
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Add to `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "filekit": {
+          "url": "https://filekit.mintlify.app/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="VS Code">
+    Add to `.vscode/mcp.json`:
+
+    ```json
+    {
+      "servers": {
+        "filekit": {
+          "type": "http",
+          "url": "https://filekit.mintlify.app/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Other clients">
+    Any MCP client that supports remote servers over HTTP can use `https://filekit.mintlify.app/mcp`.
+  </Tab>
+</Tabs>
+
+You can also use the page menu at the top of any docs page to copy the MCP URL or install the server in Cursor or VS Code.
+
+## llms.txt
+
+The docs are published in the [llms.txt](https://llmstxt.org) format, which AI tools can read directly:
+
+| File | Content |
+| --- | --- |
+| [`/llms.txt`](https://filekit.mintlify.app/llms.txt) | An index of every page with a one-line summary |
+| [`/llms-full.txt`](https://filekit.mintlify.app/llms-full.txt) | The full documentation in a single Markdown file |
+
+Paste `llms-full.txt` into a chat for full context, or give your agent the `llms.txt` URL so it fetches only the pages it needs.
+
+## Markdown pages
+
+Every page is also available as Markdown. Add `.md` to the URL, for example [`/quickstart.md`](https://filekit.mintlify.app/quickstart.md). Use the menu at the top of each page to:
+
+- Copy the page as Markdown.
+- View the page as Markdown.
+- Open the page in ChatGPT, Claude, or Perplexity with the page as context.
+
+## Project instructions
+
+If your project uses an `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or Copilot instructions file, add a short FileKit section. It prevents the most common mistakes:
+
+```markdown AGENTS.md
+## FileKit (Kotlin Multiplatform file APIs)
+
+- Docs: https://filekit.mintlify.app (MCP server: https://filekit.mintlify.app/mcp, full text: https://filekit.mintlify.app/llms-full.txt).
+- Modules: `filekit-core` (PlatformFile, read/write, file system), `filekit-dialogs` (suspend pickers/saver),
+  `filekit-dialogs-compose` (`remember…Launcher` for Compose), `filekit-coil` (Coil 3 support). Group `io.github.vinceglb`.
+- Most APIs are extension functions: import them from `io.github.vinceglb.filekit` (core),
+  `io.github.vinceglb.filekit.dialogs`, `io.github.vinceglb.filekit.dialogs.compose`, or `io.github.vinceglb.filekit.coil`.
+- Use `PlatformFile`, not `java.io.File` or `NSURL`, in shared code. Reading and writing (`readBytes()`, `readString()`,
+  `write()`, `writeString()`) are `suspend` functions.
+- Pickers return `null` when the user cancels, except `SingleWithState`/`MultipleWithState`, which emit
+  `FileKitPickerState.Cancelled`. Prefer Compose launcher overloads that take `onError`.
+- Platform setup: `FileKit.init(appId = ...)` on JVM desktop, Linux native, and Windows native before using app
+  directories. On Android, `FileKit.init(activity)` before calling suspend dialog APIs (Compose launchers do it for you).
+- Some APIs are platform-specific (for example, the file saver is not available on JS/Wasm; use `FileKit.download`).
+  Check https://filekit.mintlify.app/platform-support before using an API in `commonMain`.
+```

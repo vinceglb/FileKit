@@ -1,0 +1,134 @@
+---
+title: 'Platform support'
+description: 'Which FileKit features are available on Android, iOS, macOS, JVM desktop, Linux, Windows, watchOS, and the web'
+---
+
+FileKit gives you one API, but platforms differ: browsers can't write arbitrary files, desktops have no camera picker, and phones have no "Downloads" folder. This page lists what each target supports, based on the library's platform implementations.
+
+**Legend:** ✅ supported · ⚠️ supported with limitations (see the numbered notes) · ❌ not available
+
+<Tip>
+An API marked ❌ is usually not declared at all for that target, so calling it from `commonMain` won't compile. Call it from a source set that only includes supported targets. See [Use platform-specific APIs from shared code](#use-platform-specific-apis-from-shared-code).
+</Tip>
+
+## Targets per module
+
+| Module | Android | iOS | macOS | JVM desktop | Linux native | Windows native | watchOS | JS | Wasm |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `filekit-core` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `filekit-dialogs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ |
+| `filekit-dialogs-compose` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| `filekit-coil` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+
+| Platform | Kotlin targets |
+| --- | --- |
+| Android | Android library, minSdk 24 |
+| iOS | `iosArm64`, `iosSimulatorArm64` |
+| macOS | `macosArm64` |
+| JVM desktop | `jvm` (JVM 17) on Windows, macOS, and Linux |
+| Linux native | `linuxX64`, `linuxArm64` |
+| Windows native | `mingwX64` |
+| watchOS | `watchosArm64`, `watchosDeviceArm64`, `watchosSimulatorArm64` |
+| Web | `js` (browser), `wasmJs` (browser) |
+
+Intel-only Apple targets (`iosX64`, `macosX64`) are not published.
+
+## FileKit Core
+
+Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · **Lin** Linux native · **Win** Windows native · **watch** watchOS · **Web** JS and Wasm.
+
+| Feature | And | iOS | mac | JVM | Lin | Win | watch | Web |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| [`PlatformFile`](/core/platform-file) properties: name, extension, size, `isDirectory`, `lastModified` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>1</sup> |
+| Create from a path, `exists`, `absolutePath`, `/` operator | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `mimeType()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [`readBytes`, `readString`](/core/read-file) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Streaming read: `source()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| [`write`, `writeString`](/core/write-file), `delete` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>2</sup> |
+| Streaming write: `sink()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| [`copyTo`, `copyRecursively`, `createDirectories`](/core/file-operations) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `atomicMove` | ⚠️ <sup>3</sup> | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `list`, `walk`, `sizeRecursively` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>1</sup> |
+| `createdAt()` | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>4</sup> | ✅ | ✅ | ❌ |
+| [`filesDir`, `cacheDir`, `databasesDir`](/core/file-utils) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `downloadsDir`, `picturesDir`, `videosDir`, `musicDir`, `documentsDir` | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
+| `tempDir` | ❌ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| [`compressImage`](/core/image-and-video-utils) | ✅ | ✅ | ⚠️ <sup>5</sup> | ✅ | ❌ <sup>6</sup> | ❌ <sup>6</sup> | ❌ <sup>6</sup> | ❌ |
+| `saveImageToGallery`, `saveVideoToGallery` | ✅ | ✅ | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ❌ <sup>6</sup> | ❌ |
+| [Bookmark data](/core/bookmark-data) (persistent access) | ✅ | ✅ | ✅ | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ✅ | ❌ |
+| `PlatformFile` serialization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ <sup>16</sup> |
+| [`FileKit.download`](/core/web#download-files) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| [Origin private file system (OPFS)](/core/web#store-files-in-the-origin-private-file-system) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ <sup>2</sup> |
+
+## FileKit Dialogs
+
+`filekit-dialogs` is not available on watchOS. Web means JS and Wasm.
+
+| Feature | Android | iOS | macOS | JVM | Linux native | Windows native | Web |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| [File picker](/dialogs/file-picker): single, multiple, extension filter | ✅ | ✅ | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ⚠️ <sup>11</sup> |
+| [Gallery picker](/dialogs/gallery-picker): `Image`, `Video`, `ImageAndVideo` | ✅ Photo Picker | ✅ PHPicker | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> |
+| [Directory picker](/dialogs/directory-picker) | ✅ | ✅ | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ⚠️ <sup>13</sup> |
+| [File saver](/dialogs/file-saver) | ⚠️ <sup>14</sup> | ⚠️ <sup>14</sup> | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ❌ use `FileKit.download` |
+| [Camera picker](/dialogs/camera-picker) (photo) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| [Share file](/dialogs/share-file) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| [Open with default app](/dialogs/open-file) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| [Dialog settings](/dialogs/dialog-settings) | None | ⚠️ <sup>15</sup> | ✅ | ✅ | Title only | Title only | None |
+
+## Compose and Coil
+
+| Feature | Android | iOS | macOS | JVM | Web |
+| --- | :-: | :-: | :-: | :-: | :-: |
+| `rememberFilePickerLauncher`, `rememberDirectoryPickerLauncher` | ✅ | ✅ | ✅ | ✅ | ✅ <sup>13</sup> |
+| `rememberFileSaverLauncher` | ✅ | ✅ | ✅ | ✅ | ❌ |
+| `rememberCameraPickerLauncher`, `rememberShareFileLauncher` | ✅ | ✅ | ❌ | ❌ | ❌ |
+| `PlatformFile.toImageBitmap()`, `ImageBitmap.encodeToByteArray()` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| [Coil](/integrations/coil) `AsyncImage(model = platformFile)` | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+Compose Multiplatform has no Linux native, Windows native, or watchOS targets, so `filekit-dialogs-compose` and `filekit-coil` don't either. On macOS native, Compose itself is experimental.
+
+## Use platform-specific APIs from shared code
+
+Kotlin's default hierarchy gives you `appleMain`, `iosMain`, `nativeMain`, and `webMain`, but no source set for "everything except the web" or "Android and iOS". Create them in your shared module, following [Kotlin's guide to additional source sets](https://kotlinlang.org/docs/multiplatform-hierarchy.html#creating-additional-source-sets):
+
+```kotlin build.gradle.kts
+kotlin {
+    applyDefaultHierarchyTemplate()
+
+    sourceSets {
+        // File saver, open with default app, file operations, app directories
+        val nonWebMain by creating { dependsOn(commonMain.get()) }
+        androidMain.get().dependsOn(nonWebMain)
+        jvmMain.get().dependsOn(nonWebMain)
+        iosMain.get().dependsOn(nonWebMain)
+
+        // Camera picker, share sheet
+        val mobileMain by creating { dependsOn(nonWebMain) }
+        androidMain.get().dependsOn(mobileMain)
+        iosMain.get().dependsOn(mobileMain)
+    }
+}
+```
+
+Keep only the targets your project declares, and add others (such as `macosMain` or `linuxMain`) the same way. Kotlin doesn't support a source set shared only by Android and JVM: if those are your only non-web targets, call these APIs from `androidMain` and `jvmMain`, or wrap them in an `expect`/`actual` function. Code in `nonWebMain` can then call `FileKit.openFileSaver()`, and code in `mobileMain` can call `FileKit.openCameraPicker()`.
+
+## Notes
+
+1. **Web files are read-only browser handles.** Directories report a size of `0`. `list`, `walk`, and `sizeRecursively` work on folders returned by the directory picker.
+2. **Web writing is experimental.** `write`, `writeString`, and `delete` work only on entries in the browser's origin private file system (OPFS) and require `@OptIn(ExperimentalFileKitApi::class)` and a secure context. Writing to a picked file throws.
+3. **Android `content://` files:** `atomicMove` falls back to copy-then-delete and doesn't support directories.
+4. **Linux native:** `createdAt()` always returns `null`.
+5. **macOS native:** the output size of `compressImage` depends on the screen's backing scale factor.
+6. **Throws at runtime** on these targets: `compressImage` on Linux native, Windows native, and watchOS; gallery saving on watchOS returns a failed `Result`.
+7. **Desktop "gallery":** the image or video is written to the user's Pictures or Videos folder.
+8. **Path-based bookmarks:** on Windows, Linux, and non-macOS JVM, bookmark data stores the file path. Access is not security-scoped, so the bookmark breaks if the file moves.
+9. **JVM dialogs** use `NSOpenPanel`/`NSSavePanel` on macOS, `IFileDialog` on Windows, and the XDG Desktop Portal on Linux, falling back to AWT/Swing dialogs when no portal is running.
+10. **Linux native dialogs** require a running XDG Desktop Portal (`org.freedesktop.portal.Desktop`, available on GNOME, KDE, and most modern desktops) and `libdbus-1`. There is no fallback dialog and no parent window. See [Dialogs setup](/dialogs/setup#linux-setup).
+11. **Web picker** uses `<input type="file">`. The type filter is applied through the `accept` attribute; `directory` and dialog settings are ignored.
+12. **Media types outside Android and iOS** open the regular file dialog filtered by extension: `png`, `jpg`, `jpeg`, `gif`, `bmp` for images and `mp4`, `mov`, `avi`, `mkv`, `webm` for videos. On the web, they filter with `image/*` and `video/*`.
+13. **Web directory picker** returns a read-only tree of the selected folder. An empty folder returns `null`, like a cancellation.
+14. **Mobile savers:** on Android, several `allowedExtensions` fall back to the `*/*` MIME type. On iOS, `allowedExtensions` is ignored.
+15. **iOS dialog settings:** the presenter view controller and asset representation mode are applied; `title` and `canCreateDirectories` are currently ignored.
+16. **Web serialization compiles but fails:** `PlatformFileSerializer` is declared for JS and Wasm, but serializing or deserializing a `PlatformFile` throws at runtime. Store something else, such as the file name or bytes.
+
+Something wrong or missing? [Open an issue](https://github.com/vinceglb/FileKit/issues) and include the platform and FileKit version.

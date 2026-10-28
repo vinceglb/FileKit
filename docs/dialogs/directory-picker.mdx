@@ -1,84 +1,84 @@
 ---
-title: 'Directory picker dialog'
+title: 'Directory picker'
 sidebarTitle: 'Directory picker'
-description: 'Open a folder picker dialog in a Kotlin Multiplatform project'
+description: 'Let users pick a folder with the native directory dialog'
 ---
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+import { Platforms } from '/snippets/platforms.jsx'
+import DialogResult from '/snippets/dialog-result.mdx'
 
-## Quick start
+<Platforms scope="dialogs" supported="android ios macos jvm windows" partial={{ linux: 'Needs the XDG Desktop Portal', web: 'Read-only tree; an empty folder returns null' }} anchor="filekit-dialogs" />
 
-Easily open a folder picker dialog to let users select a directory.
+`openDirectoryPicker` shows the platform's native folder dialog and returns the selected folder as a `PlatformFile`.
+
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-val directory = FileKit.openDirectoryPicker()
-```
 
-```kotlin filekit-dialogs-compose
+```kotlin Compose
 val launcher = rememberDirectoryPickerLauncher(
-    onError = { failure ->
-        // A valid directory operation could not be completed
-        showError(failure.message)
-    },
-    onResult = { directory ->
-        if (directory == null) {
-            // The user cancelled the picker
-        } else {
-            // Handle the selected directory
-        }
-    },
-)
+    onError = { failure -> showError(failure.message) },
+) { directory ->
+    // directory is a PlatformFile, or null when the user cancelled
+}
 
 Button(onClick = { launcher.launch() }) {
-    Text("Pick a directory")
+    Text("Pick a folder")
 }
 ```
+
+```kotlin Suspend API
+val directory: PlatformFile? = FileKit.openDirectoryPicker()
+```
+
 </CodeGroup>
 
-`onError` receives a `FileKitDialogException` only when FileKit cannot complete a valid directory operation. User cancellation is not a failure: it invokes `onResult(null)`. Coroutine cancellation, invalid invocation, and unexpected defects continue to propagate normally.
+<DialogResult />
 
-The compatibility overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
+## Options
 
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
+In Compose, pass these options to `rememberDirectoryPickerLauncher`. `launch()` takes no arguments.
 
-## Customizing the dialog
+<ResponseField name="directory" type="PlatformFile?" default="null">
+  Folder the dialog opens in. Ignored on the web.
+</ResponseField>
 
-You can customize the dialog by setting the initial directory and platform-specific `dialogSettings`, such as a title on supported platforms.
+<ResponseField name="dialogSettings" type="FileKitDialogSettings" default="createDefault()">
+  Title, parent window, and other [per-platform settings](/dialogs/dialog-settings).
+</ResponseField>
 
-<CodeGroup>
-```kotlin filekit-dialogs
-val directory = FileKit.openDirectoryPicker(
-    directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault(),
-)
+## Read the folder's contents
+
+Call `list()` for the direct children or `walk()` for the whole tree. See [File operations](/core/file-operations#list-a-directory).
+
+## Keep access across launches
+
+A picked folder is only accessible for the current session on Android and Apple platforms. Save its bookmark to reopen it after a restart:
+
+```kotlin nonWebMain
+val directory = FileKit.openDirectoryPicker() ?: return
+val bookmark = directory.bookmarkData()
+saveBytes("project_folder", bookmark.bytes)
+
+// After a restart
+val restored = PlatformFile.fromBookmarkData(loadBytes("project_folder"))
 ```
-```kotlin filekit-dialogs-compose
-val launcher = rememberDirectoryPickerLauncher(
-    directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure -> showError(failure.message) },
-    onResult = { directory ->
-        // Handle the selected directory, or null when the user cancelled
-    },
-)
-```
-</CodeGroup>
 
-Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
+`saveBytes` and `loadBytes` stand for your own storage. See [Bookmark data](/core/bookmark-data) for invalid bookmarks and security-scoped access on Apple platforms.
 
-<Note>
-  On JS and WASM, directory picking uses the browser `webkitdirectory` input behavior. Browsers expose the selected directory as a flat list of files, so FileKit rebuilds a virtual directory tree from their relative paths. Empty directories are not available, and directory `lastModified()` values are synthetic.
-</Note>
+## Platform notes
 
-<Note>
-  **macOS System Appearance**
+| Platform | Behavior |
+| --- | --- |
+| Android | Storage Access Framework tree picker. The result is a `content://` tree URI. |
+| iOS | `UIDocumentPickerViewController` in folder mode. |
+| macOS | `NSOpenPanel` configured for folders. |
+| JVM | Native dialog on macOS and Windows, and the XDG Desktop Portal on Linux with a Swing fallback when no portal runs. |
+| Linux native | XDG Desktop Portal only, with no fallback dialog. See [Linux setup](/dialogs/setup#linux-setup). |
+| Windows native | `IFileDialog` in folder mode. |
+| Web | Browsers expose the folder as a flat file list, so FileKit rebuilds a read-only tree from relative paths. Empty subfolders are missing, folders report a `lastModified()` of epoch `0`, and an empty folder returns `null`, like a cancellation. |
 
-  On macOS, to ensure the directory picker dialog uses the system's theme (light or dark), you may need to set a system property at the start of your application:
+## Related
 
-  ```kotlin
-  System.setProperty("apple.awt.application.appearance", "system")
-  ```
-
-  This is typically done in your `main` function, before the application window is created.
-</Note>
+- [Bookmark data](/core/bookmark-data) to keep access to the folder.
+- [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

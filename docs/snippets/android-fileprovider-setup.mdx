@@ -1,44 +1,39 @@
-Opening files on Android requires additional FileProvider configuration to securely share files with other applications. Starting from Android 7.0 (API level 24), Android restricts the sharing of file URIs between apps for security reasons. FileProvider generates secure content URIs that allow temporary access to specific files.
+Only needed for files outside `FileKit.filesDir` and `FileKit.cacheDir`. `filekit-dialogs` already ships a FileProvider (`${applicationId}.FileKitFileProvider`) that covers those two directories, and `content://` files returned by the pickers need no provider at all. For any other location, such as `getExternalFilesDir()`, `FileProvider` throws an `IllegalArgumentException` until you declare your own provider.
 
-**Why FileProvider is required?**
+<Steps>
+  <Step title="Declare a provider in your manifest">
+    ```xml AndroidManifest.xml
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.fileprovider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+    </provider>
+    ```
+  </Step>
+  <Step title="List the directories it may expose">
+    Add one entry per location you use, for example app-specific external storage:
 
-Android uses FileProvider to:
-- **Enhance security**: Prevents exposing your app's internal file structure to other apps
-- **Control access**: Grants temporary, limited access to specific files only
-- **Maintain compatibility**: Required for opening files on Android 7.0+ due to `FileUriExposedException`
+    ```xml res/xml/file_paths.xml
+    <paths>
+        <external-files-path name="external_files" path="." />
+    </paths>
+    ```
 
-When using custom file locations on Android, you need to configure a FileProvider in your app:
+    See [FileProvider](https://developer.android.com/reference/androidx/core/content/FileProvider) for every path type.
+  </Step>
+  <Step title="Pass the authority to FileKit">
+    The `authority` parameter exists only on Android, so build these settings in `androidMain`:
 
-<Info>
-For detailed information about FileProvider, see the [official Android documentation](https://developer.android.com/reference/androidx/core/content/FileProvider).
-</Info>
+    ```kotlin androidMain
+    val authority = "${FileKit.context.packageName}.fileprovider"
 
-1. Add the FileProvider to your `AndroidManifest.xml`:
-
-```xml
-<provider
-    android:name="androidx.core.content.FileProvider"
-    android:authorities="${applicationId}.fileprovider"
-    android:exported="false"
-    android:grantUriPermissions="true">
-    <meta-data
-        android:name="android.support.FILE_PROVIDER_PATHS"
-        android:resource="@xml/file_paths" />
-</provider>
-```
-
-2. Create `androidMain/res/xml/file_paths.xml`:
-
-```xml
-<paths>
-    <cache-path name="filekit_cache" path="." />
-    <files-path name="filekit_files" path="." />
-</paths>
-```
-
-<Info>
-**Important**: Include only the path type that matches your FileKit usage:
-- Use `<files-path>` if you use `FileKit.filesDir`
-- Use `<cache-path>` if you use `FileKit.cacheDir`
-- Include both if you use both directories
-</Info>
+    FileKitOpenCameraSettings(authority = authority) // camera picker
+    FileKitShareSettings(authority = authority) // share file
+    FileKitOpenFileSettings(authority = authority) // open with default app
+    ```
+  </Step>
+</Steps>

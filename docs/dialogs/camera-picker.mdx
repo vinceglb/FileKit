@@ -1,192 +1,110 @@
 ---
-title: 'Camera picker dialog'
+title: 'Camera picker'
 sidebarTitle: 'Camera picker'
-description: 'Open a camera picker dialog in a Kotlin Multiplatform project'
+description: 'Take a photo with the device camera and get it back as a PlatformFile on Android and iOS'
 ---
 
+import { Platforms } from '/snippets/platforms.jsx'
+import DialogResult from '/snippets/dialog-result.mdx'
 import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
-<Check>Supported on Android and iOS targets</Check>
+<Platforms scope="dialogs" supported="android ios" anchor="filekit-dialogs" />
 
-## Quick start
+Open the system camera to take a photo. FileKit writes the photo to a file and returns it as a `PlatformFile`. Call it from a source set that only includes Android and iOS, such as `mobileMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
 
-The camera picker component provides a native interface for users to capture photos using their device's camera.
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openCameraPicker()
-```
 
-```kotlin filekit-dialogs-compose
+```kotlin Compose
 val launcher = rememberCameraPickerLauncher(
-    onError = { failure ->
-        // A valid camera operation could not start or complete
-        showError(failure.message)
-    },
-    onResult = { file ->
-        if (file == null) {
-            // The user dismissed the camera, or denied camera permission on Android
-        } else {
-            // Handle the captured photo
-        }
-    },
-)
+    onError = { failure -> showError(failure.message) },
+) { photo ->
+    // photo is a PlatformFile, or null if the user cancelled
+}
 
 Button(onClick = { launcher.launch() }) {
     Text("Take a photo")
 }
 ```
-</CodeGroup>
 
-`onError` receives a `FileKitDialogException` only when FileKit cannot start or complete a valid camera operation, such as when no Android camera activity is available or iOS cannot prepare, present, encode, or write the capture. User dismissal is not a failure and invokes `onResult(null)`. Android camera-permission denial also invokes `onResult(null)`. Coroutine cancellation, invalid invocation, and unexpected defects continue to propagate normally.
-
-The suspending `FileKit.openCameraPicker()` function throws the same `FileKitDialogException` for operational failures. On Android, this includes an unavailable or unauthorized camera-permission request or camera launch. On iOS, this includes failures while preparing, presenting, encoding, or writing the capture. Android's lifecycle-safe Compose launcher reports the equivalent launch failures through `onError`. The compatibility Compose overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
-
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
-
-The captured media file is automatically saved to the specified location (or cache directory by default). If you need to keep the file permanently, make sure to copy it to a permanent storage location.
-
-## Android camera permission behavior
-
-On Android, camera capture is launched with `ACTION_IMAGE_CAPTURE`.
-If your app declares `android.permission.CAMERA`, FileKit checks runtime permission before launching the camera:
-
-- If camera permission is already granted, FileKit opens the camera as usual.
-- If camera permission is not granted, FileKit requests it first.
-- If the user denies the permission, FileKit returns `null` (same as cancel) and does not crash.
-
-If your app only launches the external camera app through this picker, you usually do not need to declare `android.permission.CAMERA`.
-
-## Camera type
-
-You can specify the type of media to capture using the `type` parameter:
-- `Photo` - Capture a photo (default)
-- `Video` - Capture a video (coming soon)
-
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openCameraPicker(type = FileKitCameraType.Photo)
+```kotlin Suspend API
+val photo: PlatformFile? = FileKit.openCameraPicker()
 ```
 
-```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
+</CodeGroup>
+
+<DialogResult />
+
+## Options
+
+<ResponseField name="type" type="FileKitCameraType" default="Photo" post={["launch()"]}>
+  What to capture. Only `Photo` is available: video capture is not supported yet.
+</ResponseField>
+
+<ResponseField name="cameraFacing" type="FileKitCameraFacing" default="System" post={["launch()"]}>
+  `System` lets the camera app choose, or force `Front` or `Back`. Best effort on Android: see [Platform notes](#platform-notes).
+</ResponseField>
+
+<ResponseField name="destinationFile" type="PlatformFile" default="FileKit.cacheDir / &quot;<random UUID>.jpg&quot;" post={["launch()"]}>
+  Where the photo is written. Files in `filesDir` and `cacheDir` need no Android setup.
+</ResponseField>
+
+<ResponseField name="openCameraSettings" type="FileKitOpenCameraSettings" default="createDefault()" post={["rememberCameraPickerLauncher"]}>
+  Platform-specific settings. In the suspend API, pass it to `openCameraPicker()`.
+
+  <Expandable title="properties">
+    <ResponseField name="authority" type="String?" default="null" post={["Android"]}>
+      FileProvider authority, only needed for a `destinationFile` outside `filesDir` and `cacheDir`. When `null`, FileKit uses its bundled `${applicationId}.FileKitFileProvider`. See [Android setup](#android-setup).
+    </ResponseField>
+    <ResponseField name="presenter" type="UIViewController?" default="null" post={["iOS"]}>
+      View controller that presents the camera. When `null`, the suspend API presents from its own window above your app, and the Compose launcher uses the current `LocalUIViewController`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Keep the photo
+
+The default destination is in the cache directory, which the system can clear. To keep the photo, write it to `FileKit.filesDir` directly:
+
+```kotlin
+val photo = FileKit.openCameraPicker(
+    destinationFile = FileKit.filesDir / "profile.jpg",
 )
-
-Button(onClick = { launcher.launch(type = FileKitCameraType.Photo) }) {
-    Text("Take a photo")
-}
-```
-</CodeGroup>
-
-<Info>
-Video capture support is planned for a future release.
-</Info>
-
-## Camera facing
-
-You can specify whether the front or rear facing camera is used, using the `cameraFacing` parameter:
-- `System` lets the camera app decide which camera to open (default)
-- `Front` opens the front facing camera (Selfie-Camera)
-- `Back` opens the rear facing camera
-
-By default, the camera app decides which camera to use.
-On Android, FileKit only applies camera-facing intent extras when you explicitly request `Front` or `Back`.
-
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openCameraPicker(cameraFacing = FileKitCameraFacing.Front)
 ```
 
-```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
-)
+Files in `FileKit.filesDir` and `FileKit.cacheDir` need no Android setup. For any other directory, see [Android setup](#android-setup).
 
-Button(onClick = { launcher.launch(cameraFacing = FileKitCameraFacing.Front) }) {
-    Text("Take a selfie")
-}
-```
-</CodeGroup>
+## Platform notes
 
-<Warning>
-Android has no documented parameter for an intent to specify which camera is supposed to be used by the Camera App.
-Since Android implementations differ, we can not guarantee that this feature will work for every device/Android version.
-If you encounter issues please file an issue.
-</Warning>
+| Platform | Behavior |
+| --- | --- |
+| Android | Launches the device camera app with `ACTION_IMAGE_CAPTURE`. If your manifest declares `android.permission.CAMERA`, FileKit requests it before opening the camera, and a denial returns `null`. If you don't declare it, no permission is needed. |
+| Android | `Front` and `Back` are best effort. Android has no standard extra to choose the camera, so FileKit sends the extras that common camera apps read. Some devices ignore them. |
+| iOS | Add `NSCameraUsageDescription` to your `Info.plist`: iOS terminates apps that open the camera without it. |
+| iOS | The photo is saved as a full-quality JPEG. A missing camera (such as the Simulator) or an unavailable `Front` or `Back` camera fails with a `FileKitDialogException`. |
 
-## Destination file
-
-You can specify where the captured photo should be saved using the `destinationFile` parameter. By default, the photo is saved to the cache directory with a randomly generated filename.
-
-<CodeGroup>
-```kotlin filekit-dialogs
-// Using default destination (cache directory with random filename)
-val file = FileKit.openCameraPicker()
-
-// Specifying a custom destination
-val customFile = FileKit.filesDir / "my_photo.jpg"
-val file = FileKit.openCameraPicker(destinationFile = customFile)
-```
-
-```kotlin filekit-dialogs-compose
-val launcher = rememberCameraPickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { file -> /* Handle the captured photo, or null for cancellation */ },
-)
-
-// Using default destination
-Button(onClick = { launcher.launch() }) {
-    Text("Take a photo")
-}
-
-// Specifying a custom destination
-val customFile = FileKit.filesDir / "my_photo.jpg"
-Button(onClick = { launcher.launch(destinationFile = customFile) }) {
-    Text("Take a photo to custom location")
-}
-```
-</CodeGroup>
-
-<Warning>
-On Android, when using a custom `destinationFile`, you must provide the `openCameraSettings` parameter with your app's FileProvider authority. This ensures the camera app has permission to write to your specified location.
-</Warning>
-
-## Destination file Android Setup
+## Android setup
 
 <AndroidFileProviderSetup />
 
-3. When using a custom `destinationFile`, provide the `openCameraSettings` parameter with your app's FileProvider authority:
+For example, to save to app-specific external storage:
 
-<CodeGroup>
-```kotlin filekit-dialogs
-val customFile = FileKit.filesDir / "my_photo.jpg"
-val file = FileKit.openCameraPicker(
-    destinationFile = customFile,
-    openCameraSettings = FileKitOpenCameraSettings(
-        authority = "${context.packageName}.fileprovider"
-    )
-)
-```
+```kotlin androidMain
+val externalDir = PlatformFile(FileKit.context.getExternalFilesDir(null)!!)
 
-```kotlin filekit-dialogs-compose
-val customFile = FileKit.filesDir / "my_photo.jpg"
-val launcher = rememberCameraPickerLauncher(
+val photo = FileKit.openCameraPicker(
+    destinationFile = externalDir / "photo.jpg",
     openCameraSettings = FileKitOpenCameraSettings(
-        authority = "${context.packageName}.fileprovider",
+        authority = "${FileKit.context.packageName}.fileprovider",
     ),
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the captured photo, or null when dismissed or camera permission is denied
-    },
 )
-
-Button(onClick = {
-    launcher.launch(destinationFile = customFile)
-}) {
-    Text("Take a photo to custom location")
-}
 ```
-</CodeGroup>
+
+With Compose, pass the same `openCameraSettings` to `rememberCameraPickerLauncher` and the file to `launch(destinationFile = ...)`.
+
+## Related
+
+- [Gallery picker](/dialogs/gallery-picker) to pick existing photos.
+- [Share file](/dialogs/share-file) to send the photo to another app.
+- [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

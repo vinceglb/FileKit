@@ -1,141 +1,78 @@
 ---
 title: 'Coil 3'
-description: 'Load and display images from PlatformFile using Coil'
+sidebarTitle: 'Coil'
+description: 'Display a PlatformFile image with Coil 3 AsyncImage'
 ---
 
-import VersionCoil from '/snippets/version-coil.mdx';
+import { Platforms } from '/snippets/platforms.jsx'
+import VersionCoil from '/snippets/version-coil.mdx'
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+<Platforms scope="compose" supported="android ios macos jvm web" anchor="compose-and-coil" />
 
-## Introduction
-
-FileKit provides seamless integration with [Coil](https://coil-kt.github.io/coil/), a popular image loading library for Kotlin Multiplatform. This integration allows you to easily load and display images from `PlatformFile` objects using Coil's powerful image loading capabilities.
-
-## Configuration
-
-Add the FileKit Coil dependency to your project:
-
-<VersionCoil />
-
-Then, configure Coil in your app's root composable:
-
-```kotlin
-@Composable
-fun App() {
-    setSingletonImageLoaderFactory { context ->
-        ImageLoader.Builder(context)
-            .components {
-                addPlatformFileSupport()
-            }
-            .build()
-    }
-
-    MaterialTheme {
-        // Your app content
-    }
-}
-```
-
-This setup utilizes the `addPlatformFileSupport()` extension function to register the necessary components within Coil's pipeline, enabling it to handle `PlatformFile` objects:
-- **`PlatformFileMapper`**: Maps the `PlatformFile` object to a data type that Coil's fetchers can understand.
-- **`PlatformFileFetcher`**: Handles the actual loading of the image data from the `PlatformFile`.
-- **`PlatformFileKeyer`**: Generates stable cache keys for `PlatformFile` objects, allowing Coil to effectively cache the loaded images.
+`filekit-coil` lets [Coil 3](https://coil-kt.github.io/coil/) load a `PlatformFile` directly, so you can pass a picked file to `AsyncImage` as its `model`.
 
 ## Usage
 
-Once configured, you can use Coil's standard `AsyncImage` composable with `PlatformFile` objects:
+<VersionCoil />
+
+Register `PlatformFile` support once, in your root composable:
 
 ```kotlin
-@Composable
-fun ImagePreview(file: PlatformFile) {
-    AsyncImage(
-        model = file,
-        contentDescription = "Image preview",
-        modifier = Modifier.fillMaxWidth()
-    )
-}
-```
+import io.github.vinceglb.filekit.coil.addPlatformFileSupport
 
-For more information about using Coil's image loading capabilities, refer to the [official Coil documentation](https://coil-kt.github.io/coil/getting_started/).
-
-## Handling Security-Scoped Resources (iOS/macOS)
-
-On iOS and macOS, if you obtain a `PlatformFile` through mechanisms like the document picker, your app gets temporary, scoped access permission. To ensure Coil can load the image data while this permission is active, FileKit provides the `securelyAccessFile` extension function for `AsyncImagePainter.State`.
-
-Use this function within the `onState` callback of `AsyncImage`:
-
-```kotlin
-@Composable
-fun ImagePreviewScoped(file: PlatformFile) {
-    AsyncImage(
-        model = file,
-        contentDescription = "Image preview",
-        modifier = Modifier.fillMaxWidth(),
-        onState = { state ->
-            // Start/stop security-scoped access based on Coil's state
-            state.securelyAccessFile(file)
-        }
-    )
-}
-```
-
-This function automatically calls `startAccessingSecurityScopedResource()` when Coil starts loading (`State.Loading`) and `stopAccessingSecurityScopedResource()` when it finishes (`State.Success` or `State.Error`), ensuring the file remains accessible throughout the loading process.
-
-## Example
-
-Here's a complete example showing how to use the Coil integration in a gallery:
-
-```kotlin
 @Composable
 fun App() {
     setSingletonImageLoaderFactory { context ->
         ImageLoader.Builder(context)
-            .components {
-                addPlatformFileSupport()
-            }
+            .components { addPlatformFileSupport() }
             .build()
     }
 
-    MaterialTheme {
-        ImageGallery()
-    }
+    MaterialTheme { /* your content */ }
 }
+```
 
+Then use a `PlatformFile` as the model:
+
+```kotlin
 @Composable
-fun ImageGallery(files: List<PlatformFile>) {
-    LazyColumn {
+fun Gallery(files: List<PlatformFile>, modifier: Modifier = Modifier) {
+    LazyColumn(modifier) {
         items(files) { file ->
             AsyncImage(
                 model = file,
-                contentDescription = "Gallery image",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp),
-                contentScale = ContentScale.Crop
+                contentDescription = file.name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(200.dp),
             )
         }
     }
 }
 ```
 
-## Next steps
+If you build your own `ImageLoader` instead of the singleton, call `addPlatformFileSupport()` in its `components` block.
 
-<CardGroup>
+## Load files that need security-scoped access
 
-<Card
-  title="PlatformFile"
-  icon="file"
-  href="/core/platform-file"
->
-  Learn more about the core file representation used by FileKit.
-</Card>
+Coil reads the file itself, without the security-scoped access FileKit starts around its own operations. Call `securelyAccessFile` from `onState` when the file comes from:
 
-<Card
-  title="Image & Video Utils"
-  icon="image"
-  href="/core/image-and-video-utils"
->
-  Discover more image manipulation utilities provided by FileKit.
-</Card>
+- the file or directory picker on iOS, which return files outside your app's sandbox;
+- a [bookmark](/core/bookmark-data) restored on iOS, or on macOS (native or JVM) when the app is sandboxed.
 
-</CardGroup> 
+```kotlin
+import io.github.vinceglb.filekit.coil.securelyAccessFile
+
+AsyncImage(
+    model = file,
+    contentDescription = file.name,
+    onState = { state -> state.securelyAccessFile(file) },
+)
+```
+
+It starts access when loading begins and stops it on success or error. You don't need it for gallery and camera results (on iOS, FileKit writes them into your app's temporary or cache folder), for files in your [app directories](/core/file-utils), or on Android and the web. Elsewhere it is a no-op, so calling it from common code is safe.
+
+## Related
+
+- [Image and video utilities](/core/image-and-video-utils) to compress images or get an `ImageBitmap`.
+- [Gallery picker](/dialogs/gallery-picker) to let users pick photos.
+- [Coil documentation](https://coil-kt.github.io/coil/getting_started/) for transformations, placeholders, and caching.

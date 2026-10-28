@@ -1,0 +1,163 @@
+---
+title: 'File operations'
+sidebarTitle: 'File operations'
+description: 'List, walk, copy, move, and delete files and directories with PlatformFile'
+---
+
+import { Platforms } from '/snippets/platforms.jsx'
+
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos" partial={{ web: 'list, walk and sizeRecursively on picked folders; delete on OPFS entries' }} anchor="filekit-core" />
+
+These functions manage files and directory trees on disk. On the web, `list()`, `walk()`, and `sizeRecursively()` work on folders from the directory picker, and the experimental [origin private file system](/core/web#store-files-in-the-origin-private-file-system) adds `listEntries()` and `delete()`. Call the other functions from `nonWebMain` or a platform source set.
+
+## Usage
+
+```kotlin nonWebMain
+val reports = FileKit.filesDir / "reports"
+reports.createDirectories()
+
+val files: List<PlatformFile> = reports.list()
+pickedFile.copyTo(reports)
+(reports / "old.txt").delete(mustExist = false)
+```
+
+## Options
+
+<ResponseField name="maxDepth" type="Int" default="Int.MAX_VALUE" post={["walk"]}>
+  `1` yields only the direct children. Must be positive.
+</ResponseField>
+
+<ResponseField name="mustCreate" type="Boolean" default="false" post={["createDirectories"]}>
+  `true` throws if the directory already exists.
+</ResponseField>
+
+<ResponseField name="overwrite" type="Boolean" default="false" post={["copyRecursively"]}>
+  `true` replaces existing files. See [Copy a directory tree](#copy-a-directory-tree).
+</ResponseField>
+
+<ResponseField name="mustExist" type="Boolean" default="true" post={["delete"]}>
+  `true` throws if the file doesn't exist.
+</ResponseField>
+
+<ResponseField name="recursively" type="Boolean" default="false" post={["delete"]}>
+  `true` empties a directory before removing it.
+</ResponseField>
+
+## List a directory
+
+```kotlin
+val children: List<PlatformFile> = directory.list()
+```
+
+`list()` returns the direct children and throws on a regular file. It does blocking I/O: on every platform except the web, call it on `Dispatchers.IO`.
+
+## Walk a directory tree
+
+`walk()` lazily yields every file and subdirectory below a directory, depth-first, without the directory itself:
+
+```kotlin
+val images = directory.walk()
+    .filter { it.isRegularFile() && it.extension == "png" }
+    .toList()
+
+val children = directory.walk(maxDepth = 1).toList() // like list()
+```
+
+On a regular file, `walk()` yields only that file. It is synchronous, like `list()`: iterate it on `Dispatchers.IO`.
+
+## Get the size of a tree
+
+```kotlin
+val totalBytes: Long = directory.sizeRecursively()
+```
+
+`sizeRecursively()` adds up the size of every regular file in the tree, or returns the file's own size for a regular file. Files whose size is unknown count as `0`. It is a suspend function that switches to `Dispatchers.IO` on every platform except the web.
+
+Symbolic links are never followed by `walk()` or `sizeRecursively()`, so a link can't cause an infinite loop: `walk()` yields the link itself, and `sizeRecursively()` counts it as `0`. This also applies when you call them on a link.
+
+## Create directories
+
+```kotlin nonWebMain
+val reports = FileKit.filesDir / "reports" / "2026"
+reports.createDirectories()
+(reports / "summary.txt").writeString("Q4")
+```
+
+`createDirectories()` creates the directory and any missing parent. It does nothing if the directory already exists, unless you pass `mustCreate = true`.
+
+## Copy a file
+
+```kotlin nonWebMain
+source.copyTo(FileKit.filesDir / "backup.pdf") // to this file
+source.copyTo(FileKit.filesDir)                // into this folder, as source.name
+```
+
+`copyTo()` streams the content, so it works when the source size is unknown. An existing destination file is replaced. It throws if the source and destination are the same file, or if the destination folder contains a directory with the source's name.
+
+## Copy a directory tree
+
+`copyRecursively()` copies a file or a whole directory tree. Unlike `copyTo()`, the target becomes the new root, not a folder to copy into (as with Kotlin's `File.copyRecursively()`):
+
+```kotlin nonWebMain
+source.copyRecursively(target)                   // source/a.txt -> target/a.txt
+source.copyRecursively(target, overwrite = true) // merge, replacing existing files
+```
+
+| Target entry | `overwrite = false` | `overwrite = true` |
+| --- | --- | --- |
+| Missing, or missing parent directories | Created | Created |
+| Existing directory | Merged | Merged |
+| Existing file | Throws | Replaced |
+| A file where the source has a directory, or the other way around | Throws | Throws |
+
+- The copy stops at the first error and leaves the target partially copied: there is no rollback.
+- Symbolic links inside the tree are skipped. Calling it on a link, or copying a directory into itself, throws.
+- It runs on `Dispatchers.IO`.
+
+<Warning>
+With `overwrite = true`, FileKit can't tell that an existing target file is the source itself when it is reached through a hard link or a Windows junction. Copying then truncates the source file.
+</Warning>
+
+## Move a file
+
+```kotlin nonWebMain
+source.atomicMove(FileKit.filesDir / "archive" / "report.pdf")
+```
+
+`atomicMove()` renames the file in a single step and replaces an existing destination file. When the destination is an existing directory, the file moves into it under its own name. Moving across volumes can throw `UnsupportedOperationException`: use `copyTo()` then `delete()` instead.
+
+## Delete a file or directory
+
+```kotlin nonWebMain
+file.delete()                        // throws if the file doesn't exist
+file.delete(mustExist = false)
+directory.delete(recursively = true) // also deletes the contents
+```
+
+Without `recursively = true`, deleting a non-empty directory throws. Symbolic links (including dangling links) and Windows directory junctions are removed as links: their targets are left untouched.
+
+## Platform notes
+
+<AccordionGroup>
+  <Accordion title="Android: content:// files and document trees">
+    - `atomicMove()` falls back to copy then delete when the source or the destination is a `content://` file, and doesn't support directories.
+    - `delete()` lets the document provider remove the document, with its contents, whatever `recursively` says.
+    - `list()`, `walk()`, and `sizeRecursively()` cost provider queries for each subdirectory, so large trees are slow. Files whose provider doesn't report a size count as `0`.
+    - `copyRecursively()` accepts document trees as a source. As a target, it can create subdirectories only with providers whose document IDs are paths, such as device storage: with other providers, it throws when it needs a new subdirectory. An entry named `.` or `..`, containing `/`, or sharing its name with a sibling makes the copy throw before anything is written. Copying a tree into itself is detected only for providers whose document IDs are paths.
+  </Accordion>
+  <Accordion title="iOS and macOS: security-scoped folders">
+    Keep security-scoped access to a picked folder active while you iterate `walk()`, for example inside `folder.withScopedAccess { }`. `copyRecursively()` holds access to the source and the target for the whole copy.
+  </Accordion>
+  <Accordion title="Windows: reparse points">
+    Every reparse point counts as a link, including directory junctions and OneDrive Files On-Demand folders. `walk()` lists such a folder without its contents, `sizeRecursively()` doesn't count it, and `copyRecursively()` skips it. A `copyRecursively()` target that reaches the source through a junction isn't detected as being inside it: the copy doesn't throw, and it still ends without copying its own output.
+  </Accordion>
+  <Accordion title="Web: picked folders only">
+    `list()`, `walk()`, and `sizeRecursively()` work on folders returned by the directory picker, whose tree is already in memory, and run on the caller's dispatcher. They throw on origin private file system directories: use `listEntries()` instead. `copyTo()`, `copyRecursively()`, `createDirectories()`, and `atomicMove()` are not available. `delete()` exists only for origin private file system entries. See [Files on the web](/core/web).
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+- [PlatformFile](/core/platform-file): paths, properties, and the `/` operator
+- [Writing files](/core/write-file)
+- [Directory picker](/dialogs/directory-picker): let the user pick a folder
