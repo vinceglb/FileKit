@@ -106,4 +106,7 @@ export function paintBackground(canvas, { stops, seed, grain, focus = 0 }) {
   gl.uniform1f(u('uGrain'), grain);
   gl.uniform1f(u('uFocus'), focus);
   gl.drawArrays(gl.TRIANGLES, 0, 3);
+  // The drawing buffer is preserved; free the GL objects so repaints (e.g. on resize) do not pile them up.
+  gl.getAttachedShaders(program).forEach((s) => gl.deleteShader(s));
+  gl.deleteProgram(program);
 }

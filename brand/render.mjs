@@ -99,7 +99,7 @@ async function serve(port = 0) {
 if (process.argv[2] === '--preview') {
   const { base } = await serve(4173);
   console.log(`Brand board:  ${base}/brand/src/board.html`);
-  console.log(`Live hero:    ${base}/brand/src/hero.html?theme=dark&seed=2.4  (resize the window to try formats)`);
+  console.log(`Live hero:    ${base}/brand/src/hero.html  (resize the window to try formats, add ?seed=3.6 to try a composition)`);
   console.log('Ctrl+C to stop.');
 } else {
   await render(process.argv[2]);

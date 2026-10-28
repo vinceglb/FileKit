@@ -67,41 +67,48 @@
   frame.style.setProperty('--blend', look.blend);
   frame.style.setProperty('--guide-opacity', look.guideOpacity);
 
-  await document.fonts.ready;
   const seed = params.has('seed') ? Number(params.get('seed')) : look.seed;
-  paintBackground(document.querySelector('canvas'), { ...look, seed });
+  await document.fonts.ready;
 
-  // Layout: two cells of equal height, text optically centered in each.
-  const cqw = frame.clientWidth / 100;
-  const padY = 3.4 * cqw;
-  const padX = 6 * cqw;
-  const title = document.querySelector('.title');
-  const subtitle = document.querySelector('.subtitle');
+  function draw() {
+    paintBackground(document.querySelector('canvas'), { ...look, seed });
 
-  // Italic glyphs lean right: shift the title so its ink, not its advance box, is centered.
-  const ctx = document.createElement('canvas').getContext('2d');
-  ctx.font = getComputedStyle(title).font;
-  ctx.letterSpacing = getComputedStyle(title).letterSpacing;
-  const m = ctx.measureText(title.textContent);
-  const inkShift = m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
-  document.querySelectorAll('.title').forEach((el) => { el.style.transform = `translateX(${inkShift}px)`; });
+    // Layout: two cells of equal height, text optically centered in each.
+    const cqw = frame.clientWidth / 100;
+    const padY = 3.4 * cqw;
+    const padX = 6 * cqw;
+    const title = document.querySelector('.title');
+    const subtitle = document.querySelector('.subtitle');
 
-  const cellH = Math.max(title.offsetHeight, subtitle.offsetHeight) + 2 * padY;
-  const cellW = Math.max(title.offsetWidth, subtitle.offsetWidth) + 2 * padX;
-  document.querySelectorAll('.cell').forEach((el) => { el.style.width = `${cellW}px`; el.style.height = `${cellH}px`; });
+    // Italic glyphs lean right: shift the title so its ink, not its advance box, is centered.
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = getComputedStyle(title).font;
+    ctx.letterSpacing = getComputedStyle(title).letterSpacing;
+    const m = ctx.measureText(title.textContent);
+    const inkShift = m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
+    document.querySelectorAll('.title').forEach((el) => { el.style.transform = `translateX(${inkShift}px)`; });
 
-  // Guides on the grid edges.
-  const W = frame.clientWidth, Hh = frame.clientHeight;
-  const left = (W - cellW) / 2, top = (Hh - 2 * cellH) / 2;
-  const ys = [top, top + cellH, top + 2 * cellH];
-  const xs = [left, left + cellW];
-  Object.assign(document.querySelector('.grid').style, { left: `${left}px`, top: `${top}px` });
-  const guides = document.querySelector('.guides');
-  guides.innerHTML =
-    ys.map((y) => `<div class="guide h" style="top:${y}px"></div>`).join('') +
-    xs.map((x) => `<div class="guide v" style="left:${x}px"></div>`).join('') +
-    ys.flatMap((y) => xs.map((x) => `<div class="node" style="left:${x}px;top:${y}px"></div>`)).join('');
+    const cellH = Math.max(title.offsetHeight, subtitle.offsetHeight) + 2 * padY;
+    const cellW = Math.max(title.offsetWidth, subtitle.offsetWidth) + 2 * padX;
+    document.querySelectorAll('.cell').forEach((el) => { el.style.width = `${cellW}px`; el.style.height = `${cellH}px`; });
 
+    // Guides on the grid edges.
+    const W = frame.clientWidth, Hh = frame.clientHeight;
+    const left = (W - cellW) / 2, top = (Hh - 2 * cellH) / 2;
+    const ys = [top, top + cellH, top + 2 * cellH];
+    const xs = [left, left + cellW];
+    Object.assign(document.querySelector('.grid').style, { left: `${left}px`, top: `${top}px` });
+    const guides = document.querySelector('.guides');
+    guides.innerHTML =
+      ys.map((y) => `<div class="guide h" style="top:${y}px"></div>`).join('') +
+      xs.map((x) => `<div class="guide v" style="left:${x}px"></div>`).join('') +
+      ys.flatMap((y) => xs.map((x) => `<div class="node" style="left:${x}px;top:${y}px"></div>`)).join('');
+  }
+
+  draw();
+  // Keep the live preview (npm run preview) accurate when the window is resized.
+  let pending = 0;
+  addEventListener('resize', () => { cancelAnimationFrame(pending); pending = requestAnimationFrame(draw); });
   document.body.dataset.ready = '1';
 </script>
 </body>
