@@ -14,7 +14,7 @@ FileKit is already used in production on Android, iOS, desktop and the web. The 
 | Step | Version | Focus | Can it break your code? |
 | --- | --- | --- | --- |
 | 1. Release 0.17 | 0.17 | Recursive file helpers, web storage, iOS fixes | No API removals. Android `minSdk` goes from 23 to 24 |
-| 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes, if you still use a deprecated API** |
+| 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes**: deprecated APIs are removed, and the API review may change others, with migration notes |
 | 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | No removals. API changes only to fix problems found in the RCs |
 | 4. FileKit 1.0 | 1.0.0 | Stable release and stabilization period | No |
 | 5. After 1.0 | 1.x | New features and platforms | No breaks for stable APIs on stable platforms. Minimum Kotlin, SDK or JDK versions may rise |
@@ -56,7 +56,7 @@ No more removals: existing APIs stay as they were in 0.18, except to fix problem
 - **Regression tests** where users report the most issues: Android content URIs and picker lifecycle, Apple security-scoped resources and bookmarks, desktop dialogs, and browser file handling. Manual verification steps are documented where system UI cannot be automated.
 - **Fixes for the highest-impact confirmed bugs** on stable platforms, for example missing dismissal events from some iOS pickers ([#138](https://github.com/vinceglb/FileKit/issues/138)).
 - **Platform support matrix**: every feature, on every platform, with its known limitations.
-- **1.0 migration guide** covering every API removed in 0.18 and every API deprecated since 0.17.
+- **1.0 migration guide** covering every breaking change in 0.18 and every API deprecated since 0.17.
 - **API reference** generated from KDoc and published next to these docs.
 
 These additions are targeted for the release candidates. They are additive, so if they are not ready by the last RC, they ship in a 1.x release instead:
