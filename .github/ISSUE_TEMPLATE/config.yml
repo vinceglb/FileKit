@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ❓ Question or help with your setup
+    url: https://github.com/vinceglb/FileKit/discussions/categories/q-a
+    about: Ask how to use FileKit in GitHub Discussions.
+  - name: 💡 Idea to discuss
+    url: https://github.com/vinceglb/FileKit/discussions/categories/ideas
+    about: Share an open-ended idea before turning it into a feature request.
+  - name: 📚 Documentation
+    url: https://filekit.mintlify.app
+    about: Guides and API documentation for every FileKit module.

@@ -1,0 +1,88 @@
+name: 🐛 Bug report
+description: Something in FileKit does not work as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please search [existing issues](https://github.com/vinceglb/FileKit/issues?q=is%3Aissue) first.
+        For questions or help with your setup, use [GitHub Discussions](https://github.com/vinceglb/FileKit/discussions) instead.
+
+  - type: input
+    id: version
+    attributes:
+      label: FileKit version
+      description: The version you use. Please check that the bug still happens on the latest release.
+      placeholder: e.g. 0.17.0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: modules
+    attributes:
+      label: Modules
+      description: Which FileKit modules are involved?
+      options:
+        - label: filekit-core
+        - label: filekit-dialogs
+        - label: filekit-dialogs-compose
+        - label: filekit-coil
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Affected platforms
+      description: Select every platform where you can reproduce the bug.
+      options:
+        - label: Android
+        - label: iOS
+        - label: macOS (native)
+        - label: watchOS
+        - label: JVM desktop – Windows
+        - label: JVM desktop – macOS
+        - label: JVM desktop – Linux
+        - label: Linux (native)
+        - label: Windows (native)
+        - label: JS (browser)
+        - label: Wasm (browser)
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and device versions, browser, JDK, Kotlin and Compose Multiplatform versions, as relevant.
+      placeholder: |
+        - OS / device: Android 15, Pixel 8
+        - Kotlin: 2.4.21
+        - Compose Multiplatform: 1.12.2
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug, and what you expected to happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: |
+        A minimal snippet or a link to a small project that only uses FileKit is the fastest way to get a fix.
+        Issues without a way to reproduce them may be labelled `needs repro`.
+      placeholder: |
+        1. Call `FileKit.openFilePicker(type = FileKitType.Image)`
+        2. Dismiss the picker
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and stack traces
+      description: Paste relevant logs or stack traces. They are formatted as code automatically.
+      render: shell
