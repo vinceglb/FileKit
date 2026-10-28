@@ -7,7 +7,7 @@ import DownloadFilesWeb from '/snippets/download-files-web.mdx'
 
 ## Standard Directories
 
-<Check>Supported on Android, iOS, macOS, JVM, and Kotlin/Native Linux targets</Check>
+<Check>Supported on Android, iOS, macOS, watchOS, JVM, Kotlin/Native Linux and Kotlin/Native Windows targets. See [platform support](/platform-support).</Check>
 
 FileKit provides access to standard platform-specific directories:
 
@@ -38,9 +38,9 @@ Each platform maps these standard directories to different locations according t
 - **cacheDir**: Maps to the app's Caches directory, which isn't backed up and may be cleared by the system
 - **databasesDir**: Maps to a `databases` subdirectory in the app's Documents directory
 
-**macOS**
-- **filesDir**: Maps to `~/Library/Application Support/<app-id>/`, requiring FileKit initialization with an app ID
-- **cacheDir**: Maps to `~/Library/Caches/<app-id>/`
+**macOS (native)**
+- **filesDir**: Maps to `~/Library/Application Support/<bundle-identifier>/`, using the app bundle's identifier
+- **cacheDir**: Maps to the user's Caches directory (`~/Library/Caches/`, or the app container's Caches directory for sandboxed apps)
 - **databasesDir**: Maps to a `databases` subdirectory in the application support directory
 
 **JVM (Desktop)**
@@ -59,13 +59,18 @@ Each platform maps these standard directories to different locations according t
 - **cacheDir**: Maps to `$XDG_CACHE_HOME/<app-id>/`, or `~/.cache/<app-id>/` when `XDG_CACHE_HOME` is unset
 - **databasesDir**: Maps to a `databases` subdirectory within filesDir
 
+**Kotlin/Native Windows (`mingwX64`)**
+- **filesDir**: Maps to `%APPDATA%/<app-id>/`
+- **cacheDir**: Maps to `%LOCALAPPDATA%/<app-id>/Cache/`
+- **databasesDir**: Maps to a `databases` subdirectory within filesDir
+
 <Note>
-On JVM, macOS, and Kotlin/Native Linux platforms, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
+On JVM, Kotlin/Native Linux, and Kotlin/Native Windows, you must initialize FileKit with an application ID before accessing these directories. See the [Setup guide](/core/setup) for details.
 </Note>
 
 ### Additional Directories
 
-On desktop platforms (JVM, macOS, and Kotlin/Native Linux), FileKit provides access to common user directories:
+On desktop platforms (JVM, macOS, Kotlin/Native Linux, and Kotlin/Native Windows), FileKit provides access to common user directories:
 
 ```kotlin
 // Typed API
@@ -96,7 +101,6 @@ configFile.writeString("{\"version\": 1}")
 val tempFile = FileKit.cacheDir / "temp_data.bin"
 tempFile.write(processingData)
 
-```kotlin
 // Access a database file
 val dbFile = FileKit.databasesDir / "app.db" 
 // Use the database file with your preferred database library

@@ -11,7 +11,7 @@ import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
 
 <VersionDialogs/>
 
-FileKit Dialogs integrates FileKit Core and automatically provides `PlatformFile` support.
+FileKit Dialogs integrates FileKit Core and automatically provides `PlatformFile` support. See the [platform support matrix](/platform-support) for the dialogs available on each target.
 
 ## Platform-specific setup
 
@@ -58,7 +58,7 @@ compose.desktop {
 
 This prevents a `NoClassDefFoundError` in some cases. Read more about this issue in the [GitHub issue #107](https://github.com/vinceglb/FileKit/issues/107).
 
-If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the GNOME XDG Desktop Portal. The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME and other modern desktops); the application binary links against the `libdbus-1` runtime library.
+If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the XDG Desktop Portal (`org.freedesktop.portal.Desktop`). The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME, KDE, and other modern desktops); the application binary links against the `libdbus-1` runtime library.
 
 Building an application that consumes FileKit Dialogs requires the target architecture's D-Bus development libraries (`libdbus-1-dev` on Debian/Ubuntu), including the unversioned `libdbus-1.so` linker file. If the library directory is outside Kotlin/Native's linker search paths, configure the corresponding target, for example:
 

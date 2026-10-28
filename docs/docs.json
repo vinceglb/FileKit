@@ -5,6 +5,7 @@
     "decoration": "windows"
   },
   "name": "FileKit",
+  "description": "FileKit is a Kotlin Multiplatform library to pick, save, read, and write files with native dialogs on Android, iOS, macOS, JVM desktop, Linux, Windows, JS, and Wasm.",
   "colors": {
     "primary": "#0D9373",
     "light": "#07C983",
@@ -20,7 +21,8 @@
           "quickstart",
           "installation",
           "live-demo",
-          "roadmap"
+          "platform-support",
+          "ai-assistants"
         ]
       },
       {
@@ -39,7 +41,6 @@
         "group": "FileKit Dialogs",
         "pages": [
           "dialogs/setup",
-          "dialogs/error-handling",
           "dialogs/file-picker",
           "dialogs/gallery-picker",
           "dialogs/directory-picker",
@@ -47,7 +48,8 @@
           "dialogs/file-saver",
           "dialogs/share-file",
           "dialogs/open-file",
-          "dialogs/dialog-settings"
+          "dialogs/dialog-settings",
+          "dialogs/error-handling"
         ]
       },
       {
@@ -64,6 +66,14 @@
           "cookbook/datastore",
           "cookbook/test-resources",
           "cookbook/zip-archives"
+        ]
+      },
+      {
+        "group": "Resources",
+        "pages": [
+          "roadmap",
+          "showcase",
+          "migrate-to-v0.10"
         ]
       }
     ]
@@ -90,5 +100,17 @@
     "amplitude": {
       "apiKey": "f4fd93ebc8fad4322b99fa1d99a6815"
     }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   }
 }

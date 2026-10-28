@@ -38,6 +38,8 @@ The `compressImage` function provides several key features:
 - **Format conversion**: Converts the image to the specified format (JPEG or PNG)
 - **Metadata handling**: On Android, automatically handles EXIF orientation metadata
 
+<Note>`compressImage` is available on Android, iOS, macOS, and JVM. It throws on Kotlin/Native Linux, Kotlin/Native Windows, and watchOS, and is not declared for web targets. See [platform support](/platform-support).</Note>
+
 ## Saving Images to Gallery
 
 FileKit provides a way to save images to the device's photo gallery:
@@ -61,8 +63,9 @@ The behavior of `saveImageToGallery` varies slightly by platform:
 |----------|----------|
 | Android | Saves to the device's Pictures directory and makes it visible in the gallery app |
 | iOS | Saves to the device's Camera Roll |
-| macOS/JVM | Saves to the user's Pictures directory |
-| JS/WASM | Not supported (no-op) |
+| macOS/JVM/Linux native/Windows native | Saves to the user's Pictures directory |
+| watchOS | Not supported (returns a failed `Result`) |
+| JS/WASM | Not available (the API is not declared for web targets) |
 
 ## Saving Videos to Gallery
 
@@ -87,8 +90,9 @@ The behavior of `saveVideoToGallery` varies slightly by platform:
 |----------|----------|
 | Android | Saves to the device's Videos directory and makes it visible in the gallery app |
 | iOS | Saves to the device's Camera Roll |
-| macOS/JVM | Saves to the user's videos directory |
-| JS/WASM | Not supported (no-op) |
+| macOS/JVM/Linux native/Windows native | Saves to the user's Videos directory |
+| watchOS | Not supported (returns a failed `Result`) |
+| JS/WASM | Not available (the API is not declared for web targets) |
 
 ## Encoding and Converting Images
 

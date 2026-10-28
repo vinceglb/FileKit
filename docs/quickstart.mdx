@@ -1,302 +1,162 @@
 ---
-title: 'Quickstart Guide'
+title: 'Quickstart'
 sidebarTitle: 'Quickstart'
-description: 'Get started with FileKit in minutes'
+description: 'Pick, read, and save your first file with FileKit in a few minutes'
 ---
 
 import VersionDialogs from '/snippets/version-dialogs.mdx'
 
-FileKit is a powerful Kotlin Multiplatform library for cross-platform file operations. This guide will quickly get you up and running with FileKit, demonstrating its key features.
-
-## File Dialogs
-
-<VersionDialogs/>
-
-### File picker
-
-FileKit provides a simple way to open a file picker dialog. Read more about [file picker](/dialogs/file-picker).
-
-<CodeGroup>
-
-```kotlin filekit-dialogs
-// Pick a single file
-val file = FileKit.openFilePicker()
-
-// Pick multiple files
-val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
-
-// Pick only image files
-val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
-```
-
-```kotlin filekit-dialogs-compose
-// Pick a single file
-val launcher = rememberFilePickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the selected file, or null when the user cancelled
-    },
-)
-
-Button(onClick = { launcher.launch() }) {
-    Text("Pick a file")
-}
-```
-
-</CodeGroup>
-
-### Directory picker
-
-FileKit makes it easy to open a directory picker dialog. Read more about [directory picker](/dialogs/directory-picker).
-
-<CodeGroup>
-
-```kotlin filekit-dialogs
-// Pick a single directory
-val directory = FileKit.openDirectoryPicker()
-```
-
-```kotlin filekit-dialogs-compose
-// Pick a single directory
-val launcher = rememberDirectoryPickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { directory ->
-        // Handle the selected directory, or null when the user cancelled
-    },
-)
-
-Button(onClick = { launcher.launch() }) {
-    Text("Pick a directory")
-}
-```
-
-</CodeGroup>
-
-### Camera picker
-
-FileKit makes it easy to open a camera picker dialog. Read more about [camera picker](/dialogs/camera-picker).
-
-<CodeGroup>
-
-```kotlin filekit-dialogs
-// Pick a single image
-val imageFile = FileKit.openCameraPicker()
-```
-
-```kotlin filekit-dialogs-compose
-// Pick a single image
-val launcher = rememberCameraPickerLauncher(
-    onError = { failure -> showError(failure.message) },
-    onResult = { imageFile ->
-        // Handle the selected image, or null when the user dismissed the camera
-    },
-)
-
-Button(onClick = { launcher.launch() }) {
-    Text("Pick an image")
-}
-```
-
-</CodeGroup>
-
-
-### File saver
-
-FileKit makes it easy to save a file. Read more about [file saver](/dialogs/file-saver).
-
-<CodeGroup>
-
-```kotlin filekit-dialogs
-val contentToSave = "Hello FileKit!"
-
-// Open save dialog to let user choose location
-val file = FileKit.openFileSaver(
-    suggestedName = "document",
-    defaultExtension = "txt",
-    allowedExtensions = setOf("txt", "md"),
-)
-
-// Write content to the file
-file?.writeString(contentToSave)
-```
-
-```kotlin filekit-dialogs-compose
-// Create a file saver launcher
-val launcher = rememberFileSaverLauncher(
-    dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Cancellation is reported as null, not as an error
-        file?.let { saveFile(it) }
-    },
-)
-
-// Display a button to open the file saver dialog
-Button(onClick = {
-    launcher.launch(
-        suggestedName = "document",
-        defaultExtension = "txt",
-        allowedExtensions = setOf("txt", "md"),
-    )
-}) {
-    Text("Save a file")
-}
-
-// Save the file
-val scope = rememberCoroutineScope()
-fun saveFile(file: PlatformFile) = scope.launch {
-  val contentToSave = "Hello FileKit!"
-  file.writeString(contentToSave)
-}
-```
-
-</CodeGroup>
-
-### Documentation
-
-<Card icon="window" title="FileKit Dialogs Documentation" href="/dialogs/setup">
-    Get started with FileKit Dialogs, installation and usage, here.
-</Card>
-
-## Working with files
-
-FileKit helps you work with files on your Kotlin Multiplatform project.
-
-### PlatformFile
-
-[PlatformFile](/core/platform-file) is a Kotlin Multiplatform abstraction for a file with [kotlinx-io](https://github.com/Kotlin/kotlinx-io) interoperability. It facilitates file operations across all platforms.
-
-```kotlin
-// Pick a file
-val file = FileKit.openFilePicker()
-
-// Get a file reference
-val file = FileKit.filesDir / "document.pdf"
-
-// Get the file properties
-val name: String = file.name
-val extension: String = file.extension
-val path: String = file.path
-val size: Long = file.size()
-val absolutePath: String = file.absolutePath()
-val parent: PlatformFile? = file.parent()
-val exists: Boolean = file.exists()
-val isFile: Boolean = file.isRegularFile()
-val isDirectory: Boolean = file.isDirectory()
-
-// And more...
-```
-
-### Reading Files
-
-For more details, see the [Reading Files](/core/read-file) documentation.
-
-```kotlin
-// Read as bytes
-val bytes: ByteArray = file.readBytes()
-
-// Read as text
-val text: String = file.readString()
-
-// Read large files with streaming API
-file.source().buffered().use { source ->
-    // Process chunks of data
-}
-```
-
-### Writing Files
-
-For more details, see the [Writing Files](/core/write-file) documentation.
-
-```kotlin
-// Write text to a file
-file.writeString("Hello, FileKit!")
-
-// Write binary data
-val data: ByteArray = getImageData()
-file.write(data)
-
-// Write with streaming API for large files
-file.sink(append = false).buffered().use { sink ->
-    sink.writeString("First line\n")
-    sink.writeString("Second line\n")
-    // Write more data as needed
-}
-```
-
-### File operations
-
-For more details, see the [File operations](/core/platform-file#file-operations) documentation.
-
-```kotlin
-// Create directories
-file.createDirectories()
-
-// Copy file
-file.copyTo(destinationFile)
-
-// Move file
-file.atomicMove(destinationFile)
-
-// Delete file
-file.delete()
-```
-
-## Image utilities
-
-FileKit provides utilities for **image compression** and **saving to the gallery**. Read more about [image utilities](/core/image-and-video-utils) documentation.
-
-```kotlin
-// Compress an image
-val originalImage = PlatformFile("/path/to/photo.jpg")
-val compressedBytes = FileKit.compressImage(
-    bytes = originalImage.readBytes(),
-    quality = 80,  // 0-100
-    maxWidth = 1024,
-    maxHeight = 1024,
-    imageFormat = ImageFormat.JPEG
-)
-
-// Save to device gallery
-val saveResult = FileKit.saveImageToGallery(
-    filename = "my-photo.jpg",
-    bytes = compressedBytes,
-)
-
-saveResult.onFailure { error ->
-    // Handle save failure
-    println("Failed to save image: ${error.message}")
-}
-```
-
-## File utilities
-
-FileKit provides access to standard platform-specific directories:
-
-```kotlin
-// Get the application's files directory
-val filesDir: PlatformFile = FileKit.filesDir
-
-// Get the application's cache directory
-val cacheDir: PlatformFile = FileKit.cacheDir
-
-// Get the application's databases directory
-val databasesDir: PlatformFile = FileKit.databasesDir
-```
-
-Read more about [File utilities](/core/file-utils) documentation.
-
-### Documentation
-
-<Card icon="window" title="FileKit Core Documentation" href="/core/setup">
-    Get started with FileKit Core, installation and usage, here.
-</Card>
-
-## Next Steps
-
-Now that you've seen the basics of FileKit, you can:
-
-- Read the detailed [Core documentation](/core/setup) to learn about platform-specific setup
-- Explore [Dialogs documentation](/dialogs/setup) to learn about dialogs
-
-FileKit makes file operations simple and consistent across all platforms. Start building your cross-platform app with a powerful file system abstraction today! 
+This guide opens a native file picker, reads the selected file, and saves a new file to a location the user chooses.
+
+<Steps>
+  <Step title="Add the dependency">
+    <VersionDialogs/>
+
+    Both artifacts include `filekit-core`. For Compose apps, add `filekit-dialogs-compose`. To call the dialogs from ViewModels or non-Compose code, `filekit-dialogs` is enough. See [Installation](/installation) for every module.
+  </Step>
+
+  <Step title="Initialize FileKit where needed">
+    Most targets work without setup. Android (without Compose), desktop JVM, and Linux or Windows native need one line at startup.
+
+    <Tabs>
+      <Tab title="Android">
+        With `filekit-dialogs-compose`, nothing to do.
+
+        With `filekit-dialogs` only, register your activity so FileKit can launch dialogs:
+
+        ```kotlin MainActivity.kt
+        class MainActivity : ComponentActivity() {
+            override fun onCreate(savedInstanceState: Bundle?) {
+                super.onCreate(savedInstanceState)
+                FileKit.init(this)
+            }
+        }
+        ```
+      </Tab>
+      <Tab title="JVM desktop">
+        Give FileKit your application ID before showing UI. It is used for the app's files and cache directories.
+
+        ```kotlin main.kt
+        fun main() {
+            FileKit.init(appId = "com.example.myapp")
+
+            application {
+                Window(onCloseRequest = ::exitApplication) { App() }
+            }
+        }
+        ```
+
+        On Linux, packaged apps also need the `jdk.security.auth` module. See [Dialogs setup](/dialogs/setup#linux-setup).
+      </Tab>
+      <Tab title="Linux & Windows native">
+        ```kotlin main.kt
+        fun main() {
+            FileKit.init(appId = "com.example.myapp")
+        }
+        ```
+
+        On Linux, dialogs use the XDG Desktop Portal and link against `libdbus-1`. See [Dialogs setup](/dialogs/setup#linux-setup).
+      </Tab>
+      <Tab title="iOS, macOS, JS, Wasm">
+        Nothing to do. FileKit works out of the box.
+      </Tab>
+    </Tabs>
+  </Step>
+
+  <Step title="Pick a file">
+    <CodeGroup>
+
+    ```kotlin Compose
+    val launcher = rememberFilePickerLauncher(
+        onError = { failure -> println("Picker failed: ${failure.message}") },
+    ) { file ->
+        // file is a PlatformFile, or null when the user cancelled
+        println("Picked ${file?.name}")
+    }
+
+    Button(onClick = { launcher.launch() }) {
+        Text("Pick a file")
+    }
+    ```
+
+    ```kotlin Suspend API
+    // Call from a coroutine: a ViewModel, a LaunchedEffect, a click handler with scope.launch...
+    val file: PlatformFile? = FileKit.openFilePicker()
+    println("Picked ${file?.name}")
+    ```
+
+    </CodeGroup>
+
+    Restrict the selection with `type = FileKitType.Image`, `FileKitType.Video`, or `FileKitType.File(extensions = listOf("pdf"))`. Pick several files with `mode = FileKitMode.Multiple()`. See [File picker](/dialogs/file-picker) for all options.
+  </Step>
+
+  <Step title="Read it">
+    `PlatformFile` exposes the same read API on every platform:
+
+    ```kotlin
+    val name: String = file.name
+    val size: Long = file.size()
+
+    val text: String = file.readString()
+    val bytes: ByteArray = file.readBytes()
+    ```
+
+    For an image in Compose, call `file.toImageBitmap()` or use the [Coil integration](/integrations/coil).
+  </Step>
+
+  <Step title="Save a file">
+    Ask the user where to save, then write to the returned file:
+
+    <CodeGroup>
+
+    ```kotlin Compose
+    val scope = rememberCoroutineScope()
+    val saver = rememberFileSaverLauncher(
+        dialogSettings = FileKitDialogSettings.createDefault(),
+        onError = { failure -> println("Saver failed: ${failure.message}") },
+    ) { file ->
+        scope.launch { file?.writeString("Hello FileKit!") }
+    }
+
+    Button(onClick = { saver.launch(suggestedName = "hello", defaultExtension = "txt") }) {
+        Text("Save")
+    }
+    ```
+
+    ```kotlin Suspend API
+    val file = FileKit.openFileSaver(suggestedName = "hello", defaultExtension = "txt")
+    file?.writeString("Hello FileKit!")
+    ```
+
+    </CodeGroup>
+
+    <Note>
+      The file saver is available on Android, iOS, macOS, JVM, and Linux and Windows native, so call it from a non-web source set. Browsers don't let you choose a save location, so on JS and Wasm use `FileKit.download(bytes, fileName)` instead. See [File saver](/dialogs/file-saver#download-file-on-the-web).
+    </Note>
+  </Step>
+</Steps>
+
+That's a complete round trip. FileKit uses each platform's native dialog, so the picker looks and behaves the way your users expect.
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="PlatformFile" icon="file" href="/core/platform-file">
+    Properties, paths, listing, walking, copying, moving, and deleting.
+  </Card>
+  <Card title="Reading and writing" icon="pen-to-square" href="/core/write-file">
+    Text, bytes, and streaming with kotlinx-io for large files.
+  </Card>
+  <Card title="Gallery and camera" icon="camera" href="/dialogs/gallery-picker">
+    Native photo pickers on Android and iOS, plus camera capture.
+  </Card>
+  <Card title="Directories" icon="folder-open" href="/dialogs/directory-picker">
+    Let users pick a folder and keep access with bookmarks.
+  </Card>
+  <Card title="Image utilities" icon="image" href="/core/image-and-video-utils">
+    Compress and resize images, and save them to the gallery.
+  </Card>
+  <Card title="Platform support" icon="table-cells" href="/platform-support">
+    Check which features each platform supports.
+  </Card>
+</CardGroup>

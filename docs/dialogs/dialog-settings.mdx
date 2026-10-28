@@ -137,6 +137,8 @@ On iOS and macOS, you can configure:
 - `title`: Set a custom title for the dialog
 - `canCreateDirectories`: Allow or prevent directory creation in dialogs (default: true)
 
+<Note>On iOS, `title` and `canCreateDirectories` are accepted for API parity but currently have no effect. On macOS, `title` applies to pickers but not to the file saver.</Note>
+
 On iOS, you can also configure:
 
 - `assetRepresentationMode`: Choose the Photos picker asset representation mode (default: `Automatic`)
@@ -157,6 +159,16 @@ The iOS Photos picker supports these asset representation modes:
 - `Compatible`: Prefer a broadly compatible representation, even if transcoding is required
 
 Use `Compatible` when picked image bytes need to be decoded by libraries that may not support every Apple-native image format, such as HEIF/HEIC.
+
+### Kotlin/Native Linux and Windows Settings
+
+On `linuxX64`, `linuxArm64`, and `mingwX64`, you can configure:
+
+- `title`: Set a custom title for the dialog
+
+```kotlin
+val settings = FileKitDialogSettings(title = "Select a file")
+```
 
 ### Android, Web, and WASM
 

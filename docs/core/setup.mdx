@@ -10,7 +10,7 @@ import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
 
 <VersionCore/>
 
-FileKit Core provides the fundamental file operations for your Kotlin Multiplatform project. It's designed to work across all supported platforms with a unified API.
+FileKit Core provides the fundamental file operations for your Kotlin Multiplatform project. It's designed to work across all supported platforms with a unified API. See the [platform support matrix](/platform-support) for the APIs available on each target.
 
 ## Platform-specific setup
 
@@ -49,6 +49,18 @@ fun main() {
 
 FileKit uses the XDG data and cache directories by default. You can instead pass explicit `PlatformFile` values for `filesDir` and `cacheDir`.
 
-### iOS, macOS, JS, WASM setup
+### Windows Native setup
 
-No additional setup is needed for iOS, macOS, JS, and WASM targets. FileKit Core works out of the box on these platforms.
+For `mingwX64`, initialize FileKit with your application ID before accessing the standard application directories:
+
+```kotlin
+fun main() {
+    FileKit.init(appId = "my.application.id")
+}
+```
+
+FileKit uses `%APPDATA%` and `%LOCALAPPDATA%` by default. You can instead pass explicit `PlatformFile` values for `filesDir` and `cacheDir`.
+
+### iOS, macOS, watchOS, JS, WASM setup
+
+No additional setup is needed for iOS, macOS, watchOS, JS, and WASM targets. FileKit Core works out of the box on these platforms.
