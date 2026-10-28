@@ -1,11 +1,11 @@
 package io.github.vinceglb.filekit.sample.shared.ui.components.exp
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,20 +19,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.AndroidUiModes
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import filekit.sample.shared.generated.resources.Res
+import filekit.sample.shared.generated.resources.filekit_mark_dark
+import filekit.sample.shared.generated.resources.filekit_mark_light
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppButton
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppButtonDefaults
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppOutlinedButton
 import io.github.vinceglb.filekit.sample.shared.ui.components.AppTextButton
 import io.github.vinceglb.filekit.sample.shared.ui.icons.ArrowUpRight
-import io.github.vinceglb.filekit.sample.shared.ui.icons.File
 import io.github.vinceglb.filekit.sample.shared.ui.icons.LucideIcons
 import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun AppEmpty(
@@ -60,26 +64,17 @@ internal fun AppEmpty(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = MaterialTheme.shapes.medium,
+                // The brand mark has a light and a dark version; pick the one for the current scheme.
+                val darkScheme = MaterialTheme.colorScheme.background.luminance() < 0.5f
+                Image(
+                    painter = painterResource(
+                        if (darkScheme) Res.drawable.filekit_mark_dark else Res.drawable.filekit_mark_light,
+                    ),
+                    contentDescription = null,
                     modifier = Modifier
                         .padding(bottom = 4.dp)
-                        .size(40.dp),
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            imageVector = LucideIcons.File,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(24.dp),
-                        )
-                    }
-                }
+                        .size(48.dp),
+                )
 
                 Text(
                     text = title,

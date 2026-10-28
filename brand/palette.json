@@ -47,5 +47,20 @@
       "blend": "multiply",
       "guideOpacity": 0.9
     }
+  },
+  "icon": {
+    "mark": [
+      "#F2D37A",
+      "#FFF1D0",
+      "#FFFFFF"
+    ],
+    "fold": "#E3C266",
+    "scale": 0.56,
+    "shadow": "#07160E80",
+    "background": {
+      "seed": 2.4,
+      "grain": 0,
+      "focus": 0.5
+    }
   }
 }

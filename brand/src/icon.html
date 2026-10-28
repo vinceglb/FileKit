@@ -1,0 +1,61 @@
+<!doctype html>
+<!--
+  FileKit app icon: the mark on the silk background. Fills a square viewport, so the export script picks the size.
+  URL parameters:
+    layer=full|background|foreground   Android adaptive icons need the two layers apart.
+    shape=square|rounded|circle|macos  Clip of the icon. `macos` follows the macOS grid (824 px body on 1024).
+    scale=<number>                     Mark height as a fraction of the icon (default: palette.json icon.scale).
+    seed=<number>                      Try another background composition without editing palette.json.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
+  .icon { position: absolute; inset: 0; overflow: hidden; }
+  .rounded .icon { border-radius: 22.37%; }
+  .circle .icon { border-radius: 50%; }
+  .macos .icon { inset: 9.77%; border-radius: 22.37%; }
+  canvas, svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<div class="icon"><canvas></canvas></div>
+<script type="module">
+  import { paintBackground } from './background.js';
+  import { MARK_BOX, markSvg } from './mark.js';
+
+  const params = new URLSearchParams(location.search);
+  const layer = params.get('layer') ?? 'full';
+  document.body.classList.add(params.get('shape') ?? 'square');
+  const palette = await (await fetch('../palette.json')).json();
+  const { icon } = palette;
+  const look = { ...palette.background.dark, ...icon.background };
+  if (params.has('seed')) look.seed = Number(params.get('seed'));
+  const scale = params.has('scale') ? Number(params.get('scale')) : icon.scale;
+
+  const box = document.querySelector('.icon');
+  const canvas = box.querySelector('canvas');
+  if (layer === 'foreground') canvas.remove();
+  else paintBackground(canvas, look);
+
+  if (layer !== 'background') {
+    // The 32-unit mark box holds a 24-unit sheet: size the box so the sheet is `scale` of the icon.
+    // The slanted sheet's bounding box is centered in the box already, so centering the box centers the ink.
+    const size = (scale * 32) / MARK_BOX.height;
+    const unit = box.clientWidth / 100;
+    const holder = document.createElement('div');
+    holder.innerHTML = markSvg(icon.mark, 32, 'fk', `fill="${icon.fold}"`);
+    const svg = holder.firstChild;
+    Object.assign(svg.style, {
+      width: `${size * 100}%`, height: `${size * 100}%`,
+      left: `${(1 - size) * 50}%`, top: `${(1 - size) * 50}%`,
+      filter: `drop-shadow(0 ${size * 1.2 * unit}px ${size * 3 * unit}px ${icon.shadow})`,
+    });
+    box.append(svg);
+  }
+  document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
