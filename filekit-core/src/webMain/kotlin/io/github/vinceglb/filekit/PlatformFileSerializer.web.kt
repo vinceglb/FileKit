@@ -8,8 +8,15 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 private const val UNSUPPORTED_MESSAGE =
-    "PlatformFile serialization is not supported on Wasm JS targets"
+    "PlatformFile serialization is not supported on web targets (JS and Wasm)"
 
+/**
+ * Web (JS and Wasm) implementation of [PlatformFileSerializer].
+ *
+ * A web [PlatformFile] wraps a browser `File` object that has no path to persist, so
+ * [serialize] and [deserialize] always throw an [IllegalStateException]. The serializer
+ * exists so that `@Serializable` classes holding a [PlatformFile] still compile in shared code.
+ */
 public actual object PlatformFileSerializer : KSerializer<PlatformFile> {
     actual override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
         serialName = "io.github.vinceglb.filekit.PlatformFile",

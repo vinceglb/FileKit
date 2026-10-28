@@ -6,7 +6,6 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.awt.Desktop
 
 internal actual suspend fun FileKit.platformOpenFilePicker(
     type: FileKitType,
@@ -97,12 +96,19 @@ internal actual suspend fun FileKit.platformOpenFileSaver(
 /**
  * Opens a file with the default application associated with its file type.
  *
+ * Uses `java.awt.Desktop` when it supports opening files. Otherwise, on Linux, falls back to
+ * `xdg-open` and waits a few seconds at most for it to report an error.
+ *
  * @param file The file to open.
  * @param openFileSettings Platform-specific settings for opening the file.
+ * @throws FileKitDialogException When `java.awt.Desktop` cannot open files (for example in a headless
+ * environment) and the `xdg-open` fallback is unavailable, cannot start, or exits with an error.
+ * Errors raised by `java.awt.Desktop.open` itself, such as an [java.io.IOException] when no application
+ * is associated with the file, are not wrapped.
  */
 public actual fun FileKit.openFileWithDefaultApplication(
     file: PlatformFile,
     openFileSettings: FileKitOpenFileSettings,
 ) {
-    Desktop.getDesktop()?.open(file.file)
+    JvmDefaultApplicationOpener.Default.open(file.file)
 }
