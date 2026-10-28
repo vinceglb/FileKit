@@ -1,89 +1,55 @@
 ---
-title: 'Test Resources'
-description: 'Access test resources easily in Kotlin Multiplatform'
+title: 'Test resources'
+sidebarTitle: 'Test resources'
+description: 'Read test fixture files from shared Kotlin Multiplatform tests with FileKit.projectDir'
 ---
 
-Accessing test resources in Kotlin Multiplatform can be tricky. FileKit provides a simple solution with `FileKit.projectDir`.
+import { Platforms } from '/snippets/platforms.jsx'
 
-## The Problem
+<Platforms scope="core" supported="jvm macos linux windows" partial={{ android: 'Local unit tests only', ios: 'Simulator only', watchos: 'Simulator only' }} anchor="filekit-core" />
 
-In KMP, there's no built-in way to access files in your test resources folder across all platforms. Traditional approaches like `ClassLoader.getResource()` don't work consistently.
+Kotlin Multiplatform has no common API to read files from a test resources folder. `FileKit.projectDir` points to your module's directory while tests run, so you can build paths to fixtures from shared test code.
 
-## The Solution
+## Usage
 
-FileKit provides `FileKit.projectDir` which returns the root directory of your project. From there, you can easily navigate to your test resources:
+Put the fixtures in a folder of your module, for example `src/commonTest/resources/hello.txt`, then read them:
 
-```kotlin
-val resourceDirectory = FileKit.projectDir / "src/commonTest/resources"
-val testFile = resourceDirectory / "test-data.txt"
-```
-
-## Example
-
-Here's a complete example of a multiplatform test that reads a file from test resources:
-
-```kotlin
+```kotlin jvmTest
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.div
+import io.github.vinceglb.filekit.exists
+import io.github.vinceglb.filekit.projectDir
 import io.github.vinceglb.filekit.readString
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
-class MyTest {
-    private val resourceDirectory = FileKit.projectDir / "src/commonTest/resources"
-    private val textFile = resourceDirectory / "hello.txt"
-    private val imageFile = resourceDirectory / "image.png"
-
-    @Test
-    fun readTestFile() = runTest {
-        val content = textFile.readString()
-        assertEquals(expected = "Hello, World!", actual = content)
-    }
+class ResourcesTest {
+    private val resources = FileKit.projectDir / "src/commonTest/resources"
 
     @Test
-    fun checkFileExists() {
-        assertTrue { textFile.exists() }
-        assertTrue { imageFile.exists() }
+    fun readHello() = runTest {
+        val hello = resources / "hello.txt"
+        assertTrue(hello.exists())
+        assertEquals("Hello, World!", hello.readString())
     }
 }
 ```
 
-## Project Structure
+`projectDir` is declared in `nonWebMain`, so it doesn't compile in `commonTest` when your module has JS or Wasm targets. Put the test in a test source set without web targets, such as `jvmTest`, `iosTest`, or a shared `nonWebTest` you declare. The fixtures folder can stay anywhere in the module.
 
-Your test resources should be placed in the appropriate source set:
+## How each platform finds the module
 
-```
-my-project/
-├── src/
-│   ├── commonMain/
-│   ├── commonTest/
-│   │   ├── kotlin/
-│   │   │   └── MyTest.kt
-│   │   └── resources/
-│   │       ├── hello.txt
-│   │       └── image.png
-│   └── ...
-```
+| Platform | `projectDir` | Works in |
+| --- | --- | --- |
+| JVM, macOS, Linux native, Windows native | `PlatformFile(".")`, the working directory | Gradle test tasks, which run from the module directory |
+| Android | `PlatformFile(".")` | Local unit tests that run on your computer. On a device or emulator, `.` is not your project. |
+| iOS, watchOS | Four folders above the test bundle | Simulator tests, where that is the module directory. Not on a real device. |
 
-<Tip>
-Use the `/` operator (via `div`) to build paths in a readable way:
+`projectDir` is for tests and tooling only. Don't use it in production code.
 
-```kotlin
-val file = FileKit.projectDir / "src" / "commonTest" / "resources" / "data.json"
-```
-</Tip>
+## Related
 
-## Supported Platforms
-
-`FileKit.projectDir` is available on all non-web platforms:
-
-| Platform | Supported |
-|----------|-----------|
-| Android  | ✅        |
-| iOS      | ✅        |
-| macOS    | ✅        |
-| JVM      | ✅        |
-| Kotlin/Native Linux (`linuxX64`, `linuxArm64`) | ✅ |
-| JS       | ❌        |
-| WASM     | ❌        |
+- [App directories](/core/file-utils) for runtime locations.
+- [Read a file](/core/read-file) for the full read API.

@@ -1,37 +1,35 @@
 ---
 title: 'Krop'
-description: 'Image cropping library with FileKit support'
+sidebarTitle: 'Krop'
+description: 'Crop images picked with FileKit using the Krop library'
 ---
+
+[Krop](https://github.com/tamimattafi/krop) is a third-party image cropping library for Compose Multiplatform. Its FileKit extension turns a `PlatformFile` into a Krop image source.
 
 <Frame>
   <img
     src="https://raw.githubusercontent.com/tamimattafi/krop/refs/heads/main/art/preview.gif"
-    alt="Krop Preview"
+    alt="Krop cropping an image"
   />
 </Frame>
 
-<Card title="Krop Documentation" icon="book" href="https://github.com/tamimattafi/krop">
-  View setup instructions and usage examples on GitHub
-</Card>
+## Usage
 
-**Krop** is a powerful image cropping library designed specifically for Compose Multiplatform. It provides a rich set of features including:
+Add Krop and its FileKit extension:
 
-- **Custom shapes** - Crop images to various shapes (rectangle, circle, custom paths)
-- **Aspect ratios** - Lock or freely adjust crop aspect ratios
-- **Transformations** - Pan, zoom, and rotate images
-- **Large image support** - Efficiently handle high-resolution images
-- **Auto zoom** - Smart zooming to fit the crop area
+```kotlin build.gradle.kts
+implementation("com.attafitamim.krop:core:<version>")
+implementation("com.attafitamim.krop:extensions-filekit:<version>")
+```
 
-## Platforms
+Pick an image with FileKit, then hand it to Krop with `toImageSrc()`:
 
-Krop supports Android, iOS, macOS, JVM, JS, and WASM targets.
+```kotlin
+scope.launch {
+    val file = FileKit.openFilePicker(type = FileKitType.Image) ?: return@launch
+    val imageSrc = file.toImageSrc()
+    // Pass imageSrc to Krop's image cropper
+}
+```
 
-## FileKit Integration
-
-Krop provides an official FileKit extension module (`com.attafitamim.krop:extensions-filekit`) that enables seamless integration between the two libraries:
-
-- **`PlatformFile.toImageSrc()`** - Converts a FileKit `PlatformFile` to Krop's `ImageSrc` for cropping
-- Pick images with FileKit, crop them with Krop, and save the results back using FileKit
-
-For setup instructions and usage examples, visit the [Krop documentation](https://github.com/tamimattafi/krop).
-
+See the [Krop README](https://github.com/tamimattafi/krop) for the cropper setup, supported platforms, and the current version. Once cropped, save the result with the [file saver](/dialogs/file-saver) or [compress it](/core/image-and-video-utils) first.

@@ -46,7 +46,7 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | Streaming read: `source()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | [`write`, `writeString`](/core/write-file), `delete` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>2</sup> |
 | Streaming write: `sink()` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| `copyTo`, `copyRecursively`, `createDirectories` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| [`copyTo`, `copyRecursively`, `createDirectories`](/core/file-operations) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | `atomicMove` | ⚠️ <sup>3</sup> | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
 | `list`, `walk`, `sizeRecursively` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>1</sup> |
 | `createdAt()` | ✅ | ✅ | ✅ | ✅ | ⚠️ <sup>4</sup> | ✅ | ✅ | ❌ |
@@ -57,8 +57,8 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | `saveImageToGallery`, `saveVideoToGallery` | ✅ | ✅ | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ⚠️ <sup>7</sup> | ❌ <sup>6</sup> | ❌ |
 | [Bookmark data](/core/bookmark-data) (persistent access) | ✅ | ✅ | ✅ | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ⚠️ <sup>8</sup> | ✅ | ❌ |
 | `PlatformFile` serialization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| [`FileKit.download`](/dialogs/file-saver#download-file-on-the-web) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
-| Origin private file system (OPFS) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ <sup>2</sup> |
+| [`FileKit.download`](/core/web#download-files) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
+| [Origin private file system (OPFS)](/core/web#store-files-in-the-origin-private-file-system) | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ⚠️ <sup>2</sup> |
 
 ## FileKit Dialogs
 
@@ -73,7 +73,7 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | [Camera picker](/dialogs/camera-picker) (photo) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | [Share file](/dialogs/share-file) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | [Open with default app](/dialogs/open-file) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| [Dialog settings](/dialogs/dialog-settings) | — | ⚠️ <sup>15</sup> | ✅ | ✅ | Title only | Title only | — |
+| [Dialog settings](/dialogs/dialog-settings) | None | ⚠️ <sup>15</sup> | ✅ | ✅ | Title only | Title only | None |
 
 ## Compose and Coil
 

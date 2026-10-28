@@ -1,0 +1,95 @@
+---
+title: 'Files on the web'
+sidebarTitle: 'Web'
+description: 'Read picked files, download files, and store files in the browser with FileKit on JS and Wasm'
+---
+
+import { Platforms } from '/snippets/platforms.jsx'
+
+<Platforms scope="core" supported="web" anchor="filekit-core" />
+
+On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the user picks are read-only. To give the user a file, download it. To keep files between sessions, store them in the browser's origin private file system.
+
+## What a web PlatformFile is
+
+| Source | Wraps | Read | Write, delete | List |
+| --- | --- | --- | --- | --- |
+| File picker | A snapshot of a browser `File` | Yes | No | No |
+| Directory picker | A virtual tree of the selected files | Files only | No | `list()`, `walk()`, `listEntries()` |
+| `FileKit.originPrivateDir` (experimental) | A live origin private file system entry | Yes | Yes | `listEntries()` |
+
+The `path` of a picked file is its name, or for a file inside a picked folder, its relative path starting with the folder's name. Path constructors such as `PlatformFile("/path")`, `FileKit.filesDir`, and `exists()` don't exist on the web: keep that code in `nonWebMain`.
+
+## Read a file
+
+```kotlin webMain
+val file = FileKit.openFilePicker() ?: return
+val text: String = file.readString()
+val bytes: ByteArray = file.readBytes()
+```
+
+Reads load the whole file into memory: `source()` is not available on the web. `name`, `extension`, `size()`, `lastModified()`, and `mimeType()` come from the browser's file metadata.
+
+## Download files
+
+Browsers don't let a page choose where a file is saved, so there is no file saver on the web. `FileKit.download` hands the file to the browser, which saves it to the user's downloads folder:
+
+```kotlin webMain
+scope.launch {
+    FileKit.download("Hello, FileKit!".encodeToByteArray(), fileName = "hello.txt")
+    FileKit.download(file) // fileName defaults to file.name
+}
+```
+
+Both overloads are suspend functions. The `PlatformFile` overload reads the file first, so it works with picked files and origin private file system files.
+
+## Store files in the origin private file system
+
+The [origin private file system](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system) (OPFS) is a private storage space for your site, hidden from the user and from other sites. FileKit can read, write, list, and delete files in it.
+
+<Note>
+This API is experimental: opt in with `@OptIn(ExperimentalFileKitApi::class)`, and expect signature changes. OPFS only works in secure contexts: HTTPS pages and local addresses such as `localhost`.
+</Note>
+
+### Get a file or directory
+
+```kotlin webMain
+@OptIn(ExperimentalFileKitApi::class)
+suspend fun todayNote(): PlatformFile {
+    val notes = FileKit.originPrivateDir.resolveDirectory("notes", create = true)
+    return notes.resolveFile("today.txt", create = true)
+}
+```
+
+`resolveFile(relative, create = false)` and `resolveDirectory(relative, create = false)` take a path relative to an OPFS directory. With `create = true`, they create the entry and its missing parent directories. Without it, a missing entry throws. Empty segments are ignored, and `.` or `..` segments throw.
+
+### Read and write
+
+```kotlin webMain
+file.writeString("Hello, FileKit!")
+file.write("Hello again".encodeToByteArray())
+val text = file.readString()
+```
+
+`write` and `writeString` replace the file's content. They throw on any file that doesn't come from `FileKit.originPrivateDir`.
+
+### List and delete
+
+```kotlin webMain
+val notes = FileKit.originPrivateDir.resolveDirectory("notes")
+val entries: List<PlatformFile> = notes.listEntries()
+
+notes.delete(recursively = true)
+```
+
+`list()` and `walk()` can't read OPFS directories: use the suspend `listEntries()`, which also works on picked folders. `delete(mustExist = true, recursively = false)` behaves as on other platforms. The root directory can't be deleted.
+
+### Good to know
+
+- `size()` and `lastModified()` are up to date after each FileKit write. If another tab or worker changes a file, resolve it again to see the change.
+- Browsers may clear OPFS when the device runs low on storage. To prevent this, request persistent storage with [`navigator.storage.persist()`](https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persist): the data is protected only if it returns `true`, as the browser can refuse.
+
+## Related
+
+- [File picker](/dialogs/file-picker) and [Directory picker](/dialogs/directory-picker)
+- [PlatformFile](/core/platform-file)

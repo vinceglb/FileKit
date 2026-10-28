@@ -1,38 +1,29 @@
 ---
 title: 'Compose Media Player'
-description: 'Video player library with FileKit support'
+sidebarTitle: 'Compose Media Player'
+description: 'Play videos picked with FileKit using Compose Media Player'
 ---
 
-<Frame>
-  <img
-    src="https://github.com/kdroidFilter/ComposeMediaPlayer/blob/master/assets/banner.jpg?raw=true"
-    alt="Compose Media Player Banner"
-  />
-</Frame>
+[Compose Media Player](https://github.com/kdroidFilter/ComposeMediaPlayer) is a third-party video player for Compose Multiplatform. Its player state opens a FileKit `PlatformFile` directly, with no extra module.
 
-<Card title="Compose Media Player Documentation" icon="book" href="https://github.com/kdroidFilter/ComposeMediaPlayer">
-  View setup instructions and usage examples on GitHub
-</Card>
+## Usage
 
-**Compose Media Player** is a feature-rich video player library designed for Compose Multiplatform. It offers comprehensive media playback capabilities:
+```kotlin build.gradle.kts
+implementation("io.github.kdroidfilter:composemediaplayer:<version>")
+```
 
-- **Multi-platform support** - Android, iOS, macOS, Windows, Linux, and WASM
-- **Playback controls** - Play, pause, seek, volume, and playback speed
-- **Subtitle support** - SRT and VTT formats with customizable styling
-- **Fullscreen mode** - Native fullscreen support across platforms
-- **Metadata extraction** - Access video title, duration, resolution, and more
-- **Audio visualization** - Left/right channel level monitoring
+Pick a video with FileKit, then open it in the player:
 
-## Platforms
+```kotlin
+scope.launch {
+    val file = FileKit.openFilePicker(type = FileKitType.Video) ?: return@launch
+    playerState.openFile(file)
+}
+```
 
-Compose Media Player supports Android, iOS, macOS, Windows, Linux, JS, and WASM targets.
+`playerState` is the library's video player state. See the [Compose Media Player README](https://github.com/kdroidFilter/ComposeMediaPlayer) for the current version, the player composable, and supported platforms.
 
-## FileKit Integration
+## Related
 
-Compose Media Player has native support for FileKit's `PlatformFile` through the `openFile()` method:
-
-- Pick video files with FileKit's file picker
-- Play them directly using `playerState.openFile(platformFile)`
-
-For setup instructions and usage examples, visit the [Compose Media Player documentation](https://github.com/kdroidFilter/ComposeMediaPlayer).
-
+- [File picker](/dialogs/file-picker) for type filters and multiple selection.
+- [Gallery picker](/dialogs/gallery-picker) to pick videos from the photo library on Android and iOS.

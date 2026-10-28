@@ -131,7 +131,7 @@ This guide opens a native file picker, reads the selected file, and saves a new 
     </CodeGroup>
 
     <Note>
-      The file saver is available on Android, iOS, macOS, JVM, and Linux and Windows native, so call it from a non-web source set. Browsers don't let you choose a save location, so on JS and Wasm use `FileKit.download(bytes, fileName)` instead. See [File saver](/dialogs/file-saver#download-file-on-the-web).
+      The file saver is available on Android, iOS, macOS, JVM, and Linux and Windows native, so call it from a non-web source set. Browsers don't let you choose a save location, so on JS and Wasm use `FileKit.download(bytes, fileName)` instead. See [Files on the web](/core/web#download-files).
     </Note>
   </Step>
 </Steps>
@@ -141,8 +141,8 @@ That's a complete round trip. FileKit uses each platform's native dialog, so the
 ## Where to go next
 
 <CardGroup cols={2}>
-  <Card title="PlatformFile" icon="file" href="/core/platform-file">
-    Properties, paths, listing, walking, copying, moving, and deleting.
+  <Card title="File operations" icon="file" href="/core/file-operations">
+    List, walk, copy, move, and delete files and folders.
   </Card>
   <Card title="Reading and writing" icon="pen-to-square" href="/core/write-file">
     Text, bytes, and streaming with kotlinx-io for large files.

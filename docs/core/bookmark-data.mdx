@@ -1,240 +1,127 @@
 ---
-title: 'Bookmark Data'
-description: 'Maintain persistent access to files across app restarts'
+title: 'Bookmark data'
+sidebarTitle: 'Bookmark data'
+description: 'Keep access to user-picked files and folders across app restarts'
 ---
 
-<Check>Available on Android, iOS, macOS, watchOS, JVM, Kotlin/Native Linux and Kotlin/Native Windows targets. See [platform support](/platform-support).</Check>
+import { Platforms } from '/snippets/platforms.jsx'
 
-## The Problem: Losing File Access
+<Platforms scope="core" supported="android ios macos watchos" partial={{ jvm: 'Stores the path, except on macOS', linux: 'Stores the path, breaks if the file moves', windows: 'Stores the path, breaks if the file moves' }} anchor="filekit-core" />
 
-Modern operating systems use security measures like sandboxing, which means your app can lose access to files selected by the user once it restarts. A standard file path might become invalid. This is especially true on Android (for files outside your app's private storage) and on sandboxed apps on macOS and iOS.
+A file the user picked can become unreachable after a restart: Android revokes `content://` access and sandboxed Apple apps lose their security scope. `bookmarkData()` turns a `PlatformFile` into bytes you can store, and `PlatformFile.fromBookmarkData(bytes)` gives the file back, with its access, on the next launch.
 
-## The Solution: Bookmark Data
+## Usage
 
-`BookmarkData` is a feature that creates a persistent, secure reference to a file. You can save this reference and use it later to reliably regain access to the file, even after your app has been closed and reopened. FileKit handles the complex platform-specific implementations for you.
+```kotlin nonWebMain
+// After the user picks a file
+val bytes: ByteArray = file.bookmarkData().bytes
+// Store the bytes: a file, DataStore, a database...
 
-## The Basic Workflow
+// On the next launch
+val restored: PlatformFile = PlatformFile.fromBookmarkData(bytes)
+```
 
-The process involves two main steps: creating and saving a bookmark, and later loading and resolving it.
+Both functions are declared in `nonWebMain`. `bookmarkData()` is a suspend function. Bookmark bytes are platform-specific: don't share them between operating systems or apps.
+
+## Restore a bookmark safely
+
+A bookmark breaks when the user deletes the file, revokes your app's access, or (on path-based platforms) moves it. Handle failure and ask the user to pick the file again. This helper stores one bookmark in your app's files directory:
+
+```kotlin nonWebMain
+private val bookmarkFile = FileKit.filesDir / "last-file.bookmark"
+
+suspend fun saveLastFile(file: PlatformFile) {
+    bookmarkFile.write(file.bookmarkData().bytes)
+}
+
+suspend fun loadLastFile(): PlatformFile? {
+    if (!bookmarkFile.exists()) return null
+    val bytes = bookmarkFile.readBytes()
+    val resolution = runCatching { PlatformFile.resolveBookmarkData(bytes) }.getOrNull()
+    if (resolution == null || !resolution.file.exists()) {
+        bookmarkFile.delete() // gone or no longer accessible: ask the user again
+        return null
+    }
+    if (resolution.shouldRefresh) saveLastFile(resolution.file)
+    return resolution.file
+}
+```
+
+`resolveBookmarkData` returns a `BookmarkResolution` with the `file` and two flags:
+
+| Property | Meaning |
+| --- | --- |
+| `isStale` | The operating system resolved the bookmark but asks you to recreate it. |
+| `shouldRefresh` | FileKit recommends replacing the stored bytes. `true` when `isStale` is, and when the bytes come from an older FileKit format. |
+
+Refreshing is best effort: the old bytes may still work, and `bookmarkData()` can fail if the file disappeared or macOS already revoked access. Use `fromBookmarkData` when you only need the file.
+
+## Platform behavior
+
+| Platform | Stored as | Security-scoped | Survives a move |
+| --- | --- | --- | --- |
+| Android, regular path | The path | Not needed | No |
+| Android, `content://` | The URI, plus a persisted URI permission | Not needed (the permission persists) | Depends on the document provider |
+| iOS | Foundation bookmark | Yes | Yes |
+| watchOS | Foundation bookmark | No | Yes |
+| macOS, JVM on macOS | Native bookmark in a versioned FileKit wrapper | Yes when the app is sandboxed | Yes |
+| JVM on Linux and Windows, Linux native, Windows native | The path | No | No |
+
+On Android, `releaseBookmark()` releases the persisted URI permission. Android limits how many URI permissions an app can persist, so release the ones you no longer need.
+
+## Set up the macOS App Sandbox
+
+FileKit reads your app's App Sandbox entitlement at runtime. When it is present, FileKit creates security-scoped bookmarks and reports a failure instead of falling back to a bookmark that can't restore access.
+
+<Steps>
+  <Step title="Enable the sandbox and user-selected file access">
+    Add these entitlements to the signed app:
+
+    ```xml entitlements.plist
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <key>com.apple.security.files.bookmarks.app-scope</key>
+    <true/>
+    ```
+  </Step>
+  <Step title="Test the packaged app">
+    Entitlements only apply to a signed build. Pick a file, quit, relaunch, and restore the bookmark.
+  </Step>
+</Steps>
+
+## Keep security-scoped access
+
+On iOS and in sandboxed macOS apps, a file outside your container is readable only while its security-scoped access is active. FileKit starts and stops access around its own operations, and keeps it active until returned sources and sinks are closed.
+
+Derive files from the restored `PlatformFile` with `/`, `resolve()`, or `list()` so they share its access:
+
+```kotlin nonWebMain
+val folder = PlatformFile.fromBookmarkData(savedFolderBookmark)
+source.atomicMove(folder / "backup.db")
+```
+
+A `PlatformFile` rebuilt from a path string or `toKotlinxIoPath()` loses that access, and so does one restored by `PlatformFileSerializer`, which stores only the path. Persist bookmark data instead.
+
+When you hand a file to another library, wrap the call in `withScopedAccess`. It calls `startAccessingSecurityScopedResource()` and `stopAccessingSecurityScopedResource()` for you, and is a no-op on platforms without security scopes:
 
 ```kotlin
-// 1. User picks a file
-val userPickedFile: PlatformFile = // ...from a file picker
-
-// 2. Create and save its bookmark data
-val bookmark = userPickedFile.bookmarkData()
-MyPreferences.save("last_file_bookmark", bookmark.bytes)
-
-// --- App restarts ---
-
-// 3. Load the saved bookmark data
-val savedBytes = MyPreferences.load("last_file_bookmark")
-
-// 4. Restore the PlatformFile from the bookmark
-if (savedBytes != null) {
-    val restoredFile = PlatformFile.fromBookmarkData(savedBytes)
-    // Now you can work with the restoredFile
+file.withScopedAccess { scoped ->
+    thirdPartyLibrary.open(scoped.path)
 }
 ```
 
-`fromBookmarkData()` remains a supported, non-deprecated convenience API when you only need the restored file. Use `resolveBookmarkData()` when your application also needs refresh metadata or can update its stored bookmark:
+Call `releaseBookmark()` once you are done with a restored bookmark and every file derived from it. Already-open sources and sinks still close cleanly, but new scoped operations then throw a `FileKitException`.
 
-```kotlin
-val resolution = PlatformFile.resolveBookmarkData(savedBytes)
-val restoredFile = resolution.file
+<Accordion title="Upgrading from older versions">
+- **macOS bookmark format:** new bookmarks on macOS (native and JVM) are wrapped in a versioned FileKit format. Unwrapped Kotlin/Native bookmarks and JVM path bytes written by earlier versions remain readable, and `resolveBookmarkData` reports `shouldRefresh = true` for them.
+- **iOS security scope:** restored bookmarks now keep the security-scoped URL for the bookmarked item and its descendants, including after a device restart. Stored bookmarks get this behavior without a migration.
+- **iOS `releaseBookmark()`:** it was a no-op in FileKit 0.15.0 and 0.16.0 and now releases access. Calling `startAccessingSecurityScopedResource()` on a released bookmark throws instead of returning `false`.
+- **`fromBookmarkData`** is not deprecated. `resolveBookmarkData` was added for refresh metadata.
+</Accordion>
 
-if (resolution.shouldRefresh) {
-    // Replace the bytes in your own storage.
-    val refreshedBookmark = restoredFile.bookmarkData()
-    MyPreferences.save("last_file_bookmark", refreshedBookmark.bytes)
-}
-```
+## Related
 
-- `isStale` means the operating system resolved the bookmark but reported that its native representation should be recreated.
-- `shouldRefresh` is FileKit's broader recommendation. It is also `true` when FileKit successfully resolves bookmark data written by an older FileKit version.
-
-Refreshing is advisory. The old bookmark may still work, and refresh can fail if the resource disappeared or macOS already revoked access. In that case, ask the user to select the file or directory again.
-
-## Complete Example
-
-Here’s a more complete, practical example using a simple object to manage the bookmark.
-
-<CodeGroup>
-```kotlin Storage
-// A simple manager for a single bookmarked file
-object BookmarkManager {
-    private val bookmarkFile = FileKit.filesDir / "bookmark.bin"
-
-    suspend fun save(file: PlatformFile) {
-        try {
-            val bookmark = file.bookmarkData()
-            bookmarkFile.write(bookmark.bytes)
-        } catch (e: Exception) {
-            // Handle exceptions, e.g., log the error
-            println("Error saving bookmark: ${e.message}")
-        }
-    }
-
-    suspend fun load(): PlatformFile? {
-        if (!bookmarkFile.exists()) return null
-        
-        return try {
-            val bytes = bookmarkFile.readBytes()
-            val file = PlatformFile.fromBookmarkData(bytes)
-            
-            // Best practice: verify the file still exists
-            if (file.exists()) {
-                file
-            } else {
-                // The file was moved or deleted, so clean up the stale bookmark
-                clear()
-                null
-            }
-        } catch (e: Exception) {
-            // Bookmark is invalid or corrupted, clean it up
-            clear()
-            null
-        }
-    }
-    
-    suspend fun clear() {
-        try {
-            if (bookmarkFile.exists()) {
-                bookmarkFile.delete()
-            }
-        } catch (e: Exception) {
-            println("Error clearing bookmark: ${e.message}")
-        }
-    }
-}
-```
-```kotlin Compose UI
-// Example usage in a Composable screen
-@Composable
-fun MyScreen() {
-    var file by remember { mutableStateOf<PlatformFile?>(null) }
-    val coroutineScope = rememberCoroutineScope()
-    
-    // Load the file when the screen is first composed
-    LaunchedEffect(Unit) {
-        file = BookmarkManager.load()
-    }
-    
-    val picker = rememberFilePickerLauncher(
-        onError = { failure -> println("Picker failed: ${failure.message}") },
-        onResult = { pickedFile ->
-            file = pickedFile
-            // Save the bookmark in a coroutine
-            pickedFile?.let {
-                coroutineScope.launch {
-                    BookmarkManager.save(it)
-                }
-            }
-        },
-    )
-    
-    // UI to show file details and a button to launch the picker
-    Column {
-        if (file != null) {
-            Text("Current file: ${file?.name}")
-        }
-        Button(onClick = { picker.launch() }) {
-            Text("Pick a File")
-        }
-    }
-}
-```
-</CodeGroup>
-
-## Platform-Specific Behavior
-
-FileKit abstracts away the details, but here's what happens on each platform:
-
-- **Android**: For standard file paths, the path itself is stored. For `content://` URIs from the system picker, FileKit requests persistent URI permissions and stores the URI string. This ensures long-term access.
-
-- **iOS**: Uses Foundation bookmark data and retains the restored security-scoped URL for operations on the bookmarked file or directory and its descendants, including after a device restart. Existing stored bookmarks use this behavior without a format migration. The explicit persistent bookmark flags described below are macOS-only.
-
-- **Kotlin/Native macOS**: Uses a native macOS bookmark. FileKit automatically creates an explicit security-scoped bookmark when the running application adopts App Sandbox and a regular native bookmark otherwise.
-
-- **JVM macOS**: Uses the same versioned native bookmark format through CoreFoundation. A `PlatformFile` restored from a security-scoped bookmark retains its access capability, including for children inside a bookmarked directory.
-
-- **Kotlin/Native Linux, JVM Linux, and Windows**: Stores the file path. These platforms use a path-based bookmark representation.
-
-New macOS bookmark data is wrapped in a versioned FileKit format. Existing unwrapped Kotlin/Native bookmarks and JVM path bytes remain readable. Bookmark bytes are platform-specific and must not be treated as portable between operating systems or applications.
-
-## macOS App Sandbox Setup
-
-Persistent access to user-selected locations outside a macOS application's container requires appropriate signing entitlements. Configure the packaged application with:
-
-```xml
-<key>com.apple.security.app-sandbox</key>
-<true/>
-<key>com.apple.security.files.user-selected.read-write</key>
-<true/>
-<key>com.apple.security.files.bookmarks.app-scope</key>
-<true/>
-```
-
-FileKit reads the signed App Sandbox entitlement at runtime and selects security-scoped bookmark creation automatically. When sandboxing is enabled, failure to create scoped bookmark data is reported instead of silently falling back to a bookmark that cannot restore access across launches.
-
-## Security-Scoped Access on Apple Platforms
-
-On iOS, and for security-scoped bookmarks on sandboxed macOS, FileKit shares the restored bookmark's access with descendants created using `/`, `resolve()`, or `list()`. Derive files from the restored `PlatformFile` so that they retain this access:
-
-```kotlin
-val directory = PlatformFile.fromBookmarkData(savedDirectoryBookmark)
-val destination = directory / "backup.db"
-source.atomicMove(destination)
-```
-
-Reconstructing a `PlatformFile` from its path string or `toKotlinxIoPath()` does not preserve the original security-scoped URL. `PlatformFileSerializer` also stores only the path; persist bookmark data instead when access must survive an app restart. Paths outside the bookmarked location do not inherit its access.
-
-Keep security-scoped access balanced. FileKit does this around its own file operations and keeps access active until returned sources and sinks are closed. Use `withScopedAccess` when passing a restored file to another library:
-
-```kotlin
-restoredFile.withScopedAccess { file ->
-    thirdPartyLibrary.open(file.path)
-}
-```
-
-Call `releaseBookmark()` when the restored bookmark is no longer needed. It also releases access for descendants sharing that bookmark. It prevents new scoped operations, which then fail with `FileKitException`, while allowing already-open sources and sinks to close cleanly.
-
-On iOS, `releaseBookmark()` takes effect for restored bookmarks; it was a no-op in FileKit 0.15.0 and 0.16.0. Release a bookmark only after finishing all operations on it and its descendants. A direct call to `startAccessingSecurityScopedResource()` after release also throws instead of returning `false`.
-
-## Handling Invalid and Legacy Bookmarks
-
-A bookmark is not a guarantee. It can become invalid if the original file is deleted, moved, or if permissions change. A stale bookmark is different: it resolved successfully but should be recreated. Legacy bookmark data is also different: FileKit resolved an older representation and recommends replacing it.
-
-<Warning>
-**Always handle restoration failures gracefully.** A bookmark can become invalid if:
-- The user moves or deletes the file.
-- The user revokes file permissions for your app.
-- System security policies change.
-- The app is uninstalled and reinstalled (on some platforms).
-</Warning>
-
-Your code should anticipate that restoring from a bookmark might fail.
-
-```kotlin
-suspend fun loadFileSafely(): PlatformFile? {
-    return try {
-        val bytes = MyStorage.getBookmarkBytes() ?: return null
-        val file = PlatformFile.fromBookmarkData(bytes)
-
-        // The most important check: does the file still exist?
-        if (file.exists()) {
-            file
-        } else {
-            // The file is gone. Clean up the invalid bookmark.
-            MyStorage.deleteBookmark()
-            null
-        }
-    } catch (e: Exception) {
-        // The bookmark data is corrupted or invalid for other reasons.
-        // Clean it up to prevent future errors.
-        MyStorage.deleteBookmark()
-        null
-    }
-}
-```
-This defensive approach ensures your app doesn't crash from an invalid bookmark and can self-heal by clearing invalid data.
+- [Directory picker](/dialogs/directory-picker) to let users pick a folder worth bookmarking.
+- [App directories](/core/file-utils) for files your app owns, which need no bookmark.

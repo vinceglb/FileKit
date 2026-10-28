@@ -1,147 +1,87 @@
 ---
-title: 'File saver dialog'
+title: 'File saver'
 sidebarTitle: 'File saver'
-description: 'Open a file saver dialog in a Kotlin Multiplatform project'
+description: 'Let the user choose where to save a file, then write your data to it'
 ---
 
-<Check>Supported on Android, iOS, macOS, JVM, Kotlin/Native Linux and Kotlin/Native Windows targets. See [platform support](/platform-support).</Check>
+import { Platforms } from '/snippets/platforms.jsx'
+import DialogResult from '/snippets/dialog-result.mdx'
 
-## Quick start
+<Platforms scope="dialogs" supported="macos jvm windows" partial={{ android: 'Several allowedExtensions fall back to */*', ios: 'allowedExtensions is ignored', linux: 'Needs the XDG Desktop Portal' }} anchor="filekit-dialogs" />
 
-The file saver component provides a native interface for users to choose where to save a file on their device.
+Open the native save dialog. FileKit returns the location the user picked as a `PlatformFile`, and you write your data to it. The file saver is not available on the web, so call it from a non-web source set such as `nonWebMain`.
 
-The file saver dialog returns a `PlatformFile` object representing where the user wants to save the file. Note that the file is not created automatically - it's the developer's responsibility to write the actual data to the file location using methods like `write()`.
-
-Here's a basic example:
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-// Open file saver dialog
-val file = FileKit.openFileSaver(
-    suggestedName = "document",
-    defaultExtension = "pdf",
-)
 
-// Write your data to the file
-if (file != null) {
-    file.write(bytes)
-}
-```
-
-```kotlin filekit-dialogs-compose
+```kotlin Compose
 val scope = rememberCoroutineScope()
 val launcher = rememberFileSaverLauncher(
     dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure ->
-        // A valid file-saving operation could not be completed
-        showError(failure.message)
-    },
-    onResult = { file ->
-        if (file == null) {
-            // The user cancelled the saver
-        } else {
-            scope.launch {
-                file.write(bytes)
-            }
-        }
-    },
-)
+    onError = { failure -> println("Saver failed: ${failure.message}") },
+) { file ->
+    scope.launch { file?.writeString("Hello FileKit!") }
+}
 
-Button(onClick = {
-    launcher.launch(
-        suggestedName = "document",
-        defaultExtension = "pdf",
-    )
-}) {
-    Text("Save file")
+Button(onClick = { launcher.launch(suggestedName = "notes", defaultExtension = "txt") }) {
+    Text("Save")
 }
 ```
-</CodeGroup>
 
-`onError` receives a `FileKitDialogException` only when FileKit cannot complete a valid file-saving operation. User cancellation is not a failure: it invokes `onResult(null)`. Coroutine cancellation, invalid arguments or unsupported argument combinations, and unexpected defects continue to propagate normally.
-
-The compatibility overload without `onError` remains available and ignores normalized operational failures without logging. New integrations should use explicit error handling.
-
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
-
-## Parameters
-
-The file saver can be customized with several parameters:
-
-- `suggestedName`: The default name for the file without extension
-- `defaultExtension`: The default file extension without the dot (e.g., "pdf", "txt")
-- `allowedExtensions`: The allowed save extensions without dots (e.g., `setOf("txt", "md")`). This is a native dialog hint, not a validation guarantee.
-- `directory`: The starting directory for the save dialog
-- `dialogSettings`: Platform-specific settings for customizing the dialog behavior
-
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openFileSaver(
-    suggestedName = "my-document",
-    defaultExtension = "pdf",
-    allowedExtensions = setOf("pdf", "txt"),
-    directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault()
-)
+```kotlin Suspend API
+val file = FileKit.openFileSaver(suggestedName = "notes", defaultExtension = "txt")
+file?.writeString("Hello FileKit!")
 ```
 
-```kotlin filekit-dialogs-compose
-val launcher = rememberFileSaverLauncher(
-    dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the selected save location, or null when the user cancelled
-    },
-)
-
-launcher.launch(
-    suggestedName = "my-document",
-    defaultExtension = "pdf",
-    directory = PlatformFile("/custom/initial/path"),
-    allowedExtensions = setOf("pdf", "txt"),
-)
-```
 </CodeGroup>
 
-Use `defaultExtension` for the default file name and default extension. Use `allowedExtensions` when the native save dialog should offer specific save types. Filtering is applied where the platform supports it; apps that require a specific output format should still validate the returned file extension.
+<DialogResult />
 
-Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
+## Options
 
-## Writing data
+| Parameter | Values | Default | Where (Compose) | Notes |
+| --- | --- | --- | --- | --- |
+| `suggestedName` | `String` | Required | `launch()` | File name without the extension. |
+| `defaultExtension` | `String`, without the dot | `null` | `launch()` | Appended to `suggestedName`. |
+| `allowedExtensions` | `Set<String>`, without dots | `null` | `launch()` | Save types offered by the dialog. A hint, not a validation. |
+| `directory` | `PlatformFile` | `null` | `launch()` | Initial folder. Ignored on Android. |
+| `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | `rememberFileSaverLauncher` | Required by the Compose launcher. See [Dialog settings](/dialogs/dialog-settings). |
 
-The file saver returns a `PlatformFile` object representing the selected save location. You can write data to this file using the `write()` extension function:
+In a Compose Desktop `Window`, `WindowScope.rememberFileSaverLauncher` makes `dialogSettings` optional and parents the dialog to the window.
+
+## Offer several file types
+
+Pass `allowedExtensions` to let the user pick a format. `defaultExtension` stays the preselected one:
 
 ```kotlin
-val file = FileKit.openFileSaver(suggestedName = "document", defaultExtension = "pdf")
-
-if (file != null) {
-    // Write bytes to the file
-    file.write(bytes)
-}
+val file = FileKit.openFileSaver(
+    suggestedName = "report",
+    defaultExtension = "pdf",
+    allowedExtensions = setOf("pdf", "txt"),
+)
 ```
 
-For more information about writing files, see the [write file guide](/core/write-file).
+Not every platform enforces the filter, so check `file.extension` if your app needs a specific format.
 
 ## Download file on the web
 
-On web targets (JS and WASM), instead of using a file saver dialog, you can directly download a file using `FileKit.download()`:
+Browsers don't let you choose a save location: use `FileKit.download` to send bytes to the user's downloads folder instead. See [Download files](/core/web#download-files).
 
-```kotlin
-// Download bytes
-FileKit.download(
-    bytes = "Hello, World!".encodeToByteArray(),
-    fileName = "hello.txt"
-)
+## Platform notes
 
-// Download from a PlatformFile
-val file: PlatformFile = ...
-FileKit.download(file, fileName = "document.pdf")
-```
+| Platform | Behavior |
+| --- | --- |
+| Android | Opens the system "Create document" screen, which creates an empty file at the chosen location. With several `allowedExtensions`, the MIME type falls back to `*/*`. |
+| iOS | Exports a temporary placeholder file through the Files picker, then removes it so you can write to the returned location. `allowedExtensions` is ignored. |
+| Desktop | The save dialog shows `dialogSettings.title` on Linux native, Windows native, and JVM on macOS. The macOS native saver and the JVM savers on Windows and Linux ignore it. |
+| Linux native | Needs a running XDG Desktop Portal. See [Dialogs setup](/dialogs/setup#linux-setup). |
+| Web | Not available. Use `FileKit.download`. |
 
-This will trigger the browser's native download behavior, saving the file to the user's default downloads directory.
+<Accordion title="Upgrading from older versions">
+  The `extension` parameter of `openFileSaver` and `launch()` is deprecated. Rename it to `defaultExtension`; the behavior is the same.
+</Accordion>
 
-<Info>
-On web targets, the file saver dialog is not supported due to browser security restrictions. Instead, use `FileKit.download()` to download files directly.
-</Info>
+## Related
 
-For more information about writing files on different platforms, see the [write file guide](/core/write-file).
+[Writing files](/core/write-file) for streaming large content, and [Dialog settings](/dialogs/dialog-settings) for titles and parent windows.

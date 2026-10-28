@@ -1,7 +1,12 @@
 ---
-title: 'Zip Archives'
+title: 'Zip archives'
+sidebarTitle: 'Zip archives'
 description: 'Create and extract zip archives with FileKit and kmp-zip'
 ---
+
+import { Platforms } from '/snippets/platforms.jsx'
+
+<Platforms scope="core" supported="android ios macos jvm linux windows" partial={{ web: 'In memory only, see Zip on the web' }} anchor="filekit-core" />
 
 FileKit doesn't create or extract archives itself. [kmp-zip](https://github.com/henrik242/kmp-zip) is a Kotlin Multiplatform zip library that works well with FileKit, because both use [kotlinx-io](https://github.com/Kotlin/kotlinx-io) streams.
 
@@ -11,7 +16,7 @@ This recipe works with any `PlatformFile`, including files and folders returned 
 
 Add kmp-zip and its kotlinx-io adapters alongside FileKit Core:
 
-```kotlin
+```kotlin build.gradle.kts
 commonMain.dependencies {
     // FileKit Core
     implementation("io.github.vinceglb:filekit-core:<version>")
@@ -22,13 +27,13 @@ commonMain.dependencies {
 }
 ```
 
-## Creating an archive
+kmp-zip 1.0.0 publishes no watchOS targets. On the web, `source()` and `sink()` don't exist, so build the archive in memory instead: see [Zip on the web](#zip-on-the-web).
 
-<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
+## Create an archive
 
 The `zip` function below writes files and folders into an archive. Each folder keeps its name as the top-level entry, so extracting the archive recreates the folder:
 
-```kotlin
+```kotlin nonWebMain
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.isDirectory
 import io.github.vinceglb.filekit.list
@@ -79,13 +84,11 @@ A few things to keep in mind:
 - kmp-zip doesn't support ZIP64. Each file and the archive must stay under 4 GB, with at most 65,535 entries.
 </Note>
 
-## Extracting an archive
-
-<Check>Supported on Android, iOS, macOS, JVM and Kotlin/Native Linux targets</Check>
+## Extract an archive
 
 The `unzip` function extracts every entry into a destination folder:
 
-```kotlin
+```kotlin nonWebMain
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.createDirectories
 import io.github.vinceglb.filekit.div
@@ -136,11 +139,11 @@ Always validate entry names before extracting an archive you didn't create. A ma
 Untrusted archives can also be decompression bombs: a few kilobytes that extract to gigabytes. kmp-zip doesn't limit the extracted size, so count the bytes you write and stop above a maximum. See the [kmp-zip threat model](https://github.com/henrik242/kmp-zip#threat-model) for an example.
 </Warning>
 
-## Example: Zipping files picked by the user
+## Zip files picked by the user
 
 Combined with [FileKit Dialogs](/dialogs/setup), you can let the user pick files and choose where to save the archive:
 
-```kotlin
+```kotlin nonWebMain
 val files = FileKit.openFilePicker(mode = FileKitMode.Multiple()) ?: return
 val archive = FileKit.openFileSaver(suggestedName = "archive", defaultExtension = "zip") ?: return
 
@@ -149,13 +152,13 @@ zip(files, archive)
 
 To zip a whole folder, use `FileKit.openDirectoryPicker()` and pass the folder to `zip`.
 
-## Web
+## Zip on the web
 
-<Check>Supported on JS and WASM targets</Check>
+<Platforms scope="core" supported="web" anchor="filekit-core" />
 
-`source()` and `sink()` are not available on web. You can still build the archive in memory and download it with `FileKit.download`:
+Build the archive in memory, then save it with [`FileKit.download`](/core/web#download-files):
 
-```kotlin
+```kotlin webMain
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.download
@@ -182,6 +185,6 @@ FileKit.download(zipToBytes(files), "archive.zip")
 
 The whole archive is kept in memory, so this approach is best suited for small files. See the [kmp-zip documentation](https://github.com/henrik242/kmp-zip#js-and-wasmjs-notes) for more details about web support.
 
-## Going further
+## Related
 
-kmp-zip also supports password-protected archives (AES and legacy ZipCrypto), GZIP, and reading a single entry without extracting the whole archive. Check out the [kmp-zip documentation](https://github.com/henrik242/kmp-zip) for more details.
+kmp-zip also supports password-protected archives (AES and legacy ZipCrypto), GZIP, and reading a single entry without extracting the whole archive. See the [kmp-zip documentation](https://github.com/henrik242/kmp-zip).

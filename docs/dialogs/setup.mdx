@@ -1,77 +1,117 @@
 ---
-title: 'Setup FileKit Dialogs'
+title: 'Set up FileKit Dialogs'
 sidebarTitle: 'Setup'
-description: 'Install and setup FileKit Dialogs in your Kotlin Multiplatform project'
+description: 'Add FileKit Dialogs, register your Android activity, and prepare Linux and desktop builds'
 ---
 
 import VersionDialogs from '/snippets/version-dialogs.mdx'
-import SetupJVMCore from '/snippets/setup-jvm-core.mdx'
+import { Platforms } from '/snippets/platforms.jsx'
+
+<Platforms scope="dialogs" supported="android ios macos jvm windows web" partial={{ linux: 'Needs the XDG Desktop Portal and libdbus-1' }} anchor="filekit-dialogs" />
+
+FileKit Dialogs opens native file, folder, gallery, and save dialogs and returns the result as a `PlatformFile`. Most targets need no setup beyond the dependency.
 
 ## Installation
 
 <VersionDialogs/>
 
-FileKit Dialogs integrates FileKit Core and automatically provides `PlatformFile` support. See the [platform support matrix](/platform-support) for the dialogs available on each target.
+Both artifacts include `filekit-core`. Check the [platform support matrix](/platform-support#filekit-dialogs) for the dialogs available on each target.
 
-## Platform-specific setup
+## Android setup
 
-It's required to setup FileKit Dialogs on Android and JVM targets. All other platforms are supported out of the box.
-
-### Android setup
-
-Using <Tooltip tip="io.github.vinceglb:filekit-dialogs">filekit-dialogs</Tooltip> needs an initialization step in your Android application.
-
-<Note>This initialization step is not needed when using filekit-dialogs-compose.</Note>
-
-FileKit needs to have access to the `ActivityResultRegistry` to handle the result of the file picker dialog. To do this, you need to add the following code to your `MainActivity`:
+Only Android needs an init step for dialogs, and only when you use `filekit-dialogs` without Compose. Register your activity so FileKit can reach its `ActivityResultRegistry`:
 
 ```kotlin MainActivity.kt
 class MainActivity : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-    // Initialize FileKit
-    FileKit.init(this)
-  }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        FileKit.init(this)
+    }
 }
 ```
 
-### JVM setup
+With `filekit-dialogs-compose`, the launchers find the registry themselves. On JVM, Linux native, and Windows native, `FileKit.init(appId)` is not needed for dialogs: it only configures app directories such as `filesDir` and `cacheDir`. See [Core setup](/core/setup).
 
-<SetupJVMCore/>
+## Linux setup
 
-### Linux setup
+<Tabs>
+  <Tab title="JVM on Linux">
+    Packaged Compose Desktop apps need the `jdk.security.auth` module, otherwise dialogs can fail with a `NoClassDefFoundError` ([issue #107](https://github.com/vinceglb/FileKit/issues/107)):
 
-If using JVM target and Linux distribution, you need to add the following module in your `build.gradle.kts` file:
-
-```kotlin build.gradle.kts
-compose.desktop {
-    application {
-        nativeDistributions {
-            linux {
-                modules("jdk.security.auth")
+    ```kotlin build.gradle.kts
+    compose.desktop {
+        application {
+            nativeDistributions {
+                linux {
+                    modules("jdk.security.auth")
+                }
             }
         }
     }
-}
-```
+    ```
 
-This prevents a `NoClassDefFoundError` in some cases. Read more about this issue in the [GitHub issue #107](https://github.com/vinceglb/FileKit/issues/107).
+    Dialogs use the XDG Desktop Portal when it is running and fall back to AWT/Swing dialogs otherwise.
+  </Tab>
+  <Tab title="Linux native">
+    On `linuxX64` and `linuxArm64`, dialogs go through the XDG Desktop Portal (`org.freedesktop.portal.Desktop`), which runs by default on GNOME, KDE, and most modern desktops. There is no fallback dialog and no parent window.
 
-If using the Kotlin/Native Linux target (`linuxX64` or `linuxArm64`), dialogs are provided out of the box through the XDG Desktop Portal (`org.freedesktop.portal.Desktop`). The portal file chooser is shown on systems running `xdg-desktop-portal` (default on GNOME, KDE, and other modern desktops); the application binary links against the `libdbus-1` runtime library.
+    Your binary links against `libdbus-1`:
 
-Building an application that consumes FileKit Dialogs requires the target architecture's D-Bus development libraries (`libdbus-1-dev` on Debian/Ubuntu), including the unversioned `libdbus-1.so` linker file. If the library directory is outside Kotlin/Native's linker search paths, configure the corresponding target, for example:
+    - **To build**, install the D-Bus development package for the target architecture (`libdbus-1-dev` on Debian/Ubuntu). It provides the unversioned `libdbus-1.so` linker file.
+    - **To run**, the runtime library is enough.
 
-```kotlin
-kotlin {
-    linuxX64 {
-        binaries.all {
-            linkerOpts("-L/usr/lib/x86_64-linux-gnu")
+    If the library directory is outside Kotlin/Native's linker search paths, add it to your target:
+
+    ```kotlin build.gradle.kts
+    kotlin {
+        linuxX64 {
+            binaries.all {
+                linkerOpts("-L/usr/lib/x86_64-linux-gnu")
+            }
         }
+    }
+    ```
+
+    On a Linux build machine, `pkg-config --variable=libdir dbus-1` prints the directory to use. Cross-compiling requires the libraries of the target architecture.
+  </Tab>
+</Tabs>
+
+## Compose launchers
+
+`remember…Launcher` functions capture platform context when they are remembered, not when you call `launch()`. A few platforms care about where that happens.
+
+| Platform | What to do |
+| --- | --- |
+| iOS | Remember launchers in a stable scope, such as your screen's root. A launcher remembered inside a `ModalBottomSheet`, dialog, popup, or dropdown keeps that transient view controller as its presenter ([issue #547](https://github.com/vinceglb/FileKit/issues/547)). |
+| JVM | Called with a `WindowScope` receiver (directly inside `Window { }` content), the launchers parent the dialog to that window. Elsewhere, pass `FileKitDialogSettings(parent = FileKitDialogParent.awt(window))`. See [Dialog settings](/dialogs/dialog-settings). |
+| JVM on macOS | To make dialogs follow the system light or dark theme, set `apple.awt.application.appearance` before creating any window (snippet below). |
+
+```kotlin main.kt
+fun main() {
+    System.setProperty("apple.awt.application.appearance", "system")
+
+    application {
+        Window(onCloseRequest = ::exitApplication) { App() }
     }
 }
 ```
 
-Use your target's library directory (reported by `pkg-config --variable=libdir dbus-1` on a native Linux build machine). Cross-compilation requires libraries for the target architecture. Running the finished application requires the runtime library, not the development package.
+## ProGuard
 
-Building `filekit-dialogs` from source for Linux native targets requires the Linux D-Bus development headers (`libdbus-1-dev` on Debian/Ubuntu). Linux builds discover them through `pkg-config`. For cross-compilation, pass `-Pfilekit.dbusHeaders=/path/to/include`, where `include/dbus/` contains both the public headers and the Linux `dbus-arch-deps.h`. Release and snapshot workflows supply these headers to the macOS build so both Linux artifacts and their multiplatform metadata are published together.
+If you shrink or obfuscate your JVM app, keep the classes FileKit loads through JNA and D-Bus:
+
+```proguard proguard-rules.pro
+# Required on JVM for JNA-based integrations.
+-keep class com.sun.jna.** { *; }
+-keep class * implements com.sun.jna.** { *; }
+
+# Required when using FileKit Dialogs on Linux (XDG Desktop Portal / DBus).
+-keep class org.freedesktop.dbus.** { *; }
+-keep class io.github.vinceglb.filekit.dialogs.platform.xdg.** { *; }
+-keepattributes Signature,InnerClasses,RuntimeVisibleAnnotations
+```
+
+## Related
+
+- [File picker](/dialogs/file-picker) to open your first dialog.
+- [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

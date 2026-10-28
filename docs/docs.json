@@ -32,24 +32,26 @@
           "core/platform-file",
           "core/read-file",
           "core/write-file",
+          "core/file-operations",
           "core/file-utils",
           "core/image-and-video-utils",
-          "core/bookmark-data"
+          "core/bookmark-data",
+          "core/web"
         ]
       },
       {
         "group": "FileKit Dialogs",
         "pages": [
           "dialogs/setup",
+          "dialogs/error-handling",
           "dialogs/file-picker",
           "dialogs/gallery-picker",
-          "dialogs/directory-picker",
           "dialogs/camera-picker",
+          "dialogs/directory-picker",
           "dialogs/file-saver",
           "dialogs/share-file",
           "dialogs/open-file",
-          "dialogs/dialog-settings",
-          "dialogs/error-handling"
+          "dialogs/dialog-settings"
         ]
       },
       {

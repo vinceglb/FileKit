@@ -1,45 +1,40 @@
 ---
-title: 'File picker dialog'
+title: 'File picker'
 sidebarTitle: 'File picker'
-description: 'Open a file picker dialog in a Kotlin Multiplatform project'
+description: 'Let users pick one or several files with the native file dialog'
 ---
 
-import { FileKitDemo } from "/snippets/demo-embed.jsx"
+import { Platforms } from '/snippets/platforms.jsx'
+import DialogResult from '/snippets/dialog-result.mdx'
+import { FileKitDemo } from '/snippets/demo-embed.jsx'
 
-<Check>Supported on Android, iOS, macOS, JVM, JS and WASM targets</Check>
+<Platforms scope="dialogs" supported="android ios macos jvm windows" partial={{ linux: 'Needs the XDG Desktop Portal', web: 'No initial directory or dialog settings' }} anchor="filekit-dialogs" />
 
-## Quick start
+`openFilePicker` shows the platform's native file dialog and returns the selected file as a `PlatformFile`, or a list of files in multiple mode.
 
-The file picker component provides a native interface for users to browse and select files from their device. It supports various file types and offers customization options to fit different use cases.
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openFilePicker()
-```
 
-```kotlin filekit-dialogs-compose
+```kotlin Compose
 val launcher = rememberFilePickerLauncher(
     onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the file, or null when the user cancelled
-    },
-)
+) { file ->
+    // file is a PlatformFile, or null when the user cancelled
+}
 
 Button(onClick = { launcher.launch() }) {
     Text("Pick a file")
 }
 ```
+
+```kotlin Suspend API
+val file: PlatformFile? = FileKit.openFilePicker()
+```
+
 </CodeGroup>
 
-The shorter Compose overload without `onError` remains available for source and binary compatibility. It ignores operational picker failures without logging. New integrations should use the explicit form shown above.
-
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
-
-<Warning>
-On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not
-inside transient surfaces such as `ModalBottomSheet`, dialogs, popups, or
-dropdowns. [Learn more in GitHub issue #547](https://github.com/vinceglb/FileKit/issues/547).
-</Warning>
+<DialogResult />
 
 ## Try it
 
@@ -47,179 +42,93 @@ This is the FileKit sample running in your browser. Pick files, switch the selec
 
 <FileKitDemo demo="file-picker" title="File picker" />
 
-## Selection mode
+## Options
 
-Select one or multiple files using the `mode` parameter. FileKit provides four different selection modes:
+| Parameter | Values | Default | Notes |
+| --- | --- | --- | --- |
+| `type` | `FileKitType.File(extensions)`, `Image`, `Video`, `ImageAndVideo` | `File()` (any file) | Media types open the [gallery picker](/dialogs/gallery-picker) on Android and iOS. |
+| `mode` | `FileKitMode.Single`, `Multiple(maxItems)`, `SingleWithState`, `MultipleWithState(maxItems)` | `Single` | The result type follows the mode. `maxItems` is `1` to `50`, or `null` for no limit. |
+| `directory` | `PlatformFile?` | `null` | Folder the dialog opens in. Ignored on Android and the web. |
+| `dialogSettings` | `FileKitDialogSettings` | `createDefault()` | Title, parent window, and other [per-platform settings](/dialogs/dialog-settings). |
 
-### Basic modes
-- `Single` - Allows the user to select a single file (default).
-- `Multiple()` - Allows the user to select multiple files.
+## Filter by extension
+
+Pass the extensions without the dot:
 
 <CodeGroup>
-```kotlin filekit-dialogs
-// Single file selection
-val file = FileKit.openFilePicker(mode = FileKitMode.Single)
 
-// Multiple file selection
-val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
-
-// Multiple with max limit
-val files = FileKit.openFilePicker(mode = FileKitMode.Multiple(maxItems = 5))
+```kotlin Compose
+val launcher = rememberFilePickerLauncher(
+    type = FileKitType.File("pdf", "docx"),
+    onError = { failure -> showError(failure.message) },
+) { file ->
+    // a pdf or docx file, or null
+}
 ```
 
-```kotlin filekit-dialogs-compose
-// Single file selection
-val singleLauncher = rememberFilePickerLauncher(
-    mode = FileKitMode.Single,
-    onError = { failure -> println("Picker failed: ${failure.message}") },
-    onResult = { file ->
-        // Handle single file: PlatformFile? (null means user cancellation)
-    },
-)
-
-// Multiple file selection
-val multipleLauncher = rememberFilePickerLauncher(
-    mode = FileKitMode.Multiple(maxItems = 10),
-    onError = { failure -> println("Picker failed: ${failure.message}") },
-    onResult = { files ->
-        // Handle multiple files: List<PlatformFile>? (null means user cancellation)
-    },
-)
+```kotlin Suspend API
+val file = FileKit.openFilePicker(type = FileKitType.File("pdf", "docx"))
 ```
+
 </CodeGroup>
 
-### State-tracking modes
+`FileKitType.File` also accepts a `List<String>` or a `Set<String>`.
 
-For advanced use cases where you need to track the selection progress:
+## Pick multiple files
 
-- `SingleWithState` - Single file selection with state tracking.
-- `MultipleWithState()` - Multiple file selection with state tracking.
+`FileKitMode.Multiple()` returns a `List<PlatformFile>`, or `null` when the user cancels:
 
 <CodeGroup>
-```kotlin filekit-dialogs
-// Single file with state tracking
-val stateFlow = FileKit.openFilePicker(mode = FileKitMode.MultipleWithState())
-stateFlow.collect { state ->
+
+```kotlin Compose
+val launcher = rememberFilePickerLauncher(
+    mode = FileKitMode.Multiple(maxItems = 10),
+    onError = { failure -> showError(failure.message) },
+) { files ->
+    // List<PlatformFile>? with at most 10 files
+}
+```
+
+```kotlin Suspend API
+val files = FileKit.openFilePicker(mode = FileKitMode.Multiple(maxItems = 10))
+```
+
+</CodeGroup>
+
+Gallery pickers on Android and iOS enforce `maxItems` in their UI. Other dialogs have no native limit, so FileKit keeps the first `maxItems` files in the order the platform returns them.
+
+## Track progress
+
+`SingleWithState` and `MultipleWithState` report each step as a `FileKitPickerState`, which lets you show a loading indicator while large files are prepared. In Compose, each state reaches `onResult`. The suspend API returns a `Flow`:
+
+```kotlin
+FileKit.openFilePicker(mode = FileKitMode.MultipleWithState()).collect { state ->
     when (state) {
-        is FileKitPickerState.Started -> println("Selection started with ${state.total} files")
-        is FileKitPickerState.Progress -> println("Processing: ${state.processed.size} / ${state.total}")
-        is FileKitPickerState.Completed -> println("Completed: ${state.result.size} files selected")
-        is FileKitPickerState.Failed -> println("Selection failed: ${state.cause.message}")
-        is FileKitPickerState.Cancelled -> println("Selection cancelled")
+        is FileKitPickerState.Started -> showLoading(total = state.total)
+        is FileKitPickerState.Progress -> updateLoading(state.processed.size, state.total)
+        is FileKitPickerState.Completed -> showFiles(state.result)
+        is FileKitPickerState.Failed -> showError(state.cause.message)
+        FileKitPickerState.Cancelled -> hideLoading()
     }
 }
 ```
 
-```kotlin filekit-dialogs-compose
-// Single file with state tracking
-val stateLauncher = rememberFilePickerLauncher(
-    mode = FileKitMode.MultipleWithState(),
-    onError = { failure ->
-        // A thrown operational failure not represented by the state stream.
-        println("Picker failed: ${failure.message}")
-    },
-    onResult = { state ->
-        when (state) {
-            is FileKitPickerState.Started -> {
-                // Show loading indicator
-                println("Selection started with ${state.total} files")
-            }
-            is FileKitPickerState.Progress -> {
-                // Update progress for: state.processed
-                println("Processing: ${state.processed.size} / ${state.total}")
-            }
-            is FileKitPickerState.Completed -> {
-                // Handle selected file: state.result
-                println("Completed: ${state.result.size} files selected")
-            }
-            is FileKitPickerState.Failed -> {
-                // A failure represented as a terminal state value.
-                println("Selection failed: ${state.cause.message}")
-            }
-            is FileKitPickerState.Cancelled -> {
-                // The user dismissed the picker.
-                println("Selection cancelled")
-            }
-        }
-    },
-)
-```
-</CodeGroup>
+Progress matters most for iOS gallery picks, where FileKit copies each item before returning it. Other dialogs deliver every state at once when they close. See [Results and errors](/dialogs/error-handling#state-tracking-picker-modes) for the full state contract.
 
-<Info>
-User dismissal is a normal result (`null` or `FileKitPickerState.Cancelled`). A represented state-processing failure is
-`FileKitPickerState.Failed` through `onResult`. A thrown operational failure reaches `onError`. Coroutine cancellation,
-invalid invocations, unexpected defects, and exceptions thrown by your callbacks propagate and are not redelivered.
-</Info>
+## Platform notes
 
-<Info>
-The `Multiple` and `MultipleWithState` modes support a `maxItems` parameter (1-50 files). If not specified, there's no limit.
+| Platform | Behavior |
+| --- | --- |
+| Android | Storage Access Framework document picker. Extensions are converted to MIME types: unknown extensions are dropped, and if none is known every file is allowed. |
+| iOS | `UIDocumentPickerViewController`. Media types open `PHPickerViewController`. |
+| macOS | `NSOpenPanel`. |
+| JVM | `NSOpenPanel` on macOS, `IFileDialog` on Windows, and the XDG Desktop Portal on Linux, with an AWT/Swing fallback when no portal runs. |
+| Linux native | XDG Desktop Portal only, with no fallback dialog. Dialog settings support the title only. See [Linux setup](/dialogs/setup#linux-setup). |
+| Windows native | `IFileDialog`. Dialog settings support the title only. |
+| Web | `<input type="file">`. The type filter becomes the `accept` attribute. `directory` and dialog settings are ignored. |
 
-FileKit treats `maxItems` as an output contract across platforms:
-- **UI-enforced limit**: on pickers that natively support max selection (for example gallery pickers on Android and iOS).
-- **Output-enforced limit**: when native picker APIs do not support max selection (for example generic file/document pickers), FileKit truncates the result to the first `maxItems` files in platform-returned order.
-</Info>
+## Related
 
-## Filter by type
-
-Filter the files by their type using the `type` parameter. You can pick different types of files with `FileKitType`:
-- `Image`: Pick an image file.
-- `Video`: Pick a video file.
-- `ImageAndVideo`: Pick an image or a video file.
-- `File()`: Pick any file. It is the default type. It's possible to specify a list of extensions.
-
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openFilePicker(type = FileKitType.File(listOf("pdf", "docx")))
-```
-
-```kotlin filekit-dialogs-compose
-val launcher = rememberFilePickerLauncher(
-    type = FileKitType.File(extensions = listOf("pdf", "docx")),
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the pdf or docx file, or null when the user cancelled
-    },
-)
-```
-</CodeGroup>
-
-<Info>On Android and iOS, using Image, Video or ImageAndVideo FileKitType will open a gallery picker. [Read more here.](/dialogs/gallery-picker)</Info>
-
-## Customizing the dialog
-
-You can customize the dialog by setting the initial directory and platform-specific `dialogSettings`, such as a title on supported platforms.
-
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.openFilePicker(
-    directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault(),
-)
-```
-
-```kotlin filekit-dialogs-compose
-val launcher = rememberFilePickerLauncher(
-    directory = PlatformFile("/custom/initial/path"),
-    dialogSettings = FileKitDialogSettings.createDefault(),
-    onError = { failure -> showError(failure.message) },
-    onResult = { file ->
-        // Handle the file, or null when the user cancelled
-    },
-)
-```
-</CodeGroup>
-
-Read more about [dialog settings](/dialogs/dialog-settings) to customize the dialog for each platform.
-
-<Note>
-  **macOS System Appearance**
-
-  On macOS, to ensure the file picker dialog uses the system's theme (light or dark), you may need to set a system property at the start of your application:
-
-  ```kotlin
-  System.setProperty("apple.awt.application.appearance", "system")
-  ```
-
-  This is typically done in your `main` function, before the application window is created.
-</Note>
+- [Gallery picker](/dialogs/gallery-picker) for photos and videos.
+- [Read a file](/core/read-file) once the user has picked it.
+- [Results and errors](/dialogs/error-handling) for cancellation and failure handling.

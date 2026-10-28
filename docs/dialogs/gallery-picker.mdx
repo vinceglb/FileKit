@@ -1,61 +1,73 @@
 ---
-title: 'Gallery picker dialog'
+title: 'Gallery picker'
 sidebarTitle: 'Gallery picker'
-description: 'Open the native photos and videos picker on Android and iOS'
+description: 'Let users pick photos and videos with the native gallery on Android and iOS'
 ---
 
-<Check>Native gallery picker on Android and iOS. Other targets open a file picker filtered by image or video type. See [platform support](/platform-support).</Check>
+import { Platforms } from '/snippets/platforms.jsx'
+import DialogResult from '/snippets/dialog-result.mdx'
 
-Android and iOS offer a native interface for users to browse and select photos and videos from their device. FileKit provides a unified API to open the gallery picker dialog on both platforms.
+<Platforms scope="dialogs" supported="android ios" partial={{ macos: 'File dialog filtered by extension', jvm: 'File dialog filtered by extension', linux: 'File dialog filtered by extension', windows: 'File dialog filtered by extension', web: 'File input filtered by image/* and video/*' }} anchor="filekit-dialogs" />
 
-- On Android, FileKit provides the [Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker) API. 
-- On iOS, FileKit provides the [PHPickerViewController](https://developer.apple.com/documentation/photokit/selecting-photos-and-videos-in-ios) API.
+Pass `FileKitType.Image`, `Video`, or `ImageAndVideo` to the file picker. On Android and iOS it opens the system photo picker; on other targets it opens a file dialog filtered to media files.
 
-<div className="flex justify-center gap-6">
-  <a href="https://developer.android.com/training/data-storage/shared/photopicker" target="_blank" className="border-transparent">
-    <img height="200" width="200" noZoom src="https://developer.android.com/static/images/training/data-storage/kotlin-picker.gif" />
-  </a>
-  <a href="https://developer.apple.com/documentation/photokit/selecting-photos-and-videos-in-ios" target="_blank" className="border-transparent">
-    <img height="200" width="200" noZoom src="https://miro.medium.com/v2/resize:fit:1400/format:webp/1*TzEgvuo17bT95aOJj1IuRg.png" />
-  </a>
-</div>
-
-### Open the gallery picker
-
-To open the gallery picker dialog on Android and iOS, simply pass `Image`, `Video`, or `ImageAndVideo` to the `type` parameter:
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-val image = FileKit.openFilePicker(type = FileKitType.Image)
-```
 
-```kotlin filekit-dialogs-compose
+```kotlin Compose
 val launcher = rememberFilePickerLauncher(
     type = FileKitType.Image,
-    onError = { failure -> println("Picker failed: ${failure.message}") },
-    onResult = { image ->
-        // Handle the image, or user cancellation when image is null.
-    },
-)
+    onError = { failure -> showError(failure.message) },
+) { image ->
+    // image is a PlatformFile, or null when the user cancelled
+}
+
+Button(onClick = { launcher.launch() }) {
+    Text("Pick a photo")
+}
 ```
+
+```kotlin Suspend API
+val image: PlatformFile? = FileKit.openFilePicker(type = FileKitType.Image)
+```
+
 </CodeGroup>
 
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
+<DialogResult />
 
-<Warning>
-On iOS, remember FileKit Compose launchers from a stable/root Compose scope, not
-inside transient surfaces such as `ModalBottomSheet`, dialogs, popups, or
-dropdowns. [Learn more in GitHub issue #547](https://github.com/vinceglb/FileKit/issues/547).
-</Warning>
+Every [file picker option](/dialogs/file-picker#options) applies, including the state-tracking modes.
 
-### Maximum number of items
+## What users see
 
-On both Android and iOS, you can set a limit on the number of items a user can select by passing the `maxItems` parameter to `FileKitMode.Multiple()`:
+| Platform | Dialog |
+| --- | --- |
+| Android | The system [Photo Picker](https://developer.android.com/training/data-storage/shared/photopicker). If the device has none, FileKit opens the document picker filtered by `image/*` or `video/*`. |
+| iOS | [`PHPickerViewController`](https://developer.apple.com/documentation/photokit/selecting-photos-and-videos-in-ios). FileKit copies each selected item to a temporary directory before returning it. |
+| macOS, JVM, Linux native, Windows native | The regular file dialog, filtered to `png`, `jpg`, `jpeg`, `gif`, `bmp` for images and `mp4`, `mov`, `avi`, `mkv`, `webm` for videos. |
+| Web | `<input type="file">` with `accept` set to `image/*`, `video/*`, or both. |
+
+<img height="200" width="200" noZoom src="https://developer.android.com/static/images/training/data-storage/kotlin-picker.gif" alt="The Android Photo Picker" />
+
+## Limit the number of items
+
+Use `FileKitMode.Multiple(maxItems)` with a value from `1` to `50`. The same `mode` works on `rememberFilePickerLauncher`:
 
 ```kotlin
-val mode = FileKitMode.Multiple(maxItems = 5)
+val media: List<PlatformFile>? = FileKit.openFilePicker(
+    type = FileKitType.ImageAndVideo,
+    mode = FileKitMode.Multiple(maxItems = 5),
+)
 ```
 
-This limit is natively enforced by the gallery picker UI on both platforms.
+The Android and iOS pickers enforce the limit in their UI. File dialogs on other targets can't, so FileKit keeps the first `maxItems` files.
 
-For generic file/document pickers, platform APIs generally only support single/multiple selection (without a native max count). In those cases, FileKit still enforces `maxItems` by truncating returned results.
+<Tip>
+iOS can return photos as HEIC, which some image decoders and servers can't read. In `iosMain`, pass `FileKitDialogSettings(assetRepresentationMode = FileKitAssetRepresentationMode.Compatible)` as `dialogSettings` so iOS transcodes them to a more compatible format.
+</Tip>
+
+## Related
+
+- [Camera picker](/dialogs/camera-picker) to take a new photo.
+- [Coil integration](/integrations/coil) to display the picked image.
+- [Image utilities](/core/image-and-video-utils) to compress or resize it.

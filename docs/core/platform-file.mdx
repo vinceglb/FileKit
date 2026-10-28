@@ -1,292 +1,127 @@
 ---
 title: 'PlatformFile'
-description: 'Cross-platform file representation for Kotlin Multiplatform'
+description: 'Create, inspect, and serialize files and directories with one type on every platform'
 ---
 
-<Check>Supported on Android, iOS, macOS, watchOS, JVM, Kotlin/Native Linux, Kotlin/Native Windows, JS and WASM targets. See [platform support](/platform-support).</Check>
+import { Platforms } from '/snippets/platforms.jsx'
 
-## Introduction
+<Platforms scope="core" supported="android ios macos jvm linux windows watchos" partial={{ web: 'Read-only browser handles, no paths' }} anchor="filekit-core" />
 
-`PlatformFile` is the core class in FileKit that provides a unified representation of files across all platforms. It abstracts away platform-specific file implementations and provides a consistent API for working with files in your Kotlin Multiplatform project.
+`PlatformFile` is the file or directory type that every FileKit API takes and returns. It wraps the native representation of each platform (`java.io.File`, Android `Uri`, `NSURL`, a browser `File`) behind one set of properties and functions.
 
-## Creating a PlatformFile
+## Create a PlatformFile
 
-You can create a `PlatformFile` instance in several ways:
+On every platform except the web, create a file from a path, or from a parent directory and a child path:
 
-```kotlin
-// From a path string
-val file = PlatformFile("/path/to/file.txt")
+```kotlin nonWebMain
+val file = PlatformFile("/path/to/document.pdf")
+val fromPath = PlatformFile(Path("/path/to/document.pdf")) // kotlinx.io.files.Path
 
-// From a kotlinx.io.files.Path
-val path = Path("/path/to/file.txt")
-val file = PlatformFile(path)
-
-// From a parent file and child path
-val parentDir = PlatformFile("/path/to")
-val file = PlatformFile(parentDir, "file.txt")
-// or using the convenient / operator
-val file = parentDir / "file.txt"
+val notes = PlatformFile(FileKit.filesDir, "notes.txt")
+val today = FileKit.filesDir / "notes" / "today.txt"
+val same = FileKit.filesDir.resolve("notes/today.txt")
 ```
 
-## Platform-specific constructors
-
-Each platform also provides specific constructors:
+The file doesn't have to exist yet. Each platform also accepts its native type:
 
 <CodeGroup>
-```kotlin Android
-// From a Java File
-val javaFile = File("/path/to/file.txt")
-val file = PlatformFile(javaFile)
 
-// From an Android Uri
-val uri = Uri.parse("content://...")
-val file = PlatformFile(uri)
+```kotlin androidMain
+val fromFile = PlatformFile(File("/path/to/document.pdf"))
+val fromUri = PlatformFile(uri) // content:// or file:// Uri
 ```
 
-```kotlin JVM
-// From a Java File
-val javaFile = File("/path/to/file.txt")
-val file = PlatformFile(javaFile)
+```kotlin jvmMain
+val file = PlatformFile(File("/path/to/document.pdf"))
+val javaFile: File = file.file
 ```
 
-```kotlin iOS/macOS
-// From an NSURL
-val nsUrl = NSURL(string = "/path/to/file.txt")
-val file = PlatformFile(nsUrl)
+```kotlin appleMain
+val file = PlatformFile(NSURL.fileURLWithPath("/path/to/document.pdf"))
+val url: NSURL = file.nsUrl
 ```
 
-```kotlin JS/WASM
-// Web files come from FileKit pickers...
-val file = FileKit.openFilePicker()
-val directory = FileKit.openDirectoryPicker()
-
-// ...or from the browser's private storage (see "Storing files on web").
-// This API is experimental and requires @OptIn(ExperimentalFileKitApi::class).
-val stored = FileKit.originPrivateDir.resolveFile("notes/today.txt")
+```kotlin webMain
+// Browsers have no paths: files come from a picker or from the origin private file system
+val picked: PlatformFile? = FileKit.openFilePicker()
 ```
+
 </CodeGroup>
+
+On Android, `PlatformFile(path)` also parses `content://` and `file://` strings into a `Uri`.
 
 ## Properties
 
-`PlatformFile` provides several properties to access file information:
+| Property | Type | Notes |
+| --- | --- | --- |
+| `name` | `String` | File name with extension, such as `document.pdf`. |
+| `extension` | `String` | `pdf`. Empty when the name has none. |
+| `nameWithoutExtension` | `String` | `document`. |
+| `path` | `String` | The path you created the file with. The `Uri` string for Android `content://` files, the relative path on the web. |
+| `size()` | `Long` | Size in bytes. `-1` when unknown: the file doesn't exist, or an Android provider doesn't report a size. `0` for web directories. |
+| `lastModified()` | `Instant` | Epoch `0` for web directories. |
+| `createdAt()` | `Instant?` | Not on web. Always `null` on Linux native, for Android `content://` files, and before Android 8.0. |
+| `mimeType()` | `MimeType?` | `null` for directories and unknown types. See [Check the MIME type](#check-the-mime-type). |
+| `parent()` | `PlatformFile?` | `null` at the root. See Android notes below for `content://` files. |
+| `isRegularFile()`, `isDirectory()` | `Boolean` | `false` for both when the file doesn't exist. |
+| `exists()`, `isAbsolute()` | `Boolean` | Not on web. |
+| `absolutePath()`, `absoluteFile()` | `String`, `PlatformFile` | Not on web. Resolves a relative path against the working directory. |
+| `toKotlinxIoPath()` | `Path` | Not on web. Throws `FileKitUriPathNotSupportedException` for Android `content://` files. |
+
+`Instant` is `kotlin.time.Instant`. To read the content, see [Reading files](/core/read-file). To list, copy, move, or delete, see [File operations](/core/file-operations).
+
+## Check the MIME type
 
 ```kotlin
-val file = PlatformFile("/path/to/document.pdf")
-
-// Get the file name with extension
-val name: String = file.name // "document.pdf"
-
-// Get just the file extension
-val extension: String = file.extension // "pdf"
-
-// Get the file name without extension
-val nameWithoutExtension: String = file.nameWithoutExtension // "document"
-
-// Get the file path
-val path: String = file.path // "/path/to/document.pdf"
-
-// Get the file size in bytes
-val size: Long = file.size()
-// Note: some provider-backed files may return -1 when size metadata is unavailable.
-
-// Get the parent directory
-val parent: PlatformFile? = file.parent()
-
-@OptIn(ExperimentalTime::class)
-val createdAt: Instant? = file.createdAt()
-
-@OptIn(ExperimentalTime::class)
-val lastModified: Instant = file.lastModified()
-
-// Get the absolute path string
-val absolutePath: String = file.absolutePath()
-
-// Get the absolute file
-val absoluteFile: PlatformFile = file.absoluteFile()
-
-// Check the MIME type (null for directories or unknown types)
-val mimeType: MimeType? = file.mimeType()
+val type: MimeType? = file.mimeType()
+val isImage = type?.primaryType == "image"
 ```
 
-On Android, `name` is resolved using provider metadata. For Photo Picker URIs, FileKit performs a best-effort lookup of `MediaStore.MediaColumns.DISPLAY_NAME` when providers return synthetic names (for example `18.jpg`), then falls back to a stable provider/URI-derived name if the original filename is not accessible.
+| Platform | Source of the MIME type |
+| --- | --- |
+| Android | The `ContentResolver` for `content://` files, then `MimeTypeMap` from the extension. |
+| iOS, macOS, watchOS | Provider metadata (Files app, iCloud Drive), then the extension. Extension-less documents can still resolve. |
+| JVM | `Files.probeContentType`, which depends on the operating system's registry. |
+| Linux native | The shared MIME database (`/usr/share/mime/globs2`), then `/etc/mime.types`. |
+| Windows native | The `Content Type` value of the extension in the Windows registry. |
+| Web | The type the browser reports for the file. |
 
-For Android content URIs, `parent()` supports external-storage document trees and preserves access to the selected tree. It returns `null` at the selected directory's root and for other content providers whose parent cannot be determined from the URI. Filesystem paths continue to use normal filesystem parents.
+## Serialization
 
-On JS/WASM, directory picker results are virtual directory trees built from browser file entries. Empty directories are not exposed by browsers, and directory `lastModified()` values are synthetic.
+`PlatformFile` is `@Serializable` through `PlatformFileSerializer`, so you can store it in your own serializable classes with the kotlinx.serialization plugin:
 
-## File operations
+```kotlin nonWebMain
+@Serializable
+data class Document(val title: String, val file: PlatformFile)
 
-`PlatformFile` provides methods for common file operations:
-
-```kotlin
-// Check if the file exists
-val exists: Boolean = file.exists()
-
-// Check if it's a regular file
-val isFile: Boolean = file.isRegularFile()
-
-// Check if it's a directory
-val isDirectory: Boolean = file.isDirectory()
-
-// Check if it's an absolute path
-val isAbsolute: Boolean = file.isAbsolute()
-
-// Create directories
-file.createDirectories()
-
-// Copy the file to a new location
-file.copyTo(newFile)
-
-// Move the file to a new location
-file.atomicMove(newFile)
-
-// Delete the file
-file.delete()
-
-// List files in the directory
-val files: List<PlatformFile> = file.list()
-
-// Get input stream as a source
-val source: RawSource = file.source()
-
-// Get output stream as a sink
-val sink: RawSink = file.sink(append = false)
-
-// Read bytes from the file
-val bytes: ByteArray = file.readBytes()
-
-// Read string from the file
-val content: String = file.readString()
-
-// Write bytes to the file
-file.write(bytes)
-
-// Write string to the file
-file.writeString(content)
+val json = Json.encodeToString(Document("Report", FileKit.filesDir / "report.pdf"))
+val restored = Json.decodeFromString<Document>(json)
 ```
 
-### Determining MIME types
+The file is encoded as its `path` string and decoded with `PlatformFile(path)`.
 
-Use `mimeType()` to ask the underlying platform for the best-known media type. It returns `null` when the value is unknown (for example, directories or proprietary containers).
+<Note>
+Serialization keeps the path, not the access rights. A file picked outside your app (an Android `content://` file, a security-scoped file on Apple platforms) may not be readable after a restart: use [bookmark data](/core/bookmark-data) for persistent access. On the web, `PlatformFileSerializer` throws at runtime.
+</Note>
 
-- **Apple platforms**: FileKit first queries provider metadata (e.g., from the Files app or iCloud Drive) and falls back to the filename extension when needed, so even extension-less documents can resolve to a MIME type.
-- **Android**: The resolver consults the `ContentResolver` for `content://` URIs and then falls back to `MimeTypeMap` if necessary.
-- **JVM Desktop & Web**: The lookup is derived from the file extension or the desktop platform's MIME registry.
-- **Kotlin/Native Linux**: FileKit matches the filename against the system shared MIME database, with `/etc/mime.types` as a fallback.
+## Platform notes
 
-This utility is helpful when you need to validate file types, populate upload headers, or customise previews based on content.
+<AccordionGroup>
+  <Accordion title="Android: content:// files">
+    Files from pickers are usually `content://` Uris, not filesystem paths. `name` comes from the provider's display name. For Photo Picker Uris that only expose a synthetic name (such as `18.jpg`), FileKit looks up the original name in `MediaStore`, and falls back to a stable name derived from the provider and the Uri.
 
-## Working with directories
+    `parent()` works inside external-storage document trees and keeps access to the selected tree. It returns `null` at the root of the selected directory and for providers whose parent can't be derived from the Uri.
+  </Accordion>
+  <Accordion title="iOS and macOS: security-scoped files">
+    Files picked outside your app's sandbox need security-scoped access. FileKit starts and stops it around each of its own calls on that file. Wrap longer work in `file.withScopedAccess { }`: iterating `walk()` over a picked folder, or passing `nsUrl` to Apple APIs yourself.
+  </Accordion>
+  <Accordion title="Web: browser handles">
+    A picked file is a read-only snapshot of a browser `File`: you can read it, not write it, and there is no path to reopen it later. A directory picker result is a virtual tree built from the selected files, so empty folders are missing, directories report a size of `0`, and their `lastModified()` is epoch `0`. See [Files on the web](/core/web).
+  </Accordion>
+</AccordionGroup>
 
-You can use the `resolve` method or the `/` operator to navigate through directories:
+## Related
 
-```kotlin
-val baseDir = PlatformFile("/path/to/base")
-
-// Create a reference to a subdirectory or file
-val subDir = baseDir / "subdirectory"
-val file = subDir / "file.txt"
-
-// Alternative using resolve
-val file2 = baseDir.resolve("subdirectory/file.txt")
-
-// Get the absolute path from a relative path
-val relativeDir = PlatformFile("/path/to/relative")
-val absoluteDir: PlatformFile = relativeDir.absoluteFile()
-```
-
-### Walking a directory tree
-
-`walk()` lazily yields every file and subdirectory below a directory, depth-first, without the directory itself. `sizeRecursively()` returns the total size of the regular files in the tree:
-
-```kotlin
-val fileCount = directory.walk().count { it.isRegularFile() }
-val children = directory.walk(maxDepth = 1).toList() // like list()
-val totalBytes: Long = directory.sizeRecursively()
-```
-
-- Symbolic links are listed but never followed, so a link can't cause an infinite loop. They add nothing to `sizeRecursively()`. This also applies when you call either function on a link.
-- On a regular file, `walk()` yields only that file and `sizeRecursively()` returns its size. `maxDepth` must be positive.
-- `walk()` is synchronous, like `list()`: on non-web platforms, iterate it on `Dispatchers.IO`. `sizeRecursively()` is a suspend function that switches to `Dispatchers.IO` itself on non-web platforms.
-- **Android**: each subdirectory of a document tree costs provider queries, so large trees are slow. Files whose provider doesn't report a size count as 0.
-- **Apple platforms**: keep security-scoped access to the root active while iterating `walk()`, for example inside `withScopedAccess { }`.
-- **Windows**: every reparse point counts as a link, including directory junctions and OneDrive Files On-Demand folders. `walk()` lists such a folder without its contents, and `sizeRecursively()` doesn't count them.
-- **Web**: works on directories picked with the directory picker, whose tree is already in memory. Both functions run on the caller's dispatcher. Origin private file system directories aren't supported.
-
-## Converting to kotlinx-io
-
-`PlatformFile` provides built-in integration with [kotlinx-io](https://github.com/Kotlin/kotlinx-io).
-
-```kotlin
-// Convert to kotlinx.io.files.Path
-val path: Path = file.toKotlinxIoPath()
-
-// Convert to kotlinx.io.RawSource
-val source: RawSource = file.source()
-
-// Convert to kotlinx.io.RawSink
-val sink: RawSink = file.sink()
-```
-
-## Example usage
-
-```kotlin
-// Create a file reference
-val file = PlatformFile(FileKit.filesDir, "document.txt")
-
-// Check if it exists
-if (file.exists()) {
-    // Write content to the file
-    file.writeString("Hello, FileKit!")
-}
-
-// Read the file content
-val content = file.readString()
-println(content) // "Hello, FileKit!"
-```
-
-## Next steps
-
-<CardGroup>
-
-<Card
-  title="Read File"
-  icon="square-code"
-  href="/core/read-file"
->
-  Read files as bytes, strings, or streams **across** platforms.
-</Card>
-
-<Card
-  title="Write File"
-  icon="pen"
-  href="/core/write-file"
->
-  Write data to files with atomic operations and appending.
-</Card>
-
-<Card
-  title="Image & Video Utils"
-  icon="image"
-  href="/core/image-and-video-utils"
->
-  Compress, resize and save images with platform-specific optimizations.
-</Card>
-
-<Card
-  title="File Utils"
-  icon="file"
-  href="/core/file-utils"
->
-  Access standard directories and common file operations.
-</Card>
-
-<Card
-  title="Bookmark Data"
-  icon="bookmark"
-  href="/core/bookmark-data"
->
-  Maintain persistent access to user-selected files across app restarts.
-</Card>
-
-</CardGroup>
+- [Reading files](/core/read-file) and [Writing files](/core/write-file)
+- [File operations](/core/file-operations): list, walk, copy, move, and delete
+- [File utilities](/core/file-utils): app directories and user folders

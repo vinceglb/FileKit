@@ -1,83 +1,72 @@
 ---
-title: 'Share file dialog'
+title: 'Share file'
 sidebarTitle: 'Share file'
-description: 'Open a file sharing dialog in a Kotlin Multiplatform project'
+description: 'Open the native share sheet for one or more files on Android and iOS'
 ---
 
+import { Platforms } from '/snippets/platforms.jsx'
 import AndroidFileProviderSetup from '/snippets/android-fileprovider-setup.mdx'
 
-<Check>Supported on Android and iOS targets</Check>
+<Platforms scope="dialogs" supported="android ios" anchor="filekit-dialogs" />
+
+Open the system share sheet so the user can send files to another app. Call it from a source set that only includes Android and iOS, such as `mobileMain`.
 
 <div className="flex justify-center gap-6">
-  <img height="200" width="200" noZoom src="/images/share-file-ios.png" />
-  <img height="200" width="200" noZoom src="/images/share-file-android.png" />
+  <img height="200" width="200" noZoom src="/images/share-file-ios.png" alt="iOS share sheet for a JPEG image, with Reminders, Copy, Print, and Assign to Contact actions" />
+  <img height="200" width="200" noZoom src="/images/share-file-android.png" alt="Android share sheet previewing an image, with Quick Share, Photos, Print, Drive, and Maps targets" />
 </div>
 
-## Open the share file dialog
-
-The share file component provides a native interface for users to share files using their device's sharing options.
+## Usage
 
 <CodeGroup>
-```kotlin filekit-dialogs
-val file = PlatformFile("/path/to/file.txt")
-// share a single file
-FileKit.shareFile(file)
-// share multiple files
-FileKit.shareFile(listOf(file1, file2))
-```
 
-```kotlin filekit-dialogs-compose
-var shareError by remember { mutableStateOf<String?>(null) }
+```kotlin Compose
 val launcher = rememberShareFileLauncher(
-    onError = { failure -> shareError = failure.message },
+    onError = { failure -> println("Share failed: ${failure.message}") },
 )
 
-Button(onClick = { 
-    // Successful sharing is callback-less.
-    launcher.launch(file)
-}) {
-    Text("Share file")
+Button(onClick = { launcher.launch(FileKit.filesDir / "report.pdf") }) {
+    Text("Share")
 }
 ```
+
+```kotlin Suspend API
+FileKit.shareFile(FileKit.filesDir / "report.pdf")
+
+// Several files at once
+FileKit.shareFile(listOf(FileKit.filesDir / "a.jpg", FileKit.filesDir / "b.jpg"))
+```
+
 </CodeGroup>
 
-<Info>
-The Compose launcher reports FileKit-owned operational failures through `onError`. Successful sharing remains
-callback-less. The legacy overload without `onError` remains available and ignores normalized failures without logging.
-</Info>
+Sharing has no result: a completed share and a dismissed sheet look the same. Failures go to `onError` in Compose, or are thrown as a `FileKitDialogException` by the suspend API. See [Results and errors](/dialogs/error-handling#sharing).
 
-See [dialog error handling](/dialogs/error-handling) for the complete callback and propagation matrix.
+## Options
+
+| Parameter | Values | Default | Where (Compose) | Notes |
+| --- | --- | --- | --- | --- |
+| `file` or `files` | `PlatformFile` or `List<PlatformFile>` | Required | `launch()` | An empty list does nothing. |
+| `shareSettings` | `FileKitShareSettings` | `createDefault()` | `rememberShareFileLauncher` | Platform-specific properties below. |
+
+| Property | Platform | Default | Effect |
+| --- | --- | --- | --- |
+| `authority` | Android | `${applicationId}.FileKitFileProvider` | FileProvider authority for files outside `filesDir` and `cacheDir`. |
+| `addOptionChooseIntent` | Android | No-op | Customizes the chooser `Intent` before it launches. |
+| `addOptionUIActivityViewController` | iOS | No-op | Customizes the `UIActivityViewController` before it appears, for example `excludedActivityTypes`. |
+| `presenter` | iOS | `null` | `UIViewController` that presents the sheet. When `null`, the suspend API uses the top-most view controller and the Compose launcher uses the current `LocalUIViewController`. |
+| `metaTitle` | iOS | `"Share File"` | Accepted but currently not applied to the share sheet. |
+
+## Platform notes
+
+| Platform | Behavior |
+| --- | --- |
+| Android | Files in `FileKit.filesDir`, `FileKit.cacheDir`, or returned by a picker (`content://`) share without setup. The MIME type comes from the file extensions, or `*/*` when they differ. The suspend call returns once the chooser opens. |
+| iOS | The suspend call returns when the sheet closes. An error reported by the chosen activity fails with a `FileKitDialogException`. On iPad, the sheet opens as a popover centered on the presenter's view. |
 
 ## Android setup
 
 <AndroidFileProviderSetup />
 
-3. When sharing files from custom locations, provide the `shareSettings` parameter with your app's FileProvider authority:
+## Related
 
-<CodeGroup>
-```kotlin filekit-dialogs
-val file = FileKit.filesDir / "my_file.txt"
-FileKit.shareFile(
-    file = file,
-    shareSettings = FileKitShareSettings(
-        authority = "${context.packageName}.fileprovider"
-    )
-)
-```
-
-```kotlin filekit-dialogs-compose
-val launcher = rememberShareFileLauncher(
-    shareSettings = FileKitShareSettings(
-        authority = "${context.packageName}.fileprovider",
-    ),
-    onError = { failure -> /* Show or log the failure */ },
-)
-
-val file = FileKit.filesDir / "my_file.txt"
-Button(onClick = { 
-    launcher.launch(file)
-}) {
-    Text("Share file")
-}
-```
-</CodeGroup>
+[Open with default app](/dialogs/open-file) to view a file instead of sending it, and [Camera picker](/dialogs/camera-picker) to capture a photo to share.
