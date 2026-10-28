@@ -18,9 +18,9 @@
         "group": "Get Started",
         "pages": [
           "introduction",
+          "live-demo",
           "quickstart",
           "installation",
-          "live-demo",
           "platform-support",
           "ai-assistants"
         ]
