@@ -38,9 +38,9 @@ body:
         - label: iOS
         - label: macOS (native)
         - label: watchOS
-        - label: JVM desktop – Windows
-        - label: JVM desktop – macOS
-        - label: JVM desktop – Linux
+        - label: JVM desktop (Windows)
+        - label: JVM desktop (macOS)
+        - label: JVM desktop (Linux)
         - label: Linux (native)
         - label: Windows (native)
         - label: JS (browser)
