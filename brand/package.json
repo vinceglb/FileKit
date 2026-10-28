@@ -1,0 +1,14 @@
+{
+  "name": "filekit-brand",
+  "private": true,
+  "type": "module",
+  "description": "Sources and render script for the FileKit brand visuals.",
+  "scripts": {
+    "render": "node render.mjs",
+    "preview": "node render.mjs --preview"
+  },
+  "devDependencies": {
+    "opentype.js": "^2.0.0",
+    "playwright": "^1.64.1"
+  }
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+  FileKit hero image. Fills the viewport, so the export script picks the size.
+  URL parameters: theme=dark|light, rounded=1 (transparent rounded corners),
+  seed=<number> (try another background composition without editing palette.json).
+  All sizes are in cqw (percent of the image width) so every format keeps the same proportions.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Inter'; font-weight: 400; src: url('../fonts/Inter-Regular.woff2') format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 700; font-style: italic; src: url('../fonts/Inter-BoldItalic.ttf') format('truetype'); }
+
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; background: transparent; overflow: hidden; }
+  .frame { position: absolute; inset: 0; container-type: size; overflow: hidden; }
+  .rounded .frame { border-radius: 2.2cqw; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* Title and subtitle are blended (overlay on dark, multiply on light): the text picks up the colors
+     underneath. The title is stacked twice to make it stronger while keeping the see-through look. */
+  /* No transform/opacity on ancestors: that would isolate the blend from the background. */
+  .grid { position: absolute; }
+  .cell { position: relative; display: flex; align-items: center; justify-content: center; }
+  .blend { position: absolute; mix-blend-mode: var(--blend); color: var(--text); white-space: nowrap; text-align: center; text-box: trim-both cap alphabetic; }
+  .title { font: italic 700 6.77cqw/1 'Inter'; letter-spacing: -0.02em; }
+  .subtitle { font: 400 2.6cqw/1.25 'Inter'; }
+
+  /* Construction lines: dashed hairlines through the grid edges, fading out towards the image edges. */
+  .guide { position: absolute; mix-blend-mode: var(--blend); opacity: var(--guide-opacity); }
+  .guide.h { left: 0; right: 0; height: max(1px, .07cqw); transform: translateY(-50%);
+    background: repeating-linear-gradient(90deg, var(--text) 0 .45cqw, transparent .45cqw .8cqw);
+    mask: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+  .guide.v { top: 0; bottom: 0; width: max(1px, .07cqw); transform: translateX(-50%);
+    background: repeating-linear-gradient(180deg, var(--text) 0 .45cqw, transparent .45cqw .8cqw);
+    mask: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent); }
+  .node { position: absolute; width: .7cqw; height: .7cqw; border: max(1px, .07cqw) solid var(--text); border-radius: 50%;
+    transform: translate(-50%, -50%); mix-blend-mode: var(--blend); opacity: var(--guide-opacity); }
+</style>
+</head>
+<body>
+<div class="frame">
+  <canvas></canvas>
+  <div class="guides"></div>
+  <div class="grid">
+    <div class="cell" data-row="title">
+      <div class="blend title">FileKit</div>
+      <div class="blend title">FileKit</div>
+    </div>
+    <div class="cell" data-row="subtitle">
+      <div class="blend subtitle">File operations, pickers, dialogs<br>Kotlin and Compose Multiplatform</div>
+    </div>
+  </div>
+</div>
+<script type="module">
+  import { paintBackground } from './background.js';
+
+  const params = new URLSearchParams(location.search);
+  const theme = params.get('theme') ?? 'dark';
+  if (params.get('rounded') === '1') document.body.classList.add('rounded');
+
+  const palette = await (await fetch('../palette.json')).json();
+  const frame = document.querySelector('.frame');
+  const look = palette.background[theme];
+  frame.style.setProperty('--text', look.text);
+  frame.style.setProperty('--blend', look.blend);
+  frame.style.setProperty('--guide-opacity', look.guideOpacity);
+
+  await document.fonts.ready;
+  const seed = params.has('seed') ? Number(params.get('seed')) : look.seed;
+  paintBackground(document.querySelector('canvas'), { ...look, seed });
+
+  // Layout: two cells of equal height, text optically centered in each.
+  const cqw = frame.clientWidth / 100;
+  const padY = 3.4 * cqw;
+  const padX = 6 * cqw;
+  const title = document.querySelector('.title');
+  const subtitle = document.querySelector('.subtitle');
+
+  // Italic glyphs lean right: shift the title so its ink, not its advance box, is centered.
+  const ctx = document.createElement('canvas').getContext('2d');
+  ctx.font = getComputedStyle(title).font;
+  ctx.letterSpacing = getComputedStyle(title).letterSpacing;
+  const m = ctx.measureText(title.textContent);
+  const inkShift = m.width / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2;
+  document.querySelectorAll('.title').forEach((el) => { el.style.transform = `translateX(${inkShift}px)`; });
+
+  const cellH = Math.max(title.offsetHeight, subtitle.offsetHeight) + 2 * padY;
+  const cellW = Math.max(title.offsetWidth, subtitle.offsetWidth) + 2 * padX;
+  document.querySelectorAll('.cell').forEach((el) => { el.style.width = `${cellW}px`; el.style.height = `${cellH}px`; });
+
+  // Guides on the grid edges.
+  const W = frame.clientWidth, Hh = frame.clientHeight;
+  const left = (W - cellW) / 2, top = (Hh - 2 * cellH) / 2;
+  const ys = [top, top + cellH, top + 2 * cellH];
+  const xs = [left, left + cellW];
+  Object.assign(document.querySelector('.grid').style, { left: `${left}px`, top: `${top}px` });
+  const guides = document.querySelector('.guides');
+  guides.innerHTML =
+    ys.map((y) => `<div class="guide h" style="top:${y}px"></div>`).join('') +
+    xs.map((x) => `<div class="guide v" style="left:${x}px"></div>`).join('') +
+    ys.flatMap((y) => xs.map((x) => `<div class="node" style="left:${x}px;top:${y}px"></div>`)).join('');
+
+  document.body.dataset.ready = '1';
+</script>
+</body>
+</html>
