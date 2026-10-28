@@ -1,141 +1,132 @@
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/fa59bcd1-7906-4d14-9fa3-73845269b811" alt="FileKit for Kotlin Multiplatform and Compose Multiplatform" />
+  <a href="https://filekit.mintlify.app"><img src="brand/exports/readme-hero.webp" width="960" alt="FileKit: file pickers, save dialogs, and file operations for Kotlin Multiplatform and Compose Multiplatform" /></a>
 
-  <br>
+  <p>
+    <b>Pick, save, and work with files from shared Kotlin code,<br>with native dialogs on Android, iOS, and desktop, plus browser pickers on the web.</b>
+  </p>
 
-  <h1>FileKit</h1>
-  <p>🚀 A powerful cross-platform file operations library for Kotlin Multiplatform</p>
+  <p>
+    <a href="https://central.sonatype.com/artifact/io.github.vinceglb/filekit-core"><img src="https://img.shields.io/maven-central/v/io.github.vinceglb/filekit-core?label=Maven%20Central&color=1A7F4B" alt="Maven Central version" /></a>
+    <a href="https://filekit.mintlify.app/platform-support"><img src="https://img.shields.io/badge/platforms-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM%20%7C%20Linux%20%7C%20Windows%20%7C%20Web-1A7F4B?logo=kotlin&logoColor=white" alt="Supported platforms: Android, iOS, macOS, JVM, Linux, Windows, Web" /></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/vinceglb/FileKit?color=1A7F4B" alt="MIT License" /></a>
+    <a href="https://filekit.mintlify.app"><img src="https://img.shields.io/badge/docs-filekit.mintlify.app-1A7F4B" alt="Documentation" /></a>
+  </p>
 
-  <div>
-    <img src="https://img.shields.io/maven-central/v/io.github.vinceglb/filekit-core" alt="FileKit Kotlin Maven Version" />
-    <img src="https://img.shields.io/badge/Platform-Android-brightgreen.svg?logo=android" alt="Badge Android" />
-		<img src="https://img.shields.io/badge/Platform-iOS%20%2F%20macOS-lightgrey.svg?logo=apple" alt="Badge iOS" />
-		<img src="https://img.shields.io/badge/Platform-JVM-8A2BE2.svg?logo=openjdk" alt="Badge JVM" />
-    <img src="https://img.shields.io/badge/Platform-WASM%20%2F%20JS-yellow.svg?logo=javascript" alt="Badge JS" />
-  </div>
-
-  <br>
+  <p>
+    <a href="https://filekit.mintlify.app"><b>Documentation</b></a>
+    &nbsp;·&nbsp;
+    <a href="https://filekit.mintlify.app/quickstart"><b>Quickstart</b></a>
+    &nbsp;·&nbsp;
+    <a href="https://filekit.mintlify.app/live-demo"><b>Try it in your browser</b></a>
+    &nbsp;·&nbsp;
+    <a href="https://filekit.mintlify.app/roadmap"><b>Roadmap to 1.0</b></a>
+  </p>
 </div>
 
-## ✨ Features
+## Installation
 
-- 📱 **Cross-Platform Support**: Works seamlessly on Android, iOS, macOS, JVM (Windows, macOS, Linux), JS, and WASM
-- 🎯 **Native Experience**: Uses platform-native file pickers for the best user experience
-- 🪶 **Lightweight**: Minimal dependencies to keep your app fast and lean
-- 🔌 **Rich Integrations**: Works with Compose Multiplatform, Coroutines, kotlinx-io, Coil, and more
-- 📂 **Comprehensive File Operations**: Pick files, save documents, access photos, manage directories
-- 🎨 **Image Utilities**: Built-in image compression and gallery integration
-
-## 🚀 Who's Using FileKit
-
-FileKit is trusted by developers building amazing cross-platform applications:
-
-- **[Heron](https://github.com/tunjid/heron)** - KMP Bluesky client using FileKit for image preview when uploading images or videos
-- **[Rush](https://github.com/shub39/Rush)** - Lyrics search app like Spotify
-- **[Composables SVG to Compose](https://composables.com/svg-to-compose)** - Web tool to convert SVG to Compose code in seconds
-- **[Twine](https://github.com/msasikanth/twine)** - A multiplatform RSS reader built using Kotlin and Compose
-- **[Butler](https://github.com/HLCaptain/butler)** - AI Chat App supporting image uploads across iOS, Android, Desktop, and WasmJS
-- **[PixelSafe](https://github.com/StefanOltmann/pixelsafe)** - Free steganography tool for PNG images
-- **[AndroidToolKit](https://github.com/LazyIonEs/AndroidToolKit)** - Desktop tools applicable to Android development, supporting Windows, Mac and Linux
-- **[Splital](https://splital.com/)** - Easily track and manage your shared expenses, quickly, simply, and hassle-free on [Android](https://play.google.com/store/apps/details?id=com.splital.project) and [iOS](https://apps.apple.com/us/app/splital-settle-up-easily/id6501984581)
-- **[Tracker - Manager for Bluesky](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer)** - Track and manage your Bluesky followers, unfollowers, blockers, and post analytics — all in real time! On [Android](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) and [iOS](https://apps.apple.com/us/app/tracker-manager-for-bluesky/id6740998282).
-- **[Parrot Workout Tracker](https://parrotworkouttracker.com/)** - The ultimate fitness log and exercise tracker to crush your goals on [Android](https://play.google.com/store/apps/details?id=de.kreiniker.parrotworkouttracker) and [iOS](https://apps.apple.com/us/app/workout-tracker-log-parrot/id6741729053).
-- **[Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer)** - Photo management software for organizing and searching large photo collections
-- **[AB Download Manager](https://github.com/amir1376/ab-download-manager/)** - A Download Manager that speeds up your downloads
-- **[Edconv](https://github.com/edneyosf/Edconv)** - A user-friendly interface that simplifies the power of FFmpeg. It's designed for fast and efficient conversion of video and audio files.
-- **[Gluky](https://github.com/N7ghtm4r3/Gluky)**, **[Refy](https://github.com/N7ghtm4r3/Refy)**, **[Pandoro](https://github.com/N7ghtm4r3/Pandoro)**, **[Neutron](https://github.com/N7ghtm4r3/Neutron)**, and **[Brownie](https://github.com/N7ghtm4r3/Brownie)** - Self-hosted applications using FileKit for profile pictures and file uploads
-- **[Keyguard](https://github.com/AChep/keyguard-app)** - Alternative client for the Bitwarden platform and KeePass (KDBX)
-- **[HowMarket](https://github.com/dududaa/howmarket)** - Cross-platform Point of Sale (PoS) software for small and growing businesses, using FileKit to upload and manage product and user images
-- **[Authmeister](https://monoroh.com/authmeister)** - Multiplatform OTP authenticator supporting TOTP and HOTP, available on [Android](https://play.google.com/store/apps/details?id=com.kopylovis.authmeister) and [iOS](https://apps.apple.com/us/app/authmeister/id6742833866)
-- **[Dancing Decibels](https://www.dancingdecibels.com)** - Multi-platform app for music festivals and live entertainment experiences, using FileKit for image imports and schedule import/export
-- **[Kai](https://github.com/SimonSchubert/Kai)** - OpenClaw alternative in your pocket, using FileKit in production across Android, iOS, desktop, and web
-- **[Hammer Editor](https://github.com/Wavesonics/hammer-editor)** - Multi-platform tool for writing stories and novels, using FileKit to select project directories and images
-- **[DevAnalyzer](https://github.com/Coding-Meet/DevAnalyzer)** - Developer productivity tool for analyzing and understanding software projects, using FileKit for file and directory handling in its project analysis workflow
-
-*Using FileKit in your project? [Let us know!](https://github.com/vinceglb/FileKit/discussions/343)*
-
-## 📚 Documentation
-
-Visit our [documentation](https://filekit.mintlify.app) to learn more: https://filekit.mintlify.app
-
-- [FileKit Introduction](https://filekit.mintlify.app/introduction)
-- [Getting Started Guide](https://filekit.mintlify.app/quickstart)
-- [Core API Documentation](https://filekit.mintlify.app/core/setup)
-- [Dialogs Documentation](https://filekit.mintlify.app/dialogs/setup)
-
-> Migrate from FileKit 0.8 to 0.10 by following the [migration guide](https://filekit.mintlify.app/migrate-to-v0.10).
-
-## 🚀 Quick Start
-
-### Installation
+Add FileKit to your shared module. For a Compose Multiplatform app, one artifact brings the dialogs, the Compose launchers, and the core file API:
 
 ```kotlin
 // build.gradle.kts
-dependencies {
-    implementation("io.github.vinceglb:filekit-core:$version")
-    implementation("io.github.vinceglb:filekit-dialogs:$version")
-    implementation("io.github.vinceglb:filekit-dialogs-compose:$version")
-    implementation("io.github.vinceglb:filekit-coil:$version")
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.vinceglb:filekit-dialogs-compose:0.17.0")
+        }
+    }
 }
 ```
 
-Follow the [installation guide](https://filekit.mintlify.app/installation) to learn how to install and setup FileKit in your project.
+Not using Compose, or targeting Linux native, Windows native, or watchOS? Use `filekit-dialogs`, or `filekit-core` for file operations only. The [platform support matrix](https://filekit.mintlify.app/platform-support#targets-per-module) shows which module runs where.
 
-### Usage Examples
+Most targets need no setup. On Android, call `FileKit.init(activity)` if you use the suspend dialog APIs; the Compose launchers work without it. On JVM desktop and Linux or Windows native, call `FileKit.init(appId)` before using app directories such as `FileKit.filesDir`. The [installation guide](https://filekit.mintlify.app/installation#platform-setup) covers the version catalog, every module, and each platform.
+
+## At a glance
+
+**Pick a file in Compose**
 
 ```kotlin
-// Pick a file
-val file = FileKit.openFilePicker()
+val launcher = rememberFilePickerLauncher(
+    type = FileKitType.Image,
+    onError = { failure -> println("Picker failed: ${failure.message}") },
+) { image ->
+    // A PlatformFile, or null if the user cancelled
+}
 
-// Pick multiple files
-val files = FileKit.openFilePicker(mode = FileKitMode.Multiple())
+Button(onClick = { launcher.launch() }) {
+    Text("Pick an image")
+}
+```
 
-// Pick only images
-val imageFile = FileKit.openFilePicker(type = FileKitType.Image)
+**Pick files from any coroutine**
 
-// Pick a directory
-val directory = FileKit.openDirectoryPicker()
-
-// Save a file
-val contentToSave = "Hello FileKit!"
-val file = FileKit.openFileSaver(
-    suggestedName = "document",
-    defaultExtension = "txt",
-    allowedExtensions = setOf("txt", "md"),
-)
-file?.writeString(contentToSave)
-
-// Work with files
-val myFile = FileKit.filesDir / "document.pdf"
-println(myFile.name)
-println(myFile.size())
-myFile.writeString("Hello, World!")
-
-// Image operations
-val compressedBytes = FileKit.compressImage(
-    bytes = imageFile.readBytes(),
-    quality = 80,
-    maxWidth = 1024,
-    maxHeight = 1024
+```kotlin
+val files: List<PlatformFile>? = FileKit.openFilePicker(
+    type = FileKitType.File("pdf", "docx"),
+    mode = FileKitMode.Multiple(maxItems = 10),
 )
 ```
 
-See the [quickstart guide](https://filekit.mintlify.app/quickstart) to learn more about the different file operations and utilities available in FileKit.
+**Save a file where the user chooses**
 
-## 📦 Modular Structure
+```kotlin
+// From a coroutine
+val file = FileKit.openFileSaver(suggestedName = "hello", defaultExtension = "txt")
+file?.writeString("Hello FileKit!")
+```
 
-FileKit is designed to be modular, allowing you to include only what you need:
+**Work with files**
 
-- **FileKit Core**: Basic file operations and the `PlatformFile` abstraction
-- **FileKit Dialogs**: File pickers and save dialogs
-- **FileKit Dialogs Compose**: Compose Multiplatform integration
-- **FileKit Coil**: Integration with Coil for image loading
+```kotlin
+// From a coroutine
+val notes = FileKit.filesDir / "notes.txt"
+notes.writeString("Hello FileKit!")
 
-![FileKit Preview](https://github.com/vinceglb/FileKit/assets/24540801/e8a7bc49-41cc-4632-84c4-1013fd23dd76)
+println("${notes.name}: ${notes.size()} bytes")
+notes.copyTo(FileKit.cacheDir / "notes-backup.txt")
+```
 
-## 🙏 Credits
+The file saver, app directories, and path operations such as `/` and `copyTo` aren't available on JS and Wasm. Call them from a [non-web source set](https://filekit.mintlify.app/platform-support#use-platform-specific-apis-from-shared-code), and use `FileKit.download` in the browser.
+
+The [quickstart](https://filekit.mintlify.app/quickstart) walks through a full pick, read, and save round trip in a few minutes.
+
+## Modules
+
+| Module | Use it for |
+| --- | --- |
+| `filekit-core` | `PlatformFile` and file operations (read, write, copy, move, list), app directories, image compression |
+| `filekit-dialogs` | Native file, directory, gallery, and camera pickers and save dialogs, callable from any coroutine |
+| `filekit-dialogs-compose` | Compose Multiplatform launchers such as `rememberFilePickerLauncher`, plus `ImageBitmap` helpers |
+| `filekit-coil` | Display a `PlatformFile` with Coil 3's `AsyncImage` |
+
+`filekit-dialogs-compose` includes `filekit-dialogs`, which includes `filekit-core`.
+
+## Platform support
+
+| Module | Android | iOS | macOS | JVM desktop | Linux | Windows | watchOS | Web |
+| --- | :-: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `filekit-core` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `filekit-dialogs` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| `filekit-dialogs-compose` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+| `filekit-coil` | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ | ✅ |
+
+JVM desktop runs on Windows, macOS, and Linux. The Linux and Windows columns are Kotlin/Native targets, and Web covers JS and Wasm. Some features depend on the platform (browsers don't let you choose a save location, so FileKit offers `FileKit.download` there). The [platform support matrix](https://filekit.mintlify.app/platform-support) lists every feature per target.
+
+## Who's using FileKit
+
+FileKit ships in production apps on mobile, desktop, and the web, including [Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer), [Keyguard](https://github.com/AChep/keyguard-app), [AB Download Manager](https://github.com/amir1376/ab-download-manager/), [Twine](https://github.com/msasikanth/twine), [Heron](https://github.com/tunjid/heron), and [Composables SVG to Compose](https://composables.com/svg-to-compose).
+
+See every project in the [showcase](https://filekit.mintlify.app/showcase), or [add your project](https://github.com/vinceglb/FileKit/discussions/343).
+
+## Contributing
+
+Bug reports, documentation fixes, and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to set up the project and which checks to run. For questions and ideas, open a [discussion](https://github.com/vinceglb/FileKit/discussions).
+
+## Credits
 
 FileKit stands on the shoulders of giants. Special thanks to:
+
 - [compose-multiplatform-file-picker](https://github.com/Wavesonics/compose-multiplatform-file-picker)
 - [peekaboo](https://github.com/onseok/peekaboo)
 - [Calf](https://github.com/MohamedRejeb/Calf)
@@ -146,9 +137,12 @@ FileKit stands on the shoulders of giants. Special thanks to:
 - [IntelliJ Community Foundation](https://github.com/JetBrains/intellij-community/blob/master/platform/util/ui/src/com/intellij/ui/mac/foundation/Foundation.java)
 - [file_picker (flutter)](https://pub.dev/packages/file_picker)
 
+## License
+
+FileKit is released under the [MIT License](LICENSE).
+
 ---
 
 <div align="center">
   <p>Made with ❤️ by <a href="https://github.com/vinceglb">Vince</a></p>
-  <!-- <p>If you find FileKit helpful, please consider giving it a ⭐️</p> -->
 </div>
