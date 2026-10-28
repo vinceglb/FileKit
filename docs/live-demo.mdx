@@ -11,7 +11,7 @@ The FileKit sample app is built with Compose Multiplatform and compiled to WebAs
 <FileKitDemo title="FileKit sample" height={680} />
 
 <Note>
-The browser limits what a web page can do with files. File and directory pickers work in modern browsers, while the camera picker, file saver dialog and share sheet are only available on native platforms, so the sample marks them as unsupported here. On the web, use [`FileKit.download()`](/dialogs/file-saver) to save files. Each page lists the supported platforms.
+The browser limits what a web page can do with files. File and directory pickers work in modern browsers. The camera picker and share sheet are Android and iOS only, and the file saver dialog is not available on the web, so the sample marks them as unsupported here. On the web, use [`FileKit.download()`](/dialogs/file-saver) to save files. Each page lists the supported platforms.
 </Note>
 
 ## Run it locally

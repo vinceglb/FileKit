@@ -8,6 +8,8 @@ on:
       - 'build-logic/**'
       - 'filekit-*/**'
       - 'gradle/**'
+      - 'gradle.properties'
+      - 'kotlin-js-store/**'
       - 'sample/shared/**'
       - 'sample/webApp/**'
       - '*.gradle.kts'
@@ -47,13 +49,15 @@ jobs:
         run: ./gradlew :sample:webApp:wasmJsBrowserDistribution --max-workers=2
 
       - name: 📦 Upload Pages artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v5
         with:
           path: 'sample/webApp/build/dist/wasmJs/productionExecutable'
 
   deploy:
     name: 🚀 Deploy to GitHub Pages
-    if: github.event_name != 'pull_request'
+    # Only main is published: PR builds and manual runs on other branches stop after the build
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     needs: build
     permissions:

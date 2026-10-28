@@ -10,49 +10,35 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.window.ComposeViewport
 import io.github.vinceglb.filekit.sample.shared.App
 import io.github.vinceglb.filekit.sample.shared.AppDemo
+import kotlinx.browser.document
 import kotlinx.browser.window
 
 /**
- * URL parameters, used when the sample is embedded in the documentation:
+ * The embed bridge in `index.html` reads the URL parameters used by the documentation embeds
+ * and exposes them as `data-*` attributes on the root element:
  * - `demo`: opens a screen directly (see [AppDemo.id]), e.g. `?demo=file-picker`.
- * - `theme`: `light` or `dark`. Defaults to the system theme.
- * - `embed`: `true` hides links to the documentation.
- *
- * The embedding page can switch the theme at runtime by posting a `filekit-demo:theme=dark` message.
+ * - `theme`: `light` or `dark`, also updated by `filekit-demo:theme=dark` messages from the embedding page.
+ *   Defaults to the system theme.
+ * - `embed`: `true` hides the documentation button of feature screens.
  */
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-    val params = parseQuery(window.location.search)
-    var theme by mutableStateOf(params["theme"])
+    val root = document.documentElement
+    var theme by mutableStateOf(root?.getAttribute("data-theme"))
 
-    window.addEventListener("message", { event ->
-        val message = (event as? org.w3c.dom.MessageEvent)?.data?.toString().orEmpty()
-        if (message.startsWith(THEME_MESSAGE_PREFIX)) {
-            theme = message.removePrefix(THEME_MESSAGE_PREFIX)
-        }
+    window.addEventListener("filekit-demo-theme", {
+        theme = root?.getAttribute("data-theme")
     })
 
     ComposeViewport {
         App(
-            startDemo = AppDemo.fromId(params["demo"]),
+            startDemo = AppDemo.fromId(root?.getAttribute("data-demo")),
             darkTheme = when (theme) {
                 "dark" -> true
                 "light" -> false
                 else -> isSystemInDarkTheme()
             },
-            embedded = params["embed"] == "true",
+            embedded = root?.getAttribute("data-embed") == "true",
         )
     }
 }
-
-private const val THEME_MESSAGE_PREFIX = "filekit-demo:theme="
-
-private fun parseQuery(search: String): Map<String, String> = search
-    .removePrefix("?")
-    .split("&")
-    .filter { it.isNotEmpty() }
-    .associate { part ->
-        val key = part.substringBefore("=")
-        val value = part.substringAfter("=", missingDelimiterValue = "")
-        key to value
-    }

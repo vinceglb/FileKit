@@ -8,11 +8,35 @@
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link type="text/css" rel="stylesheet" href="styles.css">
     <script>
-        // Match the loading screen to the requested theme to avoid a flash in documentation embeds
+        // Embed bridge for the documentation, read by main.kt. It runs before the app downloads, so theme
+        // messages sent while the app is loading are kept, and it only accepts them from the embedding page.
         (function () {
-            var theme = new URLSearchParams(window.location.search).get("theme");
-            var dark = theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-            document.documentElement.classList.toggle("dark", dark);
+            var root = document.documentElement;
+            var params = new URLSearchParams(window.location.search);
+            var themePrefix = "filekit-demo:theme=";
+            root.dataset.demo = params.get("demo") || "";
+            root.dataset.embed = params.get("embed") === "true" ? "true" : "false";
+
+            function applyTheme(theme) {
+                if (theme !== "light" && theme !== "dark") return;
+                root.dataset.theme = theme;
+                root.classList.toggle("dark", theme === "dark");
+                window.dispatchEvent(new Event("filekit-demo-theme"));
+            }
+
+            var theme = params.get("theme");
+            if (theme) {
+                applyTheme(theme);
+            } else {
+                root.classList.toggle("dark", window.matchMedia("(prefers-color-scheme: dark)").matches);
+            }
+
+            window.addEventListener("message", function (event) {
+                if (window.parent === window || event.source !== window.parent) return;
+                if (typeof event.data === "string" && event.data.indexOf(themePrefix) === 0) {
+                    applyTheme(event.data.slice(themePrefix.length));
+                }
+            });
         })();
     </script>
 </head>

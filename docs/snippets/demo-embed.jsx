@@ -14,6 +14,7 @@
  */
 export const FileKitDemo = ({ demo, title = "FileKit sample", height = 560 }) => {
   const sampleUrl = "https://vinceglb.github.io/FileKit/"
+  const sampleOrigin = new URL(sampleUrl).origin
   const [running, setRunning] = useState(false)
   const [src, setSrc] = useState(null)
   const [dark, setDark] = useState(false)
@@ -29,12 +30,19 @@ export const FileKitDemo = ({ demo, title = "FileKit sample", height = 560 }) =>
   }, [])
 
   // Theme changes after launch are forwarded to the running sample without reloading it
-  useEffect(() => {
+  const postTheme = () => {
     const frame = iframeRef.current
     if (frame && frame.contentWindow) {
-      frame.contentWindow.postMessage(`filekit-demo:theme=${dark ? "dark" : "light"}`, "*")
+      frame.contentWindow.postMessage(`filekit-demo:theme=${dark ? "dark" : "light"}`, sampleOrigin)
     }
-  }, [dark])
+  }
+
+  useEffect(postTheme, [dark])
+
+  // The launch button disappears on click, so keyboard focus moves to the demo
+  useEffect(() => {
+    if (running && iframeRef.current) iframeRef.current.focus()
+  }, [running])
 
   const params = new URLSearchParams({ embed: "true" })
   if (demo) params.set("demo", demo)
@@ -57,7 +65,7 @@ export const FileKitDemo = ({ demo, title = "FileKit sample", height = 560 }) =>
             ref={iframeRef}
             src={src}
             title={`${title} live demo`}
-            allow="camera; clipboard-write; web-share"
+            onLoad={postTheme}
             className="w-full h-full border-0"
           />
         ) : (
@@ -72,7 +80,7 @@ export const FileKitDemo = ({ demo, title = "FileKit sample", height = 560 }) =>
               onClick={run}
               className="mt-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 dark:bg-primary-light dark:text-gray-950"
             >
-              ▶ Run live demo
+              <span aria-hidden="true">▶ </span>Run live demo
             </button>
           </div>
         )}

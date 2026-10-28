@@ -14,7 +14,7 @@ import io.github.vinceglb.filekit.sample.shared.ui.theme.AppTheme
 /**
  * @param startDemo Screen opened on top of the home screen at launch, if any.
  * @param darkTheme Whether to use the dark color scheme.
- * @param embedded Whether the sample runs embedded in another page, which hides links to the documentation.
+ * @param embedded Whether the sample runs embedded in another page, which hides the documentation button of feature screens.
  */
 @Composable
 public fun App(
