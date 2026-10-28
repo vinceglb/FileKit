@@ -14,10 +14,10 @@ FileKit is already used in production on Android, iOS, desktop and the web. The 
 | Step | Version | Focus | Can it break your code? |
 | --- | --- | --- | --- |
 | 1. Release 0.17 | 0.17 | Recursive file helpers, web storage, iOS fixes | No API removals. Android `minSdk` goes from 23 to 24 |
-| 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes, for the last time** |
-| 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | No removals. Only fixes for problems found in the RCs |
+| 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes, if you still use a deprecated API** |
+| 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | No removals. API changes only to fix problems found in the RCs |
 | 4. FileKit 1.0 | 1.0.0 | Stable release and stabilization period | No |
-| 5. After 1.0 | 1.x | New features and platforms | No API or binary breaks. Minimum Kotlin, SDK or JDK versions may rise |
+| 5. After 1.0 | 1.x | New features and platforms | No breaks for stable APIs on stable platforms. Minimum Kotlin, SDK or JDK versions may rise |
 
 <Tip>
   **What should I do today?**
@@ -41,7 +41,7 @@ Adds recursive helpers (`walk()`, `sizeRecursively()`, `copyRecursively()`), an 
 
 ### 2. API freeze: 0.18
 
-The last release that removes APIs.
+The last release before 1.0 that removes APIs.
 
 - **Deprecated APIs removed**, such as the old `downloadDir`, `pictureDir` and `videoDir` desktop properties and the file saver overloads that take `extension` instead of `defaultExtension`.
 - **Public API review** of `filekit-core`, `filekit-dialogs`, `filekit-dialogs-compose` and `filekit-coil`, against the [Kotlin library authors' guidelines](https://kotlinlang.org/docs/api-guidelines-introduction.html): naming, defaults, nullability, exceptions and visibility. If the review finds a better name, the old one is deprecated with an IDE replacement and keeps compiling until 2.0.
@@ -82,7 +82,7 @@ The stable release, with the guarantees below, followed by a stabilization perio
 | Tier | Platforms | What it means |
 | --- | --- | --- |
 | **Stable** | Android, iOS, JVM desktop (Windows, macOS, Linux), JS, Wasm | Covered by the compatibility policy below. Regressions are treated as bugs. |
-| **Experimental** | Kotlin/Native macOS (`macosArm64`), Linux (`linuxX64`, `linuxArm64`), Windows (`mingwX64`) and watchOS | Published and built in CI, with tests on some targets, but not covered by the compatibility policy: APIs and behavior on these targets may change in minor releases. They can move to Stable in any 1.x release. |
+| **Experimental** | Kotlin/Native macOS (`macosArm64`), Linux (`linuxX64`, `linuxArm64`), Windows (`mingwX64`) and watchOS (`watchosArm64`, `watchosDeviceArm64`, `watchosSimulatorArm64`) | Published and built in CI, with tests on some targets, but not covered by the compatibility policy: APIs and behavior on these targets may change in minor releases. They can move to Stable in any 1.x release. |
 
 <Note>
   Compose Multiplatform desktop apps run on the JVM, so they are in the **Stable** tier on Windows, macOS and Linux. The Experimental tier only concerns apps compiled with Kotlin/Native for those systems. Not every module ships every Kotlin/Native target: watchOS is available in `filekit-core` only, and Linux and Windows native in `filekit-core` and `filekit-dialogs`.
@@ -92,7 +92,7 @@ The stable release, with the guarantees below, followed by a stabilization perio
 
 From 1.0 on, FileKit follows [semantic versioning](https://semver.org/) for stable APIs on stable platforms:
 
-- **Patch releases** (1.0.x) contain bug fixes only.
+- **Patch releases** (1.x.y) contain bug fixes only.
 - **Minor releases** (1.x.0) add features. They don't change or remove existing stable APIs, and libraries built against an earlier 1.x keep working.
 - **Major releases** (2.0.0) are the only ones allowed to remove APIs or break source or binary compatibility.
 - **Deprecations come first.** An API that will go away is deprecated in a 1.x release, with a migration note and an IDE replacement when there is a mechanical one. Your code keeps compiling, and removal waits for the next major release.
