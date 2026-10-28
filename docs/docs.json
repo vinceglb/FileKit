@@ -7,11 +7,11 @@
   "name": "FileKit",
   "description": "FileKit is a Kotlin Multiplatform library to pick, save, read, and write files on Android, iOS, macOS, JVM desktop, Linux, and Windows with native dialogs, plus browser file pickers and downloads on JS and Wasm.",
   "colors": {
-    "primary": "#0D9373",
-    "light": "#07C983",
-    "dark": "#0D9373"
+    "primary": "#1A7F4B",
+    "light": "#E3C266",
+    "dark": "#1A7F4B"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/brand/favicon.svg",
   "navigation": {
     "groups": [
       {
@@ -80,8 +80,18 @@
     ]
   },
   "logo": {
-    "light": "/logo/light-0.10.2.svg",
-    "dark": "/logo/dark-0.10.2.svg"
+    "light": "/brand/logo-light.svg",
+    "dark": "/brand/logo-dark.svg"
+  },
+  "seo": {
+    "metatags": {
+      "og:image": "https://filekit.mintlify.app/brand/og.jpg",
+      "og:image:width": "1200",
+      "og:image:height": "630",
+      "og:image:alt": "FileKit: file operations, pickers, and dialogs for Kotlin and Compose Multiplatform",
+      "twitter:card": "summary_large_image",
+      "twitter:image": "https://filekit.mintlify.app/brand/og.jpg"
+    }
   },
   "navbar": {
     "primary": {
