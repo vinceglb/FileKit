@@ -6,72 +6,73 @@ description: 'Where FileKit is heading, what 1.0 will guarantee, and how you can
 FileKit is already used in production on Android, iOS, desktop and the web. The goal of 1.0 is not a big list of new features. It is a **promise**: a reviewed public API, clear compatibility guarantees, predictable behavior across platforms, and documentation that tells you exactly what to expect.
 
 <Info>
-  **Target: FileKit 1.0 in Q1 2027.** This is a best-effort target, not a fixed date. The order of the work below matters more than the calendar, and this page is updated as work lands.
+  **Target: FileKit 1.0 in Q1 2027.** This is a best-effort target, not a fixed date. The order of the steps below matters more than the calendar, and this page is updated as work lands.
 </Info>
+
+## At a glance
+
+| Step | Version | Focus | Can it break your code? |
+| --- | --- | --- | --- |
+| 1. Latest release | 0.17 | Recursive file helpers, web storage, iOS fixes | No |
+| 2. API freeze | 0.18 | Final API review, deprecated APIs removed | **Yes, for the last time** |
+| 3. Release candidates | 1.0.0-RC | Reliability, documentation, your feedback | Only to fix problems found in the RCs |
+| 4. FileKit 1.0 | 1.0.0 | Stable release and stabilization period | No |
+| 5. After 1.0 | 1.x | New features and platforms | No |
+
+<Tip>
+  **What should I do today?**
+
+  - Upgrade to the latest release and **fix your deprecation warnings**: deprecated APIs are removed in 0.18.
+  - Check where you opt in to `@ExperimentalFileKitApi`: those APIs may still change.
+  - If a name, default or behavior feels wrong, [tell us now](https://github.com/vinceglb/FileKit/discussions). After 1.0 it gets much harder to change.
+</Tip>
 
 ## Guiding principle
 
-Before 1.0, changes that **break existing code** are allowed, as long as they come with a deprecation cycle and migration guidance. After 1.0, they are not.
+Breaking changes happen **before** 1.0, always with a deprecation cycle and migration guidance. After 1.0, they wait for 2.0.
 
-So the work is ordered by that rule:
+Everything additive, like a new function, a new platform implementation or a new integration, doesn't break anyone. So it can ship in any 1.x release and doesn't need to block 1.0.
 
-- **Before 1.0:** anything that changes or removes an existing API, plus the reliability and documentation work that makes the guarantees credible.
-- **In 1.x releases:** anything additive. A new function, a new platform implementation or a new integration doesn't break anyone, so it doesn't need to block 1.0.
+## The plan
 
-## Themes
+### 1. Latest release: 0.17
 
-<CardGroup cols={2}>
-  <Card title="API stability" icon="lock">
-    Review the whole public API, finish the last renames and removals, define a compatibility and deprecation policy, and check it automatically in CI.
-  </Card>
-  <Card title="Cross-platform reliability" icon="shield-halved">
-    More regression tests at platform boundaries and fixes for the highest-impact confirmed bugs, so shared code behaves the same everywhere.
-  </Card>
-  <Card title="Documentation and migration" icon="book-open">
-    A platform support matrix, a 1.0 migration guide, an API reference, and clear notes on platform limitations.
-  </Card>
-  <Card title="Release candidate" icon="flag-checkered">
-    One or more release candidates tested by real apps and libraries, then 1.0 followed by a stabilization period.
-  </Card>
-</CardGroup>
+Adds recursive helpers (`walk()`, `sizeRecursively()`, `copyRecursively()`), an experimental Origin Private File System API on the web, and a fix for persisted folder access on iOS. See the [releases](https://github.com/vinceglb/FileKit/releases) for details.
 
-## Now, next, later
+### 2. API freeze: 0.18
 
-### Now: 0.17
+The last release that is allowed to break things.
 
-Shipping now. It adds recursive helpers (`walk()`, `sizeRecursively()`, `copyRecursively()`), an experimental Origin Private File System API on the web, and a fix for persisted folder access on iOS. See the [releases](https://github.com/vinceglb/FileKit/releases) for details.
-
-### Next: API freeze (0.18)
-
-The last release that is allowed to break things. Everything here must land before 1.0.
-
-- **Public API audit** of `filekit-core`, `filekit-dialogs`, `filekit-dialogs-compose` and `filekit-coil`, against the [Kotlin library authors' guidelines](https://kotlinlang.org/docs/api-guidelines-introduction.html): naming, defaults, nullability, exceptions, and visibility.
-- **Remove deprecated APIs**, such as the old `downloadDir`, `pictureDir` and `videoDir` desktop properties and the file saver overloads that take `extension` instead of `defaultExtension`.
-- **Automated API checks.** Public API dumps (JVM and Kotlin/Native klib) are committed and verified in CI, so any change to the public surface is visible in review.
-- **Experimental status review.** Each `@ExperimentalFileKitApi` declaration is either promoted to stable or explicitly stays experimental through 1.0.
+- **Public API review** of `filekit-core`, `filekit-dialogs`, `filekit-dialogs-compose` and `filekit-coil`, against the [Kotlin library authors' guidelines](https://kotlinlang.org/docs/api-guidelines-introduction.html): naming, defaults, nullability, exceptions and visibility.
+- **Deprecated APIs removed**, such as the old `downloadDir`, `pictureDir` and `videoDir` desktop properties and the file saver overloads that take `extension` instead of `defaultExtension`.
+- **Automatic API checks in CI**, so every change to the public API is visible in review and accidental breaking changes fail the build.
+- **Experimental APIs reviewed.** Each `@ExperimentalFileKitApi` declaration is either promoted to stable or explicitly stays experimental through 1.0.
 - **Compatibility policy** published in these docs (see "What 1.0 guarantees" below).
 
-### Next: reliability and docs (1.0 release candidates)
+### 3. Release candidates: 1.0.0-RC
+
+The API is frozen. The focus moves to reliability and documentation, with builds you can try in your app or library.
 
 - **Regression tests** where users report the most issues: Android content URIs and picker lifecycle, Apple security-scoped resources and bookmarks, desktop dialogs, and browser file handling. Manual verification steps are documented where system UI cannot be automated.
-- **Fix the highest-impact confirmed bugs** on the stable platforms, for example missing dismissal events from some iOS pickers ([#138](https://github.com/vinceglb/FileKit/issues/138)).
+- **Fixes for the highest-impact confirmed bugs** on stable platforms, for example missing dismissal events from some iOS pickers ([#138](https://github.com/vinceglb/FileKit/issues/138)).
 - **Platform support matrix**: every feature, on every platform, with its known limitations.
 - **1.0 migration guide** covering every API removed or renamed since 0.17.
 - **API reference** generated from KDoc and published next to these docs.
-- **Release candidates**: `1.0.0-RC` builds for apps and libraries to try before the final release.
 
-### Targeted for 1.0, not blocking
+### 4. FileKit 1.0
 
-These are additive, so they can ship in 1.0 if they are ready, or in a 1.x release if not:
+The stable release, followed by a stabilization period focused on regressions.
+
+These additions are targeted for 1.0 and included if they are ready. Otherwise, they ship in a 1.x release:
 
 - **Native save dialog on the web** ([#348](https://github.com/vinceglb/FileKit/issues/348)), using the File System Access API where available, with the current download behavior as a fallback.
 - **Blob and W3C `File` interop on the web** ([#173](https://github.com/vinceglb/FileKit/issues/173)), so web code can move between browser types and `PlatformFile` without boilerplate.
 
-### Later: 1.x
+### 5. After 1.0: 1.x
 
 - **Chunked reading on the web**, for uploading or processing large files without loading them fully in memory.
 - **More consistent image processing** across platforms, for compression and resizing results that match more closely.
-- **Promote native targets to stable** (macOS, Linux, Windows, watchOS) as their test coverage and real-world usage grow. That includes validating Linux distributions such as Aurora OS ([#609](https://github.com/vinceglb/FileKit/issues/609)).
+- **Kotlin/Native targets promoted to stable** as their test coverage and real-world usage grow. That includes validating Linux distributions such as Aurora OS ([#609](https://github.com/vinceglb/FileKit/issues/609)).
 - **More integrations and recipes** with popular Kotlin Multiplatform libraries.
 
 ## What 1.0 guarantees
@@ -80,18 +81,22 @@ These are additive, so they can ship in 1.0 if they are ready, or in a 1.x relea
 
 | Tier | Platforms | What it means |
 | --- | --- | --- |
-| **Stable** | Android, iOS, JVM desktop (Windows, macOS, Linux), JS, Wasm | Covered by the compatibility guarantees below. Regressions are treated as bugs. |
-| **Experimental** | macOS native, Linux native, Windows native, watchOS | Published and tested in CI, but platform-specific APIs and behavior may change in minor releases. They can move to Stable in any 1.x release. |
+| **Stable** | Android, iOS, JVM desktop (Windows, macOS, Linux), JS, Wasm | Covered by the compatibility policy below. Regressions are treated as bugs. |
+| **Experimental** | Kotlin/Native macOS (`macosArm64`), Linux (`linuxX64`, `linuxArm64`), Windows (`mingwX64`) and watchOS | Published and tested in CI, but not covered by the compatibility policy: APIs and behavior on these targets may change in minor releases. They can move to Stable in any 1.x release. |
+
+<Note>
+  Compose Multiplatform desktop apps run on the JVM, so they are in the **Stable** tier on Windows, macOS and Linux. The Experimental tier only concerns apps compiled with Kotlin/Native for those systems.
+</Note>
 
 ### Compatibility policy
 
-From 1.0 on, FileKit follows [semantic versioning](https://semver.org/) for its stable API on stable platforms:
+From 1.0 on, FileKit follows [semantic versioning](https://semver.org/) for stable APIs on stable platforms:
 
 - **Patch releases** (1.0.x) contain bug fixes only.
-- **Minor releases** (1.x.0) add features without breaking source or binary compatibility.
+- **Minor releases** (1.x.0) add features without breaking your code or the libraries you depend on.
 - **Major releases** (2.0.0) are the only ones allowed to remove APIs or break compatibility.
-- **Deprecations come first.** An API is deprecated with a `ReplaceWith` hint and a migration note before it goes away. Its deprecation level may go from `WARNING` to `ERROR` to `HIDDEN` across minor releases, but it is only removed in a major release.
-- **Checked automatically.** Public API dumps are verified in CI, so accidental breaking changes fail the build instead of reaching you.
+- **Deprecations come first.** An API that goes away is first deprecated, with an automatic replacement in your IDE and a migration note. It may become a compilation error in a later 1.x release, but it stays binary compatible and is only removed in a major release.
+- **Checked automatically.** CI compares the public API with the previous release, so accidental breaking changes fail the build instead of reaching you.
 
 ### Not covered
 
