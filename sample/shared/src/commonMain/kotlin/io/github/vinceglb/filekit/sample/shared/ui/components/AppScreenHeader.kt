@@ -106,16 +106,18 @@ internal fun AppScreenHeader(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                val loading = primaryButtonState == AppScreenHeaderButtonState.Loading
                 AppButton(
                     onClick = onPrimaryButtonClick,
-                    enabled = primaryButtonEnabled && primaryButtonState != AppScreenHeaderButtonState.Loading,
+                    enabled = primaryButtonEnabled && !loading,
                     contentPadding = AppButtonDefaults.SmallButtonContentPadding,
                 ) {
                     AnimatedVisibility(
-                        visible = primaryButtonState == AppScreenHeaderButtonState.Loading,
+                        visible = loading,
                     ) {
+                        // The button is disabled while loading, then fades the indicator out on the primary color.
                         LoadingIndicator(
-                            color = MaterialTheme.colorScheme.onSurface,
+                            color = if (loading) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
                             modifier = Modifier
                                 .padding(end = 4.dp)
                                 .size(24.dp),
