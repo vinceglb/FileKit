@@ -62,5 +62,39 @@
       "grain": 0,
       "focus": 0.5
     }
+  },
+  "banner": {
+    "seed": 9.1,
+    "pieces": 90,
+    "background": {
+      "dark": {
+        "grain": 0.06,
+        "focus": 0.45
+      },
+      "light": {
+        "grain": 0.05,
+        "focus": -0.5
+      }
+    },
+    "text": {
+      "dark": "#FFF1D0",
+      "light": "#0F5A36"
+    },
+    "confetti": {
+      "dark": [
+        "#F2D37A",
+        "#FFF1D0",
+        "#FFFFFF",
+        "#3DBA6E",
+        "#E3C266"
+      ],
+      "light": [
+        "#0F5A36",
+        "#2E9A5C",
+        "#E7C25E",
+        "#FFFFFF",
+        "#D8B24C"
+      ]
+    }
   }
 }

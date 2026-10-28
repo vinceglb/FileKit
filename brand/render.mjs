@@ -5,7 +5,7 @@
 //   npm run render -- sample  # only the sample app icons
 //   npm run preview           # serve the sources to tweak them live in a browser
 //
-// Raster images are screenshots of src/hero.html taken by headless Chromium (Playwright).
+// Raster images are screenshots of src/hero.html and src/banner.html taken by headless Chromium (Playwright).
 // SVG logos are generated from src/mark.js and the outlines of Inter Bold Italic (opentype.js).
 // App icons are screenshots of src/icon.html; .icns and .ico files are assembled from those PNGs.
 
@@ -30,6 +30,12 @@ const HEROES = [
   { file: 'docs/brand/hero.webp', width: 1920, height: 1080, theme: 'dark', rounded: true },
   { file: 'docs/brand/og.jpg', width: 1200, height: 630, theme: 'dark' },
 ];
+
+// Grant banner (src/banner.html), in both themes. The README one is a link, so it carries its call to action.
+const BANNERS = ['dark', 'light'].flatMap((theme) => [
+  { file: `brand/exports/grant-banner-${theme}.webp`, width: 1920, height: 240, theme, rounded: true, cta: true },
+  { file: `docs/brand/grant-banner-${theme}.webp`, width: 1920, height: 240, theme },
+]);
 const QUALITY = 0.92;
 
 // ---------------------------------------------------------------------------------------------
@@ -135,6 +141,7 @@ if (process.argv[2] === '--preview') {
   const { base } = await serve(4173);
   console.log(`Brand board:  ${base}/brand/src/board.html`);
   console.log(`Live hero:    ${base}/brand/src/hero.html  (resize the window to try formats, add ?seed=3.6 to try a composition)`);
+  console.log(`Grant banner: ${base}/brand/src/banner.html?cta=1  (add &theme=light or &seed=3.6)`);
   console.log('Ctrl+C to stop.');
 } else {
   await render(process.argv[2]);
@@ -149,7 +156,7 @@ async function render(filter) {
     console.log('wrote', svg.file);
   }
 
-  const heroes = HEROES.filter((h) => wanted(h.file));
+  const heroes = [...HEROES, ...BANNERS].filter((h) => wanted(h.file));
   const icons = ICONS.filter((i) => wanted(i.file));
   if (heroes.length === 0 && icons.length === 0) return;
   const { server, base } = await serve();
@@ -158,7 +165,8 @@ async function render(filter) {
   for (const hero of heroes) {
     const page = await browser.newPage({ viewport: { width: hero.width, height: hero.height } });
     page.on('pageerror', (e) => console.error(hero.file, e.message));
-    await page.goto(`${base}/brand/src/hero.html?theme=${hero.theme}&rounded=${hero.rounded ? 1 : 0}`);
+    const source = BANNERS.includes(hero) ? 'banner' : 'hero';
+    await page.goto(`${base}/brand/src/${source}.html?theme=${hero.theme}&rounded=${hero.rounded ? 1 : 0}&cta=${hero.cta ? 1 : 0}`);
     await page.waitForSelector('body[data-ready]');
     await mkdir(dirname(join(REPO, hero.file)), { recursive: true });
     if (hero.file.endsWith('.jpg')) {

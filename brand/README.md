@@ -15,8 +15,9 @@ npm run render -- sample          # only the sample app icons and logos
 npm run preview                   # serve the sources to tweak them live in a browser
 ```
 
-`npm run preview` prints two URLs: the brand board (every export and the palette on one page) and the live
-hero (`src/hero.html`). The hero fills the browser window, so resizing the window previews other formats.
+`npm run preview` prints three URLs: the brand board (every export and the palette on one page), the live
+hero (`src/hero.html`) and the grant banner (`src/banner.html`, configured under `banner` in `palette.json`).
+The hero fills the browser window, so resizing the window previews other formats.
 Add `?seed=3.6` to the hero URL to try another background composition without editing any file.
 
 Rendering runs locally only; CI does not build these assets.
@@ -28,6 +29,8 @@ Rendering runs locally only; CI does not build these assets.
 | README hero | `brand/exports/readme-hero.webp` | 1920×960, rounded corners |
 | GitHub social preview | `brand/exports/social-preview.jpg` | 1280×640, upload in the repo settings |
 | Docs hero | `docs/brand/hero.webp` | 1920×1080, rounded corners |
+| README grant banner | `brand/exports/grant-banner-{dark,light}.webp` | 1920×240, rounded corners, with the call to action |
+| Docs grant banner | `docs/brand/grant-banner-{dark,light}.webp` | 1920×240 |
 | Open Graph image | `docs/brand/og.jpg` | 1200×630 |
 | Logo for light backgrounds | `docs/brand/logo-light.svg` | mark + wordmark, outlined |
 | Logo for dark backgrounds | `docs/brand/logo-dark.svg` | mark + wordmark, outlined |
