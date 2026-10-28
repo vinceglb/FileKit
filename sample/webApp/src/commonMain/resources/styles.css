@@ -6,29 +6,37 @@ html, body {
     overflow: hidden;
 }
 
+/* Loading screen, in the colors of the app theme (sample/shared/.../ui/theme/Theme.kt) */
 body {
     display: flex;
+    flex-direction: column;
+    gap: 20px;
     align-items: center;
     justify-content: center;
-    background: #fffbfe;
+    background: #f8faf5;
+}
+
+.logo {
+    width: 48px;
+    height: 48px;
 }
 
 .loader-track {
-    stroke: #ccc;
+    stroke: #dce5dc;
 }
 
 .loader-arc {
-    stroke: #333;
+    stroke: #1a7f4b;
 }
 
 html.dark body {
-    background: #1c1b1f;
+    background: #07160e;
 }
 
 html.dark .loader-track {
-    stroke: #444;
+    stroke: #2a3a31;
 }
 
 html.dark .loader-arc {
-    stroke: #ddd;
+    stroke: #86d9a4;
 }

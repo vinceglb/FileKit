@@ -11,6 +11,7 @@ npm ci
 npx playwright install chromium   # first time only
 npm run render                    # every asset (a few seconds)
 npm run render -- hero            # only assets whose path contains "hero"
+npm run render -- sample          # only the sample app icons and logos
 npm run preview                   # serve the sources to tweak them live in a browser
 ```
 
@@ -39,6 +40,27 @@ The heroes are lossy on purpose: the film grain makes lossless PNGs about 3.5 MB
 They are WebP when the rounded corners need transparency, and JPEG for social cards (GitHub caps the
 social preview at 1 MB).
 
+### Sample app icons
+
+`npm run render -- sample` writes every sample app icon from `src/icon.html`: the mark (cream sheet,
+gold fold) on the silk background. The icons skip the film grain, which is invisible at icon sizes.
+
+| Platform | Path | Sizes |
+| --- | --- | --- |
+| Android launcher (legacy, round) | `sample/androidApp/src/main/res/mipmap-*/ic_launcher{,_round}.webp` | 48 dp at mdpi to xxxhdpi |
+| Android adaptive layers | `sample/androidApp/src/main/res/mipmap-*/ic_launcher_{foreground,background}.webp` | 108 dp at mdpi to xxxhdpi |
+| Google Play | `sample/androidApp/src/main/ic_launcher-playstore.png` | 512 |
+| iOS | `sample/iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/AppIcon.png` | 1024, square (iOS rounds it) |
+| macOS (Xcode app) | `sample/iosApp/macosApp/Assets.xcassets/AppIcon.appiconset/icon_*.png` | 16 to 1024, macOS grid |
+| Desktop apps, macOS | `sample/icons/filekit.icns` | 16 to 1024, macOS grid |
+| Desktop apps, Windows | `sample/icons/filekit.ico` | 16 to 256, rounded |
+| Desktop apps, Linux | `sample/icons/filekit.png` | 512, rounded |
+| Web favicon and loading screen | `sample/webApp/src/commonMain/resources/favicon.svg` | 32×32 mark |
+| In-app logo (light, dark) | `sample/shared/src/commonMain/composeResources/drawable/filekit_mark_{light,dark}.xml` | vector drawable |
+
+The desktop icons are referenced by `sample/desktopApp` and `sample/nucleusApp` (`nativeDistributions`).
+The `.icns` and `.ico` files are assembled by `render.mjs` itself, so no image tool is needed.
+
 ## Sources
 
 | File | What it controls |
@@ -46,7 +68,8 @@ social preview at 1 MB).
 | `palette.json` | Every color: docs colors, mark gradient, background stops, grain, text blend. Start here. |
 | `src/hero.html` | Hero layout: title, subtitle, construction lines. Sizes are in `cqw` (percent of the width). |
 | `src/background.js` | The silk gradient shader. |
-| `src/mark.js` | The mark: a file sheet with a folded corner, slanted at Inter Bold Italic's 9.4° italic angle. |
+| `src/mark.js` | The mark: a file sheet with a folded corner, slanted at Inter Bold Italic's 9.4° italic angle. Also writes it as an Android vector drawable. |
+| `src/icon.html` | App icon: the mark on the silk background, clipped per platform (`?shape=rounded`, `circle`, `macos`). |
 | `render.mjs` | Export list (paths, sizes, formats), logo lockup and wordmark outlining. |
 | `fonts/` | Inter 4.1 (SIL Open Font License, see `fonts/OFL.txt`). |
 
@@ -59,6 +82,13 @@ social preview at 1 MB).
 | `docs.dark` | `#1A7F4B` | Docs buttons and hover states |
 | `ink` | `#07160E` | Wordmark on light backgrounds |
 | `background.dark.stops` | `#07160E` `#0F4A2F` `#2E8A55` `#D8B24C` `#FFE6A6` | Hero gradient, darkest to brightest |
+| `icon.mark`, `icon.fold` | `#F2D37A` `#FFF1D0` `#FFFFFF`, `#E3C266` | App icon sheet gradient and folded corner |
+
+`icon.background` overrides the dark background settings (seed, grain, focus) for the app icons.
+
+The sample app theme (`sample/shared/.../ui/theme/Theme.kt`) derives its Material 3 color schemes from these
+colors by hand: green primary, gold tertiary, ink text in light mode and ink surfaces in dark mode.
+Keep it in sync when the palette changes.
 
 To change the hero colors, edit `background.dark.stops`. The shader maps its noise onto these five colors
 in order, so keep them sorted from darkest to brightest.

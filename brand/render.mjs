@@ -2,10 +2,12 @@
 //
 //   npm run render            # all assets
 //   npm run render -- hero    # only assets whose path contains "hero"
+//   npm run render -- sample  # only the sample app icons
 //   npm run preview           # serve the sources to tweak them live in a browser
 //
 // Raster images are screenshots of src/hero.html taken by headless Chromium (Playwright).
 // SVG logos are generated from src/mark.js and the outlines of Inter Bold Italic (opentype.js).
+// App icons are screenshots of src/icon.html; .icns and .ico files are assembled from those PNGs.
 
 import { createServer } from 'node:http';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -13,7 +15,7 @@ import { dirname, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import opentype from 'opentype.js';
 import { chromium } from 'playwright';
-import { MARK_BOX, markShapes, markSvg } from './src/mark.js';
+import { MARK_BOX, markShapes, markSvg, markVectorDrawable } from './src/mark.js';
 
 const BRAND = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(BRAND, '..');
@@ -29,6 +31,36 @@ const HEROES = [
   { file: 'docs/brand/og.jpg', width: 1200, height: 630, theme: 'dark' },
 ];
 const QUALITY = 0.92;
+
+// ---------------------------------------------------------------------------------------------
+// Sample app icons (src/icon.html)
+
+const ANDROID_RES = 'sample/androidApp/src/main/res';
+const MACOS_ICONSET = 'sample/iosApp/macosApp/Assets.xcassets/AppIcon.appiconset';
+// Adaptive icon layers are 108 dp, of which launchers show the center 72 dp: keep the mark the same visible size.
+const ADAPTIVE = 72 / 108;
+const DENSITIES = { mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 };
+
+/** One rendered PNG per entry; `sizes` packs several renders into one .icns or .ico file. */
+const ICONS = [
+  ...Object.entries(DENSITIES).flatMap(([density, x]) => [
+    { file: `${ANDROID_RES}/mipmap-${density}/ic_launcher.webp`, size: 48 * x, shape: 'rounded' },
+    { file: `${ANDROID_RES}/mipmap-${density}/ic_launcher_round.webp`, size: 48 * x, shape: 'circle' },
+    { file: `${ANDROID_RES}/mipmap-${density}/ic_launcher_foreground.webp`, size: 108 * x, layer: 'foreground', scale: ADAPTIVE },
+    { file: `${ANDROID_RES}/mipmap-${density}/ic_launcher_background.webp`, size: 108 * x, layer: 'background' },
+  ]),
+  { file: 'sample/androidApp/src/main/ic_launcher-playstore.png', size: 512 },
+  // iOS masks the corners itself and wants an opaque square.
+  { file: 'sample/iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/AppIcon.png', size: 1024 },
+  ...[16, 32, 128, 256, 512].flatMap((size) => [
+    { file: `${MACOS_ICONSET}/icon_${size}x${size}.png`, size, shape: 'macos' },
+    { file: `${MACOS_ICONSET}/icon_${size}x${size}@2x.png`, size: size * 2, shape: 'macos' },
+  ]),
+  // Desktop (Compose and Nucleus) native distributions.
+  { file: 'sample/icons/filekit.icns', sizes: [16, 32, 64, 128, 256, 512, 1024], shape: 'macos' },
+  { file: 'sample/icons/filekit.ico', sizes: [16, 24, 32, 48, 64, 128, 256], shape: 'rounded' },
+  { file: 'sample/icons/filekit.png', size: 512, shape: 'rounded' },
+];
 
 // ---------------------------------------------------------------------------------------------
 // SVG logos
@@ -71,6 +103,9 @@ const SVGS = [
   { file: 'docs/brand/logo-dark.svg', content: () => lockup('dark') },
   { file: 'docs/brand/favicon.svg', content: () => markSvg(palette.mark, 32) + '\n' },
   { file: 'brand/exports/mark.svg', content: () => markSvg(palette.mark, 512) + '\n' },
+  { file: 'sample/webApp/src/commonMain/resources/favicon.svg', content: () => markSvg(palette.mark, 32) + '\n' },
+  { file: 'sample/shared/src/commonMain/composeResources/drawable/filekit_mark_light.xml', content: () => markVectorDrawable(palette.mark) },
+  { file: 'sample/shared/src/commonMain/composeResources/drawable/filekit_mark_dark.xml', content: () => markVectorDrawable(palette.markOnDark) },
 ];
 
 // ---------------------------------------------------------------------------------------------
@@ -115,7 +150,8 @@ async function render(filter) {
   }
 
   const heroes = HEROES.filter((h) => wanted(h.file));
-  if (heroes.length === 0) return;
+  const icons = ICONS.filter((i) => wanted(i.file));
+  if (heroes.length === 0 && icons.length === 0) return;
   const { server, base } = await serve();
   // SwiftShader keeps WebGL output identical across machines with or without a GPU.
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
@@ -128,25 +164,81 @@ async function render(filter) {
     if (hero.file.endsWith('.jpg')) {
       await page.screenshot({ path: join(REPO, hero.file), type: 'jpeg', quality: QUALITY * 100 });
     } else {
-      // Chromium encodes WebP (with alpha) itself, so no image tool is needed.
       const png = await page.screenshot({ omitBackground: true });
-      const webp = await page.evaluate(async ([data, quality]) => {
-        const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
-        const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-        canvas.getContext('2d').drawImage(bitmap, 0, 0);
-        const blob = await canvas.convertToBlob({ type: 'image/webp', quality });
-        const url = await new Promise((done) => {
-          const reader = new FileReader();
-          reader.onload = () => done(reader.result);
-          reader.readAsDataURL(blob);
-        });
-        return url.slice(url.indexOf(',') + 1);
-      }, [png.toString('base64'), QUALITY]);
-      await writeFile(join(REPO, hero.file), Buffer.from(webp, 'base64'));
+      await writeFile(join(REPO, hero.file), await toWebp(page, png));
     }
     await page.close();
     console.log('wrote', hero.file);
   }
+  for (const icon of icons) {
+    const pngs = [];
+    for (const size of icon.sizes ?? [icon.size]) {
+      const page = await browser.newPage({ viewport: { width: size, height: size } });
+      page.on('pageerror', (e) => console.error(icon.file, e.message));
+      const query = new URLSearchParams({ layer: icon.layer ?? 'full', shape: icon.shape ?? 'square' });
+      if (icon.scale) query.set('scale', palette.icon.scale * icon.scale);
+      await page.goto(`${base}/brand/src/icon.html?${query}`);
+      await page.waitForSelector('body[data-ready]');
+      const png = await page.screenshot({ omitBackground: true });
+      pngs.push({ size, data: icon.file.endsWith('.webp') ? await toWebp(page, png) : png });
+      await page.close();
+    }
+    const data = icon.file.endsWith('.icns') ? icns(pngs) : icon.file.endsWith('.ico') ? ico(pngs) : pngs[0].data;
+    await mkdir(dirname(join(REPO, icon.file)), { recursive: true });
+    await writeFile(join(REPO, icon.file), data);
+    console.log('wrote', icon.file);
+  }
   await browser.close();
   server.close();
+}
+
+/** Chromium encodes WebP (with alpha) itself, so no image tool is needed. */
+async function toWebp(page, png) {
+  const webp = await page.evaluate(async ([data, quality]) => {
+    const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${data}`)).blob());
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0);
+    const blob = await canvas.convertToBlob({ type: 'image/webp', quality });
+    const url = await new Promise((done) => {
+      const reader = new FileReader();
+      reader.onload = () => done(reader.result);
+      reader.readAsDataURL(blob);
+    });
+    return url.slice(url.indexOf(',') + 1);
+  }, [png.toString('base64'), QUALITY]);
+  return Buffer.from(webp, 'base64');
+}
+
+/** Apple icon file: a header, then one PNG chunk per size (the type code tells the size). */
+function icns(pngs) {
+  const types = { 16: 'icp4', 32: 'icp5', 64: 'icp6', 128: 'ic07', 256: 'ic08', 512: 'ic09', 1024: 'ic10' };
+  const chunks = pngs.map(({ size, data }) => {
+    const head = Buffer.alloc(8);
+    head.write(types[size], 0, 'ascii');
+    head.writeUInt32BE(data.length + 8, 4);
+    return Buffer.concat([head, data]);
+  });
+  const head = Buffer.alloc(8);
+  head.write('icns', 0, 'ascii');
+  head.writeUInt32BE(8 + chunks.reduce((n, c) => n + c.length, 0), 4);
+  return Buffer.concat([head, ...chunks]);
+}
+
+/** Windows icon file: a directory of PNG images (supported since Windows Vista). */
+function ico(pngs) {
+  const head = Buffer.alloc(6 + 16 * pngs.length);
+  head.writeUInt16LE(1, 2); // type: icon
+  head.writeUInt16LE(pngs.length, 4);
+  let offset = head.length;
+  pngs.forEach(({ size, data }, i) => {
+    const entry = 6 + 16 * i;
+    head.writeUInt8(size >= 256 ? 0 : size, entry); // 0 means 256
+    head.writeUInt8(size >= 256 ? 0 : size, entry + 1);
+    head.writeUInt16LE(1, entry + 4); // color planes
+    head.writeUInt16LE(32, entry + 6); // bits per pixel
+    head.writeUInt32LE(data.length, entry + 8);
+    head.writeUInt32LE(offset, entry + 12);
+    offset += data.length;
+  });
+  return Buffer.concat([head, ...pngs.map((p) => p.data)]);
 }
