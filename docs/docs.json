@@ -72,8 +72,7 @@
         "group": "Resources",
         "pages": [
           "roadmap",
-          "showcase",
-          "migrate-to-v0.10"
+          "showcase"
         ]
       }
     ]
@@ -112,5 +111,11 @@
       "cursor",
       "vscode"
     ]
-  }
+  },
+  "redirects": [
+    {
+      "source": "/migrate-to-v0.10",
+      "destination": "/installation"
+    }
+  ]
 }
