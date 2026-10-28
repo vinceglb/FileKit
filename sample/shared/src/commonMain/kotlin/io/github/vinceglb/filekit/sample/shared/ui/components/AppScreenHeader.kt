@@ -115,7 +115,7 @@ internal fun AppScreenHeader(
                         visible = primaryButtonState == AppScreenHeaderButtonState.Loading,
                     ) {
                         LoadingIndicator(
-                            color = MaterialTheme.colorScheme.outlineVariant,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .padding(end = 4.dp)
                                 .size(24.dp),
