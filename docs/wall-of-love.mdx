@@ -7,9 +7,7 @@ mode: 'wide'
 
 import { QuoteGrid, QuoteCard } from '/snippets/quote-card.jsx'
 
-Every quote is copied word for word from a public post, issue, or discussion, with a link to the original.
-
-<QuoteGrid>
+<QuoteGrid layout="wall">
   <QuoteCard
     quote={"📁 Adding photo uploads, document attachments, or file exports to a Kotlin Multiplatform app?\n\nFileKit handles file picking, saving, and creation across platforms – from photos and documents to folders, media capture, and sharing."}
     name="Kotlin by JetBrains"
@@ -23,6 +21,7 @@ Every quote is copied word for word from a public post, issue, or discussion, wi
     quote="The API just makes sense and I can just focus on my app instead of fighting with platform APIs"
     name="Alex Styl"
     role="Composables"
+    avatar="alexstyl"
     handle="@alexstyl"
     platform="X"
     date="Jun 2, 2025"
@@ -32,15 +31,27 @@ Every quote is copied word for word from a public post, issue, or discussion, wi
     quote={"Thank you for the project. You literally saved me hours and hours of time 👍\n\nHappily using FileKit on multiplatform android. iOS, desktop and web in production"}
     name="Simon Schubert"
     role="Kai"
+    avatar="SimonSchubert"
     handle="@SimonSchubert"
     platform="GitHub"
     date="Mar 15, 2026"
     href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-16142366"
   />
   <QuoteCard
+    quote="Currently this project is unmaintained. If you want an alternative I will recommend FileKit"
+    name="Giorgi Shalvashvili"
+    role="Co-maintainer of Compose Multiplatform File Picker"
+    avatar="shalva97"
+    handle="@shalva97"
+    platform="GitHub"
+    date="Jun 23, 2024"
+    href="https://github.com/Wavesonics/compose-multiplatform-file-picker/commit/5ed5d20dde86f1b0067129f14273110fd7298e68"
+  />
+  <QuoteCard
     quote="It's been fantastic for helping people choose images to import for their artists and importing and exporting schedule content into the app. Thanks for making this and letting me focus on building the app instead of having to spend time dealing with the headaches of file management in a multi-platform setting."
     name="Benjamin Abramovitch"
     role="Dancing Decibels"
+    avatar="babramovitch"
     handle="@babramovitch"
     platform="GitHub"
     date="Feb 19, 2026"
@@ -50,36 +61,200 @@ Every quote is copied word for word from a public post, issue, or discussion, wi
     quote="Thanks a lot Vincent. I also want to +1 on what Maurizio said above, you have done an excellent job and your documentation is outstanding. Finally a human friendly documentation 😅"
     name="Pavlos Tzegiannakis"
     role="Tracker for Bluesky"
+    avatar="PavlosTze"
     handle="@PavlosTze"
     platform="GitHub"
     date="Mar 18, 2025"
     href="https://github.com/vinceglb/FileKit/issues/215#issuecomment-2734341542"
   />
   <QuoteCard
+    quote={"I use FileKit on Composables's SVG to Compose tool. Love how simple you made it to just pick files.\n\nIt was particularly handy because I build my Compose apps on JVM and I needed the tool to be published on my site. Debugging apps on the web is a pain right now, so FileKit made it a breeze. Kudos!"}
+    name="Alex Styl"
+    role="Composables"
+    avatar="alexstyl"
+    handle="@alexstyl"
+    platform="GitHub"
+    date="Jul 28, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13905300"
+  />
+  <QuoteCard
+    quote="I want to thank Vincent for the great work done with this library. It's just amazing. I've also appreciated the well-written doc of the new version. The migration from version 0.8.8 was very easy. Thank you!"
+    name="Maurizio Faleo"
+    role="Splital"
+    avatar="mauriziofaleo"
+    handle="@mauriziofaleo"
+    platform="GitHub"
+    date="Mar 14, 2025"
+    href="https://github.com/vinceglb/FileKit/issues/215#issuecomment-2725626597"
+  />
+  <QuoteCard
     quote={"I use FileKit in PixelSafe, a Compose Multiplatform Steganography app.\n\nIt works really well, so I will soon switch to it in Ashampoo Photo Organizer, which is a Compose Multiplatform photo management tool.\n\nEDIT: Migration is done for my Photo Organizer and the macOS version (using your lib) online. :)"}
     name="Stefan Oltmann"
     role="Ashampoo Photo Organizer and PixelSafe"
+    avatar="StefanOltmann"
     handle="@StefanOltmann"
     platform="GitHub"
     date="Jul 28, 2025"
     href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13911389"
   />
   <QuoteCard
-    quote="Currently this project is unmaintained. If you want an alternative I will recommend FileKit"
-    name="Giorgi Shalvashvili"
-    role="Co-maintainer of Compose Multiplatform File Picker"
-    handle="@shalva97"
-    platform="GitHub"
-    date="Jun 23, 2024"
-    href="https://github.com/Wavesonics/compose-multiplatform-file-picker/commit/5ed5d20dde86f1b0067129f14273110fd7298e68"
-  />
-  <QuoteCard
     quote={"Now it works like a charm on both platforms! [...] Now with PlatformFile and .readBytes() it makes it easier to read csv file to String without writing platform-specific code.\n\nThank you for your help and this library! It's inspired and gives future for kotlin/compose multiplatform!"}
     name="brucemax"
+    avatar="brucemax"
     handle="@brucemax"
     platform="GitHub"
     date="Feb 27, 2025"
     href="https://github.com/vinceglb/FileKit/issues/201#issuecomment-2689283732"
+  />
+  <QuoteCard
+    quote={"I’m using FileKit in AB Download Manager for letting users select download locations.\n\nthe native file picker looks great! -- I really appreciate your work. Keep it up!"}
+    name="AmirHossein Abdolmotallebi"
+    role="AB Download Manager"
+    avatar="amir1376"
+    handle="@amir1376"
+    platform="GitHub"
+    date="Oct 18, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-14714611"
+  />
+  <QuoteCard
+    quote={"Built with KMP and CMP, FileKit came handy in order to provide my users the ability to export some of their data as .json files and import them with your file picker, so that the users can easily move their data between phones.\n\nThanks a lot for your work, everything is working perfectly so far! 👏"}
+    name="Pavlos Tzegiannakis"
+    role="Tracker for Bluesky"
+    avatar="PavlosTze"
+    handle="@PavlosTze"
+    platform="GitHub"
+    date="Jul 30, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13936833"
+  />
+  <QuoteCard
+    quote="FileKit is an external library made to apply file operations on Kotlin and KMP projects. This simplified the development process of allowing file selection"
+    name="Workflow trace viewer"
+    role="README in square/workflow-kotlin"
+    platform="GitHub"
+    date="Aug 5, 2025"
+    href="https://github.com/square/workflow-kotlin/blob/main/workflow-trace-viewer/README.md"
+  />
+  <QuoteCard
+    quote={"We've been using FileKit since February 2025, and our experience has been amazing! 👍🏻\n\nThank you for your work 🙏"}
+    name="Maurizio Faleo"
+    role="Splital"
+    avatar="mauriziofaleo"
+    handle="@mauriziofaleo"
+    platform="GitHub"
+    date="Jul 29, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13923299"
+  />
+  <QuoteCard
+    quote="OMG, that was fast and thorough, thank you so much!"
+    name="Jan Exner"
+    avatar="janexner"
+    handle="@janexner"
+    platform="GitHub"
+    date="May 2, 2025"
+    href="https://github.com/vinceglb/FileKit/issues/257#issuecomment-2847049236"
+  />
+  <QuoteCard
+    quote="Your library enabled me to more quickly implement importing and exporting data, routines, and images of my workout completion screen so users can share their completed workout without having to take a screenshot."
+    name="Corey Kreiniker"
+    role="Parrot Workout Tracker"
+    avatar="coalacorey"
+    handle="@coalacorey"
+    platform="GitHub"
+    date="Aug 1, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13960874"
+  />
+  <QuoteCard
+    quote="For me, FileKit meets all my needs for file selection, whether it is folder or file selection, it is very easy to use"
+    name="LazyIonEs"
+    role="AndroidToolKit"
+    avatar="LazyIonEs"
+    handle="@LazyIonEs"
+    platform="GitHub"
+    date="Jul 29, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13916467"
+  />
+  <QuoteCard
+    quote={"Needless to say this is a fantastic library and I'm only filing a few bugs to help polish it :)\nThank you so much for your hard work."}
+    name="Licryle"
+    avatar="licryle"
+    handle="@licryle"
+    platform="GitHub"
+    date="Sep 28, 2025"
+    href="https://github.com/vinceglb/FileKit/issues/400"
+  />
+  <QuoteCard
+    quote="Hello! First of all, I just want to say this is an awesome library, thank you for your great work!"
+    name="Lucas Yuji Yoshimine"
+    avatar="ujizin"
+    handle="@ujizin"
+    platform="GitHub"
+    date="Feb 20, 2026"
+    href="https://github.com/vinceglb/FileKit/issues/490"
+  />
+  <QuoteCard
+    quote="Hi, thank you for creating this library. It's been very helpful in my project. I've implemented this feature as part of my work and wanted to port it back to the library."
+    name="sittisak-kij"
+    avatar="sittisak-kij"
+    handle="@sittisak-kij"
+    platform="GitHub"
+    date="Jul 27, 2025"
+    href="https://github.com/vinceglb/FileKit/pull/340"
+  />
+  <QuoteCard
+    quote="I use FileKit for Heron, an open source KMP bluesky client. Specifically Filekit is used for fetching images for previewing when uploading images or videos to bluesky."
+    name="Adetunji Dahunsi"
+    role="Heron"
+    avatar="tunjid"
+    handle="@tunjid"
+    platform="GitHub"
+    date="Jul 28, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13904385"
+  />
+  <QuoteCard
+    quote="I use filekit on Twine to support importing and exporting OPML files for RSS feeds."
+    name="Sasikanth"
+    role="Twine"
+    avatar="msasikanth"
+    handle="@msasikanth"
+    platform="GitHub"
+    date="Jul 28, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13905373"
+  />
+  <QuoteCard
+    quote="The applications are many, but this library integrates perfectly in different contexts ;)"
+    name="N7ghtm4r3"
+    role="Gluky, Refy, Pandoro, and Neutron"
+    avatar="N7ghtm4r3"
+    handle="@N7ghtm4r3"
+    platform="GitHub"
+    date="Dec 17, 2025"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-15279776"
+  />
+  <QuoteCard
+    quote="Hi there, very useful library!"
+    name="Rob Mason"
+    avatar="iamcalledrob"
+    handle="@iamcalledrob"
+    platform="GitHub"
+    date="May 13, 2024"
+    href="https://github.com/vinceglb/FileKit/issues/18"
+  />
+  <QuoteCard
+    quote="Hi! Thanks for the libray it's great to see more and more features coming to KMP and Compose Multiplaform!"
+    name="Bernat Borrás Paronella"
+    avatar="alorma"
+    handle="@alorma"
+    platform="GitHub"
+    date="May 29, 2024"
+    href="https://github.com/vinceglb/FileKit/issues/33"
+  />
+  <QuoteCard
+    quote="Vincent Guillebaud brings us pickFile(), pickDirectory(), and saveFile() functions for Kotlin Multiplatform and Compose Multiplatform, providing a consistent bridge to platform-specific file and directory pickers."
+    name="jetc.dev"
+    role="Jetpack Compose newsletter, issue #220"
+    platform="jetc.dev"
+    date="Jun 25, 2024"
+    href="https://jetc.dev/issues/220.html"
   />
 </QuoteGrid>
 

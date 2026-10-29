@@ -2,3 +2,196 @@
 img.nav-logo {
   height: 1.375rem;
 }
+
+/* Community: quote cards (snippets/quote-card.jsx) and the "used by" banner (snippets/used-by.jsx) */
+.fk-quotes {
+  margin: 1.5rem 0;
+  container-type: inline-size;
+}
+
+.fk-quotes-wall > div {
+  column-width: 15rem;
+  column-gap: 1rem;
+}
+
+.fk-quotes-wall .fk-quote {
+  break-inside: avoid;
+  margin: 0 0 1rem;
+}
+
+.fk-quotes-row > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+}
+
+@container (min-width: 36rem) {
+  .fk-quotes-row > div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.fk-quote {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid rgb(17 24 39 / 0.08);
+  background: rgb(255 255 255);
+  box-shadow: 0 1px 2px rgb(17 24 39 / 0.04);
+  transition: border-color 150ms ease;
+}
+
+.fk-quote:hover {
+  border-color: rgb(26 127 75 / 0.45);
+}
+
+.dark .fk-quote {
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(255 255 255 / 0.03);
+  box-shadow: none;
+}
+
+.dark .fk-quote:hover {
+  border-color: rgb(227 194 102 / 0.45);
+}
+
+.fk-quote-mark {
+  height: 1.25rem;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.5rem;
+  line-height: 1;
+  color: #1a7f4b;
+}
+
+.dark .fk-quote-mark {
+  color: #e3c266;
+}
+
+.fk-quote blockquote {
+  margin: 0.5rem 0 1.25rem;
+  padding: 0;
+  border: 0;
+  font-style: normal;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: rgb(17 24 39 / 0.88);
+}
+
+.dark .fk-quote blockquote {
+  color: rgb(255 255 255 / 0.85);
+}
+
+.fk-quote figcaption {
+  margin-top: auto;
+}
+
+.fk-quote-author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fk-quote-author > span:last-child {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fk-quote-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin: 0;
+  border-radius: 9999px;
+  object-fit: cover;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1a7f4b;
+  background: rgb(26 127 75 / 0.12);
+}
+
+.dark .fk-quote-avatar {
+  color: #e3c266;
+  background: rgb(227 194 102 / 0.12);
+}
+
+.fk-quote-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.fk-quote-meta {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  opacity: 0.65;
+}
+
+.fk-quote-source {
+  display: block;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgb(128 128 128 / 0.15);
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgb(128 128 128 / 0.5);
+  text-underline-offset: 2px;
+}
+
+.fk-used-by {
+  margin: 1.5rem 0;
+  container-type: inline-size;
+}
+
+.fk-used-by > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@container (min-width: 36rem) {
+  .fk-used-by > div {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.fk-used-by a {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(17 24 39 / 0.08);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.fk-used-by a:hover {
+  border-color: rgb(26 127 75 / 0.45);
+}
+
+.dark .fk-used-by a {
+  border-color: rgb(255 255 255 / 0.1);
+}
+
+.dark .fk-used-by a:hover {
+  border-color: rgb(227 194 102 / 0.45);
+}
+
+.fk-used-by-name {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.fk-used-by-detail {
+  font-size: 0.78rem;
+  opacity: 0.65;
+}
