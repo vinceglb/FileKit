@@ -19,7 +19,7 @@ export const GrantBanner = () => {
       <img src="/brand/grant-banner-light.webp" alt={alt} width="1920" height="240" className="block w-full dark:hidden" />
       <img src="/brand/grant-banner-dark.webp" alt={alt} width="1920" height="240" className="hidden w-full dark:block" />
       <p className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
-        The grant funds the road to FileKit 1.0.{" "}
+        The grant supports the work toward FileKit 1.0.{" "}
         <span className="font-semibold text-primary group-hover:underline dark:text-primary-light">
           Read the announcement →
         </span>
