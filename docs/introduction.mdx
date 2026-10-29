@@ -5,6 +5,9 @@ description: Pick, save, read, and write files with one Kotlin Multiplatform API
 og:title: FileKit
 ---
 
+import { QuoteGrid, QuoteCard } from '/snippets/quote-card.jsx'
+import { UsedBy } from '/snippets/used-by.jsx'
+
 <img
   src="/brand/hero.webp"
   alt="FileKit: file operations, pickers, and dialogs for Kotlin and Compose Multiplatform"
@@ -130,29 +133,55 @@ graph LR
   </Card>
 </CardGroup>
 
-## Used in production
+## Who uses FileKit
 
-<CardGroup cols={3}>
-  <Card title="Heron" href="https://github.com/tunjid/heron">
-    Bluesky client for Android, iOS, and desktop
-  </Card>
-  <Card title="Twine" href="https://github.com/msasikanth/twine">
-    Multiplatform RSS reader
-  </Card>
-  <Card title="Keyguard" href="https://github.com/AChep/keyguard-app">
-    Bitwarden and KeePass client
-  </Card>
-  <Card title="Ashampoo Photo Organizer" href="https://www.ashampoo.com/en-us/photo-organizer">
-    Photo management for large collections
-  </Card>
-  <Card title="AB Download Manager" href="https://github.com/amir1376/ab-download-manager/">
-    Desktop download manager
-  </Card>
-  <Card title="SVG to Compose" href="https://composables.com/svg-to-compose">
-    Web tool by Composables
-  </Card>
-</CardGroup>
+<UsedBy
+  href="/showcase"
+  items={[
+    { name: 'Thunderbird', detail: 'Email for Android' },
+    { name: 'Leboncoin', detail: 'Spark design system' },
+    { name: 'Gradle', detail: 'Gradle Client' },
+    { name: 'Blockstream', detail: 'Green wallet' },
+    { name: 'Square', detail: 'Workflow trace viewer' },
+    { name: 'Android FHIR', detail: 'Health data SDK' },
+    { name: 'Animeko', detail: 'Anime streaming app' },
+    { name: 'StreetComplete', detail: 'OpenStreetMap editor' },
+  ]}
+/>
 
-[See all projects using FileKit →](/showcase)
+<QuoteGrid layout="row">
+  <QuoteCard
+    quote="The API just makes sense and I can just focus on my app instead of fighting with platform APIs"
+    name="Alex Styl"
+    role="Composables"
+    avatar="alexstyl"
+    handle="@alexstyl"
+    platform="X"
+    date="Jun 2, 2025"
+    href="https://x.com/alexstyl/status/1929504630490239214"
+  />
+  <QuoteCard
+    quote="You literally saved me hours and hours of time 👍"
+    name="Simon Schubert"
+    role="Kai"
+    avatar="SimonSchubert"
+    handle="@SimonSchubert"
+    platform="GitHub"
+    date="Mar 15, 2026"
+    href="https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-16142366"
+  />
+  <QuoteCard
+    quote="[...] your documentation is outstanding. Finally a human friendly documentation 😅"
+    name="Pavlos Tzegiannakis"
+    role="Tracker for Bluesky"
+    avatar="PavlosTze"
+    handle="@PavlosTze"
+    platform="GitHub"
+    date="Mar 18, 2025"
+    href="https://github.com/vinceglb/FileKit/issues/215#issuecomment-2734341542"
+  />
+</QuoteGrid>
+
+See how each project uses FileKit in the [showcase](/showcase), and read more on the [wall of love](/wall-of-love).
 
 Browse the [sample apps](https://github.com/vinceglb/FileKit/tree/main/sample) to see FileKit running on each platform.

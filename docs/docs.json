@@ -71,10 +71,16 @@
         ]
       },
       {
+        "group": "Community",
+        "pages": [
+          "showcase",
+          "wall-of-love"
+        ]
+      },
+      {
         "group": "Resources",
         "pages": [
-          "roadmap",
-          "showcase"
+          "roadmap"
         ]
       }
     ]

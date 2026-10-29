@@ -1,33 +1,108 @@
 ---
 title: "Who's using FileKit"
 sidebarTitle: 'Showcase'
-description: 'Apps and tools built with FileKit across Android, iOS, desktop, and the web'
+description: 'Organizations, open source apps, and commercial products that use FileKit, each with a public source'
+mode: 'wide'
 ---
 
-FileKit ships in production apps on mobile, desktop, and the web. Here are some of the projects that rely on it.
+FileKit ships in apps on mobile, desktop, and the web. Each entry says how the project uses FileKit and links to a public source: the build file that declares the dependency or, for closed-source apps, the developer's own post.
 
-- **[Heron](https://github.com/tunjid/heron)**: KMP Bluesky client using FileKit for image preview when uploading images or videos
-- **[Rush](https://github.com/shub39/Rush)**: Lyrics search app like Spotify
-- **[Composables SVG to Compose](https://composables.com/svg-to-compose)**: Web tool to convert SVG to Compose code in seconds
-- **[Twine](https://github.com/msasikanth/twine)**: A multiplatform RSS reader built using Kotlin and Compose
-- **[Butler](https://github.com/HLCaptain/butler)**: AI Chat App supporting image uploads across iOS, Android, Desktop, and WasmJS
-- **[PixelSafe](https://github.com/StefanOltmann/pixelsafe)**: Free steganography tool for PNG images
-- **[AndroidToolKit](https://github.com/LazyIonEs/AndroidToolKit)**: Desktop tools applicable to Android development, supporting Windows, Mac and Linux
-- **[Splital](https://splital.com/)**: Easily track and manage your shared expenses, quickly, simply, and hassle-free on [Android](https://play.google.com/store/apps/details?id=com.splital.project) and [iOS](https://apps.apple.com/us/app/splital-settle-up-easily/id6501984581)
-- **[Tracker - Manager for Bluesky](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer)**: Track and manage your Bluesky followers, unfollowers, blockers, and post analytics, all in real time. On [Android](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) and [iOS](https://apps.apple.com/us/app/tracker-manager-for-bluesky/id6740998282).
-- **[Parrot Workout Tracker](https://parrotworkouttracker.com/)**: The ultimate fitness log and exercise tracker to crush your goals on [Android](https://play.google.com/store/apps/details?id=de.kreiniker.parrotworkouttracker) and [iOS](https://apps.apple.com/us/app/workout-tracker-log-parrot/id6741729053).
-- **[Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer)**: Photo management software for organizing and searching large photo collections
-- **[AB Download Manager](https://github.com/amir1376/ab-download-manager/)**: A Download Manager that speeds up your downloads
-- **[Edconv](https://github.com/edneyosf/Edconv)**: A user-friendly interface that simplifies the power of FFmpeg. It's designed for fast and efficient conversion of video and audio files.
-- **[Gluky](https://github.com/N7ghtm4r3/Gluky)**, **[Refy](https://github.com/N7ghtm4r3/Refy)**, **[Pandoro](https://github.com/N7ghtm4r3/Pandoro)**, **[Neutron](https://github.com/N7ghtm4r3/Neutron)**, and **[Brownie](https://github.com/N7ghtm4r3/Brownie)**: Self-hosted applications using FileKit for profile pictures and file uploads
-- **[Keyguard](https://github.com/AChep/keyguard-app)**: Alternative client for the Bitwarden platform and KeePass (KDBX)
-- **[HowMarket](https://github.com/dududaa/howmarket)**: Cross-platform Point of Sale (PoS) software for small and growing businesses, using FileKit to upload and manage product and user images
-- **[Authmeister](https://monoroh.com/authmeister)**: Multiplatform OTP authenticator supporting TOTP and HOTP, available on [Android](https://play.google.com/store/apps/details?id=com.kopylovis.authmeister) and [iOS](https://apps.apple.com/us/app/authmeister/id6742833866)
-- **[Dancing Decibels](https://www.dancingdecibels.com)**: Multi-platform app for music festivals and live entertainment experiences, using FileKit for image imports and schedule import/export
-- **[Kai](https://github.com/SimonSchubert/Kai)**: OpenClaw alternative in your pocket, using FileKit in production across Android, iOS, desktop, and web
-- **[Hammer Editor](https://github.com/Wavesonics/hammer-editor)**: Multi-platform tool for writing stories and novels, using FileKit to select project directories and images
-- **[DevAnalyzer](https://github.com/Coding-Meet/DevAnalyzer)**: Developer productivity tool for analyzing and understanding software projects, using FileKit for file and directory handling in its project analysis workflow
+## Trusted by
+
+<CardGroup cols={2}>
+  <Card title="Thunderbird">
+    Thunderbird for Android and K-9 Mail use FileKit Core in their logging stack to write and export sync debug logs. Included from Thunderbird 26, currently in Daily builds. [Source](https://github.com/thunderbird/thunderbird-android/blob/main/app-common/build.gradle.kts)
+  </Card>
+  <Card title="Leboncoin">
+    Spark, Leboncoin's Android design system, builds its FileUpload components on FileKit pickers. [Source](https://github.com/leboncoin/spark-android/blob/main/spark/build.gradle.kts)
+  </Card>
+  <Card title="Gradle">
+    Gradle Client, a desktop app for the Gradle Tooling API, picks build directories with FileKit. [Source](https://github.com/gradle/gradle-client/blob/main/gradle-client/build.gradle.dcl)
+  </Card>
+  <Card title="Blockstream Green">
+    The Green Bitcoin wallet imports and exports PSBT files and shares files with FileKit, on Android and desktop. [Source](https://github.com/Blockstream/green_android/blob/master/data/build.gradle.kts)
+  </Card>
+  <Card title="Square">
+    `workflow-trace-viewer`, an internal desktop tool in the Workflow repository, loads trace files with the FileKit file picker. [Source](https://github.com/square/workflow-kotlin/blob/main/workflow-trace-viewer/build.gradle.kts)
+  </Card>
+  <Card title="Android FHIR SDK">
+    The project started by Google, now under the OHS Software Foundation, uses FileKit camera and file pickers for attachments in its in-progress multiplatform Structured Data Capture module. [Source](https://github.com/ohs-foundation/android-fhir/blob/master/datacapture-kmp/build.gradle.kts)
+  </Card>
+  <Card title="DroidKaigi">
+    The official DroidKaigi 2025 conference app picks profile images with FileKit and loads them with Coil. [Source](https://github.com/DroidKaigi/conference-app-2025/blob/main/feature/profile/build.gradle.kts)
+  </Card>
+  <Card title="Mifos">
+    Open source banking apps for Apache Fineract upload ID, KYC, and loan documents with FileKit: [Mifos Mobile](https://github.com/openMF/mifos-mobile/blob/dev/feature/auth/build.gradle.kts), [Mifos Pay](https://github.com/openMF/mifos-pay/blob/dev/feature/kyc/build.gradle.kts), and [Mifos X Field Officer](https://github.com/openMF/mifos-x-field-officer-app/blob/dev/feature/client/build.gradle.kts).
+  </Card>
+  <Card title="OSS Review Toolkit">
+    ORT Workbench, the desktop viewer for ORT results, opens result files and directories with FileKit dialogs. [Source](https://github.com/oss-review-toolkit/ort-workbench/blob/main/build.gradle.kts)
+  </Card>
+  <Card title="Scanbot SDK">
+    The official Kotlin Multiplatform example app for the Scanbot SDK picks images and PDFs with FileKit. [Source](https://github.com/doo/scanbot-sdk-example-kmp/blob/main/composeApp/build.gradle.kts)
+  </Card>
+</CardGroup>
+
+## Open source apps
+
+Sorted by GitHub stars. The source link points to the build file that declares FileKit.
+
+| Project | Stars | How it uses FileKit | Source |
+| --- | --- | --- | --- |
+| [Spotube](https://github.com/team-spotube/spotube) | <img src="https://img.shields.io/github/stars/team-spotube/spotube?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Music streaming app. Its Kotlin Multiplatform rewrite picks the download and cache folders, playlist covers, and plugin files | [Source](https://github.com/team-spotube/spotube/blob/master/composeApp/build.gradle.kts) |
+| [Animeko](https://github.com/open-ani/animeko) | <img src="https://img.shields.io/github/stars/open-ani/animeko?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Anime tracking and streaming app: image attachments in comments, avatar upload, saving images, desktop cache folder | [Source](https://github.com/open-ani/animeko/blob/main/app/shared/application/build.gradle.kts) |
+| [AB Download Manager](https://github.com/amir1376/ab-download-manager) | <img src="https://img.shields.io/github/stars/amir1376/ab-download-manager?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Desktop download manager: download location folder picker and custom sound files | [Source](https://github.com/amir1376/ab-download-manager/blob/master/desktop/app/build.gradle.kts) |
+| [StreetComplete](https://github.com/streetcomplete/StreetComplete) | <img src="https://img.shields.io/github/stars/streetcomplete/StreetComplete?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | OpenStreetMap editor for Android and iOS: note photos, image compression, sharing log files | [Source](https://github.com/streetcomplete/StreetComplete/blob/master/app/build.gradle.kts) |
+| [MuJing](https://github.com/tangshimin/MuJing) | <img src="https://img.shields.io/github/stars/tangshimin/MuJing?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Desktop app to learn English words from movies and documents: opens subtitle, video, and vocabulary files | [Source](https://github.com/tangshimin/MuJing/blob/master/build.gradle.kts) |
+| [AutoDev Xiuper](https://github.com/phodal/auto-dev) | <img src="https://img.shields.io/github/stars/phodal/auto-dev?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | AI coding app for desktop, mobile, and web: file and directory pickers, web downloads | [Source](https://github.com/phodal/auto-dev/blob/master/mpp-ui/build.gradle.kts) |
+| [Keyguard](https://github.com/AChep/keyguard-app) | <img src="https://img.shields.io/github/stars/AChep/keyguard-app?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Bitwarden and KeePass client: open and save dialogs for vaults and attachments on desktop | [Source](https://github.com/AChep/keyguard-app/blob/master/common/build.gradle.kts) |
+| [CrossPaste](https://github.com/CrossPaste/crosspaste-desktop) | <img src="https://img.shields.io/github/stars/CrossPaste/crosspaste-desktop?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Cross-device clipboard sync: storage path, import, and export dialogs | [Source](https://github.com/CrossPaste/crosspaste-desktop/blob/main/app/build.gradle.kts) |
+| [Twine](https://github.com/msasikanth/twine) | <img src="https://img.shields.io/github/stars/msasikanth/twine?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Multiplatform RSS reader: OPML feed import and export | [Source](https://github.com/msasikanth/twine/blob/main/core/data/build.gradle.kts) |
+| [Husi](https://github.com/xchacha20-poly1305/husi) | <img src="https://img.shields.io/github/stars/xchacha20-poly1305/husi?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Multiplatform proxy tool: backup import and export, saving QR codes | [Source](https://github.com/xchacha20-poly1305/husi/blob/dev/composeApp/build.gradle.kts) |
+| [Bifrost](https://github.com/zacharee/Bifrost) | <img src="https://img.shields.io/github/stars/zacharee/Bifrost?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Samsung firmware downloader: file and folder pickers, save dialog | [Source](https://github.com/zacharee/Bifrost/blob/master/common/build.gradle.kts) |
+| [Tomato](https://github.com/nsh07/Tomato) | <img src="https://img.shields.io/github/stars/nsh07/Tomato?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Pomodoro timer: backup and restore files | [Source](https://github.com/nsh07/Tomato/blob/dev/shared/build.gradle.kts) |
+| [qBitController](https://github.com/Bartuzen/qBitController) | <img src="https://img.shields.io/github/stars/Bartuzen/qBitController?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | qBittorrent remote control: adds torrent files and exports data | [Source](https://github.com/Bartuzen/qBitController/blob/master/composeApp/build.gradle.kts) |
+| [Kai](https://github.com/SimonSchubert/Kai) | <img src="https://img.shields.io/github/stars/SimonSchubert/Kai?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | AI assistant on Android, iOS, desktop, and web: chat attachments, file export, sandbox file browser | [Source](https://github.com/SimonSchubert/Kai/blob/main/composeApp/build.gradle.kts) |
+| [PodAura](https://github.com/SkyD666/PodAura) | <img src="https://img.shields.io/github/stars/SkyD666/PodAura?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Podcast and RSS app: OPML import and export, media folders, sharing | [Source](https://github.com/SkyD666/PodAura/blob/master/shared/build.gradle.kts) |
+| [Grit](https://github.com/shub39/Grit) | <img src="https://img.shields.io/github/stars/shub39/Grit?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Habit tracker: backup export and restore | [Source](https://github.com/shub39/Grit/blob/master/shared/logic/build.gradle.kts) |
+| [Bangumi for CMP](https://github.com/xiaoyvyv/bangumi) | <img src="https://img.shields.io/github/stars/xiaoyvyv/bangumi?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Unofficial bangumi.tv client: image pickers and Coil loading | [Source](https://github.com/xiaoyvyv/bangumi/blob/main/buildSrc/src/main/kotlin/bgm.library.gradle.kts) |
+| [Rush](https://github.com/shub39/Rush) | <img src="https://img.shields.io/github/stars/shub39/Rush?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Lyrics search app: backups, background images, saving lyrics cards | [Source](https://github.com/shub39/Rush/blob/master/shared/ui/build.gradle.kts) |
+| [IReader](https://github.com/IReaderorg/IReader) | <img src="https://img.shields.io/github/stars/IReaderorg/IReader?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Novel reader: storage folder picker on desktop and iOS | [Source](https://github.com/IReaderorg/IReader/blob/master/presentation/build.gradle.kts) |
+| [Hammer Editor](https://github.com/Darkrock-Studios/hammer-editor) | <img src="https://img.shields.io/github/stars/Darkrock-Studios/hammer-editor?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Story and novel writing tool: imports, exports, project images | [Source](https://github.com/Darkrock-Studios/hammer-editor/blob/develop/composeUi/build.gradle.kts) |
+| [Edconv](https://github.com/edneyosf/Edconv) | <img src="https://img.shields.io/github/stars/edneyosf/Edconv?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | FFmpeg interface for video and audio conversion: picks input media files | [Source](https://github.com/edneyosf/Edconv/blob/main/composeApp/build.gradle.kts) |
+| [kitshn](https://github.com/kitshn-app/kitshn) | <img src="https://img.shields.io/github/stars/kitshn-app/kitshn?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Tandoor recipes client for Android, iOS, and desktop: recipe photo picker | [Source](https://github.com/kitshn-app/kitshn/blob/main/shared/build.gradle.kts) |
+| [Morphe Desktop](https://github.com/MorpheApp/morphe-desktop) | <img src="https://img.shields.io/github/stars/MorpheApp/morphe-desktop?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Desktop APK patching tool: file and directory pickers | [Source](https://github.com/MorpheApp/morphe-desktop/blob/main/build.gradle.kts) |
+| [Heron](https://github.com/tunjid/heron) | <img src="https://img.shields.io/github/stars/tunjid/heron?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Bluesky client: media picker for posts and profiles, Coil previews, saving images to the gallery | [Source](https://github.com/tunjid/heron/blob/main/ui/media/build.gradle.kts) |
+| [Askimo](https://github.com/askimo-ai/askimo) | <img src="https://img.shields.io/github/stars/askimo-ai/askimo?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | AI desktop app: file and folder pickers, file saver | [Source](https://github.com/askimo-ai/askimo/blob/main/desktop-shared/build.gradle.kts) |
+| [Komelia](https://github.com/Snd-R/Komelia) | <img src="https://img.shields.io/github/stars/Snd-R/Komelia?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Komga media client: poster uploads, fonts, offline downloads, drag and drop | [Source](https://github.com/Snd-R/Komelia/blob/main/komelia-ui/build.gradle.kts) |
+| [Flocon](https://github.com/openflocon/Flocon) | <img src="https://img.shields.io/github/stars/openflocon/Flocon?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Desktop debugging companion for Android and KMP apps: CSV, Markdown, and image exports | [Source](https://github.com/openflocon/Flocon/blob/main/FloconDesktop/composeApp/build.gradle.kts) |
+| [Pixelix](https://github.com/ghostbyte-dev/pixelix) | <img src="https://img.shields.io/github/stars/ghostbyte-dev/pixelix?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Pixelfed client: image and video picker in the post editor | [Source](https://github.com/ghostbyte-dev/pixelix/blob/dev/sharedUI/build.gradle.kts) |
+| [AndroidToolKit](https://github.com/LazyIonEs/AndroidToolKit) | <img src="https://img.shields.io/github/stars/LazyIonEs/AndroidToolKit?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Desktop tools for Android developers: file and directory pickers | [Source](https://github.com/LazyIonEs/AndroidToolKit/blob/main/shared/build.gradle.kts) |
+| [DevAnalyzer](https://github.com/Coding-Meet/DevAnalyzer) | <img src="https://img.shields.io/github/stars/Coding-Meet/DevAnalyzer?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Project analysis tool for developers: picks the project directory to analyze | [Source](https://github.com/Coding-Meet/DevAnalyzer/blob/main/composeApp/build.gradle.kts) |
+| [PixelSafe](https://github.com/StefanOltmann/pixelsafe) | <img src="https://img.shields.io/github/stars/StefanOltmann/pixelsafe?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Steganography tool for PNG images: picks the image and saves the result | [Source](https://github.com/StefanOltmann/pixelsafe/blob/main/app/build.gradle.kts) |
+| [Butler](https://github.com/HLCaptain/butler) | <img src="https://img.shields.io/github/stars/HLCaptain/butler?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | AI chat app: picks chat attachments | [Source](https://github.com/HLCaptain/butler/blob/master/composeApp/feature/chat/build.gradle.kts) |
+| [Gluky](https://github.com/N7ghtm4r3/Gluky-Clients), [Refy](https://github.com/N7ghtm4r3/Refy-Clients), [Pandoro](https://github.com/N7ghtm4r3/Pandoro-Clients), [Neutron](https://github.com/N7ghtm4r3/Neutron-Clients) | | Self-hosted apps: profile pictures and image uploads | [Gluky](https://github.com/N7ghtm4r3/Gluky-Clients/blob/main/composeApp/build.gradle.kts), [Refy](https://github.com/N7ghtm4r3/Refy-Clients/blob/main/composeApp/build.gradle.kts), [Pandoro](https://github.com/N7ghtm4r3/Pandoro-Clients/blob/main/composeApp/build.gradle.kts), [Neutron](https://github.com/N7ghtm4r3/Neutron-Clients/blob/main/composeApp/build.gradle.kts) |
+
+### Libraries
+
+| Library | Stars | How it uses FileKit | Source |
+| --- | --- | --- | --- |
+| [ComposeMediaPlayer](https://github.com/kdroidFilter/ComposeMediaPlayer) | <img src="https://img.shields.io/github/stars/kdroidFilter/ComposeMediaPlayer?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Media player for Compose Multiplatform: opens a `PlatformFile` in the player | [Source](https://github.com/kdroidFilter/ComposeMediaPlayer/blob/master/mediaplayer/build.gradle.kts) |
+| [kmpalette](https://github.com/jordond/kmpalette) | <img src="https://img.shields.io/github/stars/jordond/kmpalette?style=flat" alt="GitHub stars" noZoom style={{ display: 'inline', margin: 0 }} /> | Color palettes from images: builds a palette from a `PlatformFile` | [Source](https://github.com/jordond/kmpalette/blob/main/extensions-file/build.gradle.kts) |
+
+## Commercial and closed-source apps
+
+The developers of these apps shared how they use FileKit in the [showcase discussion](https://github.com/vinceglb/FileKit/discussions/343).
+
+| App | How it uses FileKit | Source |
+| --- | --- | --- |
+| [Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer-free) | Photo management for large collections | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13911389) |
+| [Splital](https://splital.com/) | Shared expenses app on [Android](https://play.google.com/store/apps/details?id=com.splital.project) and [iOS](https://apps.apple.com/us/app/splital-settle-up-easily/id6501984581): receipt and profile photos, image compression, PDF and CSV export | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13923299) |
+| [Tracker for Bluesky](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) | Bluesky follower analytics on [Android](https://play.google.com/store/apps/details?id=com.bluesky.followers.analyzer) and [iOS](https://apps.apple.com/us/app/tracker-manager-for-bluesky/id6740998282): JSON export and import to move data between phones | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13936833) |
+| [Parrot Workout Tracker](https://parrotworkouttracker.com/) | Fitness log on [Android](https://play.google.com/store/apps/details?id=de.kreiniker.parrotworkouttracker) and [iOS](https://apps.apple.com/us/app/workout-tracker-log-parrot/id6741729053): data and routine import and export, sharing workout images | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13960874) |
+| [Authmeister](https://monoroh.com/authmeister) | OTP authenticator on [Android](https://play.google.com/store/apps/details?id=com.kopylovis.authmeister) and [iOS](https://apps.apple.com/us/app/authmeister/id6742833866) | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-15861152) |
+| [Dancing Decibels](https://www.dancingdecibels.com) | Music festival app: artist image imports, schedule import and export | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-15865180) |
+| [Composables SVG to Compose](https://composables.com/svg-to-compose) | Web tool to convert SVG to Compose code. Its Compose version used FileKit to pick files | [Discussion post](https://github.com/vinceglb/FileKit/discussions/343#discussioncomment-13905300) |
 
 ## Add your project
 
-Using FileKit in your project? Share it in the [showcase discussion](https://github.com/vinceglb/FileKit/discussions/343) and it can be added to this page.
+Using FileKit in your project? Share it in the [showcase discussion](https://github.com/vinceglb/FileKit/discussions/343) with a link to the code or a short note on how you use FileKit, and it can be added to this page. See what developers say on the [wall of love](/wall-of-love).
