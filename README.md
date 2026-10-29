@@ -115,9 +115,9 @@ JVM desktop runs on Windows, macOS, and Linux. The Linux and Windows columns are
 
 ## Who's using FileKit
 
-FileKit ships in production apps on mobile, desktop, and the web, including [Ashampoo Photo Organizer](https://www.ashampoo.com/en-us/photo-organizer), [Keyguard](https://github.com/AChep/keyguard-app), [AB Download Manager](https://github.com/amir1376/ab-download-manager/), [Twine](https://github.com/msasikanth/twine), [Heron](https://github.com/tunjid/heron), and [Composables SVG to Compose](https://composables.com/svg-to-compose).
+FileKit is used by [Thunderbird](https://github.com/thunderbird/thunderbird-android), [Leboncoin's Spark design system](https://github.com/leboncoin/spark-android), [Gradle Client](https://github.com/gradle/gradle-client), [Blockstream Green](https://github.com/Blockstream/green_android), [Square's Workflow trace viewer](https://github.com/square/workflow-kotlin), the [Android FHIR SDK](https://github.com/ohs-foundation/android-fhir), [Animeko](https://github.com/open-ani/animeko), and [StreetComplete](https://github.com/streetcomplete/StreetComplete).
 
-See every project in the [showcase](https://filekit.mintlify.app/showcase), or [add your project](https://github.com/vinceglb/FileKit/discussions/343).
+See how each project uses it in the [showcase](https://filekit.mintlify.app/showcase), read what developers say on the [wall of love](https://filekit.mintlify.app/wall-of-love), or [add your project](https://github.com/vinceglb/FileKit/discussions/343).
 
 ## Contributing
 
