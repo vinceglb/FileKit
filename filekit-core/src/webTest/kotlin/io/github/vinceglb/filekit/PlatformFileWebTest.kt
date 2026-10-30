@@ -4,6 +4,8 @@ import io.github.vinceglb.filekit.exceptions.FileKitException
 import io.github.vinceglb.filekit.mimeType.MimeType
 import io.github.vinceglb.filekit.utils.createTestFile
 import kotlinx.coroutines.test.runTest
+import org.w3c.files.Blob
+import org.w3c.files.BlobPropertyBag
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -187,6 +189,50 @@ class PlatformFileWebTest {
             expected = Instant.fromEpochMilliseconds(0),
             actual = directory.lastModified(),
         )
+    }
+
+    @OptIn(ExperimentalWasmJsInterop::class)
+    @Test
+    fun testPlatformFileFromBlob() = runTest {
+        val blob = Blob(
+            blobParts = listOf("Hello, World!".toJsString()).toJsArray(),
+            options = BlobPropertyBag(type = "text/plain"),
+        )
+
+        val file = PlatformFile(blob = blob, name = platformFile.name)
+
+        assertEquals(platformFile.name, file.name)
+        assertEquals(platformFile.extension, file.extension)
+        assertEquals(platformFile.nameWithoutExtension, file.nameWithoutExtension)
+        assertEquals(platformFile.size(), file.size())
+
+        assertEquals(
+            platformFile.readBytes().decodeToString(),
+            file.readBytes().decodeToString(),
+        )
+        assertEquals(
+            platformFile.readBytes().toList(),
+            file.readBytes().toList(),
+        )
+        assertEquals(platformFile.mimeType(), file.mimeType())
+        assertTrue(file.isRegularFile())
+        assertFalse(file.isDirectory())
+    }
+
+    @OptIn(ExperimentalWasmJsInterop::class)
+    @Test
+    fun testPlatformFileFromEmptyBlob() = runTest {
+        val blob = Blob(
+            blobParts = emptyList<JsAny?>().toJsArray(),
+            options = BlobPropertyBag(type = "application/octet-stream"),
+        )
+        val file = PlatformFile(blob = blob, name = "empty.bin")
+
+        assertEquals("empty.bin", file.name)
+        assertEquals(0L, file.size())
+        assertTrue(file.readBytes().isEmpty())
+        assertTrue(file.isRegularFile())
+        assertFalse(file.isDirectory())
     }
 
     private fun PlatformFile.webFileWrapper(): WebFile.FileWrapper =
