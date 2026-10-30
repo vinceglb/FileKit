@@ -196,7 +196,7 @@ class PlatformFileWebTest {
     fun testPlatformFileFromBlob() = runTest {
         val blob = Blob(
             blobParts = listOf("Hello, World!".toJsString()).toJsArray(),
-            options = BlobPropertyBag(type = "text/plain")
+            options = BlobPropertyBag(type = "text/plain"),
         )
 
         val file = PlatformFile(blob = blob, name = platformFile.name)
@@ -208,11 +208,11 @@ class PlatformFileWebTest {
 
         assertEquals(
             platformFile.readBytes().decodeToString(),
-            file.readBytes().decodeToString()
+            file.readBytes().decodeToString(),
         )
         assertEquals(
             platformFile.readBytes().toList(),
-            file.readBytes().toList()
+            file.readBytes().toList(),
         )
         assertEquals(platformFile.mimeType(), file.mimeType())
         assertTrue(file.isRegularFile())
@@ -224,7 +224,7 @@ class PlatformFileWebTest {
     fun testPlatformFileFromEmptyBlob() = runTest {
         val blob = Blob(
             blobParts = emptyList<JsAny?>().toJsArray(),
-            options = BlobPropertyBag(type = "application/octet-stream")
+            options = BlobPropertyBag(type = "application/octet-stream"),
         )
         val file = PlatformFile(blob = blob, name = "empty.bin")
 

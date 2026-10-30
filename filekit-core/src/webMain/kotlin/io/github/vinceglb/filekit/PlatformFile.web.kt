@@ -36,7 +36,6 @@ public actual data class PlatformFile(
     public actual override fun toString(): String = path
 
     public actual companion object {
-
         /**
          * Creates a [PlatformFile] from a browser [Blob].
          *
@@ -47,11 +46,10 @@ public actual data class PlatformFile(
             val file = BrowserFile(
                 fileBits = listOf(blob.unsafeCast<JsAny>()).toJsArray(),
                 fileName = name,
-                options = FilePropertyBag(type = blob.type)
+                options = FilePropertyBag(type = blob.type),
             )
             return PlatformFile(webFile = WebFile.FileWrapper(file = file))
         }
-
     }
 }
 
