@@ -12,6 +12,10 @@
     "dark": "#1A7F4B"
   },
   "favicon": "/brand/favicon.svg",
+  "banner": {
+    "content": "🎉 FileKit is supported by the Kotlin Foundation Grants Program. [Read the announcement](https://kotlinfoundation.org/news/grants-program-winners-26/)",
+    "dismissible": true
+  },
   "navigation": {
     "groups": [
       {
