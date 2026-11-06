@@ -12,7 +12,11 @@ import kotlinx.serialization.Serializable
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
+import org.khronos.webgl.set
+import org.w3c.files.Blob
+import org.w3c.files.FilePropertyBag
 import org.w3c.files.FileReader
+import kotlin.collections.forEachIndexed
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.js.ExperimentalWasmJsInterop
@@ -31,7 +35,22 @@ public actual data class PlatformFile(
 ) {
     public actual override fun toString(): String = path
 
-    public actual companion object
+    public actual companion object {
+        /**
+         * Creates a [PlatformFile] from a browser [Blob].
+         *
+         * Since a browser [File] is a subtype of [Blob], it can also be passed directly.
+         */
+        @OptIn(ExperimentalWasmJsInterop::class)
+        public operator fun invoke(blob: Blob, name: String): PlatformFile {
+            val file = BrowserFile(
+                fileBits = listOf(blob.unsafeCast<JsAny>()).toJsArray(),
+                fileName = name,
+                options = FilePropertyBag(type = blob.type),
+            )
+            return PlatformFile(webFile = WebFile.FileWrapper(file = file))
+        }
+    }
 }
 
 public actual val PlatformFile.name: String
