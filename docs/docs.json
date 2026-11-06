@@ -13,7 +13,7 @@
   },
   "favicon": "/brand/favicon.svg",
   "banner": {
-    "content": "🎉 FileKit is supported by the Kotlin Foundation Grant Program. [Read the announcement](https://kotlinfoundation.org/news/#FILEKIT_GRANT_POST_URL)",
+    "content": "🎉 FileKit is supported by the Kotlin Foundation Grants Program. [Read the announcement](https://kotlinfoundation.org/news/grants-program-winners-26/)",
     "dismissible": true
   },
   "navigation": {

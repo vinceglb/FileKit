@@ -22,10 +22,10 @@
     <a href="https://filekit.mintlify.app/roadmap"><b>Roadmap to 1.0</b></a>
   </p>
 
-  <a href="https://kotlinfoundation.org/news/#FILEKIT_GRANT_POST_URL">
+  <a href="https://kotlinfoundation.org/news/grants-program-winners-26/">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="brand/exports/grant-banner-dark.webp" />
-      <img src="brand/exports/grant-banner-light.webp" width="960" alt="FileKit is supported by the Kotlin Foundation Grant Program. Read the announcement." />
+      <img src="brand/exports/grant-banner-light.webp" width="960" alt="FileKit is supported by the Kotlin Foundation Grants Program. Read the announcement." />
     </picture>
   </a>
 </div>

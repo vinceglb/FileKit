@@ -7,10 +7,10 @@
  *
  *   <GrantBanner />
  */
-export const grantPostUrl = "https://kotlinfoundation.org/news/#FILEKIT_GRANT_POST_URL"
+export const grantPostUrl = "https://kotlinfoundation.org/news/grants-program-winners-26/"
 
 export const GrantBanner = () => {
-  const alt = "FileKit is supported by the Kotlin Foundation Grant Program"
+  const alt = "FileKit is supported by the Kotlin Foundation Grants Program"
   return (
     <a
       href={grantPostUrl}
@@ -20,7 +20,7 @@ export const GrantBanner = () => {
       <img src="/brand/grant-banner-dark.webp" alt={alt} width="1920" height="240" className="hidden w-full dark:block" />
       <p className="px-5 py-3 text-sm text-gray-700 dark:text-gray-300">
         The grant supports the work toward FileKit 1.0.{" "}
-        <span className="font-semibold text-primary group-hover:underline dark:text-primary-light">
+        <span className="whitespace-nowrap font-semibold text-primary group-hover:underline dark:text-primary-light">
           Read the announcement →
         </span>
       </p>
