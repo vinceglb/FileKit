@@ -12,6 +12,8 @@ import kotlinx.serialization.Serializable
 import org.khronos.webgl.ArrayBuffer
 import org.khronos.webgl.Uint8Array
 import org.khronos.webgl.get
+import org.w3c.files.Blob
+import org.w3c.files.FilePropertyBag
 import org.w3c.files.FileReader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -33,6 +35,42 @@ public actual data class PlatformFile(
 
     public actual companion object
 }
+
+/**
+ * Creates a [PlatformFile] from a browser [Blob].
+ *
+ * A browser `File` is a [Blob], so it can be passed too. Like a picked file, the result is a
+ * read-only snapshot: it has the content of [blob], read only when needed, and [name] as its
+ * name and path.
+ *
+ * Its [mimeType] is [Blob.type], or `null` when that type is empty: it isn't inferred from the
+ * extension of [name]. Its [lastModified] is the one of the `File` passed in, or the time of
+ * this call for any other [Blob].
+ *
+ * @param blob The [Blob] or `File` holding the content.
+ * @param name The name of the file, with its extension, such as `photo.png`.
+ * @return A [PlatformFile] instance.
+ */
+@OptIn(ExperimentalWasmJsInterop::class)
+public fun PlatformFile(blob: Blob, name: String): PlatformFile {
+    val file = BrowserFile(
+        fileBits = listOf<JsAny?>(blob).toJsArray(),
+        fileName = name,
+        options = filePropertyBag(
+            type = blob.type,
+            lastModified = (blob as? BrowserFile)?.lastModified,
+        ),
+    )
+    return PlatformFile(WebFile.FileWrapper(file))
+}
+
+// Built by hand: kotlinx-browser's FilePropertyBag() sets an omitted lastModified to null, which the
+// File constructor reads as epoch 0, and types it as Int on JS, too small for epoch milliseconds.
+@OptIn(ExperimentalWasmJsInterop::class)
+internal fun filePropertyBag(
+    type: String,
+    lastModified: JsNumber? = null,
+): FilePropertyBag = js("(lastModified == null ? { type } : { type, lastModified })")
 
 public actual val PlatformFile.name: String
     get() = when (val file = webFile) {
