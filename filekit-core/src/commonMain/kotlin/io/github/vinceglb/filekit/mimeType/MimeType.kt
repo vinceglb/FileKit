@@ -84,11 +84,11 @@ public class MimeType private constructor(
                 parts
                     .drop(1)
                     .map { part ->
-                        val nameValuePair = part.split("=")
+                        val nameValuePair = part.split("=", limit = 2)
 
                         if (nameValuePair.size == 2) {
-                            val name = nameValuePair[0].lowercase()
-                            val value = nameValuePair[0].lowercase()
+                            val name = nameValuePair[0].trim().lowercase()
+                            val value = nameValuePair[1].trim().lowercase()
                             MimeTypeParameter(name = name, value = value)
                         } else {
                             throw InvalidMimeTypeException("Invalid parameter in MIME type: $part")
