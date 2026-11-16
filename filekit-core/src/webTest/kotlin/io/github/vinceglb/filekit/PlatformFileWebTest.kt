@@ -13,6 +13,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 class PlatformFileWebTest {
@@ -194,45 +195,60 @@ class PlatformFileWebTest {
     @OptIn(ExperimentalWasmJsInterop::class)
     @Test
     fun testPlatformFileFromBlob() = runTest {
+        val before = Clock.System.now()
         val blob = Blob(
             blobParts = listOf("Hello, World!".toJsString()).toJsArray(),
             options = BlobPropertyBag(type = "text/plain"),
         )
 
-        val file = PlatformFile(blob = blob, name = platformFile.name)
+        val file = PlatformFile(blob = blob, name = "hello.txt")
 
-        assertEquals(platformFile.name, file.name)
-        assertEquals(platformFile.extension, file.extension)
-        assertEquals(platformFile.nameWithoutExtension, file.nameWithoutExtension)
-        assertEquals(platformFile.size(), file.size())
-
-        assertEquals(
-            platformFile.readBytes().decodeToString(),
-            file.readBytes().decodeToString(),
-        )
-        assertEquals(
-            platformFile.readBytes().toList(),
-            file.readBytes().toList(),
-        )
-        assertEquals(platformFile.mimeType(), file.mimeType())
+        assertEquals("hello.txt", file.name)
+        assertEquals("hello.txt", file.path)
+        assertEquals("txt", file.extension)
+        assertEquals("hello", file.nameWithoutExtension)
+        assertEquals(13L, file.size())
+        assertEquals("Hello, World!", file.readString())
+        assertEquals(MimeType.parse("text/plain"), file.mimeType())
         assertTrue(file.isRegularFile())
         assertFalse(file.isDirectory())
+        assertNull(file.parent())
+        assertTrue(file.lastModified().toEpochMilliseconds() >= before.toEpochMilliseconds())
     }
 
     @OptIn(ExperimentalWasmJsInterop::class)
     @Test
     fun testPlatformFileFromEmptyBlob() = runTest {
-        val blob = Blob(
-            blobParts = emptyList<JsAny?>().toJsArray(),
-            options = BlobPropertyBag(type = "application/octet-stream"),
-        )
+        val blob = Blob(blobParts = emptyList<JsAny?>().toJsArray())
+
         val file = PlatformFile(blob = blob, name = "empty.bin")
 
         assertEquals("empty.bin", file.name)
         assertEquals(0L, file.size())
         assertTrue(file.readBytes().isEmpty())
+        assertNull(file.mimeType())
         assertTrue(file.isRegularFile())
-        assertFalse(file.isDirectory())
+    }
+
+    @OptIn(ExperimentalWasmJsInterop::class)
+    @Test
+    fun testPlatformFileFromBrowserFile() = runTest {
+        val browserFile = BrowserFile(
+            fileBits = listOf("Hello, World!".toJsString()).toJsArray(),
+            fileName = "original.txt",
+            options = filePropertyBag(
+                type = "text/plain",
+                lastModified = 1_700_000_000_000.0.toJsNumber(),
+            ),
+        )
+
+        val file = PlatformFile(blob = browserFile, name = "renamed.md")
+
+        assertEquals("renamed.md", file.name)
+        assertEquals("renamed.md", file.path)
+        assertEquals("Hello, World!", file.readString())
+        assertEquals(MimeType.parse("text/plain"), file.mimeType())
+        assertEquals(Instant.fromEpochMilliseconds(1_700_000_000_000), file.lastModified())
     }
 
     private fun PlatformFile.webFileWrapper(): WebFile.FileWrapper =

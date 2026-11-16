@@ -42,8 +42,9 @@ val url: NSURL = file.nsUrl
 ```
 
 ```kotlin webMain
-// Browsers have no paths: files come from a picker or from the origin private file system
+// Browsers have no paths: files come from a picker, the origin private file system, or a Blob
 val picked: PlatformFile? = FileKit.openFilePicker()
+val fromBlob = PlatformFile(blob, name = "report.pdf") // a Blob or a File
 ```
 
 </CodeGroup>

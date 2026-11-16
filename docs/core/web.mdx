@@ -17,8 +17,19 @@ On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the u
 | File picker | A snapshot of a browser `File` | Yes | No | No |
 | Directory picker | A virtual tree of the selected files | Files only | No | `list()`, `walk()`, `listEntries()` |
 | `FileKit.originPrivateDir` (experimental) | A live origin private file system entry | Yes | Yes | `listEntries()` |
+| `PlatformFile(blob, name)` | A browser `File` made from a `Blob` or `File` | Yes | No | No |
 
 The `path` of a picked file is its name, or for a file inside a picked folder, its relative path starting with the folder's name. Path constructors such as `PlatformFile("/path")`, `FileKit.filesDir`, and `exists()` don't exist on the web: keep that code in `nonWebMain`.
+
+## Create a file from a Blob
+
+To pass browser data to code that takes a `PlatformFile`, wrap a `Blob`, or a `File` from another web API such as drag and drop or `fetch`:
+
+```kotlin webMain
+val file = PlatformFile(blob, name = "report.pdf")
+```
+
+The file is read-only, like a picked file. Its `path` is `name`, its `mimeType()` is the `Blob` type (`null` when empty, never guessed from the extension), and its `lastModified()` is the one of a `File` passed in, or the creation time for a plain `Blob`.
 
 ## Read a file
 
