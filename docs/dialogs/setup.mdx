@@ -109,18 +109,15 @@ By default, JNA extracts its native library, `libjnidispatch.jnilib`, from the J
     Compose merges `macos-arm64` into the resources only when it packages on an Apple Silicon Mac, and `macos-x64` only on an Intel Mac. Keep only the folders for the architectures you ship.
   </Step>
   <Step title="Sign the libraries">
-    Compose copies app resources into the bundle as they are, without signing them. Sign each file yourself with the certificate your App Store build uses (`3rd Party Mac Developer Application`) and the runtime entitlements file of your app:
+    Compose copies app resources into the bundle as they are, without signing them. Sign each file yourself with the certificate your App Store build uses (`3rd Party Mac Developer Application`):
 
     ```bash
     codesign -f -s "3rd Party Mac Developer Application: <Your Name> (<TEAM ID>)" \
-             --entitlements runtime-entitlements.plist \
              --timestamp --options runtime \
              resources/macos-arm64/libjnidispatch.jnilib
     ```
 
-    Run it again for `resources/macos-x64/libjnidispatch.jnilib` if you ship Intel builds.
-
-    `runtime-entitlements.plist` is the file you set in `runtimeEntitlementsFile`. See [Signing and notarization on macOS](https://github.com/JetBrains/compose-multiplatform/blob/master/tutorials/Signing_and_notarization_on_macOS/README.md#configuring-entitlements) for the entitlements a sandboxed Compose app needs.
+    Run it again for `resources/macos-x64/libjnidispatch.jnilib` if you ship Intel builds. Do not pass `--entitlements` here: entitlements belong to main executables, and Apple warns that applying them to library code [can prevent it from running](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac).
   </Step>
   <Step title="Add the resources folder to your app">
     Point `appResourcesRootDir` at the folder that contains `macos-arm64` and `macos-x64`:
@@ -139,7 +136,7 @@ By default, JNA extracts its native library, `libjnidispatch.jnilib`, from the J
     }
     ```
 
-    See [app resources](https://kotlinlang.org/docs/multiplatform/compose-native-distribution.html#adding-files-to-packaged-application) in the Compose documentation.
+    See [app resources](https://kotlinlang.org/docs/multiplatform/compose-native-distribution.html#adding-files-to-packaged-application) in the Compose documentation, and [Signing and notarization on macOS](https://github.com/JetBrains/compose-multiplatform/blob/master/tutorials/Signing_and_notarization_on_macOS/README.md#configuring-entitlements) for the entitlements a sandboxed Compose app needs in `runtime-entitlements.plist`.
   </Step>
   <Step title="Load JNA from the app bundle">
     At the very start of `main`, before any FileKit or JNA call, point JNA at the packaged resources when the app runs sandboxed:
