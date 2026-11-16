@@ -66,6 +66,8 @@ import { Platforms } from '/snippets/platforms.jsx'
     ```
 
     `FileKit.init(filesDir = ..., cacheDir = ...)` without an `appId` also works when you set both directories.
+
+    Publishing a sandboxed app to the Mac App Store or TestFlight? JNA needs extra setup: see [Mac App Store and TestFlight setup](/dialogs/setup#mac-app-store-and-testflight-setup).
   </Tab>
   <Tab title="Linux native">
     For `linuxX64` and `linuxArm64`, call `FileKit.init` once at startup:
