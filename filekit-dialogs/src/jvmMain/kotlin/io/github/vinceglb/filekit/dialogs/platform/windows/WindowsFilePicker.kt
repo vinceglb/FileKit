@@ -27,6 +27,7 @@ import io.github.vinceglb.filekit.dialogs.platform.PlatformFilePicker
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileOpenDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.FileSaveDialog
+import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IFileDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IFileOpenDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IFileSaveDialog
 import io.github.vinceglb.filekit.dialogs.platform.windows.jna.IShellItem
@@ -57,11 +58,7 @@ internal class WindowsFilePicker(
             directory?.let { fileOpenDialog.setDefaultPath(it) }
 
             // Set title
-            dialogSettings.title?.let {
-                fileOpenDialog
-                    .SetTitle(WString(dialogSettings.title))
-                    .verify("SetTitle failed")
-            }
+            fileOpenDialog.applyTitle(dialogSettings.title)
 
             // Add filters
             fileExtensions
@@ -84,11 +81,7 @@ internal class WindowsFilePicker(
             directory?.let { fileOpenDialog.setDefaultPath(it) }
 
             // Set title
-            dialogSettings.title?.let {
-                fileOpenDialog
-                    .SetTitle(WString(dialogSettings.title))
-                    .verify("SetTitle failed")
-            }
+            fileOpenDialog.applyTitle(dialogSettings.title)
 
             // Add filters
             fileExtensions
@@ -113,11 +106,7 @@ internal class WindowsFilePicker(
             directory?.let { fileOpenDialog.setDefaultPath(it) }
 
             // Set title
-            dialogSettings.title?.let {
-                fileOpenDialog
-                    .SetTitle(WString(dialogSettings.title))
-                    .verify("SetTitle failed")
-            }
+            fileOpenDialog.applyTitle(dialogSettings.title)
 
             // Add in FOS_PICKFOLDERS which hides files and only allows selection of folders
             fileOpenDialog.setFlag(FOS_PICKFOLDERS)
@@ -144,21 +133,13 @@ internal class WindowsFilePicker(
             // Set the initial directory
             directory?.let { fileSaveDialog.setDefaultPath(it) }
 
-            // Set the default file name
-            fileSaveDialog
-                .SetFileName(WString(suggestedName))
-                .verify("SetFileName failed")
-
-            // Set the default extension
-            defaultExtension?.let {
-                fileSaveDialog
-                    .SetDefaultExtension(WString(defaultExtension))
-                    .verify("SetDefaultExtension failed")
-            }
-
-            // Set filters
-            val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
-            filterExtensions?.let { fileSaveDialog.addFiltersToDialog(it) }
+            // Set the title, default file name, default extension and filters
+            fileSaveDialog.configureFileSaver(
+                suggestedName = suggestedName,
+                defaultExtension = defaultExtension,
+                allowedExtensions = allowedExtensions,
+                title = dialogSettings.title,
+            )
 
             // Show the dialog to the user
             fileSaveDialog.show(dialogSettings.resolveWindowsDialogHandle()) {
@@ -258,10 +239,6 @@ internal class WindowsFilePicker(
             // Release the folder
             folder.Release()
         }
-    }
-
-    private fun FileDialog.addFiltersToDialog(fileExtensions: Set<String>) {
-        setWindowsFileTypes(fileExtensions, this::SetFileTypes)
     }
 
     private fun FileDialog.setFlag(flag: Int) {
@@ -380,9 +357,39 @@ internal class WindowsFilePicker(
         }
 }
 
+internal fun IFileSaveDialog.configureFileSaver(
+    suggestedName: String,
+    defaultExtension: String?,
+    allowedExtensions: Set<String>?,
+    title: String?,
+) {
+    // Set title
+    applyTitle(title)
+
+    // Set the default file name
+    SetFileName(WString(suggestedName)).verify("SetFileName failed")
+
+    // Set the default extension
+    defaultExtension?.let {
+        SetDefaultExtension(WString(it)).verify("SetDefaultExtension failed")
+    }
+
+    // Set filters
+    val filterExtensions = allowedExtensions ?: defaultExtension?.let { setOf(it) }
+    filterExtensions?.let { addFiltersToDialog(it) }
+}
+
+internal fun IFileDialog.applyTitle(title: String?) {
+    title?.let { SetTitle(WString(it)).verify("SetTitle failed") }
+}
+
+internal fun IFileDialog.addFiltersToDialog(fileExtensions: Set<String>) {
+    setWindowsFileTypes(fileExtensions, this::SetFileTypes)
+}
+
 internal fun setWindowsFileTypes(
     fileExtensions: Set<String>,
-    setFileTypes: (Int, Array<COMDLG_FILTERSPEC?>?) -> HRESULT,
+    setFileTypes: (Int, Array<COMDLG_FILTERSPEC?>?) -> HRESULT?,
 ) {
     val filterString = fileExtensions.joinToString(";") { "*.$it" }
     val filterSpec = COMDLG_FILTERSPEC().apply {
@@ -393,14 +400,16 @@ internal fun setWindowsFileTypes(
     setFileTypes(1, arrayOf(filterSpec)).verify("SetFileTypes failed")
 }
 
-private fun HRESULT.verify(exceptionMessage: String): HRESULT {
+private fun HRESULT?.verify(exceptionMessage: String): HRESULT {
+    if (this == null) {
+        throw WindowsDialogOperationalException("$exceptionMessage without HRESULT")
+    }
     if (FAILED(this)) {
         throw WindowsDialogOperationalException(
             "$exceptionMessage with HRESULT 0x${toInt().toUInt().toString(16)}",
         )
-    } else {
-        return this
     }
+    return this
 }
 
 private fun Throwable.toDirectoryPickerFailure(): FileKitDialogException = FileKitDialogException(
