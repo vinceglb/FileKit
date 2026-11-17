@@ -1,7 +1,7 @@
 ---
 title: 'Set up FileKit Dialogs'
 sidebarTitle: 'Setup'
-description: 'Add FileKit Dialogs, register your Android activity, and prepare Linux and desktop builds'
+description: 'Add FileKit Dialogs, register your Android activity, and prepare Linux and Mac App Store desktop builds'
 ---
 
 import VersionDialogs from '/snippets/version-dialogs.mdx'
@@ -75,6 +75,93 @@ With `filekit-dialogs-compose`, the launchers find the registry themselves. On J
     On a Linux build machine, `pkg-config --variable=libdir dbus-1` prints the directory to use. Cross-compiling requires the libraries of the target architecture.
   </Tab>
 </Tabs>
+
+## Mac App Store and TestFlight setup
+
+On JVM, FileKit calls macOS APIs through [JNA](https://github.com/java-native-access/jna): for dialogs, and for [bookmark data](/core/bookmark-data) in `filekit-core`. A Compose Desktop app published to the Mac App Store or TestFlight runs sandboxed, and the first FileKit call that reaches macOS can then crash with an error like this one ([issue #158](https://github.com/vinceglb/FileKit/issues/158)):
+
+```text
+/Users/<user>/Library/Containers/<bundle id>/Data/tmp/jna1234567890.tmp: dlopen(...):
+... not valid for use in process: library load disallowed by system policy
+```
+
+By default, JNA extracts its native library, `libjnidispatch.jnilib`, from the JNA jar to a temporary directory and loads it from there. In a sandboxed app, native libraries must be loaded from the signed app bundle, not extracted from a jar at runtime (see the [Compose TestFlight notes](https://github.com/JetBrains/compose-multiplatform/blob/master/tutorials/Signing_and_notarization_on_macOS/README.md#testflight)), so macOS refuses the extracted copy. The fix is to ship a signed copy of the library in your app resources and tell JNA to load it from there.
+
+<Steps>
+  <Step title="Find the JNA version your app uses">
+    The native library must come from the same JNA version as the `jna` jar in your app, otherwise JNA can fail at startup with `There is an incompatible JNA native library installed`. Gradle may resolve a newer version than the one FileKit declares if another dependency also uses JNA, so check the version in your app's runtime classpath (replace `composeApp` with your module, and `jvmRuntimeClasspath` with `<target>RuntimeClasspath` for your JVM target name, or `runtimeClasspath` in a single-platform JVM project):
+
+    ```bash
+    ./gradlew :composeApp:dependencyInsight --dependency net.java.dev.jna:jna --configuration jvmRuntimeClasspath
+    ```
+
+    Repeat the next steps whenever that version changes.
+  </Step>
+  <Step title="Extract the macOS libraries from the JNA jar">
+    Download `jna-<version>.jar` from [Maven Central](https://repo1.maven.org/maven2/net/java/dev/jna/jna/) and, from your app module directory (for example `composeApp/`), extract the library for each architecture you ship:
+
+    ```bash
+    mkdir -p resources/macos-arm64 resources/macos-x64
+    unzip -j jna-<version>.jar com/sun/jna/darwin-aarch64/libjnidispatch.jnilib -d resources/macos-arm64
+    unzip -j jna-<version>.jar com/sun/jna/darwin-x86-64/libjnidispatch.jnilib -d resources/macos-x64
+    ```
+
+    Compose merges `macos-arm64` into the resources only when it packages on an Apple Silicon Mac, and `macos-x64` only on an Intel Mac. Keep only the folders for the architectures you ship.
+  </Step>
+  <Step title="Sign the libraries">
+    Compose copies app resources into the bundle as they are, without signing them. Sign each file yourself with the certificate your App Store build uses (`3rd Party Mac Developer Application`):
+
+    ```bash
+    codesign -f -s "3rd Party Mac Developer Application: <Your Name> (<TEAM ID>)" \
+             --timestamp --options runtime \
+             resources/macos-arm64/libjnidispatch.jnilib
+    ```
+
+    Run it again for `resources/macos-x64/libjnidispatch.jnilib` if you ship Intel builds. Do not pass `--entitlements` here: entitlements belong to main executables, and Apple warns that applying them to library code [can prevent it from running](https://developer.apple.com/documentation/xcode/creating-distribution-signed-code-for-the-mac).
+  </Step>
+  <Step title="Add the resources folder to your app">
+    Point `appResourcesRootDir` at the folder that contains `macos-arm64` and `macos-x64`:
+
+    ```kotlin build.gradle.kts
+    compose.desktop {
+        application {
+            nativeDistributions {
+                appResourcesRootDir.set(project.layout.projectDirectory.dir("resources"))
+
+                macOS {
+                    runtimeEntitlementsFile.set(project.file("runtime-entitlements.plist"))
+                }
+            }
+        }
+    }
+    ```
+
+    See [app resources](https://kotlinlang.org/docs/multiplatform/compose-native-distribution.html#adding-files-to-packaged-application) in the Compose documentation, and [Signing and notarization on macOS](https://github.com/JetBrains/compose-multiplatform/blob/master/tutorials/Signing_and_notarization_on_macOS/README.md#configuring-entitlements) for the entitlements a sandboxed Compose app needs in `runtime-entitlements.plist`.
+  </Step>
+  <Step title="Load JNA from the app bundle">
+    At the very start of `main`, before any FileKit or JNA call, point JNA at the packaged resources when the app runs sandboxed:
+
+    ```kotlin main.kt
+    fun main() {
+        val isSandboxed = System.getenv("APP_SANDBOX_CONTAINER_ID") != null
+        val resourcesDir = System.getProperty("compose.application.resources.dir")
+        if (isSandboxed && resourcesDir != null) {
+            System.setProperty("jna.boot.library.path", resourcesDir)
+            System.setProperty("jna.nounpack", "true")
+        }
+
+        // FileKit and any other JNA code run after this point.
+        application {
+            Window(onCloseRequest = ::exitApplication) { App() }
+        }
+    }
+    ```
+
+    `jna.boot.library.path` is the first place JNA looks for `libjnidispatch.jnilib`. `jna.nounpack` stops JNA from extracting the jar copy to a temporary directory, so a missing or misplaced library fails with `UnsatisfiedLinkError: Could not find JNA native support` instead of the sandbox error. You get the same error when the file is there but macOS refuses to load it, for example because it is not signed.
+  </Step>
+</Steps>
+
+Other JNA-based libraries in your app share the same `libjnidispatch`, so this setup covers them too. A library that ships its own native library inside a jar needs the same treatment for that file. For a broader walkthrough of publishing a Compose app to the Mac App Store, see [this article by Marco Gomiero](https://www.marcogomiero.com/posts/2024/compose-macos-app-store/).
 
 ## Compose launchers
 
