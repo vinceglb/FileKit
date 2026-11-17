@@ -39,7 +39,7 @@ Add FileKit to your shared module. For a Compose Multiplatform app, one artifact
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.vinceglb:filekit-dialogs-compose:0.17.0")
+            implementation("io.github.vinceglb:filekit-dialogs-compose:0.17.1")
         }
     }
 }

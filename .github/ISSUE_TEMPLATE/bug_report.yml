@@ -13,7 +13,7 @@ body:
     attributes:
       label: FileKit version
       description: The version you use. Please check that the bug still happens on the latest release.
-      placeholder: e.g. 0.17.0
+      placeholder: e.g. 0.17.1
     validations:
       required: true
 
