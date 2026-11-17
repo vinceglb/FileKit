@@ -65,7 +65,7 @@ No more removals: existing APIs stay as they were in 0.18, except to fix problem
 
 These additions are targeted for the release candidates. They are additive, so if they are not ready by the last RC, they ship in a 1.x release instead:
 
-- **Native save dialog on the web** ([#348](https://github.com/vinceglb/FileKit/issues/348)), using the File System Access API where available, with the current download behavior as a fallback.
+- **File saver on the web** ([#348](https://github.com/vinceglb/FileKit/issues/348)). `FileKit.openFileSaver()` and `rememberFileSaverLauncher()` come to JS and Wasm with the same signatures as on other platforms, first as `@ExperimentalFileKitApi`. Chromium browsers show the native save dialog. Firefox and Safari have no such dialog, so the returned file downloads its content when you write to it. Once the behavior has settled, the file saver, `write()` and `writeString()` move to common code. This is additive: code that compiles today keeps compiling.
 - **Blob and W3C `File` interop on the web** ([#173](https://github.com/vinceglb/FileKit/issues/173)), so web code can move between browser types and `PlatformFile` without boilerplate. Shipped early in 0.17.1 with `PlatformFile(blob, name)`.
 
 ### 4. FileKit 1.0
