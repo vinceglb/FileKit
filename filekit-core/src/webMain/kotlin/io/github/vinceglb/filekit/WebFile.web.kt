@@ -3,6 +3,7 @@ package io.github.vinceglb.filekit
 import kotlinx.coroutines.await
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.toDouble
+import kotlin.js.unsafeCast
 import kotlin.time.Instant
 
 /**
@@ -108,6 +109,64 @@ public sealed class WebFile {
         override fun equals(other: Any?): Boolean = other is OriginPrivateDirectory && other.path == path
 
         override fun hashCode(): Int = path.hashCode()
+    }
+
+    /**
+     * A destination returned by the web file saver.
+     *
+     * When the browser supports the File System Access API, writes go to [handle]. Otherwise,
+     * writes trigger a browser download and remain readable from this instance.
+     */
+    @ExperimentalFileKitApi
+    @OptIn(ExperimentalWasmJsInterop::class)
+    public class SaveDestination internal constructor(
+        internal val handle: FileSystemFileHandle?,
+        public val name: String,
+    ) : WebFile() {
+        private var fileSnapshot: BrowserFile? = null
+        private var downloadedBytes: ByteArray? = null
+
+        public val isDownload: Boolean
+            get() = handle == null
+
+        public val type: String
+            get() = fileSnapshot?.type.orEmpty()
+
+        public val size: Long
+            get() = fileSnapshot?.size?.toDouble()?.toLong() ?: downloadedBytes?.size?.toLong() ?: 0
+
+        @Suppress("REDUNDANT_CALL_OF_CONVERSION_METHOD")
+        public val lastModified: Instant
+            get() = fileSnapshot
+                ?.lastModified
+                ?.toDouble()
+                ?.toLong()
+                ?.let(Instant::fromEpochMilliseconds)
+                ?: WEB_DIRECTORY_LAST_MODIFIED
+
+        internal fun updateSnapshot(fileSnapshot: BrowserFile) {
+            this.fileSnapshot = fileSnapshot
+            downloadedBytes = null
+        }
+
+        internal fun updateDownloaded(bytes: ByteArray) {
+            downloadedBytes = bytes.copyOf()
+            fileSnapshot = BrowserFile(
+                fileBits = listOf<JsAny?>(bytes.toWebBytes()).toJsArray(),
+                fileName = name,
+                options = filePropertyBag(type = ""),
+            )
+        }
+
+        internal suspend fun readBytes(): ByteArray {
+            val fileHandle = handle
+            if (fileHandle != null) {
+                val file = fileHandle.getFile().await()
+                updateSnapshot(file)
+                return file.readBytes()
+            }
+            return downloadedBytes?.copyOf() ?: ByteArray(0)
+        }
     }
 }
 
