@@ -7,6 +7,10 @@ import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 
 internal interface FileSaverLauncher {
     val isSupported: Boolean
+    val supportsDirectorySelection: Boolean
+        get() = true
+    val supportMessage: String?
+        get() = null
 
     fun launch(
         suggestedName: String,

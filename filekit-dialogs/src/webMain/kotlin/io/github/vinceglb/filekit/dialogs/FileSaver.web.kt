@@ -44,8 +44,14 @@ public suspend fun FileKit.openFileSaver(
     val result = invokeBrowserSavePicker(fileName, extensions, browserSavePickerTestOverride).await()
 
     return when (result.kind) {
-        "unsupported" -> createSaveDestination(handle = null, name = fileName)
-        "selected" -> createSaveDestination(handle = result.handle, name = fileName)
+        "unsupported" -> {
+            createSaveDestination(handle = null, name = fileName)
+        }
+
+        "selected" -> {
+            createSaveDestination(handle = result.handle, name = fileName)
+        }
+
         "error" -> {
             if (result.errorName == "AbortError") {
                 null
@@ -56,7 +62,9 @@ public suspend fun FileKit.openFileSaver(
             }
         }
 
-        else -> throw FileKitDialogException("The browser returned an unknown file saver result")
+        else -> {
+            throw FileKitDialogException("The browser returned an unknown file saver result")
+        }
     }
 }
 

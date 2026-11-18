@@ -137,7 +137,8 @@ public sealed class WebFile {
 
         @Suppress("REDUNDANT_CALL_OF_CONVERSION_METHOD")
         public val lastModified: Instant
-            get() = fileSnapshot?.lastModified
+            get() = fileSnapshot
+                ?.lastModified
                 ?.toDouble()
                 ?.toLong()
                 ?.let(Instant::fromEpochMilliseconds)
