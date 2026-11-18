@@ -1,5 +1,9 @@
 @file:Suppress("ktlint:standard:function-naming", "TestFunctionName")
-@file:OptIn(ExperimentalFileKitApi::class)
+@file:OptIn(
+    ExperimentalFileKitApi::class,
+    FileKitCoreInternalApi::class,
+    kotlin.js.ExperimentalWasmJsInterop::class,
+)
 
 package io.github.vinceglb.filekit
 
@@ -51,6 +55,40 @@ class OriginPrivateFileSystemTest {
             assertEquals(5L, file.size())
             assertTrue(file.lastModified() > Instant.fromEpochMilliseconds(0))
             assertEquals("write/hello.txt", file.path)
+        } finally {
+            directory.delete(recursively = true)
+        }
+    }
+
+    @Test
+    fun PlatformFile_writeSaveDestinationWithoutHandle_downloadsAndKeepsLastContentReadable() = runTest {
+        val destination = createSaveDestination(handle = null, name = "report.txt")
+
+        assertTrue(destination.isRegularFile())
+        assertFalse(destination.isDirectory())
+        assertNull(destination.parent())
+        assertTrue(destination.readBytes().isEmpty())
+
+        destination.writeString("Saved content")
+
+        assertEquals("Saved content", destination.readString())
+        assertEquals(13L, destination.size())
+        assertTrue(destination.lastModified() > Instant.fromEpochMilliseconds(0))
+    }
+
+    @Test
+    fun PlatformFile_writeSaveDestinationWithHandle_updatesContentAndMetadata() = runTest {
+        val directory = createTestDirectory("save-destination")
+        try {
+            val selectedFile = directory.resolveFile("report.txt", create = true)
+            val handle = (selectedFile.webFile as WebFile.OriginPrivateFile).handle
+            val destination = createSaveDestination(handle = handle, name = selectedFile.name)
+
+            destination.writeString("Saved content")
+
+            assertEquals("Saved content", destination.readString())
+            assertEquals(13L, destination.size())
+            assertTrue(destination.lastModified() > Instant.fromEpochMilliseconds(0))
         } finally {
             directory.delete(recursively = true)
         }

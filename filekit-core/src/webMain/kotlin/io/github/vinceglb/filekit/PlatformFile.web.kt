@@ -78,6 +78,7 @@ public actual val PlatformFile.name: String
         is WebFile.DirectoryWrapper -> file.name
         is WebFile.OriginPrivateFile -> file.name
         is WebFile.OriginPrivateDirectory -> file.name
+        is WebFile.SaveDestination -> file.name
     }
 
 public actual val PlatformFile.extension: String
@@ -86,6 +87,7 @@ public actual val PlatformFile.extension: String
         is WebFile.DirectoryWrapper -> ""
         is WebFile.OriginPrivateFile -> name.substringAfterLast(".", "")
         is WebFile.OriginPrivateDirectory -> ""
+        is WebFile.SaveDestination -> name.substringAfterLast(".", "")
     }
 
 public actual val PlatformFile.nameWithoutExtension: String
@@ -94,6 +96,7 @@ public actual val PlatformFile.nameWithoutExtension: String
         is WebFile.DirectoryWrapper -> name
         is WebFile.OriginPrivateFile -> name.substringBeforeLast(".", name)
         is WebFile.OriginPrivateDirectory -> name
+        is WebFile.SaveDestination -> name.substringBeforeLast(".", name)
     }
 
 public actual fun PlatformFile.size(): Long = when (val file = webFile) {
@@ -101,6 +104,7 @@ public actual fun PlatformFile.size(): Long = when (val file = webFile) {
     is WebFile.DirectoryWrapper -> 0
     is WebFile.OriginPrivateFile -> file.size
     is WebFile.OriginPrivateDirectory -> 0
+    is WebFile.SaveDestination -> file.size
 }
 
 public actual val PlatformFile.path: String
@@ -109,6 +113,7 @@ public actual val PlatformFile.path: String
         is WebFile.DirectoryWrapper -> file.path
         is WebFile.OriginPrivateFile -> file.path
         is WebFile.OriginPrivateDirectory -> file.path
+        is WebFile.SaveDestination -> file.name
     }
 
 public actual fun PlatformFile.mimeType(): MimeType? = when (val file = webFile) {
@@ -131,6 +136,12 @@ public actual fun PlatformFile.mimeType(): MimeType? = when (val file = webFile)
     is WebFile.OriginPrivateDirectory -> {
         null
     }
+
+    is WebFile.SaveDestination -> {
+        file.type
+            .takeIf { it.isNotBlank() }
+            ?.let { MimeType.parse(it) }
+    }
 }
 
 public actual fun PlatformFile.lastModified(): Instant = when (val file = webFile) {
@@ -138,6 +149,7 @@ public actual fun PlatformFile.lastModified(): Instant = when (val file = webFil
     is WebFile.DirectoryWrapper -> file.lastModified
     is WebFile.OriginPrivateFile -> file.lastModified
     is WebFile.OriginPrivateDirectory -> WEB_DIRECTORY_LAST_MODIFIED
+    is WebFile.SaveDestination -> file.lastModified
 }
 
 public actual fun PlatformFile.parent(): PlatformFile? = when (val file = webFile) {
@@ -145,10 +157,11 @@ public actual fun PlatformFile.parent(): PlatformFile? = when (val file = webFil
     is WebFile.DirectoryWrapper -> file.parent?.toPlatformFile()
     is WebFile.OriginPrivateFile -> file.parent?.toPlatformFile()
     is WebFile.OriginPrivateDirectory -> file.parent?.toPlatformFile()
+    is WebFile.SaveDestination -> null
 }
 
 public actual fun PlatformFile.isRegularFile(): Boolean =
-    webFile is WebFile.FileWrapper || webFile is WebFile.OriginPrivateFile
+    webFile is WebFile.FileWrapper || webFile is WebFile.OriginPrivateFile || webFile is WebFile.SaveDestination
 
 public actual fun PlatformFile.isDirectory(): Boolean =
     webFile is WebFile.DirectoryWrapper || webFile is WebFile.OriginPrivateDirectory
@@ -167,6 +180,10 @@ public actual fun PlatformFile.list(): List<PlatformFile> = when (val file = web
     }
 
     is WebFile.OriginPrivateFile -> {
+        throw FileKitException("Cannot list a regular file")
+    }
+
+    is WebFile.SaveDestination -> {
         throw FileKitException("Cannot list a regular file")
     }
 
@@ -196,6 +213,10 @@ public actual suspend fun PlatformFile.readBytes(): ByteArray = when (val file =
             .readBytes()
     }
 
+    is WebFile.SaveDestination -> {
+        file.readBytes()
+    }
+
     is WebFile.OriginPrivateDirectory -> {
         throw FileKitException("Cannot read bytes from a directory")
     }
@@ -209,7 +230,7 @@ public actual suspend fun PlatformFile.sizeRecursively(): Long = computeSizeRecu
 internal actual fun PlatformFile.isSymbolicLink(): Boolean = false
 
 @OptIn(ExperimentalWasmJsInterop::class)
-private suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers.Main) {
+internal suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers.Main) {
     suspendCancellableCoroutine { continuation ->
         val reader = FileReader()
         reader.onload = { event ->
@@ -238,10 +259,10 @@ private suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers
 }
 
 /**
- * Replaces the contents of this origin private file system (OPFS) file with [bytes].
+ * Replaces the contents of this OPFS file or web save destination with [bytes].
  *
- * Only files obtained from [FileKit.originPrivateDir] can be written. Files returned by
- * browser pickers are read-only snapshots.
+ * Files obtained from [FileKit.originPrivateDir] and the web file saver can be written. Files
+ * returned by browser open-file pickers are read-only snapshots.
  *
  * @param bytes The bytes to write.
  */
@@ -249,7 +270,8 @@ private suspend fun BrowserFile.readBytes(): ByteArray = withContext(Dispatchers
 public suspend infix fun PlatformFile.write(bytes: ByteArray) {
     when (val file = webFile) {
         is WebFile.OriginPrivateFile -> file.write(bytes)
-        else -> throw FileKitException("Only origin private file system files can be written")
+        is WebFile.SaveDestination -> file.write(bytes)
+        else -> throw FileKitException("Only origin private file system files and save destinations can be written")
     }
 }
 
