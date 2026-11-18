@@ -41,7 +41,7 @@ public suspend fun FileKit.openFileSaver(
     val extensions = buildFileSaverAllowedFileTypes(defaultExtension, allowedExtensions)
         ?.joinToString(separator = "\u0000")
         .orEmpty()
-    val result = invokeBrowserSavePicker(fileName, extensions).await()
+    val result = invokeBrowserSavePicker(fileName, extensions, browserSavePickerTestOverride).await()
 
     return when (result.kind) {
         "unsupported" -> createSaveDestination(handle = null, name = fileName)
@@ -68,6 +68,10 @@ private external interface BrowserSavePickerResult : JsAny {
     val errorMessage: String
 }
 
+/** Optional picker replacement used by shared web tests. */
+@OptIn(ExperimentalWasmJsInterop::class)
+internal var browserSavePickerTestOverride: JsAny? = null
+
 /**
  * Calls the API before returning its promise so the call remains within the caller's user activation.
  * Feature detection and both synchronous and asynchronous error handling stay in this JS boundary.
@@ -75,10 +79,11 @@ private external interface BrowserSavePickerResult : JsAny {
 @OptIn(ExperimentalWasmJsInterop::class)
 private fun invokeBrowserSavePicker(
     suggestedName: String,
-    extensions: String,
+    extensionList: String,
+    testOverride: JsAny?,
 ): Promise<BrowserSavePickerResult> = js(
     """
-    (function(suggestedName, extensionList) {
+    {
         let crossOriginFrame = false;
         let hasUserActivation = true;
         const handleError = function(error) {
@@ -91,7 +96,9 @@ private fun invokeBrowserSavePicker(
         };
 
         try {
-            const api = globalThis.showSaveFilePicker;
+            const api = testOverride === null
+                ? globalThis.showSaveFilePicker
+                : (testOverride.available ? testOverride.picker : null);
             if (typeof api !== "function") {
                 return Promise.resolve({ kind: "unsupported" });
             }
@@ -138,6 +145,6 @@ private fun invokeBrowserSavePicker(
         } catch (error) {
             return Promise.resolve(handleError(error));
         }
-    })(suggestedName, extensions)
+    }
     """,
 )
