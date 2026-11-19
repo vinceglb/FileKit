@@ -91,6 +91,6 @@ If your project uses an `AGENTS.md`, `CLAUDE.md`, `.cursor/rules`, or Copilot in
   `FileKitPickerState.Cancelled`. Prefer Compose launcher overloads that take `onError`.
 - Platform setup: `FileKit.init(appId = ...)` on JVM desktop, Linux native, and Windows native before using app
   directories. On Android, `FileKit.init(activity)` before calling suspend dialog APIs (Compose launchers do it for you).
-- Some APIs are platform-specific (for example, the file saver is not available on JS/Wasm; use `FileKit.download`).
+- The experimental `FileKit.openFileSaver()` suspend API is available on JS/Wasm: it uses the browser save picker when available and downloads on write otherwise. Call it during a user action; the Compose `rememberFileSaverLauncher` is not available on web. Use `FileKit.download` for a direct download.
   Check https://filekit.mintlify.app/platform-support before using an API in `commonMain`.
 ```

@@ -8,7 +8,7 @@ import { Platforms } from '/snippets/platforms.jsx'
 
 <Platforms scope="core" supported="web" anchor="filekit-core" />
 
-On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the user picks are read-only. To give the user a file, download it. To keep files between sessions, store them in the browser's origin private file system.
+On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the user picks are read-only; writable destinations are available through the experimental file saver and OPFS. To trigger a direct download, use `FileKit.download`.
 
 ## What a web PlatformFile is
 
@@ -16,6 +16,7 @@ On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the u
 | --- | --- | --- | --- | --- |
 | File picker | A snapshot of a browser `File` | Yes | No | No |
 | Directory picker | A virtual tree of the selected files | Files only | No | `list()`, `walk()`, `listEntries()` |
+| Web file saver | A browser save destination | Yes | Yes | No |
 | `FileKit.originPrivateDir` (experimental) | A live origin private file system entry | Yes | Yes | `listEntries()` |
 | `PlatformFile(blob, name)` | A browser `File` made from a `Blob` or `File` | Yes | No | No |
 
@@ -43,7 +44,7 @@ Reads load the whole file into memory: `source()` is not available on the web. `
 
 ## Download files
 
-Browsers don't let a page choose where a file is saved, so there is no file saver on the web. `FileKit.download` hands the file to the browser, which saves it to the user's downloads folder:
+`FileKit.download` hands bytes to the browser, which saves them to the user's downloads folder:
 
 ```kotlin webMain
 scope.launch {
@@ -53,6 +54,8 @@ scope.launch {
 ```
 
 Both overloads are suspend functions. The `PlatformFile` overload reads the file first, so it works with picked files and origin private file system files.
+
+To offer a save picker and receive a writable `PlatformFile` destination instead, use the experimental [`FileKit.openFileSaver`](/dialogs/file-saver#web-behavior) API. When the browser has no usable picker, writing to that destination starts a download.
 
 ## Store files in the origin private file system
 
@@ -82,7 +85,7 @@ file.write("Hello again".encodeToByteArray())
 val text = file.readString()
 ```
 
-`write` and `writeString` replace the file's content. They throw on any file that doesn't come from `FileKit.originPrivateDir`.
+`write` and `writeString` replace the file's content. They work with OPFS files and destinations returned by the experimental web file saver; they throw on read-only files returned by the browser's file picker.
 
 ### List and delete
 
