@@ -8,7 +8,18 @@ package io.github.vinceglb.filekit.dialogs
 import io.github.vinceglb.filekit.ExperimentalFileKitApi
 import io.github.vinceglb.filekit.FileKit
 import io.github.vinceglb.filekit.WebFile
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.isDirectory
+import io.github.vinceglb.filekit.isRegularFile
+import io.github.vinceglb.filekit.lastModified
+import io.github.vinceglb.filekit.mimeType
 import io.github.vinceglb.filekit.name
+import io.github.vinceglb.filekit.nameWithoutExtension
+import io.github.vinceglb.filekit.parent
+import io.github.vinceglb.filekit.path
+import io.github.vinceglb.filekit.readString
+import io.github.vinceglb.filekit.size
+import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsAny
 import kotlin.test.Test
@@ -20,6 +31,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Instant
 
 private fun unavailablePickerOverride(): JsAny = js("({ available: false })")
 
@@ -63,6 +75,40 @@ class FileSaverWebTest {
 
             assertEquals("report.pdf", file?.name)
             assertTrue((file?.webFile as? WebFile.SaveDestination)?.isDownload == true)
+        }
+    }
+
+    @Test
+    fun openFileSaver_whenPickerUnavailable_returnsDestinationWithBasicMetadata() = runTest {
+        withPickerOverride(unavailablePickerOverride()) {
+            val file = assertNotNull(
+                FileKit.openFileSaver(suggestedName = "report", defaultExtension = "txt"),
+            )
+
+            assertEquals("report.txt", file.name)
+            assertEquals("report", file.nameWithoutExtension)
+            assertEquals("txt", file.extension)
+            assertEquals("report.txt", file.path)
+            assertEquals(0L, file.size())
+            assertNull(file.mimeType())
+            assertEquals(Instant.fromEpochMilliseconds(0), file.lastModified())
+            assertNull(file.parent())
+            assertTrue(file.isRegularFile())
+            assertFalse(file.isDirectory())
+        }
+    }
+
+    @Test
+    fun openFileSaver_whenPickerUnavailable_writesAndReadsString() = runTest {
+        withPickerOverride(unavailablePickerOverride()) {
+            val destination = assertNotNull(
+                FileKit.openFileSaver(suggestedName = "report", defaultExtension = "txt"),
+            )
+
+            destination.writeString("Saved from web saver")
+
+            assertEquals("Saved from web saver", destination.readString())
+            assertEquals(20L, destination.size())
         }
     }
 
