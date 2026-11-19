@@ -7,9 +7,9 @@ description: 'Let the user choose where to save a file, then write your data to 
 import { Platforms } from '/snippets/platforms.jsx'
 import DialogResult from '/snippets/dialog-result.mdx'
 
-<Platforms scope="dialogs" supported="macos jvm windows" partial={{ android: 'Several allowedExtensions fall back to */*', ios: 'allowedExtensions is ignored', linux: 'Needs the XDG Desktop Portal' }} anchor="filekit-dialogs" />
+<Platforms scope="dialogs" supported="macos jvm windows" partial={{ android: 'Several allowedExtensions fall back to */*', ios: 'allowedExtensions is ignored', linux: 'Needs the XDG Desktop Portal', web: 'Experimental; uses the browser save picker when available, otherwise downloads on write' }} anchor="filekit-dialogs" />
 
-Open the native save dialog. FileKit returns the location the user picked as a `PlatformFile`, and you write your data to it. The file saver is not available on the web, so call it from a non-web source set such as `nonWebMain` (see [shared source sets](/platform-support#use-platform-specific-apis-from-shared-code)).
+Open the platform save dialog. FileKit returns the chosen destination as a `PlatformFile`, and you write your data to it. On JS and Wasm, the suspend API is experimental; the browser save picker is used when available, with a download-on-write fallback. The Compose `rememberFileSaverLauncher` is not available on web.
 
 ## Usage
 
@@ -75,9 +75,26 @@ val file = FileKit.openFileSaver(
 
 Not every platform enforces the filter, so check `file.extension` if your app needs a specific format.
 
-## Download file on the web
+## Web behavior
 
-Browsers don't let you choose a save location: use `FileKit.download` to send bytes to the user's downloads folder instead. See [Download files](/core/web#download-files).
+On JS and Wasm, `FileKit.openFileSaver()` returns a writable destination. Browsers with the File System Access API open a save picker, and writes go to the selected file. If the API is unavailable or inaccessible (including some cross-origin iframe contexts), the returned destination downloads its bytes when you call `write()` or `writeString()`; the most recently written bytes remain readable from that destination.
+
+```kotlin webMain
+@OptIn(ExperimentalFileKitApi::class)
+suspend fun saveReport() {
+  val file = FileKit.openFileSaver(
+    suggestedName = "report",
+    defaultExtension = "txt",
+    allowedExtensions = setOf("txt", "md"),
+  ) ?: return // null when the user cancels
+
+  file.writeString("Hello FileKit!")
+}
+```
+
+`allowedExtensions` supplies the picker's file-type filters. `directory` and `dialogSettings` are accepted for API parity but ignored on web. Cancellation returns `null`; other picker failures are wrapped in `FileKitDialogException`.
+
+Call `openFileSaver()` directly from a user action, such as a click handler. The browser requires transient user activation to show the picker, so don't do other asynchronous work before opening it. For an unconditional download without a save picker, use [`FileKit.download`](/core/web#download-files).
 
 ## Platform notes
 
@@ -87,7 +104,7 @@ Browsers don't let you choose a save location: use `FileKit.download` to send by
 | iOS | Exports a temporary placeholder file through the Files picker, then removes it so you can write to the returned location. `allowedExtensions` is ignored. |
 | Desktop | The save dialog shows `dialogSettings.title` on Linux native, Windows native, and JVM on macOS. The macOS native saver and the JVM savers on Windows and Linux ignore it. |
 | Linux native | Needs a running XDG Desktop Portal. See [Dialogs setup](/dialogs/setup#linux-setup). |
-| Web | Not available. Use `FileKit.download`. |
+| Web | Experimental suspend API; see [Web behavior](#web-behavior). The Compose saver launcher is unavailable. |
 
 <Accordion title="Upgrading from older versions">
   The `extension` parameter of `openFileSaver` and `launch()` is deprecated. Rename it to `defaultExtension`; the behavior is the same.

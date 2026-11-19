@@ -99,7 +99,7 @@ suspend fun importPhoto() {
 | :-----: | :-: | :---: | :---------: | :----------: | :------------: | :-: | :--: | :-----: |
 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Core only |
 
-Every target with `filekit-dialogs` uses the platform's native dialogs (watchOS has FileKit Core only). Some features are platform-specific: the camera and share sheet are mobile-only, the file saver is not available in browsers, and Compose and Coil support follows Compose Multiplatform's targets. See the [platform support matrix](/platform-support) for a feature-by-feature breakdown.
+Every target with `filekit-dialogs` uses its platform's dialog APIs (watchOS has FileKit Core only). Some features are platform-specific: the camera and share sheet are mobile-only, the experimental web file saver uses browser APIs, and Compose and Coil support follows Compose Multiplatform's targets. See the [platform support matrix](/platform-support) for a feature-by-feature breakdown.
 
 ## Modules
 

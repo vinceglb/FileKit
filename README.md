@@ -94,7 +94,7 @@ println("${notes.name}: ${notes.size()} bytes")
 notes.copyTo(FileKit.cacheDir / "notes-backup.txt")
 ```
 
-The file saver, app directories, and path operations such as `/` and `copyTo` aren't available on JS and Wasm. Call them from a [non-web source set](https://filekit.mintlify.app/platform-support#use-platform-specific-apis-from-shared-code), and use `FileKit.download` in the browser.
+The file saver is experimental on JS and Wasm; it opens the browser save picker when available and otherwise downloads when you write to the destination. App directories and path operations such as `/` and `copyTo` aren't available on the web, so call those from a [non-web source set](https://filekit.mintlify.app/platform-support#use-platform-specific-apis-from-shared-code). Use `FileKit.download` when you want a direct download.
 
 The [quickstart](https://filekit.mintlify.app/quickstart) walks through a full pick, read, and save round trip in a few minutes.
 
