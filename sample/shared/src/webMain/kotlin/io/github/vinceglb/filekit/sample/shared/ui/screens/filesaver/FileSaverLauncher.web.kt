@@ -9,6 +9,8 @@ import io.github.vinceglb.filekit.PlatformFile
 import io.github.vinceglb.filekit.dialogs.FileKitDialogException
 import io.github.vinceglb.filekit.dialogs.FileKitDialogSettings
 import io.github.vinceglb.filekit.dialogs.openFileSaver
+import io.github.vinceglb.filekit.extension
+import io.github.vinceglb.filekit.write
 import io.github.vinceglb.filekit.writeString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
@@ -48,7 +50,11 @@ internal actual fun rememberFileSaverLauncher(
                             dialogSettings = dialogSettings,
                         )
                         if (file != null) {
-                            file.writeString("FileKit web file saver sample")
+                            if (file.extension.equals("pdf", ignoreCase = true)) {
+                                file.write(createSamplePdf())
+                            } else {
+                                file.writeString("FileKit web file saver sample")
+                            }
                         }
                         onResult(file)
                     } catch (failure: FileKitDialogException) {
@@ -62,4 +68,36 @@ internal actual fun rememberFileSaverLauncher(
             }
         }
     }
+}
+
+private fun createSamplePdf(): ByteArray {
+    val text = "FileKit web file saver sample"
+    val contentStream = "BT\n/F1 18 Tf\n72 720 Td\n($text) Tj\nET"
+    val objects = listOf(
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] " +
+            "/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        "<< /Length ${contentStream.encodeToByteArray().size} >>\nstream\n$contentStream\nendstream",
+    )
+    val pdf = StringBuilder("%PDF-1.4\n")
+    val objectOffsets = mutableListOf<Int>()
+
+    objects.forEachIndexed { index, body ->
+        objectOffsets += pdf.toString().encodeToByteArray().size
+        pdf.append("${index + 1} 0 obj\n$body\nendobj\n")
+    }
+
+    val crossReferenceOffset = pdf.toString().encodeToByteArray().size
+    pdf.append("xref\n0 ${objects.size + 1}\n")
+    pdf.append("0000000000 65535 f \n")
+    objectOffsets.forEach { offset ->
+        pdf.append("${offset.toString().padStart(10, '0')} 00000 n \n")
+    }
+    pdf.append(
+        "trailer\n<< /Size ${objects.size + 1} /Root 1 0 R >>\n" +
+            "startxref\n$crossReferenceOffset\n%%EOF\n",
+    )
+    return pdf.toString().encodeToByteArray()
 }
