@@ -147,18 +147,32 @@ class FileSaverWebTest {
             val file = FileKit.openFileSaver(
                 suggestedName = "report",
                 defaultExtension = "pdf",
-                allowedExtensions = setOf("txt", ".pdf"),
+                allowedExtensions = setOf("txt", ".pdf", "sublime-workspace"),
             )
             val selectedFile = assertNotNull(file)
             val destination = assertIs<WebFile.SaveDestination>(selectedFile.webFile)
 
-            assertEquals("report.pdf", selectedFile.name)
+            assertEquals("selected.txt", selectedFile.name)
+            assertEquals("txt", selectedFile.extension)
             assertEquals(false, destination.isDownload)
             assertEquals("report.pdf", lastPickerSuggestedName())
             assertEquals(
                 """[{"description":"Files","accept":{"application/pdf":[".pdf"],"text/plain":[".txt"]}}]""",
                 lastPickerTypesJson(),
             )
+        }
+    }
+
+    @Test
+    fun openFileSaver_whenAllExtensionsExceedBrowserLimit_omitsPickerTypes() = runTest {
+        withPickerOverride(selectedPickerOverride()) {
+            FileKit.openFileSaver(
+                suggestedName = "report",
+                defaultExtension = "sublime-workspace",
+            )
+
+            assertEquals("report.sublime-workspace", lastPickerSuggestedName())
+            assertFalse(hasPickerTypes())
         }
     }
 
