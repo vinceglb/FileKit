@@ -12,13 +12,13 @@ On JS and Wasm, a `PlatformFile` wraps a browser handle, not a path. Files the u
 
 ## What a web PlatformFile is
 
-| Source | Wraps | Read | Write, delete | List |
-| --- | --- | --- | --- | --- |
-| File picker | A snapshot of a browser `File` | Yes | No | No |
-| Directory picker | A virtual tree of the selected files | Files only | No | `list()`, `walk()`, `listEntries()` |
-| Web file saver | A browser save destination | Yes | Yes | No |
-| `FileKit.originPrivateDir` (experimental) | A live origin private file system entry | Yes | Yes | `listEntries()` |
-| `PlatformFile(blob, name)` | A browser `File` made from a `Blob` or `File` | Yes | No | No |
+| Source | Wraps | Read | Write | Delete | List |
+| --- | --- | --- | --- | --- | --- |
+| File picker | A snapshot of a browser `File` | Yes | No | No | No |
+| Directory picker | A virtual tree of the selected files | Files only | No | No | `list()`, `walk()`, `listEntries()` |
+| Web file saver | A browser save destination | Yes | Yes | No | No |
+| `FileKit.originPrivateDir` (experimental) | A live origin private file system entry | Yes | Yes | Yes | `listEntries()` |
+| `PlatformFile(blob, name)` | A browser `File` made from a `Blob` or `File` | Yes | No | No | No |
 
 The `path` of a picked file is its name, or for a file inside a picked folder, its relative path starting with the folder's name. Path constructors such as `PlatformFile("/path")`, `FileKit.filesDir`, and `exists()` don't exist on the web: keep that code in `nonWebMain`.
 

@@ -39,6 +39,7 @@ public suspend fun FileKit.openFileSaver(
 ): PlatformFile? {
     val fileName = buildFileSaverSuggestedName(suggestedName, defaultExtension)
     val extensions = buildFileSaverAllowedFileTypes(defaultExtension, allowedExtensions)
+        ?.filter { it.length + 1 <= MAX_BROWSER_FILE_TYPE_SUFFIX_LENGTH }
         ?.joinToString(separator = "\u0000")
         .orEmpty()
     val result = invokeBrowserSavePicker(fileName, extensions, browserSavePickerTestOverride).await()
@@ -49,7 +50,7 @@ public suspend fun FileKit.openFileSaver(
         }
 
         "selected" -> {
-            createSaveDestination(handle = result.handle, name = fileName)
+            createSaveDestination(handle = result.handle, name = result.name)
         }
 
         "error" -> {
@@ -68,10 +69,13 @@ public suspend fun FileKit.openFileSaver(
     }
 }
 
+private const val MAX_BROWSER_FILE_TYPE_SUFFIX_LENGTH = 16
+
 @OptIn(ExperimentalWasmJsInterop::class)
 private external interface BrowserSavePickerResult : JsAny {
     val kind: String
     val handle: JsAny?
+    val name: String
     val errorName: String
     val errorMessage: String
 }
@@ -113,7 +117,7 @@ private fun invokeBrowserSavePicker(
 
             try {
                 crossOriginFrame = window.self !== window.top &&
-                    window.parent.location.origin !== window.location.origin;
+                    window.top.location.origin !== window.location.origin;
             } catch (_) {
                 crossOriginFrame = true;
             }
@@ -147,7 +151,7 @@ private fun invokeBrowserSavePicker(
             }
 
             return Promise.resolve(api.call(globalThis, options)).then(
-                function(handle) { return { kind: "selected", handle: handle }; },
+                function(handle) { return { kind: "selected", handle: handle, name: handle.name }; },
                 handleError
             );
         } catch (error) {
