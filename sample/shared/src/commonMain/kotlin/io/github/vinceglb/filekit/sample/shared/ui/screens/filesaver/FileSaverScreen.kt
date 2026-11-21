@@ -102,6 +102,7 @@ private fun FileSaverScreen(
         },
     )
     val isSupported = fileSaverLauncher.isSupported
+    val supportMessage = fileSaverLauncher.supportMessage
     val primaryButtonText = if (isSupported) "Save File" else "File Saver Unavailable"
 
     fun openFileSaver() {
@@ -160,6 +161,7 @@ private fun FileSaverScreen(
                     allowedExtensions = allowedExtensions,
                     saveDirectoryName = saveDirectory?.name,
                     isSupported = isSupported,
+                    supportsDirectorySelection = fileSaverLauncher.supportsDirectorySelection,
                     onSuggestedNameChange = { suggestedName = it },
                     onDefaultExtensionChange = { newValue ->
                         val trimmed = newValue.trim()
@@ -172,10 +174,10 @@ private fun FileSaverScreen(
                 )
             }
 
-            if (!isSupported) {
+            if (supportMessage != null) {
                 item {
                     AppPickerSupportCard(
-                        text = "File saver is unavailable on web. Use FileKit.download() for browser downloads.",
+                        text = supportMessage,
                         icon = LucideIcons.Share,
                         modifier = Modifier.sizeIn(maxWidth = AppMaxWidth),
                     )
@@ -202,6 +204,7 @@ private fun FileSaverSettingsCard(
     allowedExtensions: String,
     saveDirectoryName: String?,
     isSupported: Boolean,
+    supportsDirectorySelection: Boolean,
     onSuggestedNameChange: (String) -> Unit,
     onDefaultExtensionChange: (String) -> Unit,
     onAllowedExtensionsChange: (String) -> Unit,
@@ -273,7 +276,7 @@ private fun FileSaverSettingsCard(
                 value = saveDirectoryName,
                 placeholder = "System default",
                 icon = LucideIcons.Folder,
-                enabled = isSupported,
+                enabled = isSupported && supportsDirectorySelection,
                 onClick = onPickSaveDirectory,
                 onClear = onClearSaveDirectory,
             )

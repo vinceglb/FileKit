@@ -69,7 +69,7 @@ Columns: **And** Android · **iOS** · **mac** macOS · **JVM** JVM desktop · *
 | [File picker](/dialogs/file-picker): single, multiple, extension filter | ✅ | ✅ | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ⚠️ <sup>11</sup> |
 | [Gallery picker](/dialogs/gallery-picker): `Image`, `Video`, `ImageAndVideo` | ✅ Photo Picker | ✅ PHPicker | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> | ⚠️ <sup>12</sup> |
 | [Directory picker](/dialogs/directory-picker) | ✅ | ✅ | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ⚠️ <sup>13</sup> |
-| [File saver](/dialogs/file-saver) | ⚠️ <sup>14</sup> | ⚠️ <sup>14</sup> | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ❌ use `FileKit.download` |
+| [File saver](/dialogs/file-saver) | ⚠️ <sup>14</sup> | ⚠️ <sup>14</sup> | ✅ | ✅ <sup>9</sup> | ⚠️ <sup>10</sup> | ✅ | ⚠️ <sup>17</sup> |
 | [Camera picker](/dialogs/camera-picker) (photo) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | [Share file](/dialogs/share-file) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
 | [Open with default app](/dialogs/open-file) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
@@ -115,7 +115,7 @@ Keep only the targets your project declares, and add others (such as `macosMain`
 ## Notes
 
 1. **Web files are read-only browser handles.** Directories report a size of `0`. `list`, `walk`, and `sizeRecursively` work on folders returned by the directory picker.
-2. **Web writing is experimental.** `write`, `writeString`, and `delete` work only on entries in the browser's origin private file system (OPFS) and require `@OptIn(ExperimentalFileKitApi::class)` and a secure context. Writing to a picked file throws.
+2. **Web writing is experimental.** `write` and `writeString` work on OPFS files (which require a secure context) and file-saver destinations; `delete` works only on OPFS entries. These APIs require `@OptIn(ExperimentalFileKitApi::class)`. Writing to a picked file throws.
 3. **Android `content://` files:** `atomicMove` falls back to copy-then-delete and doesn't support directories.
 4. **Linux native:** `createdAt()` always returns `null`.
 5. **macOS native:** the output size of `compressImage` depends on the screen's backing scale factor.
@@ -130,5 +130,6 @@ Keep only the targets your project declares, and add others (such as `macosMain`
 14. **Mobile savers:** on Android, several `allowedExtensions` fall back to the `*/*` MIME type. On iOS, `allowedExtensions` is ignored.
 15. **iOS dialog settings:** the presenter view controller and asset representation mode are applied; `title` and `canCreateDirectories` are currently ignored.
 16. **Web serialization compiles but fails:** `PlatformFileSerializer` is declared for JS and Wasm, but serializing or deserializing a `PlatformFile` throws at runtime. Store something else, such as the file name or bytes.
+17. **Web file saver is experimental.** JS and Wasm use the File System Access API save picker when available; otherwise, writing to the destination downloads the bytes. A browser user action is required to open the picker. `directory` and dialog settings are ignored, and the Compose `rememberFileSaverLauncher` is not available on web.
 
 Something wrong or missing? [Open an issue](https://github.com/vinceglb/FileKit/issues) and include the platform and FileKit version.

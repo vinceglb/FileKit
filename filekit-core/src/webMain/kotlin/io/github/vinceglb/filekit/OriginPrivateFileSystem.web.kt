@@ -170,13 +170,29 @@ private suspend fun WebFile.OriginPrivateDirectory.directory(
  */
 @OptIn(ExperimentalWasmJsInterop::class)
 internal suspend fun WebFile.OriginPrivateFile.write(bytes: ByteArray) {
+    updateSnapshot(writeFile(handle, bytes))
+}
+
+@OptIn(ExperimentalWasmJsInterop::class)
+internal suspend fun WebFile.SaveDestination.write(bytes: ByteArray) {
+    val fileHandle = handle
+    if (fileHandle == null) {
+        FileKit.download(bytes, name)
+        updateDownloaded(bytes)
+    } else {
+        updateSnapshot(writeFile(fileHandle, bytes))
+    }
+}
+
+@OptIn(ExperimentalWasmJsInterop::class)
+private suspend fun writeFile(handle: FileSystemFileHandle, bytes: ByteArray): BrowserFile {
     val writable = handle.createWritable().await()
     try {
         writable.write(bytes.toWebBytes()).await()
     } finally {
         writable.close().await()
     }
-    updateSnapshot(handle.getFile().await())
+    return handle.getFile().await()
 }
 
 @OptIn(ExperimentalWasmJsInterop::class)

@@ -137,7 +137,7 @@ Want to see FileKit before installing it? [Try it in your browser](/live-demo): 
     </CodeGroup>
 
     <Note>
-      The file saver is available on Android, iOS, macOS, JVM, and Linux and Windows native, so call it from a non-web source set. Browsers don't let you choose a save location, so on JS and Wasm use `FileKit.download(bytes, fileName)` instead. See [Files on the web](/core/web#download-files).
+      The file saver is available on Android, iOS, desktop, Linux and Windows native, and experimentally on JS and Wasm. On web, `FileKit.openFileSaver()` uses the browser save picker when available and downloads when you write to its destination otherwise. Call it directly from a user action so the browser's transient user activation is preserved. Use `FileKit.download(bytes, fileName)` for a direct download. See [File saver](/dialogs/file-saver#web-behavior) and [Files on the web](/core/web#download-files).
     </Note>
   </Step>
 </Steps>
